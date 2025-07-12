@@ -1,0 +1,203 @@
+/* static/css/style.css */
+/* Dark Theme */
+body {
+    background-color: #333 !important;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    height: 100vh;
+}
+
+.bg-black {
+    background-color: #000 !important;
+}
+
+.card {
+    background-color: #222;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+}
+
+.card-header {
+    padding: 0.5rem 1rem;
+}
+
+.list-group-item {
+    background-color: #222;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    padding: 0.5rem 1rem;
+}
+
+.form-control, .form-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #666;
+}
+
+/* Text Sizes */
+.small {
+    font-size: 0.85rem;
+}
+
+.x-small {
+    font-size: 0.75rem;
+}
+
+/* Nutrition Value Sizes */
+.nutrition-value-sm {
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    min-width: 100px;
+}
+
+.nutrition-value-xs {
+    border-radius: 6px;
+    padding: 6px;
+    text-align: center;
+    min-width: 80px;
+    font-size: 0.8rem;
+}
+
+.nutrition-value-xxs {
+    border-radius: 4px;
+    padding: 4px 6px;
+    text-align: center;
+    min-width: 60px;
+    font-size: 0.7rem;
+}
+
+.nutrition-value-sm .value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.nutrition-value-xs .value {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.nutrition-value-xxs .value {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.nutrition-value-sm .label {
+    font-size: 0.8rem;
+}
+
+.nutrition-value-xs .label {
+    font-size: 0.75rem;
+}
+
+.nutrition-value-xxs .label {
+    font-size: 0.65rem;
+}
+
+/* Buttons */
+.btn {
+    background-color: #ff4444 !important;
+    color: black !important;
+    border: none;
+}
+
+.btn-sm {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+}
+
+/* Search Results */
+#search-results {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #222;
+    font-size: 0.85rem;
+}
+
+/* Real-time Breakdown */
+#rt-breakdown-placeholder {
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Food Log */
+#food-log {
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+#food-log .list-group-item {
+    padding: 0.3rem 0.5rem;
+}
+
+.group-header {
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+}
+
+.group-items {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Modal */
+.modal-content {
+    background-color: #222;
+    color: #e0e0e0;
+}
+
+.modal-header, .modal-footer {
+    background-color: #000 !important;
+    border-color: #444;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #333;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* Center content */
+.container-fluid.vh-100 {
+    padding: 20px;
+}
+
+/* Unit type buttons */
+.unit-type-btn {
+    text-align: left;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.unit-type-btn.active {
+    background-color: #ff4444 !important;
+    color: black !important;
+}

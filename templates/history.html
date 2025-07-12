@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5>Nutrition History (Last 7 Days)</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Calories</th>
+                    <th>Protein (g)</th>
+                    <th>Carbs (g)</th>
+                    <th>Fats (g)</th>
+                    <th>Salt (g)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in history_data %}
+                <tr>
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.calories | round(1) }}</td>
+                    <td>{{ entry.proteins | round(1) }}</td>
+                    <td>{{ entry.carbs | round(1) }}</td>
+                    <td>{{ entry.fats | round(1) }}</td>
+                    <td>{{ entry.salt | round(1) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No history data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

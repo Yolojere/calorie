@@ -1,0 +1,605 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
+    <div class="row g-3" style="max-width: 1400px; width: 100%;">
+        <!-- Top Left: Add Food -->
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header bg-black text-light">
+                    <h6>Add Food</h6>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-2">
+                        <input type="text" id="food-search" class="form-control form-control-sm bg-secondary text-light" placeholder="Search food or scan EAN...">
+                        <button id="clear-search" class="btn btn-sm btn-outline-secondary" type="button">X</button>
+                    </div>
+                    <div id="search-results" class="mt-2"></div>
+                    
+                    <div id="food-details" class="d-none">
+                        <div class="mb-2">
+                            <label class="small">Units</label>
+                            <input type="number" id="units" class="form-control form-control-sm bg-secondary text-light" value="100" min="0.1" step="0.1">
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label class="small">Unit Type</label>
+                            <div class="d-flex flex-column gap-1">
+                                <button type="button" class="btn btn-sm btn-secondary unit-type-btn active" data-unit-type="grams">Grams</button>
+                                <button type="button" class="btn btn-sm btn-secondary unit-type-btn" data-unit-type="serving">Serving</button>
+                                <button type="button" class="btn btn-sm btn-secondary unit-type-btn" data-unit-type="half">Half</button>
+                                <button type="button" class="btn btn-sm btn-secondary unit-type-btn" data-unit-type="entire">Entire</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label class="small">Meal Group</label>
+                            <select id="meal-group" class="form-select form-select-sm bg-secondary text-light">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <button id="add-food" class="btn btn-sm w-100" style="background-color: #ff4444; color: black;">Add Food</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Right: Real-time Breakdown -->
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header bg-black text-light">
+                    <h6>Real-time Breakdown</h6>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div id="rt-breakdown-placeholder" class="text-center text-muted py-4 small">
+                        Select a food to see nutrition details
+                    </div>
+                    <div id="rt-breakdown" class="d-none">
+                        <div class="d-flex justify-content-center gap-1">
+                            <div class="nutrition-value-xxs" style="background-color: #0d6efd;">
+                                <span class="value" id="rt-calories">0</span>
+                                <span class="label">Calories</span>
+                            </div>
+                            <div class="nutrition-value-xxs" style="background-color: #ffc107; color: black;">
+                                <span class="value" id="rt-proteins">0g</span>
+                                <span class="label">Protein</span>
+                            </div>
+                            <div class="nutrition-value-xxs" style="background-color: #dc3545;">
+                                <span class="value" id="rt-carbs">0g</span>
+                                <span class="label">Carbs</span>
+                            </div>
+                            <div class="nutrition-value-xxs" style="background-color: #6c757d;">
+                                <span class="value" id="rt-fats">0g</span>
+                                <span class="label">Fats</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center gap-1 mt-1">
+                            <div class="nutrition-value-xxs" style="background-color: #0dcaf0;">
+                                <span class="value" id="rt-sugars">0g</span>
+                                <span class="label">Sugars</span>
+                            </div>
+                            <div class="nutrition-value-xxs" style="background-color: #198754;">
+                                <span class="value" id="rt-fiber">0g</span>
+                                <span class="label">Fiber</span>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center small">
+                            <span>Equivalent Grams: </span>
+                            <strong id="rt-grams">0g</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Left: Food Log -->
+        <div class="col-md-6">
+            <div class="card bg-dark h-100 d-flex flex-column">
+                <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
+                    <h6>Food Log ({{ current_day }})</h6>
+                    <div>
+                        <select id="day-selector" class="form-select form-select-sm bg-dark text-light border-secondary">
+                            {% for day in days_of_week %}
+                            <option value="{{ day }}" {% if day == current_day %}selected{% endif %}>{{ day }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body p-0 flex-grow-1">
+                    <div id="food-log" class="list-group list-group-flush">
+                        {% for group, data in group_breakdown.items() %}
+                        <div class="food-group" data-group="{{ group }}">
+                            <div class="group-header bg-dark p-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="small">{{ group }}</span>
+                                    <span class="badge bg-secondary ms-2 small">{{ data.items|length }} items</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #0d6efd;">
+                                        <span class="value">{{ data.calories|round(1) }}</span>
+                                        <span class="label">kcal</span>
+                                    </div>
+                                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #ffc107; color: black;">
+                                        <span class="value">{{ data.proteins|round(1) }}g</span>
+                                        <span class="label">P</span>
+                                    </div>
+                                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #dc3545;">
+                                        <span class="value">{{ data.carbs|round(1) }}g</span>
+                                        <span class="label">C</span>
+                                    </div>
+                                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #6c757d;">
+                                        <span class="value">{{ data.fats|round(1) }}g</span>
+                                        <span class="label">F</span>
+                                    </div>
+                                    <button class="btn btn-sm toggle-group ms-1" style="background-color: #ff4444; color: black;">−</button>
+                                </div>
+                            </div>
+                            <ul class="group-items list-group list-group-flush">
+                                {% for item in data.items %}
+                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center py-1" data-index="{{ loop.index0 }}">
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <strong class="small">{{ item.name }}</strong>
+                                            </div>
+                                            <div class="text-muted x-small">
+                                                {{ item.units }} {{ item.unit_type }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex">
+                                        <span class="edit-grams badge bg-secondary me-1" style="cursor: pointer;" data-index="{{ loop.index0 }}">
+                                            {{ item.grams|round(1) }}g
+                                        </span>
+                                        <button class="btn btn-sm delete-item" style="background-color: #ff4444; color: black;" data-index="{{ loop.index0 }}">X</button>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}
+                        <div class="list-group-item bg-dark text-light text-center text-muted py-4 small">No food logged yet</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-black py-1 d-flex justify-content-between">
+                    <button id="move-day" class="btn btn-sm" style="background-color: #ff4444; color: black;">Move to Selected Day</button>
+                    <button id="clear-session" class="btn btn-sm" style="background-color: #ff4444; color: black;">Clear All</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Right: Nutrition Summary -->
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header bg-black text-light">
+                    <h6>Nutrition Summary</h6>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="nutrition-value-sm" style="background-color: #b1adac;color: black;">
+                            <span class="value">{{ totals.calories | round(1) }}</span>
+                            <span class="label">Calories</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center gap-1 mb-3">
+                        <div class="nutrition-value-xs" style="background-color: #6043a3; color: black;">
+                            <span class="value">{{ totals.proteins | round(1) }}g</span>
+                            <span class="label">Protein</span>
+                        </div>
+                        <div class="nutrition-value-xs" style="background-color: #6043a3;color: black;">
+                            <span class="value">{{ totals.carbs | round(1) }}g</span>
+                            <span class="label">Carbs</span>
+                        </div>
+                        <div class="nutrition-value-xs" style="background-color: #6043a3;color: black;">
+                            <span class="value">{{ totals.fats | round(1) }}g</span>
+                            <span class="label">Fats</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center gap-1">
+                        <div class="nutrition-value-xxs" style="background-color: #c533b9;color: black;">
+                            <span class="value">{{ totals.sugars | round(1) }}g</span>
+                            <span class="label">Sugars</span>
+                        </div>
+                        <div class="nutrition-value-xxs" style="background-color: #c533b9;color: black;">
+                            <span class="value">{{ totals.fiber | round(1) }}g</span>
+                            <span class="label">Fiber</span>
+                        </div>
+                        <div class="nutrition-value-xxs" style="background-color: #c533b9;color: black;">
+                            <span class="value">{{ totals.salt | round(1) }}g</span>
+                            <span class="label">Salt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Grams Modal -->
+<div class="modal fade" id="editGramsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header bg-black">
+                <h5 class="modal-title">Edit Grams</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Grams</label>
+                    <input type="number" id="edit-grams-input" class="form-control bg-secondary text-light" min="0" step="0.1">
+                </div>
+                <input type="hidden" id="edit-grams-index">
+            </div>
+            <div class="modal-footer bg-black">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #ff4444; color: black;">Cancel</button>
+                <button type="button" id="save-grams" class="btn" style="background-color: #ff4444; color: black;">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        let currentFood = null;
+        const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
+        const DAYS = {{ days_of_week | tojson }};
+        const CURRENT_DAY = "{{ current_day }}";
+        
+        // Food search functionality
+        $('#food-search').on('input', function() {
+            const query = $(this).val().trim();
+            if (query.length < 2) {
+                $('#search-results').empty();
+                return;
+            }
+            
+            $.post('/search_foods', { query: query }, function(data) {
+                let resultsHtml = '';
+                if (data.length > 0) {
+                    resultsHtml = '<div class="list-group">';
+                    data.forEach(food => {
+                        resultsHtml += `
+                            <a class="list-group-item list-group-item-action food-item small text-start" 
+                               data-id="${food.id}" 
+                               data-serving="${food.serving_size || ''}"
+                               data-half="${food.half_size || ''}"
+                               data-entire="${food.entire_size || ''}">
+                                ${food.name} - ${food.calories} cal
+                            </a>
+                        `;
+                    });
+                    resultsHtml += '</div>';
+                } else {
+                    resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                }
+                $('#search-results').html(resultsHtml);
+            });
+        });
+
+        // Clear search functionality
+        $('#clear-search').click(function() {
+            $('#food-search').val('');
+            $('#search-results').empty();
+            $('#food-details').addClass('d-none');
+            currentFood = null;
+        });
+
+        // Unit type buttons
+        $('.unit-type-btn').click(function() {
+            $('.unit-type-btn').removeClass('active');
+            $(this).addClass('active');
+            const unitType = $(this).data('unit-type');
+            
+            if (unitType === 'grams') {
+                $('#units').val(100);
+            } else {
+                $('#units').val(1);
+            }
+            
+            if (currentFood) {
+                updateRealTimeBreakdown(currentFood);
+            }
+        });
+
+        // Food selection
+        $(document).on('click', '.food-item', function() {
+            const foodId = $(this).data('id');
+            const servingSize = $(this).data('serving');
+            const halfSize = $(this).data('half');
+            const entireSize = $(this).data('entire');
+            
+            $('#food-search').val($(this).text().split(' - ')[0]);
+            $('#search-results').empty();
+            
+            $.post('/get_food_details', { 
+                food_id: foodId,
+                unit_type: 'grams',
+                units: 100
+            }, function(data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Store current food
+                currentFood = data;
+                currentFood.serving_size = servingSize;
+                currentFood.half_size = halfSize;
+                currentFood.entire_size = entireSize;
+                
+                // Show food details section
+                $('#food-details').removeClass('d-none');
+                $('#units').val(100);
+                $('.unit-type-btn').removeClass('active');
+                $('.unit-type-btn[data-unit-type="grams"]').addClass('active');
+                $('#add-food').data('id', foodId);
+                
+                // Update real-time breakdown
+                updateRealTimeBreakdown(data);
+            });
+        });
+
+        // Update real-time breakdown when units change
+        $('#units').on('change input', function() {
+            if (!currentFood) return;
+            updateRealTimeBreakdown(currentFood);
+        });
+
+        // Add food to log
+        $('#add-food').click(function() {
+            const foodId = $(this).data('id');
+            const units = $('#units').val();
+            const unitType = $('.unit-type-btn.active').data('unit-type');
+            const mealGroup = $('#meal-group').val();
+            
+            $.post('/log_food', {
+                food_id: foodId,
+                unit_type: unitType,
+                units: units,
+                meal_group: mealGroup
+            }, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                resetFoodForm();
+            });
+        });
+
+        // Toggle food group
+        $(document).on('click', '.toggle-group', function() {
+            const groupHeader = $(this).closest('.group-header');
+            const groupItems = groupHeader.next('.group-items');
+            const isExpanded = groupItems.is(':visible');
+            
+            if (isExpanded) {
+                groupItems.hide();
+                $(this).text('+');
+            } else {
+                groupItems.show();
+                $(this).text('−');
+            }
+        });
+
+        // Edit grams
+        $(document).on('click', '.edit-grams', function() {
+            const index = $(this).data('index');
+            const grams = $(this).text().replace('g', '');
+            $('#edit-grams-index').val(index);
+            $('#edit-grams-input').val(grams);
+            editGramsModal.show();
+        });
+
+        // Save grams
+        $('#save-grams').click(function() {
+            const index = $('#edit-grams-index').val();
+            const newGrams = $('#edit-grams-input').val();
+            
+            if (parseFloat(newGrams) === 0) {
+                // Delete item
+                $.post('/delete_item', { item_index: index }, function(response) {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    editGramsModal.hide();
+                });
+            } else {
+                // Update grams
+                $.post('/update_grams', {
+                    item_index: index,
+                    new_grams: newGrams
+                }, function(response) {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    editGramsModal.hide();
+                });
+            }
+        });
+
+        // Delete food item
+        $(document).on('click', '.delete-item', function(e) {
+            e.stopPropagation();
+            const index = $(this).data('index');
+            $.post('/delete_item', { item_index: index }, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+            });
+        });
+
+        // Clear session
+        $('#clear-session').click(function() {
+            if (!confirm('Are you sure you want to clear all items?')) return;
+            
+            $.post('/clear_session', {}, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+            });
+        });
+
+        // Change day
+        $('#day-selector').change(function() {
+            const day = $(this).val();
+            $.post('/update_session', { day: day }, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+            });
+        });
+
+        // Move session to another day
+        $('#move-day').click(function() {
+            const targetDay = $('#day-selector').val();
+            if (targetDay === CURRENT_DAY) {
+                alert('Select a different day');
+                return;
+            }
+            
+            if (!confirm(`Move all items to ${targetDay}?`)) return;
+            
+            $.post('/move_to_day', {
+                source_day: CURRENT_DAY,
+                target_day: targetDay
+            }, function() {
+                alert(`Session moved to ${targetDay}`);
+                // Refresh current session
+                $.post('/update_session', { day: CURRENT_DAY }, function(response) {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                });
+            });
+        });
+
+        // Helper functions
+        function updateRealTimeBreakdown(data) {
+            if (!data || !data.calories) {
+                $('#rt-breakdown').addClass('d-none');
+                $('#rt-breakdown-placeholder').removeClass('d-none');
+                return;
+            }
+            
+            const units = parseFloat($('#units').val()) || 0;
+            const unitType = $('.unit-type-btn.active').data('unit-type');
+            
+            // Calculate equivalent grams
+            let grams = units;
+            if (unitType === 'serving' && data.serving_size) {
+                grams = units * data.serving_size;
+            } else if (unitType === 'half' && data.half_size) {
+                grams = units * data.half_size;
+            } else if (unitType === 'entire' && data.entire_size) {
+                grams = units * data.entire_size;
+            }
+            
+            // Calculate nutrition based on grams
+            const factor = grams / 100;
+            const calories = data.calories * factor;
+            const proteins = data.proteins * factor;
+            const carbs = data.carbs * factor;
+            const fats = data.fats * factor;
+            const sugars = data.sugars * factor;
+            const fiber = data.fiber * factor;
+            
+            $('#rt-breakdown-placeholder').addClass('d-none');
+            $('#rt-breakdown').removeClass('d-none');
+            
+            $('#rt-calories').text(calories.toFixed(1));
+            $('#rt-proteins').text(proteins.toFixed(1) + 'g');
+            $('#rt-carbs').text(carbs.toFixed(1) + 'g');
+            $('#rt-fats').text(fats.toFixed(1) + 'g');
+            $('#rt-sugars').text(sugars.toFixed(1) + 'g');
+            $('#rt-fiber').text(fiber.toFixed(1) + 'g');
+            $('#rt-grams').text(grams.toFixed(1) + 'g');
+        }
+        
+        function updateSessionDisplay(session, totals, breakdown) {
+            // Update food log with grouped items
+            let logHtml = '';
+            
+            for (const group in breakdown) {
+                const groupData = breakdown[group];
+                logHtml += `
+                    <div class="food-group" data-group="${group}">
+                        <div class="group-header bg-dark p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="small">${group}</span>
+                                <span class="badge bg-secondary ms-2 small">${groupData.items.length} items</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #0d6efd;">
+                                    <span class="value">${groupData.calories.toFixed(1)}</span>
+                                    <span class="label">kcal</span>
+                                </div>
+                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #ffc107; color: black;">
+                                    <span class="value">${groupData.proteins.toFixed(1)}g</span>
+                                    <span class="label">P</span>
+                                </div>
+                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #dc3545;">
+                                    <span class="value">${groupData.carbs.toFixed(1)}g</span>
+                                    <span class="label">C</span>
+                                </div>
+                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #6c757d;">
+                                    <span class="value">${groupData.fats.toFixed(1)}g</span>
+                                    <span class="label">F</span>
+                                </div>
+                                <button class="btn btn-sm toggle-group ms-1" style="background-color: #ff4444; color: black;">−</button>
+                            </div>
+                        </div>
+                        <ul class="group-items list-group list-group-flush">
+                `;
+                
+                groupData.items.forEach((item, index) => {
+                    logHtml += `
+                        <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center py-1" data-index="${index}">
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center">
+                                        <strong class="small">${item.name}</strong>
+                                    </div>
+                                    <div class="text-muted x-small">
+                                        ${item.units} ${item.unit_type}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex">
+                                <span class="edit-grams badge bg-secondary me-1" style="cursor: pointer;" data-index="${index}">
+                                    ${item.grams.toFixed(1)}g
+                                </span>
+                                <button class="btn btn-sm delete-item" style="background-color: #ff4444; color: black;" data-index="${index}">X</button>
+                            </div>
+                        </li>
+                    `;
+                });
+                
+                logHtml += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (logHtml === '') {
+                logHtml = '<div class="list-group-item bg-dark text-light text-center text-muted py-4 small">No food logged yet</div>';
+            }
+            
+            $('#food-log').html(logHtml);
+            
+            // Update nutrition summary
+            $('.nutrition-value-sm .value').eq(0).text(totals.calories.toFixed(1));
+            $('.nutrition-value-xs .value').eq(0).text(totals.proteins.toFixed(1));
+            $('.nutrition-value-xs .value').eq(1).text(totals.carbs.toFixed(1));
+            $('.nutrition-value-xs .value').eq(2).text(totals.fats.toFixed(1));
+            $('.nutrition-value-xxs .value').eq(0).text(totals.sugars.toFixed(1));
+            $('.nutrition-value-xxs .value').eq(1).text(totals.fiber.toFixed(1));
+            $('.nutrition-value-xxs .value').eq(2).text(totals.salt.toFixed(1));
+        }
+        
+        function resetFoodForm() {
+            $('#food-search').val('');
+            $('#units').val('100');
+            $('.unit-type-btn').removeClass('active');
+            $('.unit-type-btn[data-unit-type="grams"]').addClass('active');
+            $('#food-details').addClass('d-none');
+            currentFood = null;
+            $('#rt-breakdown').addClass('d-none');
+            $('#rt-breakdown-placeholder').removeClass('d-none');
+        }
+    });
+</script>
+{% endblock %}

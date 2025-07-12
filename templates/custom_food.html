@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card bg-dark">
+            <div class="card-header bg-black">
+                <h6>Add Custom Food</h6>
+            </div>
+            <div class="card-body">
+                <form id="food-form">
+                    <!-- Row 1: Name -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <label class="form-label small">Food Name*</label>
+                            <input type="text" name="name" class="form-control form-control-sm bg-secondary text-light" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Carbs, Sugars, Fiber -->
+                    <div class="row mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Carbohydrates (g)*</label>
+                            <input type="number" name="carbs" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Sugars (g)</label>
+                            <input type="number" name="sugars" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" value="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Fiber (g)</label>
+                            <input type="number" name="fiber" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <!-- Row 3: Proteins -->
+                    <div class="row mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Proteins (g)*</label>
+                            <input type="number" name="proteins" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 4: Fats, Saturated Fats -->
+                    <div class="row mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Fats (g)*</label>
+                            <input type="number" name="fats" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Saturated Fats (g)</label>
+                            <input type="number" name="saturated" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <!-- Row 5: Salt -->
+                    <div class="row mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Salt (g)</label>
+                            <input type="number" name="salt" class="form-control form-control-sm bg-secondary text-light" step="0.01" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <!-- Row 6: Portion Sizes -->
+                    <div class="row mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Base (grams)*</label>
+                            <input type="number" name="grams" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0" value="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Serving Size (g)</label>
+                            <input type="number" name="serving" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Half Portion (g)</label>
+                            <input type="number" name="half" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Entire Portion (g)</label>
+                            <input type="number" name="entire" class="form-control form-control-sm bg-secondary text-light" step="0.1" min="0">
+                        </div>
+                    </div>
+                    
+                    <!-- Row 7: Barcode -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">EAN/Barcode (optional)</label>
+                            <input type="text" name="ean" class="form-control form-control-sm bg-secondary text-light">
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success d-none small" id="success-message">
+                        Food added successfully!
+                    </div>
+                    
+                    <button type="submit" class="btn btn-sm w-100" style="background-color: #ff4444; color: black;">Save Food</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#food-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            $.ajax({
+                type: 'POST',
+                url: '/save_food',
+                data: $(this).serialize(),
+                success: function() {
+                    $('#success-message').removeClass('d-none');
+                    setTimeout(() => $('#success-message').addClass('d-none'), 3000);
+                    $('#food-form')[0].reset();
+                },
+                error: function() {
+                    alert('Error saving food');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
