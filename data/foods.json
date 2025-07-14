@@ -2878,5 +2878,21 @@
     "entire": 225.0,
     "serving": null,
     "ean": "8851876001507"
+  },
+  "megaforce energiajuoma": {
+    "name": "Megaforce energiajuoma",
+    "carbs": 10.7,
+    "sugars": 10.7,
+    "fiber": 0.0,
+    "proteins": 0.0,
+    "fats": 0.0,
+    "saturated": 0.0,
+    "salt": 0.16,
+    "calories": 42.8,
+    "grams": 100.0,
+    "half": null,
+    "entire": null,
+    "serving": 500.0,
+    "ean": "8711900010311"
   }
 }
