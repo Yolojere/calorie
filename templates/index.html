@@ -11,32 +11,34 @@
         body {
             font-family: 'Calibri', sans-serif;
             font-size: 15px;
+            background-color: #1a1a1a;
+            padding-right: 120px; /* Make space for nutrition grid */
         }
         .container-main {
             display: grid;
-            grid-template-columns: 940px 440px;
-            grid-template-rows: 600px 600px;
+            grid-template-columns: 1180px; /* Single column now */
+            grid-template-rows: 600px 630px;
             gap: 0;
             margin: 0 auto;
-            width: 1380px; /* 940 + 440 = 1380 */
+            width: 1180px;
         }
         .grid-panel {
-            border: 1px solid #444;
+            border: 1px solid #2b2b2b;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
         .top-panel {
-            grid-column: 1 / span 2; /* Span both columns */
+            grid-column: 1;
         }
         .card {
             border: none;
             border-radius: 0;
-            height极 100%;
+            height: 100%;
         }
         .card-header {
-            padding: 12px 15px;
-            font-size: 22px;
+            padding: 14px 15px;
+            font-size: 26px;
         }
         .card-body {
             padding: 15px;
@@ -44,15 +46,20 @@
             flex: 1;
         }
         .nutrition-value-xxs { 
-            min-width: 65px; 
-            padding: 6px 10px; 
-            font-size: 15px; 
+            min-width: 70px; 
+            padding: 5px 8px; 
+            font-size: 14px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30px;
         }
-        .nutrition-value-xxs .value { font-size: 17px; }
-        .nutrition-value-xxs .label { font-size: 17px; }
+        .nutrition-value-xxs span {
+            white-space: nowrap;
+        }
         .list-group-item { 
-            padding: 14px 18px !important; 
-            font-size: 17px;
+            padding: 8px 15px !important; 
+            font-size: 15px;
         }
         .form-control, .form-select { 
             padding: 8px 12px; 
@@ -69,27 +76,28 @@
             font-size: 16px; 
         }
         .calorie-badge { 
-            font-size: 14px; 
+            font-size: 16px; 
             padding: 7px 11px; 
         }
         .food-item {
-            font-size: 20px;
-            padding: 12px 18px;
+            font-size: 16px;
+            padding: 8px 15px;
         }
         .portion-btn {
-            font-size: 16px;
+            font-size: 18px;
             padding: 8px 12px;
         }
         .group-header {
-            padding: 16px 18px !important;
-            font-size: 18px;
+            padding: 10px 15px !important;
+            font-size: 16px;
         }
         .edit-grams, .delete-item {
-            font-size: 17px;
-            padding: 10px 15px !important;
+            font-size: 14px;
+            padding: 4px 8px !important;
+            height: 30px;
         }
         .delete-item {
-            font-size: 18px !important;
+            font-size: 14px !important;
         }
         .modal-title {
             font-size: 20px;
@@ -101,30 +109,26 @@
         .modal-content {
             width: 600px;
         }
-        .nutrition-summary .value {
-            font-size: 24px;
-        }
-        .nutrition-summary .label {
-            font-size: 18px;
-        }
         #food-log {
-            font-size: 16px;
+            font-size: 14px;
         }
         #rt-breakdown-container {
             margin: 15px 0;
             padding: 15px;
             border: 1px solid #444;
-            border-radius: 8px;
-            background-color: #2a2a2a;
+            border-radius: 4px;
+            background-color: #000000;
+            height: 80px;
+            width: 980px;
         }
         .totals-label {
-            font-size: 20px;
+            font-size: 35px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 15px;
         }
         #search-results {
-            max-height: 300px;
+            max-height: 450px;
             overflow-y: auto;
         }
         
@@ -141,52 +145,162 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 8px 0;
+            padding: 4px 0;
             display: block;
         }
         
         .nutrition-values-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 0px;
         }
         
         .toggle-group {
-            padding: 8px 12px !important;
-            font-size: 18px !important;
+            padding: 4px 8px !important;
+            font-size: 16px !important;
             margin-left: 10px !important;
             flex-shrink: 0;
+            height: 30px;
         }
         
         /* Consistent button sizes */
         .edit-grams {
-            min-width: 80px;
+            min-width: 70px;
             text-align: center;
+            background-color: #ffffff;
+            color: #000000;
+            margin-left: 15px;
         }
         
         .delete-item {
-            min-width: 50px;
+            min-width: 30px;
+            height: 30px;
+        }
+        
+        /* NEW: Nutrition Grid Container */
+        .nutrition-grid-container {
+            position: absolute;
+            left: 70.7%;
+            top: 50%; /* Adjust based on navbar height */
+            width: 100px;
+            height: 930px;
+            z-index: 100;
+        }
+        
+        /* Nutrition grid styles */
+        .nutrition-grid {
+            display: grid;
+            grid-template-rows: repeat(8, 1fr);
+            height: 100%;
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #2b2b2b;
+        }
+        
+        .grid-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1px;
+            font-size: 15px;
+            text-align: center;
+            border: 1px solid #2b2b2b;
+        }
+        
+        .grid-value {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 2px;
+        }
+        
+        /* Style adjustments for each cell */
+        .grid-cell:nth-child(1) {
+            background-color: #b61336;
+            color: #fffefe;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        
+        .grid-cell:nth-child(2) {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .grid-cell:nth-child(3) {
+            background-color: #b61336;
+            color: #000000;
+        }
+        
+        .grid-cell:nth-child(4) {
+            background-color: #b61336;
+            color: #000000;
+        }
+        
+        .grid-cell:nth-child(5) {
+            background-color: #b61336;
+            color: #000000;
+        }
+        
+        .grid-cell:nth-child(6) {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .grid-cell:nth-child(7) {
+            background-color: #ffffff;
+            color: #0e0e0e;
+        }
+        
+        .grid-cell:nth-child(8) {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        /* NEW: Food item alignment */
+        .food-item-container {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        
+        .nutrition-and-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Alignment for group header nutrition */
+        .group-nutrition-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-grow: 1;
+        }
+        
+        .group-nutrition {
+            display: flex;
+            margin-right: 10px;
         }
     </style>
 </head>
 <body class="bg-secondary">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-             <a class="navbar-brand" href="/" style="font-size: 22px;">Track You</a>
-            <a class="navbar-brand" href="/" style="font-size: 15px;">- Track, eat, repeat - </a>
+             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336; ">- Track, eat, repeat - </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/" style="font-size: 18px;">Today</a>
+                        <a class="nav-link" href="/" style="font-size: 20px;color: #b61336; ">Today</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/custom_food" style="font-size: 18px;">Add Food</a>
+                        <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/history" style="font-size: 18px;">History</a>
+                        <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336; ">History</a>
                     </li>
                 </ul>
             </div>
@@ -206,6 +320,27 @@
                         <button id="clear-search" class="btn btn-outline-secondary" type="button">X</button>
                     </div>
                     <div id="search-results" class="mt-3"></div>
+                    <!-- Real-time Breakdown -->
+                        <div id="rt-breakdown-container" class="d-none">
+                            <div class="d-flex justify-content-center gap-1 mb-2">
+                                <div class="nutrition-value-xxs" style="background-color: #ffffff; color: black;">
+                                    <span id="rt-calories">0</span>
+                                </div>
+                                <div class="nutrition-value-xxs" style="background-color: #b61336; color: black;">
+                                    <span id="rt-proteins">0g</span>
+                                </div>
+                                <div class="nutrition-value-xxs" style="background-color: #b61336;color: black;">
+                                    <span id="rt-carbs">0g</span>
+                                </div>
+                                <div class="nutrition-value-xxs" style="background-color: #b61336;color: black;">
+                                    <span id="rt-fats">0g</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-center" style="font-size: 18px;">
+                                <span>Equivalent Grams: </span>
+                                <strong id="rt-grams" style="font-size: 20px;">0g</strong>
+                            </div>
+                        </div>
                     
                     <div id="food-details" class="d-none mt-3">
                         <div class="mb-3">
@@ -215,36 +350,12 @@
                         
                         <div class="mb-3">
                             <label class="form-label">Portion Type</label>
-                            <div class="d-flex gap-2" id="portion-buttons">
+                            <div class="d-flex gap-1" id="portion-buttons">
                                 <!-- Buttons will be added dynamically -->
                             </div>
                         </div>
                         
-                        <!-- Real-time Breakdown -->
-                        <div id="rt-breakdown-container" class="d-none">
-                            <div class="d-flex justify-content-center gap-3 mb-4">
-                                <div class="nutrition-value-xxs" style="background-color: #9b9b9b;">
-                                    <span class="value" id="rt-calories">0</span>
-                                    <span class="label">Calories</span>
-                                </div>
-                                <div class="nutrition-value-xxs" style="background-color: #b61336; color: black;">
-                                    <span class="value" id="rt-proteins">0g</span>
-                                    <span class="label">Protein</span>
-                                </div>
-                                <div class="nutrition-value-xxs" style="background-color: #b61336;color: black;">
-                                    <span class="value" id="rt-carbs">0g</span>
-                                    <span class="label">Carbs</span>
-                                </div>
-                                <div class="nutrition-value-xxs" style="background-color: #b61336;color: black;">
-                                    <span class="value" id="rt-fats">0g</span>
-                                    <span class="label">Fats</span>
-                                </div>
-                            </div>
-                            <div class="mt-3 text-center" style="font-size: 18px;">
-                                <span>Equivalent Grams: </span>
-                                <strong id="rt-grams" style="font-size: 20px;">0g</strong>
-                            </div>
-                        </div>
+                        
                         
                         <div class="mb-3">
                             <label class="form-label">Meal Group</label>
@@ -263,8 +374,8 @@
             </div>
         </div>
         
-        <!-- Bottom Left: Food Log -->
-        <div class="grid-panel">
+        <!-- Bottom: Food Log -->
+        <div class="grid-panel" style="grid-column: 1; grid-row: 2; width: 1180px;">
             <div class="card bg-dark h-100 d-flex flex-column">
                 <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
                     <h6>Food Log ({{ current_date_formatted }})</h6>
@@ -285,23 +396,19 @@
                                     <div>
                                         <span class="group-title">-- {{ group | upper }} --</span>
                                     </div>
-                                    <div class="d-flex align-items-center">
-                                        <div class="nutrition-values-container d-flex">
-                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #88909c;color: black;">
-                                                <span class="value">{{ group_data['calories']|round(1) }}</span>
-                                                <span class="label">kcal</span>
+                                    <div class="group-nutrition-container">
+                                        <div class="group-nutrition">
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #ffffff;color: black;">
+                                                <span>{{ group_data['calories']|round(1) }} kcal</span>
                                             </div>
                                             <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                                                <span class="value">{{ group_data['proteins']|round(1) }}g</span>
-                                                <span class="label">P</span>
+                                                <span>{{ group_data['proteins']|round(1) }}g P</span>
                                             </div>
                                             <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                                                <span class="value">{{ group_data['carbs']|round(1) }}g</span>
-                                                <span class="label">C</span>
+                                                <span>{{ group_data['carbs']|round(1) }}g C</span>
                                             </div>
                                             <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                                                <span class="value">{{ group_data['fats']|round(1) }}g</span>
-                                                <span class="label">F</span>
+                                                <span>{{ group_data['fats']|round(1) }}g F</span>
                                             </div>
                                         </div>
                                         <button class="btn btn-sm toggle-group ms-1" style="background-color: #b61336; color: black; padding: 6px 10px; font-size: 18px;">−</button>
@@ -310,34 +417,32 @@
                                 <ul class="group-items list-group list-group-flush">
                                     {% for item in group_data['items'] %}
                                     <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="{{ loop.index0 }}">
-                                        <div class="d-flex align-items-center">
+                                        <div class="food-item-container">
                                             <div>
                                                 <div class="d-flex align-items-center">
                                                     <strong>{{ item.name }}</strong>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="d-flex">
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #88909c;color: black;">
-                                                <span class="value">{{ item.calories|round(1) }}</span>
-                                                <span class="label">kcal</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                                <span class="value">{{ item.proteins|round(1) }}</span>
-                                                <span class="label">P</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                <span class="value">{{ item.carbs|round(1) }}</span>
-                                                <span class="label">C</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                <span class="value">{{ item.fats|round(1) }}</span>
-                                                <span class="label">F</span>
-                                            </div>
-                                            <span class="edit-grams badge bg-secondary mx-1" style="cursor: pointer; color: black; padding: 8px 12px;" data-index="{{ loop.index0 }}">
+                                            <span class="edit-grams badge mx-1" style="cursor: pointer;background-color: #ffffff; color: rgb(0, 0, 0); padding: 4px 8px;" data-index="{{ loop.index0 }}">
                                                 {{ item.grams|round(1) }}g
                                             </span>
-                                            <button class="btn delete-item" style="background-color: #ff4444; color: black; padding: 6px 10px;" data-index="{{ loop.index0 }}">X</button>
+                                        </div>
+                                        <div class="nutrition-and-actions">
+                                            <div class="nutrition-values-container d-flex">
+                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #ffffff;color: black;">
+                                                    <span>{{ item.calories|round(1) }} kcal</span>
+                                                </div>
+                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
+                                                    <span>{{ item.proteins|round(1) }}g P</span>
+                                                </div>
+                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                    <span>{{ item.carbs|round(1) }}g C</span>
+                                                </div>
+                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                    <span>{{ item.fats|round(1) }}g F</span>
+                                                </div>
+                                            </div>
+                                            <button class="btn delete-item" style="background-color: #ff4444; color: black; padding: 4px 8px;" data-index="{{ loop.index0 }}">X</button>
                                         </div>
                                     </li>
                                     {% endfor %}
@@ -358,54 +463,39 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Bottom Right: Nutrition Summary -->
-        <div class="grid-panel">
-            <div class="card bg-dark h-100">
-                <div class="card-header bg-black text-light">
-                    <h6>Nutrition Summary</h6>
-                </div>
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <!-- Added "Totals for session" text -->
-                    <div class="totals-label mb-3">
-                        Totals for session
-                    </div>
-                    
-                    <div class="d-flex justify-content-center mb-4">
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #b1adac;color: black; min-width: 120px; padding: 15px;">
-                            <span class="value">{{ totals.calories | round(1) }}</span>
-                            <span class="label">Calories</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-center gap-3 mb-4">
-                        <div class="nutrition-value-极xs nutrition-summary" style="background-color: #6043a3; color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.proteins | round(1) }}g</span>
-                            <span class="label">Protein</span>
-                        </div>
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #6043a3;color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.carbs | round(1) }}g</span>
-                            <span class="label">Carbs</span>
-                        </div>
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #6043a3;color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.fats | round(1) }}g</span>
-                            <span class="label">Fats</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-center gap-3">
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #c533b9;color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.sugars | round(1) }}g</span>
-                            <span class="label">Sugars</span>
-                        </div>
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #c533b9;color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.fiber | round(1) }}g</span>
-                            <span class="label">Fiber</span>
-                        </div>
-                        <div class="nutrition-value-xxs nutrition-summary" style="background-color: #c533b9;color: black; min-width: 100px; padding: 12px;">
-                            <span class="value">{{ totals.salt | round(1) }}g</span>
-                            <span class="label">Salt</span>
-                        </div>
-                    </div>
-                </div>
+    </div>
+    
+    <!-- NEW: Independent Nutrition Grid -->
+    <div class="nutrition-grid-container">
+        <div class="nutrition-grid">
+            <div class="grid-cell">Totals</div>
+            <div class="grid-cell">
+                Calories
+                <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
+            </div>
+            <div class="grid-cell">
+                Proteins
+                <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Carbs
+                <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Fats
+                <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Sugars
+                <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Fiber
+                <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Salt
+                <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
             </div>
         </div>
     </div>
@@ -439,7 +529,7 @@
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black py-1">
                     <h5 class="modal-title">Copy Session</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -504,6 +594,18 @@
             const moveItemModal = new bootstrap.Modal(document.getElementById('moveItemModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
+            
+            // Position nutrition grid below navbar
+            function positionNutritionGrid() {
+                const navbarHeight = $('.navbar').outerHeight();
+                $('.nutrition-grid-container').css('top', navbarHeight + 20);
+            }
+            
+            // Initial positioning
+            positionNutritionGrid();
+            
+            // Re-position on resize
+            $(window).resize(positionNutritionGrid);
             
             // Load top 10 foods on page load
             loadTopFoods();
@@ -933,21 +1035,17 @@
             // Helper function to generate nutrition values for group header
             function generateNutritionValues(groupData) {
                 return `
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #88909c;color: black;">
-                        <span class="value">${groupData['calories'].toFixed(1)}</span>
-                        <span class="label">kcal</span>
+                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #ffffff;color: black;">
+                        <span>${groupData['calories'].toFixed(1)} kcal</span>
                     </div>
                     <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                        <span class="value">${groupData['proteins'].toFixed(1)}g</span>
-                        <span class="label">P</span>
+                        <span>${groupData['proteins'].toFixed(1)}g P</span>
                     </div>
                     <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span class="value">${groupData['carbs'].toFixed(1)}g</span>
-                        <span class="label">C</span>
+                        <span>${groupData['carbs'].toFixed(1)}g C</span>
                     </div>
                     <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span class="value">${groupData['fats'].toFixed(1)}g</span>
-                        <span class="label">F</span>
+                        <span>${groupData['fats'].toFixed(1)}g F</span>
                     </div>
                 `;
             }
@@ -966,8 +1064,8 @@
                                     <div>
                                         <span class="group-title">-- ${group.toUpperCase()} --</span>
                                     </div>
-                                    <div class="d-flex align-items-center">
-                                        <div class="nutrition-values-container d-flex">
+                                    <div class="group-nutrition-container">
+                                        <div class="group-nutrition">
                                             ${generateNutritionValues(groupData)}
                                         </div>
                                         <button class="btn btn-sm toggle-group ms-1" style="background-color: #b61336; color: black;">−</button>
@@ -979,33 +1077,31 @@
                         groupData['items'].forEach((item, index) => {
                             logHtml += `
                                 <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="${index}">
-                                    <div class="d-flex align-items-center">
+                                    <div class="food-item-container">
                                         <div>
                                             <div class="d-flex align-items-center">
                                                 <strong>${item.name}</strong>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="d-flex">
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #88909c;color: black;">
-                                            <span class="value">${item.calories.toFixed(1)}</span>
-                                            <span class="label">kcal</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                            <span class="value">${item.proteins.toFixed(1)}</span>
-                                            <span class="label">P</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span class="value">${item.carbs.toFixed(1)}</span>
-                                            <span class="label">C</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span class="value">${item.fats.toFixed(1)}</span>
-                                            <span class="label">F</span>
-                                        </div>
-                                        <span class="edit-grams badge bg-secondary mx-1" style="cursor: pointer; color: black;" data-index="${index}">
+                                        <span class="edit-grams badge mx-1" style="cursor: pointer; background-color: #ffffff; color: black;" data-index="${index}">
                                             ${item.grams.toFixed(1)}g
                                         </span>
+                                    </div>
+                                    <div class="nutrition-and-actions">
+                                        <div class="nutrition-values-container d-flex">
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #ffffff;color: black;">
+                                                <span>${item.calories.toFixed(1)} kcal</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
+                                                <span>${item.proteins.toFixed(1)}g P</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.carbs.toFixed(1)}g C</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.fats.toFixed(1)}g F</span>
+                                            </div>
+                                        </div>
                                         <button class="btn delete-item" style="background-color: #ff4444; color: black;" data-index="${index}">X</button>
                                     </div>
                                 </li>
@@ -1020,19 +1116,19 @@
                 }
                 
                 if (logHtml === '') {
-                    logHtml = '<div class="list-group-item bg-dark text-light text-center text-muted py-4 small">No food logged yet</div>';
+                    logHtml = '<div class="list-group-item bg-dark text-light text-center text-muted py-4" style="font-size: 16px;">No food logged yet</div>';
                 }
                 
                 $('#food-log').html(logHtml);
                 
-                // Update nutrition summary
-                $('.nutrition-value-sm .value').eq(0).text(totals.calories.toFixed(1));
-                $('.nutrition-value-xs .value').eq(0).text(totals.proteins.toFixed(1));
-                $('.nutrition-value-xs .value').eq(1).text(totals.carbs.toFixed(1));
-                $('.nutrition-value-xs .value').eq(2).text(totals.fats.toFixed(1));
-                $('.nutrition-value-xxs .value').eq(0).text(totals.sugars.toFixed(1));
-                $('.nutrition-value-xxs .value').eq(1).text(totals.fiber.toFixed(1));
-                $('.nutrition-value-xxs .value').eq(2).text(totals.salt.toFixed(1));
+                // Update nutrition grid
+                $('#grid-calories').text(totals.calories.toFixed(1));
+                $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
+                $('#grid-carbs').text(totals.carbs.toFixed(1) + 'g');
+                $('#grid-fats').text(totals.fats.toFixed(1) + 'g');
+                $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
+                $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
+                $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
             }
             
             function resetFoodForm() {
