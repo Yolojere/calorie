@@ -43,9 +43,40 @@
         .nutrition-row {
             margin-bottom: 20px;
         }
-        .nutrition-row .col-md-4, .nutrition-row .col-md-6 {
+        .nutrition-row .col-md-4, .nutrition极 .col-md-6 {
             padding-right: 10px;
             padding-left: 10px;
+        }
+        
+        /* Animation for success */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .alert-success {
+            animation: pulse 0.5s;
+        }
+        
+        /* Success celebration animation */
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+        
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: #b61336;
+            z-index: 10000;
+            animation: celebrate 1.5s ease-out;
+            pointer-events: none;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
         }
     </style>
 </head>
@@ -54,7 +85,7 @@
         <div class="container">
             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
             <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336;">- Track, eat, repeat - </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs极arget="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -70,7 +101,7 @@
                     </li>
                 </ul>
             </div>
-        </极>
+        </div>
     </nav>
 
     <div class="container py-4">
@@ -102,7 +133,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Proteins (g)*</label>
-                                    <input type="number" name="proteins" class="form-control bg-secondary text-light" step="0.1" min="0" required>
+                                    <input type="number" name="proteins" class="form-control bg-secondary text-light" step="any" min="0" required>
                                 </div>
                             </div>
                             
@@ -110,11 +141,11 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Fats (g)*</label>
-                                    <input type="number" name="fats" class="form-control bg-secondary text-light" step="0.1" min="0" required>
+                                    <input type="number" name="fats" class="form-control bg-secondary text-light" step="any" min="0" required>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Saturated Fats (g)</label>
-                                    <input type="number" name="saturated" class="form-control bg-secondary text-light" step="0.1" min="0" value="0">
+                                    <input type="number" name="saturated" class="form-control bg-secondary text-light" step="any" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -122,15 +153,15 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Carbohydrates (g)*</label>
-                                    <input type="number" name="carbs" class="form-control bg-secondary text-light" step="0.1" min="0" required>
+                                    <input type="number" name="carbs" class="form-control bg-secondary text-light" step="any" min="0" required>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Sugars (g)</label>
-                                    <input type="number" name="sugars" class="form-control bg-secondary text-light" step="0.1" min="0" value="0">
+                                    <input type="number" name="sugars" class="form-control bg-secondary text-light" step="any" min="0" value="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Fiber (g)</label>
-                                    <input type="number" name="fiber" class="form-control bg-secondary text-light" step="0.1" min="0" value="0">
+                                    <input type="number" name="fiber" class="form-control bg-secondary text-light" step="any" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -138,7 +169,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Salt (g)</label>
-                                    <input type="number" name="salt" class="form-control bg-secondary text-light" step="0.01" min="0" value="0">
+                                    <input type="number" name="salt" class="form-control bg-secondary text-light" step="any" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -146,15 +177,15 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Serving Size (g)</label>
-                                    <input type="number" name="serving" class="form-control bg-secondary text-light" step="0.1" min="0">
+                                    <input type="number" name="serving" class="form-control bg-secondary text-light" step="any" min="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Half Portion (g)</label>
-                                    <input type="number" name="half" class="form-control bg-secondary text-light" step="0.1" min="0">
+                                    <input type="number" name="half" class="form-control bg-secondary text-light" step="any" min="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Entire Portion (g)</label>
-                                    <input type="number" name="entire" class="form-control bg-secondary text-light" step="0.1" min="0">
+                                    <input type="number" name="entire" class="form-control bg-secondary text-light" step="any" min="0">
                                 </div>
                             </div>
                             
@@ -162,7 +193,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Base (grams)*</label>
-                                    <input type="number" name="grams" class="form-control bg-secondary text-light" step="0.1" min="0" value="100" required>
+                                    <input type="number" name="grams" class="form-control bg-secondary text-light" step="any" min="0" value="100" required>
                                 </div>
                             </div>
                             
@@ -237,10 +268,27 @@
                     url: '/save_food',
                     data: formData,
                     success: function() {
-                        $('#success-message').removeClass('d-none');
-                        setTimeout(() => $('#success-message').addClass('d-none'), 3000);
-                        $('#food-form')[0].reset();
-                        $('input[name="grams"]').val('100');
+                        // Create celebration animation
+                        const celebration = $('<div class="success-animation">✓</div>');
+                        $('body').append(celebration);
+                        
+                        // Remove after animation
+                        setTimeout(() => celebration.remove(), 1500);
+                        
+                        // Show success message with animation
+                        const successMessage = $('#success-message');
+                        successMessage.removeClass('d-none');
+                        
+                        // Add pulse animation to success message
+                        successMessage.css('animation', 'pulse 0.5s');
+                        setTimeout(() => successMessage.css('animation', ''), 500);
+                        
+                        // Reset form after delay
+                        setTimeout(() => {
+                            $('#food-form')[0].reset();
+                            $('input[name="grams"]').val('100');
+                            successMessage.addClass('d-none');
+                        }, 3000);
                     },
                     error: function(xhr) {
                         if (xhr.responseJSON && xhr.responseJSON.error) {
