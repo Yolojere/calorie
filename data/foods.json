@@ -2895,4 +2895,53 @@
     "serving": 500.0,
     "ean": "8711900010311"
   }
+"chiquita banaani": {
+    "name": "Chiquita banaani",
+    "carbs": 3.45,
+    "sugars": 0.0,
+    "fiber": 1.4,
+    "proteins": 0.56,
+    "fats": 0.3,
+    "saturated": 0.0363,
+    "salt": 0.0055,
+    "calories": 18.74,
+    "grams": 100.0,
+    "half": null,
+    "entire": null,
+    "serving": 125.0,
+    "ean": "2000503600002"
+  },
+  "reilun kaupan banaani luomu": {
+    "name": "Reilun kaupan Banaani Luomu",
+    "carbs": 4.2,
+    "sugars": 0.0,
+    "fiber": 1.9,
+    "proteins": 0.9,
+    "fats": 0.4,
+    "saturated": 0.0635,
+    "salt": 0.0089,
+    "calories": 24.000000000000004,
+    "grams": 100.0,
+    "half": null,
+    "entire": null,
+    "serving": 125.0,
+    "ean": "2000503700009"
+  },
+  "tuorekset thai-kasvikset": {
+    "name": "Tuorekset Thai-kasvikset",
+    "carbs": 4.6,
+    "sugars": 0.0,
+    "fiber": 2.1,
+    "proteins": 1.4,
+    "fats": 0.22,
+    "saturated": 0.05,
+    "salt": 0.03,
+    "calories": 25.98,
+    "grams": 100.0,
+    "half": null,
+    "entire": null,
+    "serving": 200.0,
+    "ean": "6405412190013"
+  }
+}
 }
