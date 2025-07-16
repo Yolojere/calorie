@@ -117,17 +117,6 @@ body {
     font-size: 0.6rem;
 }
 
-/* Buttons */
-.btn {
-    background-color: #ff4444 !important;
-    color: black !important;
-    border: none;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 12px;
-}
 
 /* Search Results */
 #search-results {
@@ -266,12 +255,7 @@ body {
     border: 1px solid #555;
 }
 
-.btn {
-    background-color: #ff4444 !important;
-    color: black !important;
-    border: none;
-    font-weight: bold;
-}
+
 
 #search-results {
     border: 1px solid #444;
@@ -306,7 +290,11 @@ body {
 
 .list-group-item.selected {
     background-color: #444 !important;
-    border: 2px solid #ff4444 !important;
+    border: 2px solid #424242 !important;
+    box-shadow: 0 0 0 2px #636363, 0 0 10px rgba(53, 53, 53, 0.5) !important;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+    background-color: #2a2a2a !important;
 }
 
 .modal-content {
@@ -328,3 +316,4 @@ body {
 .modal-body {
     padding: 20px;
 }
+
