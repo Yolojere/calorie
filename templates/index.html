@@ -441,15 +441,23 @@
         <div class="grid-panel" style="grid-column: 1; grid-row: 2; width: 1180px;">
         <div class="card bg-dark h-100 d-flex flex-column">
             <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
                 <h6>Food Log ({{ current_date_formatted }})</h6>
-                <div>
-                    <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
-                        {% for date_str, formatted in dates %}
-                        <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
+                <!-- Toggle Grid Button -->
+        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #b61336; padding: 5px;">
+    <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
+         alt="Toggle Nutrition Grid" 
+         style="width: 24px; height: 24px; filter: invert(100%);">
+</button>
+    </div>
+    <div>
+        <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
+            {% for date_str, formatted in dates %}
+            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
             <div class="card-body p-0 d-flex flex-column">
                 <div id="food-log" class="flex-grow-1" style="overflow: auto;">
                     {% if group_breakdown %}
@@ -669,7 +677,7 @@
                 const containerWidth = container.width();
                 
                 // Calculate position: right of container + spacing
-                const gridLeft = containerOffset.left + containerWidth + 20;
+                const gridLeft = containerOffset.left + containerWidth + 10;
                 
                 $('.nutrition-grid-container').css({
                     'top': navbarHeight + 20,
@@ -702,9 +710,10 @@
                                    data-half="${food.half_size || ''}"
                                    data-entire="${food.entire_size || ''}">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span>${food.name}</span>
+                                        <span class="food-name">${food.name}</span>
                                         <span class="calorie-badge">${food.calories} cal/100g</span>
                                     </div>
+                                    
                                 </a>
                             `;
                         });
@@ -736,10 +745,12 @@
                                    data-serving="${food.serving_size || ''}"
                                    data-half="${food.half_size || ''}"
                                    data-entire="${food.entire_size || ''}">
+                                  
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span>${food.name}</span>
                                         <span class="calorie-badge">${food.calories} cal/100g</span>
                                     </div>
+                                    
                                 </a>
                             `;
                         });
@@ -767,7 +778,8 @@
                 const halfSize = $(this).data('half');
                 const entireSize = $(this).data('entire');
                 
-                $('#food-search').val($(this).find('span:first').text().trim());
+                
+                $('#food-search').val($(this).find('.food-name').text().trim());
                 $('#search-results').empty();
                 
                 $.post('/get_food_details', { 
@@ -1083,7 +1095,31 @@
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
                 });
             });
+// Nutrition grid toggle functionality
+let gridVisible = true;
 
+// Toggle button click handler
+$('#toggle-grid-btn').click(function() {
+    gridVisible = !gridVisible;
+    updateGridVisibility();
+});
+
+// Update grid visibility based on state
+function updateGridVisibility() {
+    if (gridVisible) {
+        $('.nutrition-grid-container').show();
+        $('#toggle-grid-btn').css('background-color', '#b61336');
+        $('#toggle-grid-btn img').css('filter', 'invert(100%)');
+    } else {
+        $('.nutrition-grid-container').hide();
+        $('#toggle-grid-btn').css('background-color', '#6c757d');
+        $('#toggle-grid-btn img').css('filter', 'invert(80%)');
+    }
+}
+
+// Initial positioning and visibility
+positionNutritionGrid();
+updateGridVisibility();
             // Enter key in modals
             $('#editGramsModal').on('keypress', function(e) {
                 if (e.which === 13) { // Enter key
