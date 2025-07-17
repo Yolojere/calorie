@@ -234,7 +234,8 @@ def search_foods():
             'serving_size': food.get('serving'),
             'half_size': food.get('half'),
             'entire_size': food.get('entire'),
-            'usage': usage
+            'usage': usage,
+            'ean': food.get('ean'),
         })
     
     # Sort by usage (desc) then name (asc)
@@ -248,7 +249,7 @@ def search_foods():
     # Otherwise filter by query
     results = []
     for food in all_foods:
-        if query in food['name'].lower():
+        if query in food['name'].lower() or (food['ean'] and query == str(food['ean']).strip()):
             results.append(food)
     
     return jsonify(results[:10])  # Return max 10 results
