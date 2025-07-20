@@ -1,0 +1,151 @@
+<!-- templates/history.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: 'Calibri', sans-serif;
+            font-size: 16px;
+        }
+        .history-container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .card-header {
+            font-size: 20px;
+            padding: 15px 20px;
+        }
+        .table th, .table td {
+            padding: 15px;
+            font-size: 16px;
+        }
+        .nav-tabs .nav-link {
+            font-size: 18px;
+            padding: 10px 20px;
+        }
+        .week-range {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-secondary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336;">- Track, eat, repeat - </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" style="font-size: 20px;color: #b61336;">Today</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff;">Add Food</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/history" style="font-size: 20px;color: #b61336;">History</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="history-container">
+        <div class="card bg-dark">
+            <div class="card-header bg-black text-light">
+                <h5 class="mb-0">Nutrition History</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="nav nav-tabs" id="historyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly" type="button" role="tab">Weekly</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- Daily History Tab -->
+                    <div class="tab-pane fade show active" id="daily" role="tabpanel">
+                        <table class="table table-dark table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Calories</th>
+                                    <th>Protein (g)</th>
+                                    <th>Carbs (g)</th>
+                                    <th>Fats (g)</th>
+                                    <th>Salt (g)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in history_data %}
+                                <tr>
+                                    <td>{{ entry.date }}</td>
+                                    <td>{{ entry.calories | round(1) }}</td>
+                                    <td>{{ entry.proteins | round(1) }}</td>
+                                    <td>{{ entry.carbs | round(1) }}</td>
+                                    <td>{{ entry.fats | round(1) }}</td>
+                                    <td>{{ entry.salt | round(1) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No daily data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Weekly History Tab -->
+                    <div class="tab-pane fade" id="weekly" role="tabpanel">
+                        <table class="table table-dark table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Week</th>
+                                    <th>Avg Calories</th>
+                                    <th>Avg Protein (g)</极>
+                                    <th>Avg Carbs (g)</th>
+                                    <th>Avg Fats (g)</th>
+                                    <th>Avg Salt (g)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week in weekly_data %}
+                                <tr>
+                                    <td>
+                                        <span class="week-range">{{ week.week }}</span><br>
+                                        <small>{{ week.start_date }} to {{ week.end_date }}</small>
+                                    </td>
+                                    <td>{{ week.avg_calories | round(1) }}</td>
+                                    <td>{{ week.avg_proteins | round(1) }}</td>
+                                    <td>{{ week.avg_carbs | round(1) }}</td>
+                                    <td>{{ week.avg_fats | round(1) }}</td>
+                                    <td>{{ week.avg_salt | round(1) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No weekly data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
