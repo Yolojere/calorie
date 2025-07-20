@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Replaced jsQR with QuaggaJS for barcode scanning -->
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <style>
         /* Base Styles */
@@ -668,7 +667,7 @@
             }
         }
         
-        /* QuaggaJS scanner styling */
+        /* Barcode scanner UI */
         #camera-preview {
             position: relative;
             width: 100%;
@@ -692,9 +691,10 @@
             top: 50%;
             left: 10%;
             width: 80%;
-            height: 2px;
+            height: 3px;
             background: #b61336;
             animation: scan 2s infinite linear;
+            box-shadow: 0 0 10px rgba(182, 19, 54, 0.7);
         }
         
         @keyframes scan {
@@ -705,12 +705,13 @@
         
         .scan-guide {
             position: absolute;
-            top: 20%;
-            left: 20%;
-            width: 60%;
-            height: 60%;
+            top: 25%;
+            left: 15%;
+            width: 70%;
+            height: 50%;
             border: 2px solid #b61336;
             border-radius: 8px;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7);
         }
         
         .scanning-text {
@@ -722,6 +723,32 @@
             color: #b61336;
             font-weight: bold;
             text-shadow: 0 0 3px rgba(0,0,0,0.5);
+            font-size: 18px;
+        }
+        
+        .scanned-result {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            font-size: 16px;
+        }
+        
+        .highlight-search {
+            box-shadow: 0 0 10px #b61336;
+            border: 2px solid #b61336;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px #b61336; }
+            50% { box-shadow: 0 0 20px #b61336; }
+            100% { box-shadow: 0 0 5px #b61336; }
         }
     </style>
 </head>
@@ -1091,34 +1118,40 @@
             </div>
         </div>
     </div>
-<!-- Camera modal with QuaggaJS integration -->
-<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content bg-dark">
-            <div class="modal-header bg-black">
-                <h5 class="modal-title">Scan Barcode</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body d-flex flex-column align-items-center justify-content-center">
-                <div id="camera-preview"></div>
-                <div id="scanner-overlay">
-                    <div class="scan-guide"></div>
-                    <div class="scan-line"></div>
-                    <div class="scanning-text">SCANNING...</div>
+    
+    <!-- Camera Modal -->
+    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark">
+                <div class="modal-header bg-black">
+                    <h5 class="modal-title">Scan EAN Barcode</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mt-3 text-center">
-                    <p class="text-light">Point your camera at a barcode</p>
-                    <button id="toggle-camera" class="btn btn-sm" style="background-color: #b61336; color: black;">
-                        Switch Camera
-                    </button>
+                <div class="modal-body d-flex flex-column align-items-center justify-content-center">
+                    <div id="camera-preview"></div>
+                    <div id="scanner-overlay">
+                        <div class="scan-guide"></div>
+                        <div class="scan-line"></div>
+                        <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
+                        <div id="scanned-result" class="scanned-result"></div>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <p class="text-light">Point your camera at an EAN barcode</p>
+                        <button id="toggle-camera" class="btn btn-sm me-2" style="background-color: #b61336; color: black;">
+                            <i class="fas fa-sync-alt"></i> Switch Camera
+                        </button>
+                        <button id="resume-scan" class="btn btn-sm" style="background-color: #b61336; color: black;">
+                            <i class="fas fa-redo"></i> Resume Scan
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-black">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-footer bg-black">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -1127,20 +1160,21 @@
             let currentFood = null;
             let selectedItems = [];
             const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
-            $('#editGramsModal').on('shown.bs.modal', function() {
-                $('#edit-grams-input').trigger('focus').trigger('select');
-            });
             const moveSessionModal = new bootstrap.Modal(document.getElementById('moveSessionModal'));
             const moveItemModal = new bootstrap.Modal(document.getElementById('moveItemModal'));
+            const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
-            const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             
             // Camera variables
-            let stream = null;
-            let currentCamera = 'environment'; // 'environment' for back camera, 'user' for front
+            let currentCamera = 'environment';
             let scanningActive = false;
-            let quaggaInitialized = false;
+            let lastScannedCode = null;
+            
+            // Admin mode variables
+            let isAdminMode = false;
+            const ADMIN_KEY_COMBO = ['i', 'd', 'd', 'q', 'd'];
+            let keySequence = [];
             
             // Position nutrition grid
             function positionNutritionGrid() {
@@ -1167,6 +1201,32 @@
             // Re-position on scroll to keep it fixed
             $(window).scroll(positionNutritionGrid);
             
+            // Konami code detection
+            $(document).keydown(function(e) {
+                keySequence.push(e.key);
+                if (keySequence.length > ADMIN_KEY_COMBO.length) {
+                    keySequence.shift();
+                }
+                
+                if (keySequence.join('') === ADMIN_KEY_COMBO.join('')) {
+                    toggleAdminMode();
+                    keySequence = [];
+                }
+            });
+            
+            // Admin toggle button click
+            $('#admin-toggle').click(function() {
+                toggleAdminMode();
+            });
+            
+            // Toggle admin mode
+            function toggleAdminMode() {
+                isAdminMode = !isAdminMode;
+                $('#admin-toggle').toggle(isAdminMode);
+                $('body').toggleClass('admin-active', isAdminMode);
+                alert(`Admin mode ${isAdminMode ? 'ENABLED' : 'DISABLED'}`);
+            }
+            
             // Load top 10 foods on page load
             loadTopFoods();
             
@@ -1181,6 +1241,9 @@
                             <span class="food-name">${food.name}</span>
                             <div>
                                 <span class="calorie-badge">${food.calories} cal/100g</span>
+                                <button class="delete-food-btn" data-id="${food.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </a>
@@ -1564,6 +1627,25 @@
                 });
             });
             
+            // Delete food from database
+            $(document).on('click', '.delete-food-btn', function(e) {
+                e.stopPropagation();
+                const foodId = $(this).data('id');
+                const foodName = $(this).closest('.food-item').find('.food-name').text();
+                
+                if (!confirm(`Permanently delete "${foodName}" from database?`)) return;
+                
+                $.post('/delete_food', { food_id: foodId }, function(response) {
+                    if (response.success) {
+                        // Remove from UI
+                        $(this).closest('.food-item').remove();
+                        alert('Food item deleted successfully');
+                    } else {
+                        alert('Error: ' + (response.error || 'Failed to delete food item'));
+                    }
+                }.bind(this));
+            });
+            
             // Nutrition grid toggle functionality
             let gridVisible = true;
 
@@ -1769,39 +1851,59 @@
             // Camera scanning with QuaggaJS
             $('#scan-ean').click(function() {
                 cameraModal.show();
-                startCamera();
+                setTimeout(startCamera, 500);
             });
             
             // Toggle camera
             $('#toggle-camera').click(function() {
                 currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
                 stopCamera();
-                startCamera();
+                setTimeout(startCamera, 300);
             });
             
-            // Start camera and barcode scanning
+            // Resume scanning
+            $('#resume-scan').click(function() {
+                lastScannedCode = null;
+                $('#scanned-result').text('');
+                startQuagga();
+            });
+            
+            // Start camera function
             function startCamera() {
                 scanningActive = true;
-                
+                startQuagga();
+            }
+            
+            // Initialize QuaggaJS for barcode scanning
+            function startQuagga() {
                 Quagga.init({
                     inputStream: {
                         name: "Live",
                         type: "LiveStream",
                         target: document.querySelector('#camera-preview'),
                         constraints: {
-                            facingMode: currentCamera
+                            facingMode: currentCamera,
+                            focusMode: 'continuous',
+                            width: { min: 640 },
+                            height: { min: 480 }
                         }
                     },
                     decoder: {
-                        readers: ['ean_reader', 'ean_8_reader'] // Support for EAN-13 and EAN-8
+                        readers: ['ean_reader', 'ean_8_reader'],
+                        debug: {
+                            drawBoundingBox: true,
+                            showFrequency: true,
+                            drawScanline: true,
+                            showPattern: true
+                        }
                     },
                     locate: true,
-                    numOfWorkers: navigator.hardwareConcurrency || 4
+                    numOfWorkers: navigator.hardwareConcurrency || 4,
+                    frequency: 10
                 }, function(err) {
                     if (err) {
                         console.error("Quagga initialization error", err);
-                        alert('Camera error: ' + err.message);
-                        stopCamera();
+                        $('#scanned-result').text('Error: ' + err.message).css('color', '#ff4444');
                         return;
                     }
                     Quagga.start();
@@ -1810,35 +1912,79 @@
                 Quagga.onDetected(function(result) {
                     if (result && result.codeResult && result.codeResult.code) {
                         const code = result.codeResult.code;
-                        console.log("Barcode detected: ", code);
-                        handleScannedEAN(code);
+                        if (lastScannedCode === code) return;
+                        
+                        lastScannedCode = code;
+                        $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
+                        
+                        // Stop scanning for a moment
+                        Quagga.stop();
+                        
+                        // Process the scanned code after a short delay
+                        setTimeout(function() {
+                            handleScannedEAN(code);
+                        }, 1000);
+                    }
+                });
+                
+                Quagga.onProcessed(function(result) {
+                    if (!result) return;
+                    
+                    // Draw debug info
+                    const drawingCtx = Quagga.canvas.ctx.overlay;
+                    const drawingCanvas = Quagga.canvas.dom.overlay;
+                    
+                    if (result.boxes) {
+                        drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                        result.boxes.filter(function(box) {
+                            return box !== result.box;
+                        }).forEach(function(box) {
+                            Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                        });
+                    }
+                    
+                    if (result.box) {
+                        Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "blue", lineWidth: 2});
+                    }
+                    
+                    if (result.codeResult && result.codeResult.code) {
+                        Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
                     }
                 });
             }
             
-            // Stop camera
+            // Stop camera function
             function stopCamera() {
                 scanningActive = false;
                 if (Quagga) {
                     Quagga.offDetected();
+                    Quagga.offProcessed();
                     Quagga.stop();
                 }
             }
             
             // Handle scanned EAN
             function handleScannedEAN(ean) {
-                stopCamera();
-                cameraModal.hide();
+                // Validate EAN
+                if (!/^\d{8,13}$/.test(ean)) {
+                    $('#scanned-result').text('Invalid EAN: ' + ean).css('color', '#ff4444');
+                    return;
+                }
                 
-                // Set search field and trigger search
-                $('#food-search').val(ean).trigger('input');
-                
-                // Highlight the search field briefly
-                $('#food-search').addClass('highlight-search')
-                    .delay(1000)
-                    .queue(function() {
-                        $(this).removeClass('highlight-search').dequeue();
-                    });
+                // Close modal after a short delay
+                setTimeout(function() {
+                    cameraModal.hide();
+                    stopCamera();
+                    
+                    // Set search field and trigger search
+                    $('#food-search').val(ean).trigger('input');
+                    
+                    // Highlight the search field
+                    $('#food-search').addClass('highlight-search');
+                    setTimeout(function() {
+                        $('#food-search').removeClass('highlight-search');
+                    }, 3000);
+                }, 1000);
             }
             
             // Cleanup when modal is closed
