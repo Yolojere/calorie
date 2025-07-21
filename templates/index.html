@@ -48,7 +48,26 @@
             color: #e0e0e0;
             border-color: #666;
         }
+        /* Update scanner overlay styles */
+        .scan-line {
+            height: 2px;
+            background: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+            animation: scan 1.5s infinite linear;
+        }
         
+        .scan-guide {
+            top: 40%;
+            height: 20%;
+            border: 2px solid #00ff00;
+        }
+        
+        @keyframes scan {
+            0% { top: 40%; }
+            50% { top: 60%; }
+            100% { top: 40%; }
+        }
+
         /* Nutrition Value Styles */
         .nutrition-value-sm, .nutrition-value-xs, .nutrition-value-xxs, .nutrition-value-xxxs {
             border-radius: 8px;
@@ -1505,7 +1524,10 @@
                 $('#edit-grams-input').val(grams);
                 editGramsModal.show();
             });
-
+            // Focus on grams input when modal opens
+        $('#editGramsModal').on('shown.bs.modal', function () {
+            $('#edit-grams-input').trigger('focus');
+            });
             // Save grams
             $('#save-grams').click(function() {
                 const index = $('#edit-grams-index').val();
@@ -1884,12 +1906,12 @@
                         constraints: {
                             facingMode: currentCamera,
                             focusMode: 'continuous',
-                            width: { min: 640 },
-                            height: { min: 480 }
+                            width: { min: 1280 },  // Higher resolution for linear codes
+                            height: { min: 720 }
                         }
                     },
                     decoder: {
-                        readers: ['ean_reader', 'ean_8_reader'],
+                        readers: ['code_128_reader'],  // Only use Code-128 reader
                         debug: {
                             drawBoundingBox: true,
                             showFrequency: true,
@@ -1897,7 +1919,10 @@
                             showPattern: true
                         }
                     },
-                    locate: true,
+                    locator: {
+                        halfSample: true,
+                        patchSize: "medium"  // Better for linear codes
+                    },
                     numOfWorkers: navigator.hardwareConcurrency || 4,
                     frequency: 10
                 }, function(err) {
@@ -1922,52 +1947,36 @@
                         
                         // Process the scanned code after a short delay
                         setTimeout(function() {
-                            handleScannedEAN(code);
+                            handleScannedCode(code);
                         }, 1000);
                     }
                 });
                 
+                // Draw center guide line for better UX
                 Quagga.onProcessed(function(result) {
-                    if (!result) return;
-                    
-                    // Draw debug info
                     const drawingCtx = Quagga.canvas.ctx.overlay;
                     const drawingCanvas = Quagga.canvas.dom.overlay;
                     
-                    if (result.boxes) {
-                        drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
-                        result.boxes.filter(function(box) {
-                            return box !== result.box;
-                        }).forEach(function(box) {
-                            Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
-                        });
-                    }
+                    if (!result) return;
                     
-                    if (result.box) {
-                        Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "blue", lineWidth: 2});
-                    }
+                    // Clear canvas
+                    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
                     
-                    if (result.codeResult && result.codeResult.code) {
-                        Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
-                    }
+                    // Draw center guide line
+                    drawingCtx.beginPath();
+                    drawingCtx.moveTo(drawingCanvas.width/2, 0);
+                    drawingCtx.lineTo(drawingCanvas.width/2, drawingCanvas.height);
+                    drawingCtx.strokeStyle = '#b61336';
+                    drawingCtx.lineWidth = 2;
+                    drawingCtx.stroke();
                 });
             }
             
-            // Stop camera function
-            function stopCamera() {
-                scanningActive = false;
-                if (Quagga) {
-                    Quagga.offDetected();
-                    Quagga.offProcessed();
-                    Quagga.stop();
-                }
-            }
-            
-            // Handle scanned EAN
-            function handleScannedEAN(ean) {
-                // Validate EAN
-                if (!/^\d{8,13}$/.test(ean)) {
-                    $('#scanned-result').text('Invalid EAN: ' + ean).css('color', '#ff4444');
+            // Handle scanned Code-128 barcodes
+            function handleScannedCode(code) {
+                // Validate Code-128 format
+                if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
+                    $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
                     return;
                 }
                 
