@@ -1906,34 +1906,21 @@ function startQuagga() {
             constraints: {
                 facingMode: currentCamera,
                 focusMode: 'continuous',
-                width: { min: 640, ideal: 1280 },
-                height: { min: 480, ideal: 720 },
-                aspectRatio: { ideal: 1.777 }
+                width: { min: 640 },
+                height: { min: 480 },
+                aspectRatio: 4/3
             }
         },
-        decoder: {
-            readers: ['code_128_reader'],
-            debug: {
-                drawBoundingBox: true,
-                showFrequency: true,
-                drawScanline: true,
-                showPattern: true
-            }
-        },
-        locator: {
-            halfSample: true,
-            patchSize: "medium"
-        },
-        numOfWorkers: navigator.hardwareConcurrency || 4,
-        frequency: 10
+        // ... rest of config ...
     }, function(err) {
         if (err) {
-            console.error("Quagga initialization error", err);
-            $('#scanned-result').text('Error: ' + err.message).css('color', '#ff4444');
+            console.error("Camera error:", err);
+            $('#scanned-result').text('Camera error: ' + err.message).css('color', '#ff4444');
             return;
         }
         Quagga.start();
     });
+
 
     Quagga.onDetected(function(result) {
         if (result && result.codeResult && result.codeResult.code) {
@@ -1972,20 +1959,20 @@ function startQuagga() {
             }
             
             // Handle scanned Code-128 barcodes
-function handleScannedCode(code) {
-    // Validate Code-128 format
-    if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-        $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-        return;
-    }
-    
-    // Close modal after a short delay
-    setTimeout(function() {
+    // Update the handleScannedCode function
+    function handleScannedCode(code) {
+        // Validate Code-128 format
+        if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
+            $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
+            return;
+        }
+        
+        // Close modal immediately and process
         cameraModal.hide();
         stopCamera();
         
-        // SET SEARCH FIELD VALUE AND TRIGGER INPUT EVENT
-        $('#food-search').val(code).trigger('input');
+        // DIRECTLY SET SEARCH FIELD VALUE
+        $('#food-search').val(code);
         
         // Highlight the search field
         $('#food-search').addClass('highlight-search');
@@ -1993,38 +1980,52 @@ function handleScannedCode(code) {
             $('#food-search').removeClass('highlight-search');
         }, 3000);
         
-        // FORCE SEARCH TO EXECUTE IMMEDIATELY
+        // FOCUS AND TRIGGER SEARCH IMMEDIATELY
         setTimeout(function() {
+            $('#food-search').focus();
             const query = $('#food-search').val().trim();
             if (query.length > 0) {
-                $.post('/search_foods', { query: query }, function(data) {
-                    let resultsHtml = '';
-                    if (data.length > 0) {
-                        resultsHtml = '<div class="list-group">';
-                        data.forEach(food => {
-                            resultsHtml += createFoodItemHtml(food);
-                        });
-                        resultsHtml += '</div>';
-                        
-                        // AUTO-SELECT THE FIRST RESULT
-                        setTimeout(function() {
-                            $('.food-item:first').trigger('click');
-                        }, 300);
-                    } else {
-                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
-                    }
-                    $('#search-results').html(resultsHtml);
-                });
+                performFoodSearch(query);
             }
         }, 100);
-    }, 300);  // Reduced delay for better UX
-}
-            
-            // Cleanup when modal is closed
-            $('#cameraModal').on('hidden.bs.modal', function() {
-                stopCamera();
-            });
+    }
+
+    // Update the performFoodSearch function
+    function performFoodSearch(query) {
+        $.post('/search_foods', { query: query }, function(data) {
+            let resultsHtml = '';
+            if (data.length > 0) {
+                resultsHtml = '<div class="list-group">';
+                data.forEach(food => {
+                    resultsHtml += createFoodItemHtml(food);
+                });
+                resultsHtml += '</div>';
+                
+                // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+                setTimeout(function() {
+                    if ($('.food-item').length > 0) {
+                        $('.food-item:first').trigger('click');
+                    }
+                }, 300);
+            } else {
+                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+            }
+            $('#search-results').html(resultsHtml);
         });
+    }
+    });
+
+    // Add this to ensure camera is properly stopped
+    function stopCamera() {
+        if (Quagga) {
+            try {
+                Quagga.stop();
+            } catch (e) {
+                console.log("Error stopping camera:", e);
+            }
+        }
+        scanningActive = false;
+    }
     </script>
 </body>
 </html>
