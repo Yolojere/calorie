@@ -344,7 +344,7 @@ def index():
 
 @app.route('/search_foods', methods=['POST'])
 def search_foods():
-    query = request.form.get('query', '').lower().strip()
+    query = request.form.get('query', '').strip()  # Remove .lower() to preserve case
     conn = get_db_connection()
     
     if not query:
@@ -357,15 +357,15 @@ def search_foods():
             LIMIT 10
         ''').fetchall()
     else:
-        # Search by name OR EAN (supports Code-128) - UPDATED FOR BETTER MATCHING
+        # Search by name OR EAN (case-sensitive exact match)
         foods = conn.execute('''
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
-            WHERE LOWER(f.name) LIKE ? OR f.ean LIKE ? OR f.ean = ?
+            WHERE LOWER(f.name) LIKE ? OR f.ean = ?
             ORDER BY usage DESC, name ASC
             LIMIT 10
-        ''', (f'%{query}%', f'%{query}%', query)).fetchall()
+        ''', (f'%{query.lower()}%', query)).fetchall()
     
     conn.close()
     
