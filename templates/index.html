@@ -1875,7 +1875,7 @@
                 cameraModal.show();
                 setTimeout(startCamera, 500);
             });
-            
+                        
             // Toggle camera
             $('#toggle-camera').click(function() {
                 currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
@@ -1896,62 +1896,60 @@
                 startQuagga();
             }
             
-            // Initialize QuaggaJS for barcode scanning
-    function startQuagga() {
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#camera-preview'),
-                constraints: {
-                    facingMode: currentCamera,
-                    focusMode: 'continuous',
-                    width: { min: 640, ideal: 1280 },  // Lower minimum width for less zoom
-                    height: { min: 480, ideal: 720 },
-                    aspectRatio: { ideal: 1.777 }  // 16:9 aspect ratio for wider view
-                }
-            },
-                    decoder: {
-                        readers: ['code_128_reader'],  // Only use Code-128 reader
-                        debug: {
-                            drawBoundingBox: true,
-                            showFrequency: true,
-                            drawScanline: true,
-                            showPattern: true
-                        }
-                    },
-                    locator: {
-                        halfSample: true,
-                        patchSize: "medium"  // Better for linear codes
-                    },
-                    numOfWorkers: navigator.hardwareConcurrency || 4,
-                    frequency: 10
-                }, function(err) {
-                    if (err) {
-                        console.error("Quagga initialization error", err);
-                        $('#scanned-result').text('Error: ' + err.message).css('color', '#ff4444');
-                        return;
-                    }
-                    Quagga.start();
-                });
+// Update the Quagga initialization
+function startQuagga() {
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#camera-preview'),
+            constraints: {
+                facingMode: currentCamera,
+                focusMode: 'continuous',
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 },
+                aspectRatio: { ideal: 1.777 }
+            }
+        },
+        decoder: {
+            readers: ['code_128_reader'],
+            debug: {
+                drawBoundingBox: true,
+                showFrequency: true,
+                drawScanline: true,
+                showPattern: true
+            }
+        },
+        locator: {
+            halfSample: true,
+            patchSize: "medium"
+        },
+        numOfWorkers: navigator.hardwareConcurrency || 4,
+        frequency: 10
+    }, function(err) {
+        if (err) {
+            console.error("Quagga initialization error", err);
+            $('#scanned-result').text('Error: ' + err.message).css('color', '#ff4444');
+            return;
+        }
+        Quagga.start();
+    });
 
-                Quagga.onDetected(function(result) {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        const code = result.codeResult.code;
-                        if (lastScannedCode === code) return;
-                        
-                        lastScannedCode = code;
-                        $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
-                        
-                        // Stop scanning for a moment
-                        Quagga.stop();
-                        
-                        // Process the scanned code after a short delay
-                        setTimeout(function() {
-                            handleScannedCode(code);
-                        }, 1000);
-                    }
-                });
+    Quagga.onDetected(function(result) {
+        if (result && result.codeResult && result.codeResult.code) {
+            const code = result.codeResult.code;
+            if (lastScannedCode === code) return;
+            
+            lastScannedCode = code;
+            $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
+            
+            // Stop scanning for a moment
+            Quagga.stop();
+            
+            // Process the scanned code
+            handleScannedCode(code);
+        }
+    });
                 
                 // Draw center guide line for better UX
                 Quagga.onProcessed(function(result) {
@@ -1974,46 +1972,52 @@
             }
             
             // Handle scanned Code-128 barcodes
-    function handleScannedCode(code) {
-        // Validate Code-128 format
-        if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-            $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-            return;
-        }
+function handleScannedCode(code) {
+    // Validate Code-128 format
+    if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
+        $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
+        return;
+    }
+    
+    // Close modal after a short delay
+    setTimeout(function() {
+        cameraModal.hide();
+        stopCamera();
         
-        // Close modal immediately and process
-        setTimeout(function() {
-            cameraModal.hide();
-            stopCamera();
-                
-        // SET SEARCH FIELD VALUE
+        // SET SEARCH FIELD VALUE AND TRIGGER INPUT EVENT
         $('#food-search').val(code).trigger('input');
         
-        // Highlight and focus the search field
-        $('#food-search').addClass('highlight-search')
-                         .trigger('focus');
-        
+        // Highlight the search field
+        $('#food-search').addClass('highlight-search');
         setTimeout(function() {
             $('#food-search').removeClass('highlight-search');
         }, 3000);
         
-        // FORCE SEARCH EXECUTION
-        performFoodSearch(code);  // Directly call the search function
+        // FORCE SEARCH TO EXECUTE IMMEDIATELY
+        setTimeout(function() {
+            const query = $('#food-search').val().trim();
+            if (query.length > 0) {
+                $.post('/search_foods', { query: query }, function(data) {
+                    let resultsHtml = '';
+                    if (data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
+                        data.forEach(food => {
+                            resultsHtml += createFoodItemHtml(food);
+                        });
+                        resultsHtml += '</div>';
+                        
+                        // AUTO-SELECT THE FIRST RESULT
+                        setTimeout(function() {
+                            $('.food-item:first').trigger('click');
+                        }, 300);
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    }
+                    $('#search-results').html(resultsHtml);
+                });
+            }
+        }, 100);
     }, 300);  // Reduced delay for better UX
-}
-
-// Update the performFoodSearch function
-function performFoodSearch(query) {
-    $.post('/search_foods', { query: query }, function(data) {
-        // ... existing result handling ...
-        
-        // Auto-select first result if found
-        if (data.length > 0) {
-            setTimeout(function() {
-                $('.food-item:first').trigger('click');
-            }, 300);
-        }
-    });
 }
             
             // Cleanup when modal is closed
