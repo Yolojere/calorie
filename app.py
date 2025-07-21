@@ -42,7 +42,7 @@ def init_db():
             calories REAL NOT NULL,
             grams REAL NOT NULL,
             half REAL,
-            entire REAL,
+            entire REAL,    
             serving REAL,
             ean TEXT
         )
@@ -597,55 +597,92 @@ def custom_food():
 
 @app.route('/save_food', methods=['POST'])
 def save_food_route():
-    # Extract form data
-    name = request.form.get('name')
-    carbs = float(request.form.get('carbs', 0))
-    sugars = float(request.form.get('sugars', 0))
-    fiber = float(request.form.get('fiber', 0))
-    proteins = float(request.form.get('proteins', 0))
-    fats = float(request.form.get('fats', 0))
-    saturated = float(request.form.get('saturated', 0))
-    salt = float(request.form.get('salt', 0))
-    ean = request.form.get('ean') or None
-    grams = float(request.form.get('grams', 100))
-    serving = request.form.get('serving')
-    half = request.form.get('half')
-    entire = request.form.get('entire')
-    
-    # Process optional fields
-    serving = float(serving) if serving else None
-    half = float(half) if half else None
-    entire = float(entire) if entire else None
-    
-    # Calculate calories
-    calories = calculate_calories(carbs, proteins, fats)
-    
-    # Create food object
-    food_data = {
-        "key": name.lower(),
-        "name": name,
-        "carbs": carbs,
-        "sugars": sugars,
-        "fiber": fiber,
-        "proteins": proteins,
-        "fats": fats,
-        "saturated": saturated,
-        "salt": salt,
-        "calories": calories,
-        "grams": grams,
-        "half": half,
-        "entire": entire,
-        "serving": serving,
-        "ean": ean
-    }
-    
-    # Save to database
-    save_food(food_data)
-    
-    # Initialize usage count
-    increment_food_usage(name)
-    
-    return jsonify({'success': True})
+    try:
+        # Extract form data
+        name = request.form.get('name')
+        if not name:
+            return jsonify({'success': False, 'error': 'Name is required'}), 400
+
+        # Convert to floats, default to 0 if empty
+        carbs = float(request.form.get('carbs', 0)) or 0
+        sugars = float(request.form.get('sugars', 0)) or 0
+        fiber = float(request.form.get('fiber', 0)) or 0
+        proteins = float(request.form.get('proteins', 0)) or 0
+        fats = float(request.form.get('fats', 0)) or 0
+        saturated = float(request.form.get('saturated', 0)) or 0
+        salt = float(request.form.get('salt', 0)) or 0
+        ean = request.form.get('ean') or None
+        grams = float(request.form.get('grams', 100))  # default 100g
+        
+        # Optional portion fields
+        serving = request.form.get('serving')
+        half = request.form.get('half')
+        entire = request.form.get('entire')
+        
+        serving = float(serving) if serving and serving.strip() else None
+        half = float(half) if half and half.strip() else None
+        entire = float(entire) if entire and entire.strip() else None
+        
+        # Calculate calories
+        calories = calculate_calories(carbs, proteins, fats)
+        
+        # Create food object
+        food_data = {
+            "key": name.lower().replace(' ', '_'),
+            "name": name,
+            "carbs": carbs,
+            "sugars": sugars,
+            "fiber": fiber,
+            "proteins": proteins,
+            "fats": fats,
+            "saturated": saturated,
+            "salt": salt,
+            "calories": calories,
+            "grams": grams,
+            "half": half,
+            "entire": entire,
+            "serving": serving,
+            "ean": ean
+        }
+        
+        # Save to database
+        save_food(food_data)
+        
+        # Initialize usage count
+        increment_food_usage(name)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def save_food(food_data):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            food_data['key'],
+            food_data['name'],
+            food_data['carbs'],
+            food_data['sugars'],
+            food_data['fiber'],
+            food_data['proteins'],
+            food_data['fats'],
+            food_data['saturated'],
+            food_data['salt'],
+            food_data['calories'],
+            food_data['grams'],
+            food_data.get('half'),
+            food_data.get('entire'),
+            food_data.get('serving'),
+            food_data.get('ean')
+        ))
+        conn.commit()
+    finally:
+        conn.close()
 
 def calculate_weekly_averages():
     session_history = get_session_history()
