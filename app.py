@@ -323,10 +323,10 @@ def index():
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
     
-    # Generate dates for selector
+    # Generate dates for selector - 3 days past, today, 3 days future
     dates = []
     today = datetime.now()
-    for i in range(-3, 4):
+    for i in range(-3, 4):  # This creates a range from -3 to +3 (7 days total)
         date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
         formatted_date = format_date(date_str)
         dates.append((date_str, formatted_date))
@@ -341,6 +341,10 @@ def index():
                            dates=dates,
                            food_usage=food_usage,
                            group_breakdown=group_breakdown)
+
+@app.route('/custom_food')
+def custom_food():
+    return render_template('custom_food.html')
 
 @app.route('/search_foods', methods=['POST'])
 def search_foods():
@@ -566,123 +570,115 @@ def clear_session():
         'breakdown': group_breakdown
     })
 
-@app.route('/move_to_date', methods=['POST'])
-def move_to_date():
-    source_date = request.form.get('source_date')
-    target_date = request.form.get('target_date')
+@app.route('/move_items', methods=['POST'])
+def move_items():
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    item_indices = json.loads(request.form.get('item_indices'))
+    new_group = request.form.get('new_group')
+    target_date = request.form.get('target_date', date)
     
-    session_history = get_session_history()
-    if source_date in session_history:
-        session_history[target_date] = session_history[source_date].copy()
-        save_session_history(session_history)
+    eaten_items, current_date = get_current_session(date)
     
-    return jsonify({'success': True})
+    # Move items to target date and group
+    moved_items = []
+    for idx in sorted(item_indices, reverse=True):
+        if 0 <= idx < len(eaten_items):
+            item = eaten_items.pop(idx)
+            item['group'] = new_group
+            moved_items.append(item)
+    
+    # Save both sessions
+    save_current_session(eaten_items, date)
+    
+    # Add to target date (even if same date)
+    target_items, _ = get_current_session(target_date)
+    target_items.extend(moved_items)
+    save_current_session(target_items, target_date)
+    
+    # Return updated session
+    eaten_items, current_date = get_current_session(date)
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date': current_date,
+        'current_date_formatted': format_date(current_date),
+        'breakdown': group_breakdown
+    })
 
-@app.route('/create_group', methods=['POST'])
-def create_group():
-    group_name = request.form.get('group_name')
-    predefined = ["breakfast", "lunch", "dinner", "snack", "Ungrouped"]
+@app.route('/update_grams', methods=['POST'])
+def update_grams():
+    item_index = int(request.form.get('item_index'))
+    new_grams = float(request.form.get('new_grams'))
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    if not group_name:
-        return jsonify({'error': 'Group name is required'}), 400
+    eaten_items, current_date = get_current_session(date)
     
-    if group_name in predefined:
-        return jsonify({'error': 'This is a reserved group name'}), 400
+    if 0 <= item_index < len(eaten_items):
+        item = eaten_items[item_index]
+        
+        # Get original food data
+        food = get_food_by_key(item['name'].lower())
+        if not food:
+            return jsonify({'error': 'Food not found'}), 404
+        
+        # Update grams and recalculate nutrition
+        item['grams'] = new_grams
+        item['units'] = new_grams
+        item['unit_type'] = 'grams'
+        
+        factor = new_grams / 100
+        item['carbs'] = food['carbs'] * factor
+        item['proteins'] = food['proteins'] * factor
+        item['fats'] = food['fats'] * factor
+        item['salt'] = food.get('salt', 0.0) * factor
+        item['calories'] = food['calories'] * factor
+        
+        save_current_session(eaten_items, date)
     
-    return jsonify({'success': True, 'group_name': group_name})
-
-@app.route('/custom_food')
-def custom_food():
-    return render_template('custom_food.html')
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    current_date_formatted = format_date(current_date)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
 
 @app.route('/save_food', methods=['POST'])
 def save_food_route():
     try:
         # Extract form data
-        name = request.form.get('name')
-        if not name:
-            return jsonify({'success': False, 'error': 'Name is required'}), 400
-
-        # Convert to floats, default to 0 if empty
-        carbs = float(request.form.get('carbs', 0)) or 0
-        sugars = float(request.form.get('sugars', 0)) or 0
-        fiber = float(request.form.get('fiber', 0)) or 0
-        proteins = float(request.form.get('proteins', 0)) or 0
-        fats = float(request.form.get('fats', 0)) or 0
-        saturated = float(request.form.get('saturated', 0)) or 0
-        salt = float(request.form.get('salt', 0)) or 0
-        ean = request.form.get('ean') or None
-        grams = float(request.form.get('grams', 100))  # default 100g
-        
-        # Optional portion fields
-        serving = request.form.get('serving')
-        half = request.form.get('half')
-        entire = request.form.get('entire')
-        
-        serving = float(serving) if serving and serving.strip() else None
-        half = float(half) if half and half.strip() else None
-        entire = float(entire) if entire and entire.strip() else None
-        
-        # Calculate calories
-        calories = calculate_calories(carbs, proteins, fats)
-        
-        # Create food object
         food_data = {
-            "key": name.lower().replace(' ', '_'),
-            "name": name,
-            "carbs": carbs,
-            "sugars": sugars,
-            "fiber": fiber,
-            "proteins": proteins,
-            "fats": fats,
-            "saturated": saturated,
-            "salt": salt,
-            "calories": calories,
-            "grams": grams,
-            "half": half,
-            "entire": entire,
-            "serving": serving,
-            "ean": ean
+            'key': request.form.get('key'),
+            'name': request.form.get('name'),
+            'carbs': float(request.form.get('carbs', 0)),
+            'sugars': float(request.form.get('sugars', 0)),
+            'fiber': float(request.form.get('fiber', 0)),
+            'proteins': float(request.form.get('proteins', 0)),
+            'fats': float(request.form.get('fats', 0)),
+            'saturated': float(request.form.get('saturated', 0)),
+            'salt': float(request.form.get('salt', 0)),
+            'calories': float(request.form.get('calories', 0)),
+            'grams': float(request.form.get('grams', 100)),
+            'half': request.form.get('half') or None,
+            'entire': request.form.get('entire') or None,
+            'serving': request.form.get('serving') or None,
+            'ean': request.form.get('ean') or None
         }
         
         # Save to database
         save_food(food_data)
         
         # Initialize usage count
-        increment_food_usage(name)
+        increment_food_usage(food_data['name'])
         
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-def save_food(food_data):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT OR REPLACE INTO foods 
-            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            food_data['key'],
-            food_data['name'],
-            food_data['carbs'],
-            food_data['sugars'],
-            food_data['fiber'],
-            food_data['proteins'],
-            food_data['fats'],
-            food_data['saturated'],
-            food_data['salt'],
-            food_data['calories'],
-            food_data['grams'],
-            food_data.get('half'),
-            food_data.get('entire'),
-            food_data.get('serving'),
-            food_data.get('ean')
-        ))
-        conn.commit()
-    finally:
-        conn.close()
 
 def calculate_weekly_averages():
     session_history = get_session_history()
@@ -739,7 +735,7 @@ def history():
     # Daily history (last 7 days)
     session_history = get_session_history()
     today = datetime.today()
-    daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(-3, 4)]
     
     history_data = []
     for date in daily_dates:
@@ -769,71 +765,6 @@ def history():
     return render_template('history.html', 
                            history_data=history_data,
                            weekly_data=weekly_data)
-
-@app.route('/update_grams', methods=['POST'])
-def update_grams():
-    item_index = int(request.form.get('item_index'))
-    new_grams = float(request.form.get('new_grams'))
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    
-    eaten_items, current_date = get_current_session(date)
-    
-    if 0 <= item_index < len(eaten_items):
-        item = eaten_items[item_index]
-        
-        # Get original food data
-        food = get_food_by_key(item['name'].lower())
-        if not food:
-            return jsonify({'error': 'Food not found'}), 404
-        
-        # Update grams and recalculate nutrition
-        item['grams'] = new_grams
-        item['units'] = new_grams
-        item['unit_type'] = 'grams'
-        
-        factor = new_grams / 100
-        item['carbs'] = food['carbs'] * factor
-        item['proteins'] = food['proteins'] * factor
-        item['fats'] = food['fats'] * factor
-        item['salt'] = food.get('salt', 0.0) * factor
-        item['calories'] = food['calories'] * factor
-        
-        save_current_session(eaten_items, date)
-    
-    totals = calculate_totals(eaten_items)
-    group_breakdown = calculate_group_breakdown(eaten_items)
-    current_date_formatted = format_date(current_date)
-    return jsonify({
-        'session': eaten_items,
-        'totals': totals,
-        'current_date_formatted': current_date_formatted,
-        'breakdown': group_breakdown
-    })
-
-@app.route('/move_items', methods=['POST'])
-def move_items():
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    item_indices = json.loads(request.form.get('item_indices'))
-    new_group = request.form.get('new_group')
-    
-    eaten_items, current_date = get_current_session(date)
-    # Update the group for each selected item
-    for idx in item_indices:
-        if 0 <= idx < len(eaten_items):
-            eaten_items[idx]['group'] = new_group
-    
-    save_current_session(eaten_items, date)
-    
-    # Return the updated session and breakdown
-    group_breakdown = calculate_group_breakdown(eaten_items)
-    totals = calculate_totals(eaten_items)
-    current_date_formatted = format_date(current_date)
-    return jsonify({
-        'session': eaten_items,
-        'totals': totals,
-        'current_date_formatted': current_date_formatted,
-        'breakdown': group_breakdown
-    })
 
 if __name__ == '__main__':
     app.run(debug=True)
