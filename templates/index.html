@@ -1,2032 +1,839 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition Tracker</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-    <style>
-        /* Base Styles */
-        body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
-            color: #e0e0e0;
-        }
-        
-        .bg-black, .modal-header, .modal-footer {
-            background-color: #000 !important;
-            border-color: #444;
-        }
-        
-        .card, .list-group-item, .modal-content {
-            background-color: #222;
-            color: #e0e0e0;
-            border: 1px solid #444;
-        }
-        
-        .card-header {
-            background-color: #000;
-            border-bottom: 1px solid #444;
-            font-weight: bold;
-        }
-        
-        .form-control, .form-select {
-            background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #555;
-            font-size: 14px !important;
-            padding: 6px 8px !important;
-            height: 36px !important;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: #333;
-            color: #e0e0e0;
-            border-color: #666;
-        }
-        /* Update scanner overlay styles */
-        .scan-line {
-            height: 2px;
-            background: #00ff00;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
-            animation: scan 1.5s infinite linear;
-        }
-        
-        .scan-guide {
-            top: 40%;
-            height: 20%;
-            border: 2px solid #00ff00;
-        }
-        
-        @keyframes scan {
-            0% { top: 40%; }
-            50% { top: 60%; }
-            100% { top: 40%; }
-        }
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+import json
+import os
+import sqlite3
+from datetime import datetime, timedelta
 
-        /* Nutrition Value Styles */
-        .nutrition-value-sm, .nutrition-value-xs, .nutrition-value-xxs, .nutrition-value-xxxs {
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            min-width: 100px;
-        }
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
+
+# Database path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'data', 'foods.db')
+FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')  # Kept for migration
+USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')  # Kept for migration
+SESSION_FILE = os.path.join(BASE_DIR, 'data', 'session_history.json')
+
+# Database connection
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Initialize database
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Create foods table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS foods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            carbs REAL NOT NULL,
+            sugars REAL NOT NULL,
+            fiber REAL NOT NULL,
+            proteins REAL NOT NULL,
+            fats REAL NOT NULL,
+            saturated REAL NOT NULL,
+            salt REAL NOT NULL,
+            calories REAL NOT NULL,
+            grams REAL NOT NULL,
+            half REAL,
+            entire REAL,    
+            serving REAL,
+            ean TEXT
+        )
+    ''')
+    
+    # Create food_usage table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS food_usage (
+            food_key TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            FOREIGN KEY (food_key) REFERENCES foods(key)
+        )
+    ''')
+    
+    # Check if foods table is empty
+    cursor.execute("SELECT COUNT(*) FROM foods")
+    if cursor.fetchone()[0] == 0:
+        # Insert default food
+        cursor.execute('''
+            INSERT INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            'broccoli',
+            'Broccoli',
+            7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
+        ))
+    
+    conn.commit()
+    conn.close()
+
+# Migrate JSON data to database
+def migrate_json_to_db():
+    # Migrate foods
+    if os.path.exists(FOOD_FILE):
+        with open(FOOD_FILE, 'r') as f:
+            foods = json.load(f)
         
-        .nutrition-value-sm .value, .nutrition-value-xs .value {
-            display: block;
-            font-weight: bold;
-        }
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        .nutrition-value-sm .value {
-            font-size: 1.5rem;
-        }
-        
-        .nutrition-value-xs .value {
-            font-size: 1.2rem;
-        }
-        
-        .nutrition-value-xxs {
-            border-radius: 6px;
-            min-width: 70px;
-            padding: 5px 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 30px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        
-        .rtb-yay {
-            min-width: 70px;
-            padding: 5px 8px;
-            font-size: 22px !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            height: 45px !important;
-            min-width: 60px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        
-        /* Layout & Components */
-        .modal-dialog-centered {
-            display: flex;
-            align-items: center;
-            min-height: calc(100% - 1rem);
-        }
-        
-        #search-results {
-            max-height: 450px;
-            overflow-y: auto;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background-color: #222;
-            font-size: 18px;
-        }
-        
-        #rt-breakdown-container {
-            margin: 15px 0;
-            padding: 15px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background-color: #000000;
-            height: 100px;
-            width: 980px;
-        }
-        
-        .food-log-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .food-group {
-            margin-bottom: 6px;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .collapsed-group {
-        height: auto !important;
-        min-height: unset !important;
-        }
-        .group-header {
-            cursor: pointer;
-            padding: 0.5rem 1rem !important;
-            background: #111111 !important;
-            border: none !important;
-            border-radius: 6px;
-            margin: 8px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .group-header:hover {
-            background: linear-gradient(to right, #555454, #000000) !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        .group-items {
-            max-height: none !important;
-            flex: 1;
-            overflow: auto;
-            min-height: 0;
-            overflow-y: auto;
-            border-left: 3px solid #00000079;
-            border-right: 3px solid #00000079;
-            border-bottom: 3px solid #00000079;
-            border-radius: 0 0 6px 6px;
-            margin-bottom: 15px;
-        }
-        
-        .list-group-item.selected {
-            background-color: #444 !important;
-            border: 2px solid #424242 !important;
-            box-shadow: 0 0 0 2px #636363, 0 0 10px rgba(53, 53, 53, 0.5) !important;
-            transform: scale(0.98);
-            transition: all 0.1s ease;
-            background-color: #2a2a2a !important;
-        }
-        
-        /* Buttons & Actions */
-        .delete-item, #clear-search {
-            background-color: #161616 !important;
-            color: white !important;
-            border: none;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            transition: all 0.5s ease;
-        }
-        
-        .delete-item:hover, #clear-search:hover {
-            background-color: #4b4a4a !important;
+        for key, food in foods.items():
+            # Handle EAN field - convert list to string if needed
+            ean = food.get('ean')
+            if isinstance(ean, list):
+                ean = ', '.join(ean) if ean else None
             
-        }
+            try:
+                cursor.execute('''
+                    INSERT INTO foods 
+                    (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    key,
+                    food['name'],
+                    food['carbs'],
+                    food.get('sugars', 0),
+                    food.get('fiber', 0),
+                    food['proteins'],
+                    food['fats'],
+                    food.get('saturated', 0),
+                    food.get('salt', 0),
+                    food['calories'],
+                    food['grams'],
+                    food.get('half'),
+                    food.get('entire'),
+                    food.get('serving'),
+                    ean  # Use the processed EAN value
+                ))
+            except sqlite3.IntegrityError:
+                pass  # Skip duplicates
         
-        #clear-search {
-            background-color: #b61336;
-            color: rgb(0, 0, 0);
-            width: 32px;
-            height: 32px;
-            font-size: 18px;
-            margin-left: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
+        conn.commit()
+        conn.close()
+        if os.path.exists(FOOD_FILE):
+            os.rename(FOOD_FILE, FOOD_FILE + ".bak")
+    
+    # Migrate food_usage
+    if os.path.exists(USAGE_FILE):
+        with open(USAGE_FILE, 'r') as f:
+            usage = json.load(f)
         
-        #clear-search:hover {
-            background-color: #ff000048;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
+        for key, count in usage.items():
+            try:
+                cursor.execute('''
+                    INSERT INTO food_usage (food_key, count)
+                    VALUES (?, ?)
+                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+                ''', (key, count, count))
+            except sqlite3.IntegrityError:
+                pass
         
-        .edit-grams {
-            padding: 1px 14px !important;
-            font-size: 14px !important;
-            min-width: 55px;
-            height: 16px !important;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            justify-content: center;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            background-color: #ffffff;
-            color: black;
-        }
+        conn.commit()
+        conn.close()
+        if os.path.exists(USAGE_FILE):
+            os.rename(USAGE_FILE, USAGE_FILE + ".bak")
+
+    
+    # Migrate food_usage
+    if os.path.exists(USAGE_FILE):
+        with open(USAGE_FILE, 'r') as f:
+            usage = json.load(f)
         
-        .edit-grams:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        .toggle-group {
-            padding: 2px 4px !important;
-            font-size: 14px !important;
-            margin-left: 10px !important;
-            flex-shrink: 0;
-            height: 24px;
-            background-color: rgba(11, 20, 134, 0.2) !important;
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            transition: all 0.2s ease;
-        }
+        for key, count in usage.items():
+            try:
+                cursor.execute('''
+                    INSERT INTO food_usage (food_key, count)
+                    VALUES (?, ?)
+                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+                ''', (key, count, count))
+            except sqlite3.IntegrityError:
+                pass
         
-        .toggle-group:hover {
-            background-color: rgba(255, 255, 255, 0.3) !important;
-        }
+        conn.commit()
+        conn.close()
+        os.rename(USAGE_FILE, USAGE_FILE + ".bak")
+
+# Initialize database and migrate data
+init_db()
+migrate_json_to_db()
+
+# Helper functions
+def calculate_calories(carbs, proteins, fats):
+    return carbs * 4 + proteins * 4 + fats * 9
+
+def get_foods():
+    conn = get_db_connection()
+    foods = conn.execute('SELECT * FROM foods').fetchall()
+    conn.close()
+    return {food['key']: dict(food) for food in foods}
+
+def get_food_by_key(key):
+    conn = get_db_connection()
+    food = conn.execute('SELECT * FROM foods WHERE key = ?', (key,)).fetchone()
+    conn.close()
+    return dict(food) if food else None
+
+def save_food(food_data):
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT OR REPLACE INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            food_data['key'],
+            food_data['name'],
+            food_data['carbs'],
+            food_data['sugars'],
+            food_data['fiber'],
+            food_data['proteins'],
+            food_data['fats'],
+            food_data['saturated'],
+            food_data['salt'],
+            food_data['calories'],
+            food_data['grams'],
+            food_data.get('half'),
+            food_data.get('entire'),
+            food_data.get('serving'),
+            food_data.get('ean')
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+def get_food_usage():
+    conn = get_db_connection()
+    usage = conn.execute('SELECT food_key, count FROM food_usage').fetchall()
+    conn.close()
+    return {row['food_key']: row['count'] for row in usage}
+
+def increment_food_usage(food_name):
+    key = food_name.lower()
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO food_usage (food_key, count)
+            VALUES (?, 1)
+            ON CONFLICT(food_key) DO UPDATE SET count = count + 1
+        ''', (key,))
+        conn.commit()
+    finally:
+        conn.close()
+
+def get_session_history():
+    if not os.path.exists(SESSION_FILE):
+        return {}
+    
+    with open(SESSION_FILE, 'r') as f:
+        try:
+            return json.load(f)
+        except:
+            return {}
+
+def save_session_history(session_history):
+    with open(SESSION_FILE, 'w') as f:
+        json.dump(session_history, f, indent=2)
+
+def get_current_session(date=None):
+    if date is None:
+        date = datetime.now().strftime("%Y-%m-%d")
+    
+    session_history = get_session_history()
+    return session_history.get(date, []), date
+
+def save_current_session(eaten_items, date):
+    session_history = get_session_history()
+    session_history[date] = eaten_items
+    save_session_history(session_history)
+
+def calculate_group_breakdown(eaten_items):
+    groups = {}
+    for item in eaten_items:
+        group = item.get('group', 'Ungrouped')
+        if group not in groups:
+            groups[group] = {
+                "items": [],
+                "calories": 0,
+                "carbs": 0,
+                "proteins": 0,
+                "fats": 0,
+                "salt": 0
+            }
         
-        /* Main Layout */
-        .container-main {
-            display: grid;
-            grid-template-columns: 1180px;
-            grid-template-rows: 550px 690px;
-            gap: 0;
-            margin: 0 auto;
-            width: 1180px;
-            position: relative;
-        }
-        
-        .grid-panel {
-            border: 1px solid #2b2b2b;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .top-panel {
-            grid-column: 1;
-        }
-        
-        .card-body {
-            flex: 1;
-            padding: 10px;
-            overflow: auto;
-            flex: 1;
-        }
-            #food-log {
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
-        display: flex;
-        flex-direction: column;
-        }
-        .card-footer {
-        margin-top: auto; /* Push to bottom */
-        }
-        
-        .navbar-brand {
-            font-size: 26px;
-        }
-        
-        .nav-link {
-            font-size: 20px;
-        }
-        
-        /* Nutrition Grid */
-        .nutrition-grid-container {
-            position: fixed;
-            top: 120px;
-            left: calc(50% + 590px + 20px);
-            width: 100px;
-            height: 530px;
-            z-index: 100;
-        }
-         /* NEW: Hide nutrition panel on desktop */
-    @media (min-width: 992px) {
-        #nutrition-panel {
-            display: none !important;
-        }
-        
-        /* Adjust main container to only have 2 rows */
-        .container-main {
-            grid-template-rows: 570px 670px !important;
-        }
+        groups[group]["items"].append(item)
+        groups[group]["calories"] += item['calories']
+        groups[group]["carbs"] += item['carbs']
+        groups[group]["proteins"] += item['proteins']
+        groups[group]["fats"] += item['fats']
+        groups[group]["salt"] += item.get('salt', 0)
+    
+    return groups
+
+def calculate_totals(eaten_items):
+    total_carbs = sum(item['carbs'] for item in eaten_items)
+    total_sugars = sum(item.get('sugars', 0.0) for item in eaten_items)
+    total_fiber = sum(item.get('fiber', 0.0) for item in eaten_items)
+    total_proteins = sum(item['proteins'] for item in eaten_items)
+    total_fats = sum(item['fats'] for item in eaten_items)
+    total_saturated = sum(item.get('saturated', 0.0) for item in eaten_items)
+    total_salt = sum(item.get('salt', 0.0) for item in eaten_items)
+    total_calories = sum(item['calories'] for item in eaten_items)
+    
+    return {
+        "calories": total_calories,
+        "carbs": total_carbs,
+        "sugars": total_sugars,
+        "fiber": total_fiber,
+        "proteins": total_proteins,
+        "fats": total_fats,
+        "saturated": total_saturated,
+        "salt": total_salt
+    }
+
+def get_daily_totals(day_data):
+    total_calories = sum(item['calories'] for item in day_data)
+    total_proteins = sum(item['proteins'] for item in day_data)
+    total_fats = sum(item['fats'] for item in day_data)
+    total_carbs = sum(item['carbs'] for item in day_data)
+    total_salt = sum(item.get('salt', 0.0) for item in day_data)
+    return total_calories, total_proteins, total_fats, total_carbs, total_salt
+
+def format_date(date_str):
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    return date_obj.strftime("%A (%d.%m.%Y)")
+
+# Routes
+@app.route('/')
+def index():
+    eaten_items, current_date = get_current_session()
+    totals = calculate_totals(eaten_items)
+    food_usage = get_food_usage()
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    
+    # Generate dates for selector
+    dates = []
+    today = datetime.now()
+    for i in range(-3, 4):
+        date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
+        formatted_date = format_date(date_str)
+        dates.append((date_str, formatted_date))
+    
+    current_date_formatted = format_date(current_date)
+    
+    return render_template('index.html', 
+                           eaten_items=eaten_items,
+                           totals=totals,
+                           current_date=current_date,
+                           current_date_formatted=current_date_formatted,
+                           dates=dates,
+                           food_usage=food_usage,
+                           group_breakdown=group_breakdown)
+
+@app.route('/search_foods', methods=['POST'])
+def search_foods():
+    query = request.form.get('query', '').strip()  # Remove .lower() to preserve case
+    conn = get_db_connection()
+    
+    if not query:
+        # Get top 10 foods by usage
+        foods = conn.execute('''
+            SELECT f.*, COALESCE(u.count, 0) as usage
+            FROM foods f
+            LEFT JOIN food_usage u ON f.key = u.food_key
+            ORDER BY usage DESC, name ASC
+            LIMIT 10
+        ''').fetchall()
+    else:
+        # Search by name OR EAN (case-sensitive exact match)
+        foods = conn.execute('''
+            SELECT f.*, COALESCE(u.count, 0) as usage
+            FROM foods f
+            LEFT JOIN food_usage u ON f.key = u.food_key
+            WHERE LOWER(f.name) LIKE ? OR f.ean = ?
+            ORDER BY usage DESC, name ASC
+            LIMIT 10
+        ''', (f'%{query.lower()}%', query)).fetchall()
+    
+    conn.close()
+    
+    results = []
+    for food in foods:
+        results.append({
+            'id': food['key'],
+            'name': food['name'],
+            'calories': food['calories'],
+            'serving_size': food['serving'],
+            'half_size': food['half'],
+            'entire_size': food['entire'],
+            'usage': food['usage'],
+            'ean': food['ean']
+        })
+    
+    return jsonify(results)
+
+@app.route('/get_food_details', methods=['POST'])
+def get_food_details():
+    food_id = request.form.get('food_id')
+    unit_type = request.form.get('unit_type')
+    units = request.form.get('units')
+    
+    food = get_food_by_key(food_id)
+    if not food:
+        return jsonify({'error': 'Food not found'}), 404
+    
+    # Default to grams if no units provided
+    if not units or float(units) <= 0:
+        units = 100
+        unit_type = 'grams'
+    else:
+        units = float(units)
+    
+    # Convert units to grams
+    if unit_type == 'grams':
+        grams = units
+    elif unit_type == 'half' and food.get('half') is not None:
+        grams = units * food['half']
+    elif unit_type == 'entire' and food.get('entire') is not None:
+        grams = units * food['entire']
+    elif unit_type == 'serving' and food.get('serving') is not None:
+        grams = units * food['serving']
+    else:
+        grams = units
+        unit_type = 'grams'
+    
+    factor = grams / 100
+    carbs = food['carbs'] * factor
+    proteins = food['proteins'] * factor
+    fats = food['fats'] * factor
+    salt = food.get('salt', 0.0) * factor
+    calories = food['calories'] * factor
+    
+    return jsonify({
+        'name': food['name'],
+        'units': units,
+        'unit_type': unit_type,
+        'carbs': carbs,
+        'proteins': proteins,
+        'fats': fats,
+        'salt': salt,
+        'calories': calories,
+        'serving_size': food.get('serving'),
+        'half_size': food.get('half'),
+        'entire_size': food.get('entire')
+    })
+
+@app.route('/log_food', methods=['POST'])
+def log_food():
+    food_id = request.form.get('food_id')
+    unit_type = request.form.get('unit_type')
+    units = float(request.form.get('units'))
+    meal_group = request.form.get('meal_group')
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    
+    food = get_food_by_key(food_id)
+    if not food:
+        return jsonify({'error': 'Food not found'}), 404
+    
+    # Convert units to grams
+    if unit_type == 'grams':
+        grams = units
+    elif unit_type == 'half' and food.get('half') is not None:
+        grams = units * food['half']
+    elif unit_type == 'entire' and food.get('entire') is not None:
+        grams = units * food['entire']
+    elif unit_type == 'serving' and food.get('serving') is not None:
+        grams = units * food['serving']
+    else:
+        grams = units
+        unit_type = 'grams'
+    
+    factor = grams / 100
+    carbs = food['carbs'] * factor
+    proteins = food['proteins'] * factor
+    fats = food['fats'] * factor
+    salt = food.get('salt', 0.0) * factor
+    sugars = food.get('sugars', 0.0) * factor
+    fiber = food.get('fiber', 0.0) * factor
+    saturated = food.get('saturated', 0.0) * factor
+    calories = food['calories'] * factor
+    
+    item = {
+        "name": food['name'],
+        "grams": grams,
+        "units": units,
+        "unit_type": unit_type,
+        "carbs": carbs,
+        "sugars": sugars,
+        "fiber": fiber,
+        "proteins": proteins,
+        "fats": fats,
+        "saturated": saturated,
+        "salt": salt,
+        "calories": calories,
+        "group": meal_group
     }
     
-    /* Mobile Responsive */
-    @media (max-width: 991px) {
-      /* Show nutrition panel on mobile */
-        #nutrition-panel {
-            display: block;
-        }
-        /* Camera button positioning and sizing */
-
-        #scan-ean {
-            position: absolute;
-            right: 0px; /* Position next to clear button */
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            padding: 5px 8px;
-            height: 36px;
-            width: 36px;
-            border-radius: 4px;
-            background-color: #b61336 !important;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        
-        #scan-ean img {
-            width: 20px;
-            height: 20px;
-            filter: invert(1); /* Make white icon */
-        }
-        
-        /* Adjust input field padding to accommodate buttons */
-        #food-search {
-            padding-right: 90px !important; /* Space for both buttons */
-        }
-        
-        /* Position clear button */
-        #clear-search {
-            position: absolute;
-            right: 0px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            height: 36px;
-            width: 36px;
-            padding: 0;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        
-        /* Hide clear button text on mobile */
-        #clear-search .fas {
-            font-size: 16px;
-        }
-        }
-        .nutrition-grid {
-            display: grid;
-            grid-template-rows: repeat(8, 1fr);
-            height: 100%;
-            width: 100%;
-            background-color: #1a1a1a;
-            border: 1px solid #2b2b2b;
-        }
-        
-        .grid-cell {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 1px;
-            font-size: 15px;
-            text-align: center;
-            border: 1px solid #2b2b2b;
-        }
-        
-        .grid-value {
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 2px;
-        }
-        
-        /* Cell-specific styles */
-        .grid-cell:nth-child(1) {
-            background-color: #b61336;
-            color: #fffefe;
-            font-weight: bold;
-            font-size: 15px;
-        }
-        
-        .grid-cell:nth-child(2) {
-            background-color: #ffffff;
-            color: #000000;
-        }
-        
-        .grid-cell:nth-child(3),
-        .grid-cell:nth-child(4),
-        .grid-cell:nth-child(5) {
-            background-color: #b61336;
-            color: #000000;
-        }
-        
-        .grid-cell:nth-child(6),
-        .grid-cell:nth-child(7),
-        .grid-cell:nth-child(8) {
-            background-color: #ffffff;
-            color: #000000;
-        }
-        
-        /* Food Item Components */
-        .food-item-container {
-            min-width: 40% !important;
-            padding-right: 8px !important;
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-        }
-        
-        .nutrition-and-actions {
-            display: flex;
-            align-items: center;
-        }
-        
-        .nutrition-values-container {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex-grow: 1;
-            gap: 0px;
-        }
-        
-        .group-nutrition-container {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex-grow: 1;
-            background: transparent !important;
-        }
-        
-        .group-nutrition {
-            display: flex;
-            margin-right: 4px;
-        }
-        
-        /* Admin Mode */
-        #admin-toggle {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background-color: #ff0000;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            font-size: 16px;
-            border-radius: 4px;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(255, 0, 0, 0.5);
-            display: none;
-        }
-        
-        .delete-food-btn {
-            display: none;
-            background-color: #ff0000;
-            color: white;
-            border: none;
-            padding: 3px 8px;
-            border-radius: 3px;
-            margin-left: 10px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        
-        .admin-active .delete-food-btn {
-            display: inline-block;
-        }
-        
-        /* Mobile Responsive */
-        @media (max-width: 991px) {
-                body {
-                display: flex;
-                flex-direction: column;
-                height: 110vh;
-                padding-bottom: 0px;
-                }
-                html, body {
-                height: 100%;
-                overflow: hidden;
-                }
-            .container-main {
-                display: flex;
-                flex-direction: column;
-                height: calc(100% - 120px);
-                min-height: 0;
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
-                width: 100%;
-                max-width: 100%;
-                padding: 0;
-                gap: 10px;
-            }
-            
-            .nutrition-grid-container {
-                display: none !important;
-               }
-            .food-group {
-              flex: none !important;
-               }
-
-            .mobile-tab-bar {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: #000;
-                z-index: 1000;
-                padding: 10px;
-                justify-content: space-around;
-                border-top: 1px solid #444;
-            }
-            
-            .mobile-tab-btn {
-                background: #333;
-                border: none;
-                color: #e0e0e0;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-size: 18px;
-                flex: 1;
-                margin: 0 5px;
-                text-align: center;
-            }
-            
-            .mobile-tab-btn.active {
-                background: #b61336;
-                color: black;
-                font-weight: bold;
-            }
-            
-           .mobile-panel:not(.active) {
-            display: none !important;
-        }
-        add-food-panel.active, #food-log-panel.active {
-            display: flex !important;
-            flex-direction: column;
-        }
-            
-            .mobile-panel.active {
-                display: block;
-            }
-            
-            .grid-panel {
-                flex: 1;
-                min-height: 0;
-                height: auto;
-                min-height: 50vh;
-            }
-            .grid-panel.active {
-            display: flex;
-            flex-direction: column;
-            }
-            .grid-panel.active .card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            }
-            
-            #rt-breakdown-container {
-                width: 100%;
-            }
-            
-            .nutrition-values-container, .group-nutrition-container {
-                flex-wrap: wrap;
-                justify-content: flex-end;
-            }
-            
-            .nutrition-value-xxs {
-                font-size: 10px !important;
-                min-width: 35px !important;
-                height: 16px !important;
-                padding: 2px 4px !important;
-                margin: 0 1px !important;
-            }
-            
-            .group-title {
-                font-size: 12px !important;
-            }
-            
-            .navbar-brand {
-                font-size: 20px !important;
-            }
-            
-            .card-header h6 {
-                font-size: 18px !important;
-            }
-            
-            .food-item-container {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-            
-            .nutrition-and-actions {
-                width: 100%;
-                justify-content: space-between;
-                margin-top: 5px;
-            }
-            
-            #date-selector {
-                font-size: 14px !important;
-                height: 36px !important;
-            }
-            
-            #meal-group {
-                width: 100%;
-            }
-            
-            .food-item-container strong {
-                font-size: 14px !important;
-            }
-            
-            /* Mobile Nutrition Display */
-            .group-nutrition > div:not(.nutrition-calories),
-            .nutrition-values-container > div:not(.nutrition-calories) {
-                display: none !important;
-            }
-            
-            .group-header {
-                flex-wrap: nowrap !important;
-                padding: 8px 10px !important;
-            }
-            
-            .group-title {
-                max-width: 40%;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            .group-nutrition-container {
-                justify-content: flex-end !important;
-                margin-left: auto !important;
-                width: auto !important;
-                padding: 2px 5px;
-            }
-            
-            .group-nutrition .nutrition-calories,
-            .nutrition-values-container .nutrition-calories {
-                min-width: 65px !important;
-                font-size: 14px !important;
-                padding: 4px 4px 10px 4px !important;
-                line-height: 0.8;
-            }
-            
-            #move-item span {
-                display: none;
-            }
-        }
-        
-        /* Barcode scanner UI */
-        #camera-preview {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            background-color: #000;
-            overflow: hidden;
-        }
-        
-        #scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .scan-line {
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            width: 80%;
-            height: 3px;
-            background: #b61336;
-            animation: scan 2s infinite linear;
-            box-shadow: 0 0 10px rgba(182, 19, 54, 0.7);
-        }
-        
-        @keyframes scan {
-            0% { top: 10%; }
-            50% { top: 90%; }
-            100% { top: 10%; }
-        }
-        
-        .scan-guide {
-            position: absolute;
-            top: 25%;
-            left: 15%;
-            width: 70%;
-            height: 50%;
-            border: 2px solid #b61336;
-            border-radius: 8px;
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7);
-        }
-        
-        .scanning-text {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #b61336;
-            font-weight: bold;
-            text-shadow: 0 0 3px rgba(0,0,0,0.5);
-            font-size: 18px;
-        }
-        
-        .scanned-result {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #fff;
-            font-weight: bold;
-            background: rgba(0,0,0,0.7);
-            padding: 5px;
-            font-size: 16px;
-        }
-        
-        .highlight-search {
-            box-shadow: 0 0 10px #b61336;
-            border: 2px solid #b61336;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 5px #b61336; }
-            50% { box-shadow: 0 0 20px #b61336; }
-            100% { box-shadow: 0 0 5px #b61336; }
-        }
-    </style>
-</head>
-<body>
-    <!-- Admin toggle button -->
-    <button id="admin-toggle" class="btn">ADMIN MODE</button>
+    # Update session
+    eaten_items, current_date = get_current_session(date)
+    eaten_items.append(item)
+    save_current_session(eaten_items, date)
     
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-        <div class="container">
-             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-            <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336; ">- Track, eat, repeat - </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/" style="font-size: 20px;color: #b61336; ">Today</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336; ">History</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    # Update food usage
+    increment_food_usage(food['name'])
+    
+    # Return updated session, totals and breakdown
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'breakdown': group_breakdown
+    })
 
-    <!-- Mobile Tab Bar -->
-    <div class="mobile-tab-bar d-block d-lg-none">
-        <button class="mobile-tab-btn active" data-panel="add-food-panel">Add Food</button>
-        <button class="mobile-tab-btn" data-panel="food-log-panel">Food Log</button>
-        <button class="mobile-tab-btn" data-panel="nutrition-panel">Nutrition</button>
-    </div>
+@app.route('/update_session', methods=['POST'])
+def update_session():
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    eaten_items, current_date = get_current_session(date)
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    current_date_formatted = format_date(current_date)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date': current_date,
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
 
-    <div class="container-main">
-        <!-- Top: Add Food (Full Width) -->
-        <div class="grid-panel top-panel mobile-panel active" id="add-food-panel">
-            <div class="card bg-dark h-100">
-                <div class="card-header bg-black text-light">
-                    <h6>Add Food</h6>
-                </div>
-                <div class="card-body">
-                    <div class="input-group mb-3 position-relative">
-    <input type="text" id="food-search" class="form-control bg-secondary text-light" placeholder="Search food or scan EAN...">
-    <div class="position-absolute" style="right: 50px; top: 50%; transform: translateY(-50%); z-index: 10;">
-        <button id="scan-ean" class="btn p-1" type="button" style="background-color: #b61336; height: 32px; width: 32px;">
-            <img src="{{ url_for('static', filename='images/camera.svg') }}" alt="Scan EAN" style="width: 20px; height: 20px; filter: invert(1);">
-        </button>
-    </div>
-    <div class="position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); z-index: 10;">
-        <button id="clear-search" class="btn p-1" type="button" style="height: 32px; width: 32px;">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-</div>
-                    <div id="search-results" class="mt-3"></div>
-                    <!-- Real-time Breakdown -->
-                    <div id="rt-breakdown-container" class="d-none">
-                        <div class="d-flex justify-content-center gap-1 mb-2">
-                            <div class="rtb-yay" style="background-color: #ffffff; color: black;">
-                                <span id="rt-calories">0</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336; color: black;">
-                                <span id="rt-proteins">0g</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336;color: black;">
-                                <span id="rt-carbs">0g</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336;color: black;">
-                                <span id="rt-fats">0g</span>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-center" style="font-size: 15px;">
-                            <span>Per Grams: </span>
-                            <strong id="rt-grams" style="font-size: 15px;">0g</strong>
-                        </div>
-                    </div>
-                    
-                    <div id="food-details" class="d-none mt-3">
-                        <div class="mb-3">
-                            <label class="form-label">Grams</label>
-                            <input type="number" id="grams" class="form-control bg-secondary text-light" value="100" min="0.1" step="0.1">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Portion Type</label>
-                            <div class="d-flex gap-1" id="portion-buttons">
-                                <!-- Buttons will be added dynamically -->
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Meal Group</label>
-                            <select id="meal-group" class="form-select bg-secondary text-light">
-                                <option value="breakfast">Breakfast</option>
-                                <option value="lunch">Lunch</option>
-                                <option value="dinner">Dinner</option>
-                                <option value="snack">Snack</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <button id="add-food" class="btn w-200  mt-3" style="background-color: #b61336; color: black; padding: 10px; font-size: 18px;">Add Food</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+@app.route('/delete_food', methods=['POST'])
+def delete_food():
+    food_id = request.form.get('food_id').lower()
+    conn = get_db_connection()
+    try:
+        # Delete from both tables
+        conn.execute('DELETE FROM foods WHERE key = ?', (food_id,))
+        conn.execute('DELETE FROM food_usage WHERE food_key = ?', (food_id,))
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/delete_item', methods=['POST'])
+def delete_item():
+    item_index = int(request.form.get('item_index'))
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    
+    eaten_items, current_date = get_current_session(date)
+    if 0 <= item_index < len(eaten_items):
+        del eaten_items[item_index]
+        save_current_session(eaten_items, date)
+    
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    current_date_formatted = format_date(current_date)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
+
+@app.route('/clear_session', methods=['POST'])
+def clear_session():
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    save_current_session([], date)
+    group_breakdown = calculate_group_breakdown([])
+    current_date_formatted = format_date(date)
+    return jsonify({
+        'session': [],
+        'totals': calculate_totals([]),
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
+
+@app.route('/move_to_date', methods=['POST'])
+def move_to_date():
+    source_date = request.form.get('source_date')
+    target_date = request.form.get('target_date')
+    
+    session_history = get_session_history()
+    if source_date in session_history:
+        session_history[target_date] = session_history[source_date].copy()
+        save_session_history(session_history)
+    
+    return jsonify({'success': True})
+
+@app.route('/create_group', methods=['POST'])
+def create_group():
+    group_name = request.form.get('group_name')
+    predefined = ["breakfast", "lunch", "dinner", "snack", "Ungrouped"]
+    
+    if not group_name:
+        return jsonify({'error': 'Group name is required'}), 400
+    
+    if group_name in predefined:
+        return jsonify({'error': 'This is a reserved group name'}), 400
+    
+    return jsonify({'success': True, 'group_name': group_name})
+
+@app.route('/custom_food')
+def custom_food():
+    return render_template('custom_food.html')
+
+@app.route('/save_food', methods=['POST'])
+def save_food_route():
+    try:
+        # Extract form data
+        name = request.form.get('name')
+        if not name:
+            return jsonify({'success': False, 'error': 'Name is required'}), 400
+
+        # Convert to floats, default to 0 if empty
+        carbs = float(request.form.get('carbs', 0)) or 0
+        sugars = float(request.form.get('sugars', 0)) or 0
+        fiber = float(request.form.get('fiber', 0)) or 0
+        proteins = float(request.form.get('proteins', 0)) or 0
+        fats = float(request.form.get('fats', 0)) or 0
+        saturated = float(request.form.get('saturated', 0)) or 0
+        salt = float(request.form.get('salt', 0)) or 0
+        ean = request.form.get('ean') or None
+        grams = float(request.form.get('grams', 100))  # default 100g
         
-        <!-- Bottom: Food Log -->
-        <div class="grid-panel mobile-panel" id="food-log-panel" style="grid-column: 1; grid-row: 2; width: 100%;">
-            <div class="card bg-dark h-100 d-flex flex-column">
-                <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <h6>Food Log</h6>
-                        <!-- Toggle Grid Button -->
-                        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #b61336;color:#000000 padding: 5px;">
-                            <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
-                                alt="Toggle Nutrition Grid" 
-                                style="width: 24px; height: 24px; filter: invert(100%);">
-                        </button>
-                    </div>
-                    <div>
-                        <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
-                            {% for date_str, formatted in dates %}
-                            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="card-body p-0 d-flex flex-column">
-                    <div id="food-log" class="flex-grow-1" style="overflow: auto;">
-                        {% if group_breakdown %}
-                            {% for group, group_data in group_breakdown.items() %}
-                            <div class="food-group" data-group="{{ group }}">
-                                <div class="group-header bg-dark d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="group-title">-- {{ group | upper }} --</span>
-                                    </div>
-                                    <div class="group-nutrition-container">
-                                        <div class="group-nutrition">
-                                            <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                                                <span>{{ group_data['calories']|round(1) }} kcal</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                                                <span>{{ group_data['proteins']|round(1) }}g P</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                                                <span>{{ group_data['carbs']|round(1) }}g C</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                                                <span>{{ group_data['fats']|round(1) }}g F</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn btn-sm toggle-group ms-1">−</button>
-                                    </div>
-                                </div>
-                                <ul class="group-items list-group list-group-flush">
-                                    {% for item in group_data['items'] %}
-                                    <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="{{ loop.index0 }}">
-                                        <div class="food-item-container">
-                                            <div>
-                                                <div class="d-flex align-items-center">
-                                                    <strong>{{ item.name }}</strong>
-                                                </div>
-                                            </div>
-                                            <span class="edit-grams badge edit-grams-btn mx-1" 
-                                                data-index="{{ loop.index0 }}">
-                                                {{ item.grams|round(1) }}g
-                                            </span>
-                                        </div>
-                                        <div class="nutrition-and-actions">
-                                            <div class="nutrition-values-container d-flex">
-                                                <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                                                    <span>{{ item.calories|round(1) }} kcal</span>
-                                                </div>
-                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                                    <span>{{ item.proteins|round(1) }}g P</span>
-                                                </div>
-                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                    <span>{{ item.carbs|round(1) }}g C</span>
-                                                </div>
-                                                <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                    <span>{{ item.fats|round(1) }}g F</span>
-                                                </div>
-                                            </div>
-                                            <button class="btn delete-item" data-index="{{ loop.index0 }}">X</button>
-                                        </div>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="list-group-item bg-dark text-light text-center text-muted py-5" style="font-size: 18px;">No food logged yet</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-footer bg-black py-2 d-flex justify-content-between">
-                    <div>
-                        <button id="move-date" class="btn me-2" style="background-color: #b61336; color: black; padding: 8px 12px;">DATE</button>
-                        <button id="move-item" class="btn" style="background-color: #b61336; color: black; padding: 8px 12px;" disabled>Move</button>
-                    </div>
-                    <button id="clear-session" class="btn" style="background-color: #b61336; color: black; padding: 8px 12px;">Clear All</button>
-                </div>
-            </div>
-        </div>
+        # Optional portion fields
+        serving = request.form.get('serving')
+        half = request.form.get('half')
+        entire = request.form.get('entire')
         
-        <!-- Nutrition Panel -->
-        <div class="grid-panel mobile-panel" id="nutrition-panel">
-            <div class="card bg-dark h-100">
-                <div class="card-header bg-black text-light">
-                    <h6>Nutrition Breakdown</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Calories</div>
-                            <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Protein</div>
-                            <div class="grid-value" id="mobile-proteins">{{ totals.proteins | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Carbs</div>
-                            <div class="grid-value" id="mobile-carbs">{{ totals.carbs | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Fats</div>
-                            <div class="grid-value" id="mobile-fats">{{ totals.fats | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Sugars</div>
-                            <div class="grid-value" id="mobile-sugars">{{ totals.sugars | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Fiber</div>
-                            <div class="grid-value" id="mobile-fiber">{{ totals.fiber | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Salt</div>
-                            <div class="grid-value" id="mobile-salt">{{ totals.salt | round(1) }}g</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Nutrition Grid -->
-    <div class="nutrition-grid-container">
-        <div class="nutrition-grid">
-            <div class="grid-cell">Totals</div>
-            <div class="grid-cell">
-                Calories
-                <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
-            </div>
-            <div class="grid-cell">
-                Proteins
-                <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Carbs
-                <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Fats
-                <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Sugars
-                <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Fiber
-                <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Salt
-                <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Edit Grams Modal -->
-    <div class="modal fade" id="editGramsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Edit Grams</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Grams</label>
-                        <input type="number" id="edit-grams-input" class="form-control bg-secondary text-light" min="0" step="0.1">
-                    </div>
-                    <input type="hidden" id="edit-grams-index">
-                </div>
-                <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #ff4444; color: black;">Cancel</button>
-                    <button type="button" id="save-grams" class="btn" style="background-color: #ff4444; color: black;">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Move Session Modal -->
-    <div class="modal fade" id="moveSessionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Copy Session</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Destination Date</label>
-                        <select id="target-date-select" class="form-select bg-secondary text-light">
-                            {% for date_str, formatted in dates %}
-                                {% if date_str != current_date %}
-                                    <option value="{{ date_str }}">{{ formatted }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-move-session" class="btn" style="background-color: #ff4444; color: black;">Copy</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Move Item Modal -->
-    <div class="modal fade" id="moveItemModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Move Item to Group</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Group</label>
-                        <select id="target-group-select" class="form-select bg-secondary text-light">
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="dinner">Dinner</option>
-                            <option value="snack">Snack</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Or create new group:</label>
-                        <input type="text" id="new-group-name" class="form-control bg-secondary text-light" placeholder="New group name">
-                    </div>
-                </div>
-                <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-move-item" class="btn" style="background-color: #ff4444; color: black;">Move</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Camera Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black">
-                    <h5 class="modal-title">Scan EAN Barcode</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body d-flex flex-column align-items-center justify-content-center">
-                    <div id="camera-preview"></div>
-                    <div id="scanner-overlay">
-                        <div class="scan-guide"></div>
-                        <div class="scan-line"></div>
-                        <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
-                        <div id="scanned-result" class="scanned-result"></div>
-                    </div>
-                    <div class="mt-3 text-center">
-                        <p class="text-light">Point your camera at an EAN barcode</p>
-                        <button id="toggle-camera" class="btn btn-sm me-2" style="background-color: #b61336; color: black;">
-                            <i class="fas fa-sync-alt"></i> Switch Camera
-                        </button>
-                        <button id="resume-scan" class="btn btn-sm" style="background-color: #b61336; color: black;">
-                            <i class="fas fa-redo"></i> Resume Scan
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-footer bg-black">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        $(document).ready(function() {
-            let currentFood = null;
-            let selectedItems = [];
-            const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
-            const moveSessionModal = new bootstrap.Modal(document.getElementById('moveSessionModal'));
-            const moveItemModal = new bootstrap.Modal(document.getElementById('moveItemModal'));
-            const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
-            const DATES = {{ dates | tojson }};
-            const CURRENT_DATE = "{{ current_date }}";
-            
-            // Camera variables
-            let currentCamera = 'environment';
-            let scanningActive = false;
-            let lastScannedCode = null;
-            
-            // Admin mode variables
-            let isAdminMode = false;
-            const ADMIN_KEY_COMBO = ['i', 'd', 'd', 'q', 'd'];
-            let keySequence = [];
-            
-            // Position nutrition grid
-            function positionNutritionGrid() {
-                const navbarHeight = $('.navbar').outerHeight();
-                const container = $('.container-main');
-                const containerOffset = container.offset();
-                const containerWidth = container.width();
-                
-                // Calculate position: right of container + spacing
-                const gridLeft = containerOffset.left + containerWidth + 10;
-                
-                $('.nutrition-grid-container').css({
-                    'top': navbarHeight + 20,
-                    'left': gridLeft
-                });
-            }
-            
-            // Initial positioning
-            positionNutritionGrid();
-            
-            // Re-position on resize
-            $(window).resize(positionNutritionGrid);
-            
-            // Re-position on scroll to keep it fixed
-            $(window).scroll(positionNutritionGrid);
-            
-            // Konami code detection
-            $(document).keydown(function(e) {
-                keySequence.push(e.key);
-                if (keySequence.length > ADMIN_KEY_COMBO.length) {
-                    keySequence.shift();
-                }
-                
-                if (keySequence.join('') === ADMIN_KEY_COMBO.join('')) {
-                    toggleAdminMode();
-                    keySequence = [];
-                }
-            });
-            
-            // Admin toggle button click
-            $('#admin-toggle').click(function() {
-                toggleAdminMode();
-            });
-            
-            // Toggle admin mode
-            function toggleAdminMode() {
-                isAdminMode = !isAdminMode;
-                $('#admin-toggle').toggle(isAdminMode);
-                $('body').toggleClass('admin-active', isAdminMode);
-                alert(`Admin mode ${isAdminMode ? 'ENABLED' : 'DISABLED'}`);
-            }
-            
-            // Load top 10 foods on page load
-            loadTopFoods();
-            
-            function createFoodItemHtml(food) {
-                return `
-                    <a class="list-group-item list-group-item-action food-item small text-start" 
-                       data-id="${food.id}" 
-                       data-serving="${food.serving_size || ''}"
-                       data-half="${food.half_size || ''}"
-                       data-entire="${food.entire_size || ''}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="food-name">${food.name}</span>
-                            <div>
-                                <span class="calorie-badge">${food.calories} cal/100g</span>
-                                <button class="delete-food-btn" data-id="${food.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            }
-            
-            function loadTopFoods() {
-                $.post('/search_foods', { query: '' }, function(data) {
-                    let resultsHtml = '';
-                    if (data.length > 0) {
-                        resultsHtml = '<div class="list-group">';
-                        data.forEach(food => {
-                            resultsHtml += createFoodItemHtml(food);
-                        });
-                        resultsHtml += '</div>';
-                    } else {
-                        resultsHtml = '<div class="text-center p-2 small">No foods available</div>';
-                    }
-                    $('#search-results').html(resultsHtml);
-                });
-            }
-
-            // Food search functionality
-            $('#food-search').on('input', function() {
-                const query = $(this).val().trim();
-                
-                if (query.length === 0) {
-                    loadTopFoods();
-                    return;
-                }
-                
-                $.post('/search_foods', { query: query }, function(data) {
-                    let resultsHtml = '';
-                    if (data.length > 0) {
-                        resultsHtml = '<div class="list-group">';
-                        data.forEach(food => {
-                            resultsHtml += createFoodItemHtml(food);
-                        });
-                        resultsHtml += '</div>';
-                    } else {
-                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
-                    }
-                    $('#search-results').html(resultsHtml);
-                });
-            });
-
-            // Clear search functionality
-            $('#clear-search').click(function() {
-                $('#food-search').val('');
-                loadTopFoods();
-                $('#food-details').addClass('d-none');
-                currentFood = null;
-                $('#rt-breakdown-container').addClass('d-none');
-            });
-
-            // Food selection
-            $(document).on('click', '.food-item', function() {
-                const foodId = $(this).data('id');
-                const servingSize = $(this).data('serving');
-                const halfSize = $(this).data('half');
-                const entireSize = $(this).data('entire');
-                
-                
-                $('#food-search').val($(this).find('.food-name').text().trim());
-                $('#search-results').empty();
-                
-                $.post('/get_food_details', { 
-                    food_id: foodId,
-                    unit_type: 'grams',
-                    units: 100
-                }, function(data) {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-                    
-                    // Store current food
-                    currentFood = data;
-                    currentFood.serving_size = servingSize;
-                    currentFood.half_size = halfSize;
-                    currentFood.entire_size = entireSize;
-                    
-                    // Show food details section
-                    $('#food-details').removeClass('d-none');
-                    $('#grams').val(100);
-                    $('#add-food').data('id', foodId);
-                    
-                    // Update portion buttons
-                    updatePortionButtons(currentFood);
-                    
-                    // Show real-time breakdown
-                    $('#rt-breakdown-container').removeClass('d-none');
-                    
-                    // Update real-time breakdown
-                    updateRealTimeBreakdownFromForm();
-                });
-            });
-
-            // Update portion buttons
-            function updatePortionButtons(food) {
-                const container = $('#portion-buttons');
-                container.empty();
-                
-                const portionTypes = [
-                    { type: 'serving', label: 'Serving', size: food.serving_size },
-                    { type: 'half', label: 'Half', size: food.half_size },
-                    { type: 'entire', label: 'Entire', size: food.entire_size }
-                ];
-                
-                portionTypes.forEach(portion => {
-                    if (portion.size) {
-                        const button = $(`
-                            <button type="button" class="btn btn-sm btn-secondary portion-btn" 
-                                    data-portion-type="${portion.type}" 
-                                    data-portion-size="${portion.size}">
-                                ${portion.label} (${portion.size}g)
-                            </button>
-                        `);
-                        container.append(button);
-                    }
-                });
-            }
-
-            // Portion button click
-            $(document).on('click', '.portion-btn', function() {
-                $('.portion-btn').removeClass('active');
-                $(this).addClass('active');
-                const portionSize = $(this).data('portion-size');
-                $('#grams').val(portionSize);
-                updateRealTimeBreakdownFromForm();
-            });
-
-            // Grams input change
-            $('#grams').on('input', function() {
-                $('.portion-btn').removeClass('active');
-                updateRealTimeBreakdownFromForm();
-            });
-
-            // Portion button hover
-            $(document).on('mouseenter', '.portion-btn', function() {
-                const portionSize = $(this).data('portion-size');
-                const factor = portionSize / 100;
-                
-                const updatedData = {
-                    calories: currentFood.calories * factor,
-                    proteins: currentFood.proteins * factor,
-                    carbs: currentFood.carbs * factor,
-                    fats: currentFood.fats * factor,
-                    sugars: currentFood.sugars * factor,
-                    fiber: currentFood.fiber * factor,
-                    grams: portionSize
-                };
-                
-                updateRealTimeBreakdown(updatedData);
-            });
-
-            $(document).on('mouseleave', '.portion-btn', function() {
-                updateRealTimeBreakdownFromForm();
-            });
-
-            // Add food with Enter key
-            $('#grams').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#add-food').click();
-                }
-            });
-
-            // Add food to log
-            $('#add-food').click(function() {
-                const foodId = $(this).data('id');
-                const grams = parseFloat($('#grams').val()) || 0;
-                const mealGroup = $('#meal-group').val();
-                
-                let unitType = 'grams';
-                let units = grams;
-                
-                // Check if there is an active portion button
-                const activeButton = $('.portion-btn.active');
-                if (activeButton.length) {
-                    unitType = activeButton.data('portion-type');
-                    units = 1;
-                }
-                
-                $.post('/log_food', {
-                    food_id: foodId,
-                    unit_type: unitType,
-                    units: units,
-                    meal_group: mealGroup
-                }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    resetFoodForm();
-                });
-            });
-
-            // Update real-time breakdown from form
-            function updateRealTimeBreakdownFromForm() {
-                if (!currentFood) return;
-                
-                const grams = parseFloat($('#grams').val()) || 0;
-                const factor = grams / 100;
-                
-                const updatedData = {
-                    calories: currentFood.calories * factor,
-                    proteins: currentFood.proteins * factor,
-                    carbs: currentFood.carbs * factor,
-                    fats: currentFood.fats * factor,
-                    sugars: currentFood.sugars * factor,
-                    fiber: currentFood.fiber * factor,
-                    grams: grams
-                };
-                
-                updateRealTimeBreakdown(updatedData);
-            }
-
-            // Update real-time breakdown display
-            function updateRealTimeBreakdown(data) {
-                if (!data || !data.calories) {
-                    $('#rt-breakdown-container').addClass('d-none');
-                    return;
-                }
-                
-                $('#rt-breakdown-container').removeClass('d-none');
-                
-                $('#rt-calories').text(data.calories.toFixed(1)+ ' kcal');
-                $('#rt-proteins').text(data.proteins.toFixed(1) + ' P');
-                $('#rt-carbs').text(data.carbs.toFixed(1) + ' C');
-                $('#rt-fats').text(data.fats.toFixed(1) + ' F');
-                $('#rt-grams').text(data.grams.toFixed(1) + 'g');
-            }
-
-            // Toggle food group
-    $(document).on('click', '.toggle-group', function() {
-        const groupHeader = $(this).closest('.group-header');
-        const groupContainer = groupHeader.closest('.food-group');
-        const groupItems = groupHeader.next('.group-items');
-        const isExpanded = groupItems.is(':visible');
+        serving = float(serving) if serving and serving.strip() else None
+        half = float(half) if half and half.strip() else None
+        entire = float(entire) if entire and entire.strip() else None
         
-        if (isExpanded) {
-            groupItems.hide();
-            $(this).text('+');
-            groupContainer.addClass('collapsed-group');
-        } else {
-            groupItems.show();
-            $(this).text('−');
-            groupContainer.removeClass('collapsed-group');
-        }
-    });
-
-            // Double-click group toggle
-            $(document).on('dblclick', '.group-header', function() {
-                $(this).find('.toggle-group').click();
-            });
-
-            // Edit grams
-            $(document).on('click', '.edit-grams', function() {
-                const index = $(this).data('index');
-                const grams = $(this).text().replace('g', '');
-                $('#edit-grams-index').val(index);
-                $('#edit-grams-input').val(grams);
-                editGramsModal.show();
-            });
-            // Focus on grams input when modal opens
-        $('#editGramsModal').on('shown.bs.modal', function () {
-            $('#edit-grams-input').trigger('focus');
-            });
-            // Save grams
-            $('#save-grams').click(function() {
-                const index = $('#edit-grams-index').val();
-                const newGrams = $('#edit-grams-input').val();
-                
-                if (parseFloat(newGrams) === 0) {
-                    // Delete item
-                    $.post('/delete_item', { item_index: index }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                        editGramsModal.hide();
-                    });
-                } else {
-                    // Update grams
-                    $.post('/update_grams', {
-                        item_index: index,
-                        new_grams: newGrams
-                    }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                        editGramsModal.hide();
-                    });
-                }
-            });
-
-            // Delete food item
-            $(document).on('click', '.delete-item', function(e) {
-                e.stopPropagation();
-                const index = $(this).data('index');
-                $.post('/delete_item', { item_index: index }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                });
-            });
-
-            // Clear session
-            $('#clear-session').click(function() {
-                if (!confirm('Are you sure you want to clear all items?')) return;
-                
-                $.post('/clear_session', {}, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                });
-            });
-
-            // Change date
-            $('#date-selector').change(function() {
-                const date = $(this).val();
-                $.post('/update_session', { date: date }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
-                });
-            });
-
-            // Move session to another date
-            $('#move-date').click(function() {
-                moveSessionModal.show();
-            });
-            
-            $('#confirm-move-session').click(function() {
-                const targetDate = $('#target-date-select').val();
-                
-                $.post('/move_to_date', {
-                    source_date: CURRENT_DATE,
-                    target_date: targetDate
-                }, function() {
-                    moveSessionModal.hide();
-                    alert(`Session copied to ${formatDateString(targetDate)}`);
-                    // Refresh current session
-                    $.post('/update_session', { date: CURRENT_DATE }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    });
-                });
-            });
-
-            // Item selection
-            $(document).on('click', '.group-items .list-group-item', function(e) {
-                if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
-                    return; // Don't select if clicking on buttons
-                }
-                
-                const index = $(this).data('index');
-                $(this).toggleClass('selected');
-                
-                if ($(this).hasClass('selected')) {
-                    selectedItems.push(index);
-                } else {
-                    selectedItems = selectedItems.filter(i => i !== index);
-                }
-                
-                $('#move-item').prop('disabled', selectedItems.length === 0);
-            });
-
-            // Move items to another group
-            $('#move-item').click(function() {
-                moveItemModal.show();
-            });
-            
-            $('#confirm-move-item').click(function() {
-                const targetGroup = $('#target-group-select').val();
-                const newGroup = $('#new-group-name').val().trim();
-                const group = newGroup || targetGroup;
-                
-                if (!group) {
-                    alert('Please select a group or enter a new group name');
-                    return;
-                }
-                
-                // Add new group to dropdown if it doesn't exist
-                if (newGroup && $(`#meal-group option[value="${newGroup}"]`).length === 0) {
-                    $('#meal-group').append(new Option(newGroup, newGroup));
-                }
-                
-                $.post('/move_items', {
-                    date: CURRENT_DATE,
-                    item_indices: JSON.stringify(selectedItems),
-                    new_group: group
-                }, function(response) {
-                    selectedItems = [];
-                    $('#move-item').prop('disabled', true);
-                    moveItemModal.hide();
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                });
-            });
-            
-            // Delete food from database
-            $(document).on('click', '.delete-food-btn', function(e) {
-                e.stopPropagation();
-                const foodId = $(this).data('id');
-                const foodName = $(this).closest('.food-item').find('.food-name').text();
-                
-                if (!confirm(`Permanently delete "${foodName}" from database?`)) return;
-                
-                $.post('/delete_food', { food_id: foodId }, function(response) {
-                    if (response.success) {
-                        // Remove from UI
-                        $(this).closest('.food-item').remove();
-                        alert('Food item deleted successfully');
-                    } else {
-                        alert('Error: ' + (response.error || 'Failed to delete food item'));
-                    }
-                }.bind(this));
-            });
-            
-            // Nutrition grid toggle functionality
-            let gridVisible = true;
-
-            // Toggle button click handler
-            $('#toggle-grid-btn').click(function() {
-                gridVisible = !gridVisible;
-                updateGridVisibility();
-            });
-
-            // Update grid visibility based on state
-            function updateGridVisibility() {
-                if (gridVisible) {
-                    $('.nutrition-grid-container').show();
-                    $('#toggle-grid-btn').css('background-color', '#b61336');
-                    $('#toggle-grid-btn img').css('filter', 'invert(100%)');
-                } else {
-                    $('.nutrition-grid-container').hide();
-                    $('#toggle-grid-btn').css('background-color', '#6c757d');
-                    $('#toggle-grid-btn img').css('filter', 'invert(80%)');
-                }
-            }
-
-            // Initial positioning and visibility
-            positionNutritionGrid();
-            updateGridVisibility();
-
-            // Enter key in modals
-            $('#editGramsModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#save-grams').click();
-                }
-            });
-
-            $('#moveItemModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#confirm-move-item').click();
-                }
-            });
-
-            $('#moveSessionModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#confirm-move-session').click();
-                }
-            });
-
-            // Format date string for display
-            function formatDateString(dateStr) {
-                const dateObj = new Date(dateStr);
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const day = days[dateObj.getDay()];
-                return `${day} (${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()})`;
-            }
-
-            // Helper function to generate nutrition values for group header
-            function generateNutritionValues(groupData) {
-                return `
-                    <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                        <span>${groupData['calories'].toFixed(1)} kcal</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                        <span>${groupData['proteins'].toFixed(1)}g P</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span>${groupData['carbs'].toFixed(1)}g C</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span>${groupData['fats'].toFixed(1)}g F</span>
-                    </div>
-                `;
-            }
-            
-            // Helper functions
-        function updateSessionDisplay(session, totals, breakdown) {
-            // Update food log with grouped items
-            let logHtml = '';
-            
-            if (breakdown) {
-                for (const group in breakdown) {
-                    const groupData = breakdown[group];
-                    logHtml += `
-                        <div class="food-group" data-group="${group}">
-                            <div class="group-header bg-dark d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="group-title">-- ${group.toUpperCase()} --</span>
-                                </div>
-                                <div class="group-nutrition-container">
-                                    <div class="group-nutrition">
-                                        ${generateNutritionValues(groupData)}
-                                    </div>
-                                    <button class="btn btn-sm toggle-group ms-1">−</button>
-                                </div>
-                            </div>
-                            <ul class="group-items list-group list-group-flush">
-                    `;
-                    
-                    groupData['items'].forEach((item, index) => {
-                        logHtml += `
-                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="${index}">
-                                <div class="food-item-container">
-                                    <div>
-                                        <div class="d-flex align-items-center">
-                                            <strong>${item.name}</strong>
-                                        </div>
-                                    </div>
-                                    <span class="edit-grams badge edit-grams-btn mx-1"  style="background-color: #ffffff; color: black;"
-                                        data-index="${index}">
-                                        ${item.grams.toFixed(1)}g
-                                    </span>
-                                </div>
-                                <div class="nutrition-and-actions">
-                                    <div class="nutrition-values-container d-flex">
-                                        <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                                            <span>${item.calories.toFixed(1)} kcal</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                            <span>${item.proteins.toFixed(1)}g P</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span>${item.carbs.toFixed(1)}g C</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span>${item.fats.toFixed(1)}g F</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn delete-item" data-index="${index}">X</button>
-                                </div>
-                            </li>
-                        `;
-                    });
-                    
-                    logHtml += `
-                            </ul>
-                        </div>
-                    `;
-                }
-            }
-            
-            if (logHtml === '') {
-                logHtml = '<div class="list-group-item bg-dark text-light text-center text-muted py-4" style="font-size: 16px;">No food logged yet</div>';
-            }
-            
-            $('#food-log').html(logHtml);
-                
-                // Update nutrition grid
-                $('#grid-calories').text(totals.calories.toFixed(1));
-                $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
-                $('#grid-carbs').text(totals.carbs.toFixed(1) + 'g');
-                $('#grid-fats').text(totals.fats.toFixed(1) + 'g');
-                $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
-                $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
-                $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
-                
-                // Update mobile nutrition panel
-                updateMobileNutrition(totals);
-            }
-            
-            function updateMobileNutrition(totals) {
-                $('#mobile-calories').text(totals.calories.toFixed(1));
-                $('#mobile-proteins').text(totals.proteins.toFixed(1) + 'g');
-                $('#mobile-carbs').text(totals.carbs.toFixed(1) + 'g');
-                $('#mobile-fats').text(totals.fats.toFixed(1) + 'g');
-                $('#mobile-sugars').text(totals.sugars.toFixed(1) + 'g');
-                $('#mobile-fiber').text(totals.fiber.toFixed(1) + 'g');
-                $('#mobile-salt').text(totals.salt.toFixed(1) + 'g');
-            }
-            
-            function resetFoodForm() {
-                $('#food-search').val('');
-                $('#grams').val('100');
-                $('#food-details').addClass('d-none');
-                $('#portion-buttons').empty();
-                currentFood = null;
-                $('#rt-breakdown-container').addClass('d-none');
-                 loadTopFoods();
-            }
-            
-            // Mobile tab switching
-            $('.mobile-tab-btn').click(function() {
-                const panelId = $(this).data('panel');
-                
-                // Hide all panels
-                $('.mobile-panel').removeClass('active');
-                
-                // Show selected panel
-                $('#' + panelId).addClass('active');
-                
-                // Update active button
-                $('.mobile-tab-btn').removeClass('active');
-                $(this).addClass('active');
-                
-                // Close modals if open
-                $('.modal').modal('hide');
-            });
-
-            // Initialize mobile view
-            if ($(window).width() < 992) {
-                $('.mobile-panel').removeClass('active');
-                $('#add-food-panel').addClass('active');
-                $('.mobile-tab-btn').removeClass('active');
-                $('[data-panel="add-food-panel"]').addClass('active');
-            }
-            
-            // Camera scanning with QuaggaJS
-            $('#scan-ean').click(function() {
-                cameraModal.show();
-                setTimeout(startCamera, 500);
-            });
-            
-            // Toggle camera
-            $('#toggle-camera').click(function() {
-                currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-                stopCamera();
-                setTimeout(startCamera, 300);
-            });
-            
-            // Resume scanning
-            $('#resume-scan').click(function() {
-                lastScannedCode = null;
-                $('#scanned-result').text('');
-                startQuagga();
-            });
-            
-            // Start camera function
-            function startCamera() {
-                scanningActive = true;
-                startQuagga();
-            }
-            
-            // Initialize QuaggaJS for barcode scanning
-    function startQuagga() {
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#camera-preview'),
-                constraints: {
-                    facingMode: currentCamera,
-                    focusMode: 'continuous',
-                    width: { min: 640, ideal: 1280 },  // Lower minimum width for less zoom
-                    height: { min: 480, ideal: 720 },
-                    aspectRatio: { ideal: 1.777 }  // 16:9 aspect ratio for wider view
-                }
-            },
-                    decoder: {
-                        readers: ['code_128_reader'],  // Only use Code-128 reader
-                        debug: {
-                            drawBoundingBox: true,
-                            showFrequency: true,
-                            drawScanline: true,
-                            showPattern: true
-                        }
-                    },
-                    locator: {
-                        halfSample: true,
-                        patchSize: "medium"  // Better for linear codes
-                    },
-                    numOfWorkers: navigator.hardwareConcurrency || 4,
-                    frequency: 10
-                }, function(err) {
-                    if (err) {
-                        console.error("Quagga initialization error", err);
-                        $('#scanned-result').text('Error: ' + err.message).css('color', '#ff4444');
-                        return;
-                    }
-                    Quagga.start();
-                });
-
-                Quagga.onDetected(function(result) {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        const code = result.codeResult.code;
-                        if (lastScannedCode === code) return;
-                        
-                        lastScannedCode = code;
-                        $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
-                        
-                        // Stop scanning for a moment
-                        Quagga.stop();
-                        
-                        // Process the scanned code after a short delay
-                        setTimeout(function() {
-                            handleScannedCode(code);
-                        }, 1000);
-                    }
-                });
-                
-                // Draw center guide line for better UX
-                Quagga.onProcessed(function(result) {
-                    const drawingCtx = Quagga.canvas.ctx.overlay;
-                    const drawingCanvas = Quagga.canvas.dom.overlay;
-                    
-                    if (!result) return;
-                    
-                    // Clear canvas
-                    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-                    
-                    // Draw center guide line
-                    drawingCtx.beginPath();
-                    drawingCtx.moveTo(drawingCanvas.width/2, 0);
-                    drawingCtx.lineTo(drawingCanvas.width/2, drawingCanvas.height);
-                    drawingCtx.strokeStyle = '#b61336';
-                    drawingCtx.lineWidth = 2;
-                    drawingCtx.stroke();
-                });
-            }
-            
-            // Handle scanned Code-128 barcodes
-    function handleScannedCode(code) {
-        // Validate Code-128 format
-        if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-            $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-            return;
+        # Calculate calories
+        calories = calculate_calories(carbs, proteins, fats)
+        
+        # Create food object
+        food_data = {
+            "key": name.lower().replace(' ', '_'),
+            "name": name,
+            "carbs": carbs,
+            "sugars": sugars,
+            "fiber": fiber,
+            "proteins": proteins,
+            "fats": fats,
+            "saturated": saturated,
+            "salt": salt,
+            "calories": calories,
+            "grams": grams,
+            "half": half,
+            "entire": entire,
+            "serving": serving,
+            "ean": ean
         }
         
-        // Close modal after a short delay
-        setTimeout(function() {
-            cameraModal.hide();
-            stopCamera();
-            
-            // SET SEARCH FIELD VALUE AND TRIGGER SEARCH
-            $('#food-search').val(code).trigger('input');
-            
-            // Highlight the search field
-            $('#food-search').addClass('highlight-search');
-            setTimeout(function() {
-                $('#food-search').removeClass('highlight-search');
-            }, 3000);
-            
-            // FORCE SEARCH TO EXECUTE IMMEDIATELY
-            setTimeout(function() {
-                const query = $('#food-search').val().trim();
-                if (query.length > 0) {
-                    performFoodSearch(query);
-                }
-            }, 100);
-        }, 1000);
-    }
+        # Save to database
+        save_food(food_data)
+        
+        # Initialize usage count
+        increment_food_usage(name)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def save_food(food_data):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            food_data['key'],
+            food_data['name'],
+            food_data['carbs'],
+            food_data['sugars'],
+            food_data['fiber'],
+            food_data['proteins'],
+            food_data['fats'],
+            food_data['saturated'],
+            food_data['salt'],
+            food_data['calories'],
+            food_data['grams'],
+            food_data.get('half'),
+            food_data.get('entire'),
+            food_data.get('serving'),
+            food_data.get('ean')
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+def calculate_weekly_averages():
+    session_history = get_session_history()
+    weekly_data = {}
     
-    // New function to perform search
-    function performFoodSearch(query) {
-        $.post('/search_foods', { query: query }, function(data) {
-            let resultsHtml = '';
-            if (data.length > 0) {
-                resultsHtml = '<div class="list-group">';
-                data.forEach(food => {
-                    resultsHtml += createFoodItemHtml(food);
-                });
-                resultsHtml += '</div>';
-            } else {
-                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+    # Group data by week
+    for date_str, items in session_history.items():
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        year, week_num, _ = date_obj.isocalendar()
+        week_key = f"{year}-W{week_num}"
+        
+        if week_key not in weekly_data:
+            weekly_data[week_key] = {
+                "days": [],
+                "calories": 0,
+                "proteins": 0,
+                "fats": 0,
+                "carbs": 0,
+                "salt": 0,
+                "count": 0
             }
-            $('#search-results').html(resultsHtml);
-        });
-    }
-            
-            // Cleanup when modal is closed
-            $('#cameraModal').on('hidden.bs.modal', function() {
-                stopCamera();
-            });
-        });
-    </script>
-</body>
-</html>
+        
+        calories, proteins, fats, carbs, salt = get_daily_totals(items)
+        weekly_data[week_key]["days"].append(date_str)
+        weekly_data[week_key]["calories"] += calories
+        weekly_data[week_key]["proteins"] += proteins
+        weekly_data[week_key]["fats"] += fats
+        weekly_data[week_key]["carbs"] += carbs
+        weekly_data[week_key]["salt"] += salt
+        weekly_data[week_key]["count"] += 1
+    
+    # Calculate averages
+    result = []
+    for week_key, data in weekly_data.items():
+        count = data["count"]
+        if count > 0:
+            result.append({
+                "week": week_key,
+                "start_date": min(data["days"]),
+                "end_date": max(data["days"]),
+                "avg_calories": data["calories"] / count,
+                "avg_proteins": data["proteins"] / count,
+                "avg_fats": data["fats"] / count,
+                "avg_carbs": data["carbs"] / count,
+                "avg_salt": data["salt"] / count
+            })
+    
+    # Sort by week (newest first)
+    result.sort(key=lambda x: x["end_date"], reverse=True)
+    return result
+
+@app.route('/history')
+def history():
+    # Daily history (last 7 days)
+    session_history = get_session_history()
+    today = datetime.today()
+    daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    
+    history_data = []
+    for date in daily_dates:
+        if date in session_history:
+            calories, proteins, fats, carbs, salt = get_daily_totals(session_history[date])
+            history_data.append({
+                'date': format_date(date),
+                'calories': calories,
+                'proteins': proteins,
+                'fats': fats,
+                'carbs': carbs,
+                'salt': salt
+            })
+        else:
+            history_data.append({
+                'date': format_date(date),
+                'calories': 0,
+                'proteins': 0,
+                'fats': 0,
+                'carbs': 0,
+                'salt': 0
+            })
+    
+    # Weekly history
+    weekly_data = calculate_weekly_averages()
+    
+    return render_template('history.html', 
+                           history_data=history_data,
+                           weekly_data=weekly_data)
+
+@app.route('/update_grams', methods=['POST'])
+def update_grams():
+    item_index = int(request.form.get('item_index'))
+    new_grams = float(request.form.get('new_grams'))
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    
+    eaten_items, current_date = get_current_session(date)
+    
+    if 0 <= item_index < len(eaten_items):
+        item = eaten_items[item_index]
+        
+        # Get original food data
+        food = get_food_by_key(item['name'].lower())
+        if not food:
+            return jsonify({'error': 'Food not found'}), 404
+        
+        # Update grams and recalculate nutrition
+        item['grams'] = new_grams
+        item['units'] = new_grams
+        item['unit_type'] = 'grams'
+        
+        factor = new_grams / 100
+        item['carbs'] = food['carbs'] * factor
+        item['proteins'] = food['proteins'] * factor
+        item['fats'] = food['fats'] * factor
+        item['salt'] = food.get('salt', 0.0) * factor
+        item['calories'] = food['calories'] * factor
+        
+        save_current_session(eaten_items, date)
+    
+    totals = calculate_totals(eaten_items)
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    current_date_formatted = format_date(current_date)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
+
+@app.route('/move_items', methods=['POST'])
+def move_items():
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    item_indices = json.loads(request.form.get('item_indices'))
+    new_group = request.form.get('new_group')
+    
+    eaten_items, current_date = get_current_session(date)
+    # Update the group for each selected item
+    for idx in item_indices:
+        if 0 <= idx < len(eaten_items):
+            eaten_items[idx]['group'] = new_group
+    
+    save_current_session(eaten_items, date)
+    
+    # Return the updated session and breakdown
+    group_breakdown = calculate_group_breakdown(eaten_items)
+    totals = calculate_totals(eaten_items)
+    current_date_formatted = format_date(current_date)
+    return jsonify({
+        'session': eaten_items,
+        'totals': totals,
+        'current_date_formatted': current_date_formatted,
+        'breakdown': group_breakdown
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
