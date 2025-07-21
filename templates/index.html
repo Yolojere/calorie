@@ -1973,28 +1973,32 @@
             }
             
             // Handle scanned Code-128 barcodes
-            function handleScannedCode(code) {
-                // Validate Code-128 format
-                if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-                    $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-                    return;
-                }
-                
-                // Close modal after a short delay
-                setTimeout(function() {
-                    cameraModal.hide();
-                    stopCamera();
-                    
-                    // Set search field and trigger search
-                    $('#food-search').val(ean).trigger('input');
-                    
-                    // Highlight the search field
-                    $('#food-search').addClass('highlight-search');
-                    setTimeout(function() {
-                        $('#food-search').removeClass('highlight-search');
-                    }, 3000);
-                }, 1000);
-            }
+    function handleScannedCode(code) {
+        // Validate Code-128 format
+        if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
+            $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
+            return;
+        }
+        
+        // Close modal after a short delay
+        setTimeout(function() {
+            cameraModal.hide();
+            stopCamera();
+            
+            // Set search field and trigger search - UPDATED TO ENSURE PROPER COPYING
+            $('#food-search').val(code);
+            $('#food-search').trigger('input');
+            
+            // Highlight the search field
+            $('#food-search').addClass('highlight-search');
+            setTimeout(function() {
+                $('#food-search').removeClass('highlight-search');
+            }, 3000);
+            
+            // FORCE UI UPDATE IF NEEDED
+            setTimeout(loadTopFoods, 100);
+        }, 1000);
+    }
             
             // Cleanup when modal is closed
             $('#cameraModal').on('hidden.bs.modal', function() {
