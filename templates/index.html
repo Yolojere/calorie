@@ -48,26 +48,7 @@
             color: #e0e0e0;
             border-color: #666;
         }
-        /* Update scanner overlay styles */
-        .scan-line {
-            height: 2px;
-            background: #00ff00;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
-            animation: scan 1.5s infinite linear;
-        }
         
-        .scan-guide {
-            top: 40%;
-            height: 20%;
-            border: 2px solid #00ff00;
-        }
-        
-        @keyframes scan {
-            0% { top: 40%; }
-            50% { top: 60%; }
-            100% { top: 40%; }
-        }
-
         /* Nutrition Value Styles */
         .nutrition-value-sm, .nutrition-value-xs, .nutrition-value-xxs, .nutrition-value-xxxs {
             border-radius: 8px;
@@ -151,10 +132,12 @@
             flex-direction: column;
             min-height: 0;
         }
+        
         .collapsed-group {
-        height: auto !important;
-        min-height: unset !important;
+            height: auto !important;
+            min-height: unset !important;
         }
+        
         .group-header {
             cursor: pointer;
             padding: 0.5rem 1rem !important;
@@ -210,7 +193,6 @@
         
         .delete-item:hover, #clear-search:hover {
             background-color: #4b4a4a !important;
-            
         }
         
         #clear-search {
@@ -227,7 +209,6 @@
             background-color: #ff000048;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        
         
         .edit-grams {
             padding: 1px 14px !important;
@@ -293,15 +274,17 @@
             overflow: auto;
             flex: 1;
         }
-            #food-log {
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
-        display: flex;
-        flex-direction: column;
+        
+        #food-log {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
         }
+        
         .card-footer {
-        margin-top: auto; /* Push to bottom */
+            margin-top: auto; /* Push to bottom */
         }
         
         .navbar-brand {
@@ -321,69 +304,71 @@
             height: 530px;
             z-index: 100;
         }
-         /* NEW: Hide nutrition panel on desktop */
-    @media (min-width: 992px) {
-        #nutrition-panel {
-            display: none !important;
+        
+        /* NEW: Hide nutrition panel on desktop */
+        @media (min-width: 992px) {
+            #nutrition-panel {
+                display: none !important;
+            }
+            
+            /* Adjust main container to only have 2 rows */
+            .container-main {
+                grid-template-rows: 570px 670px !important;
+            }
         }
         
-        /* Adjust main container to only have 2 rows */
-        .container-main {
-            grid-template-rows: 570px 670px !important;
-        }
-    }
-    
-    /* Mobile Responsive */
-    @media (max-width: 991px) {
-      /* Show nutrition panel on mobile */
-        #nutrition-panel {
-            display: block;
-        }
-        /* Camera button positioning and sizing */
-
-        #scan-ean {
-            position: absolute;
-            right: 0px; /* Position next to clear button */
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            padding: 5px 8px;
-            height: 36px;
-            width: 36px;
-            border-radius: 4px;
-            background-color: #b61336 !important;
-            transition: background-color 0.2s ease, transform 0.2s ease;
+        /* Mobile Responsive */
+        @media (max-width: 991px) {
+            /* Show nutrition panel on mobile */
+            #nutrition-panel {
+                display: block;
+            }
+            /* Camera button positioning and sizing */
+            
+            #scan-ean {
+                position: absolute;
+                right: 0px; /* Position next to clear button */
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+                padding: 5px 8px;
+                height: 36px;
+                width: 36px;
+                border-radius: 4px;
+                background-color: #b61336 !important;
+                transition: background-color 0.2s ease, transform 0.2s ease;
+            }
+            
+            #scan-ean img {
+                width: 20px;
+                height: 20px;
+                filter: invert(1); /* Make white icon */
+            }
+            
+            /* Adjust input field padding to accommodate buttons */
+            #food-search {
+                padding-right: 90px !important; /* Space for both buttons */
+            }
+            
+            /* Position clear button */
+            #clear-search {
+                position: absolute;
+                right: 0px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+                height: 36px;
+                width: 36px;
+                padding: 0;
+                transition: background-color 0.2s ease, transform 0.2s ease;
+            }
+            
+            /* Hide clear button text on mobile */
+            #clear-search .fas {
+                font-size: 16px;
+            }
         }
         
-        #scan-ean img {
-            width: 20px;
-            height: 20px;
-            filter: invert(1); /* Make white icon */
-        }
-        
-        /* Adjust input field padding to accommodate buttons */
-        #food-search {
-            padding-right: 90px !important; /* Space for both buttons */
-        }
-        
-        /* Position clear button */
-        #clear-search {
-            position: absolute;
-            right: 0px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            height: 36px;
-            width: 36px;
-            padding: 0;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        
-        /* Hide clear button text on mobile */
-        #clear-search .fas {
-            font-size: 16px;
-        }
-        }
         .nutrition-grid {
             display: grid;
             grid-template-rows: repeat(8, 1fr);
@@ -504,18 +489,39 @@
             display: inline-block;
         }
         
+        /* Empty State */
+        .empty-state {
+            border: none !important;
+            background-color: transparent !important;
+            color: #777 !important;
+            font-style: italic;
+            padding: 30px 0 !important;
+            text-align: center;
+        }
+        
+        /* Recipe Button */
+        #create-recipe {
+            background-color: #28a745 !important;
+            transition: all 0.3s ease;
+        }
+        
+        #create-recipe:hover {
+            background-color: #218838 !important;
+            transform: scale(1.05);
+        }
+        
         /* Mobile Responsive */
         @media (max-width: 991px) {
-                body {
+            body {
                 display: flex;
                 flex-direction: column;
                 height: 110vh;
                 padding-bottom: 0px;
-                }
-                html, body {
+            }
+            html, body {
                 height: 100%;
                 overflow: hidden;
-                }
+            }
             .container-main {
                 display: flex;
                 flex-direction: column;
@@ -531,11 +537,11 @@
             
             .nutrition-grid-container {
                 display: none !important;
-               }
+            }
             .food-group {
-              flex: none !important;
-               }
-
+                flex: none !important;
+            }
+            
             .mobile-tab-bar {
                 display: flex;
                 position: fixed;
@@ -567,13 +573,9 @@
                 font-weight: bold;
             }
             
-           .mobile-panel:not(.active) {
-            display: none !important;
-        }
-        add-food-panel.active, #food-log-panel.active {
-            display: flex !important;
-            flex-direction: column;
-        }
+            .mobile-panel:not(.active) {
+                display: none !important;
+            }
             
             .mobile-panel.active {
                 display: block;
@@ -586,13 +588,13 @@
                 min-height: 50vh;
             }
             .grid-panel.active {
-            display: flex;
-            flex-direction: column;
+                display: flex;
+                flex-direction: column;
             }
             .grid-panel.active .card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
             }
             
             #rt-breakdown-container {
@@ -681,7 +683,7 @@
                 line-height: 0.8;
             }
             
-            #move-item span {
+            #move-items span {
                 display: none;
             }
         }
@@ -882,24 +884,24 @@
         <!-- Bottom: Food Log -->
         <div class="grid-panel mobile-panel" id="food-log-panel" style="grid-column: 1; grid-row: 2; width: 100%;">
             <div class="card bg-dark h-100 d-flex flex-column">
-                <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <h6>Food Log</h6>
-                        <!-- Toggle Grid Button -->
-                        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #b61336;color:#000000 padding: 5px;">
-                            <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
-                                alt="Toggle Nutrition Grid" 
-                                style="width: 24px; height: 24px; filter: invert(100%);">
-                        </button>
-                    </div>
-                    <div>
-                        <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
-                            {% for date_str, formatted in dates %}
-                            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
+ <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+        <h6>Food Log</h6>
+        <!-- Toggle Grid Button -->
+        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #b61336;color:#000000 padding: 5px;">
+            <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
+                alt="Toggle Nutrition Grid" 
+                style="width: 24px; height: 24px; filter: invert(100%);">
+        </button>
+    </div>
+    <div>
+        <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
+            {% for date_str, formatted in dates %}
+            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
                 <div class="card-body p-0 d-flex flex-column">
                     <div id="food-log" class="flex-grow-1" style="overflow: auto;">
                         {% if group_breakdown %}
@@ -964,14 +966,14 @@
                             </div>
                             {% endfor %}
                         {% else %}
-                            <div class="list-group-item bg-dark text-light text-center text-muted py-5" style="font-size: 18px;">No food logged yet</div>
+                            <div class="empty-state">No food logged yet</div>
                         {% endif %}
                     </div>
                 </div>
                 <div class="card-footer bg-black py-2 d-flex justify-content-between">
                     <div>
-                        <button id="move-date" class="btn me-2" style="background-color: #b61336; color: black; padding: 8px 12px;">DATE</button>
-                        <button id="move-item" class="btn" style="background-color: #b61336; color: black; padding: 8px 12px;" disabled>Move</button>
+                        <button id="move-items" class="btn me-2" style="background-color: #b61336; color: black; padding: 8px 12px;">MOVE</button>
+                        <button id="create-recipe" class="btn d-none" style="background-color: #28a745; color: black; padding: 8px 12px;" disabled>Recipe</button>
                     </div>
                     <button id="clear-session" class="btn" style="background-color: #b61336; color: black; padding: 8px 12px;">Clear All</button>
                 </div>
@@ -1078,61 +1080,65 @@
         </div>
     </div>
     
-    <!-- Move Session Modal -->
-    <div class="modal fade" id="moveSessionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Copy Session</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Move Items Modal -->
+<div class="modal fade" id="moveItemsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header bg-black py-1">
+                <h5 class="modal-title">Move Items</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Date</label>
+                    <select id="target-date" class="form-select bg-secondary text-light">
+                        {% for date_str, formatted in dates %}
+                            <option value="{{ date_str }}">{{ formatted }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Destination Date</label>
-                        <select id="target-date-select" class="form-select bg-secondary text-light">
-                            {% for date_str, formatted in dates %}
-                                {% if date_str != current_date %}
-                                    <option value="{{ date_str }}">{{ formatted }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Meal Group</label>
+                    <select id="target-group" class="form-select bg-secondary text-light">
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snack">Snack</option>
+                        <option value="other">Other</option>
+                    </select>
                 </div>
-                <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-move-session" class="btn" style="background-color: #ff4444; color: black;">Copy</button>
-                </div>
+            </div>
+            <div class="modal-footer bg-black py-1">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirm-move-items" class="btn" style="background-color: #ff4444; color: black;">Move Items</button>
             </div>
         </div>
     </div>
+</div>
     
-    <!-- Move Item Modal -->
-    <div class="modal fade" id="moveItemModal" tabindex="-1" aria-hidden="true">
+    <!-- Recipe Modal -->
+    <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Move Item to Group</h5>
+                    <h5 class="modal-title">Create Recipe</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Group</label>
-                        <select id="target-group-select" class="form-select bg-secondary text-light">
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="dinner">Dinner</option>
-                            <option value="snack">Snack</option>
-                            <option value="other">Other</option>
-                        </select>
+                    <div id="recipe-confirm">
+                        <p>Do you wish to create a new recipe from the selected items?</p>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Or create new group:</label>
-                        <input type="text" id="new-group-name" class="form-control bg-secondary text-light" placeholder="New group name">
+                    <div id="recipe-name-input" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Recipe Name</label>
+                            <input type="text" id="recipe-name" class="form-control bg-secondary text-light" placeholder="Enter recipe name">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-black py-1">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-move-item" class="btn" style="background-color: #ff4444; color: black;">Move</button>
+                    <button type="button" id="recipe-yes" class="btn" style="background-color: #ff4444; color: black;">Yes</button>
+                    <button type="button" id="recipe-save" class="btn d-none" style="background-color: #ff4444; color: black;">Save Recipe</button>
                 </div>
             </div>
         </div>
@@ -1178,9 +1184,12 @@
         $(document).ready(function() {
             let currentFood = null;
             let selectedItems = [];
+            let currentSession = [];
+            let selectedItemsForRecipe = [];
+            let gridVisible = true;
             const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
-            const moveSessionModal = new bootstrap.Modal(document.getElementById('moveSessionModal'));
-            const moveItemModal = new bootstrap.Modal(document.getElementById('moveItemModal'));
+            const moveItemsModal = new bootstrap.Modal(document.getElementById('moveItemsModal'));
+            const recipeModal = new bootstrap.Modal(document.getElementById('recipeModal'));
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
@@ -1210,6 +1219,20 @@
                     'left': gridLeft
                 });
             }
+
+                    // Update grid visibility
+        function updateGridVisibility() {
+            if (gridVisible) {
+                $('.nutrition-grid-container').show();
+                $('#toggle-grid-btn').css('background-color', '#b61336');
+                $('#toggle-grid-btn img').css('filter', 'invert(100%)');
+            } else {
+                $('.nutrition-grid-container').hide();
+                $('#toggle-grid-btn').css('background-color', '#6c757d');
+                $('#toggle-grid-btn img').css('filter', 'invert(80%)');
+            }
+        }
+        
             
             // Initial positioning
             positionNutritionGrid();
@@ -1238,14 +1261,27 @@
                 toggleAdminMode();
             });
             
-            // Toggle admin mode
-            function toggleAdminMode() {
-                isAdminMode = !isAdminMode;
-                $('#admin-toggle').toggle(isAdminMode);
-                $('body').toggleClass('admin-active', isAdminMode);
-                alert(`Admin mode ${isAdminMode ? 'ENABLED' : 'DISABLED'}`);
+        // Toggle admin mode
+        function toggleAdminMode() {
+            isAdminMode = !isAdminMode;
+            $('#admin-toggle').toggle(isAdminMode);
+            $('body').toggleClass('admin-active', isAdminMode);
+            
+            // Show/hide delete buttons immediately
+            if (isAdminMode) {
+                $('.delete-food-btn').show();
+            } else {
+                $('.delete-food-btn').hide();
             }
             
+            alert(`Admin mode ${isAdminMode ? 'ENABLED' : 'DISABLED'}`);
+        }
+        
+        // Nutrition grid toggle
+        $('#toggle-grid-btn').click(function() {
+            gridVisible = !gridVisible;
+            updateGridVisibility();
+        });
             // Load top 10 foods on page load
             loadTopFoods();
             
@@ -1324,7 +1360,6 @@
                 const servingSize = $(this).data('serving');
                 const halfSize = $(this).data('half');
                 const entireSize = $(this).data('entire');
-                
                 
                 $('#food-search').val($(this).find('.food-name').text().trim());
                 $('#search-results').empty();
@@ -1494,22 +1529,22 @@
             }
 
             // Toggle food group
-    $(document).on('click', '.toggle-group', function() {
-        const groupHeader = $(this).closest('.group-header');
-        const groupContainer = groupHeader.closest('.food-group');
-        const groupItems = groupHeader.next('.group-items');
-        const isExpanded = groupItems.is(':visible');
-        
-        if (isExpanded) {
-            groupItems.hide();
-            $(this).text('+');
-            groupContainer.addClass('collapsed-group');
-        } else {
-            groupItems.show();
-            $(this).text('−');
-            groupContainer.removeClass('collapsed-group');
-        }
-    });
+            $(document).on('click', '.toggle-group', function() {
+                const groupHeader = $(this).closest('.group-header');
+                const groupContainer = groupHeader.closest('.food-group');
+                const groupItems = groupHeader.next('.group-items');
+                const isExpanded = groupItems.is(':visible');
+                
+                if (isExpanded) {
+                    groupItems.hide();
+                    $(this).text('+');
+                    groupContainer.addClass('collapsed-group');
+                } else {
+                    groupItems.show();
+                    $(this).text('−');
+                    groupContainer.removeClass('collapsed-group');
+                }
+            });
 
             // Double-click group toggle
             $(document).on('dblclick', '.group-header', function() {
@@ -1524,10 +1559,20 @@
                 $('#edit-grams-input').val(grams);
                 editGramsModal.show();
             });
-            // Focus on grams input when modal opens
-        $('#editGramsModal').on('shown.bs.modal', function () {
-            $('#edit-grams-input').trigger('focus');
+            
+            // Edit grams input keypress handler
+            $(document).on('keypress', '#edit-grams-input', function(e) {
+                if (e.which === 13) { // Enter key
+                    e.preventDefault(); // Prevent form submission
+                    $('#save-grams').click();
+                }
             });
+            
+            // Focus on grams input when modal opens
+            $('#editGramsModal').on('shown.bs.modal', function () {
+                $('#edit-grams-input').trigger('focus');
+            });
+            
             // Save grams
             $('#save-grams').click(function() {
                 const index = $('#edit-grams-index').val();
@@ -1552,13 +1597,23 @@
             });
 
             // Delete food item
-            $(document).on('click', '.delete-item', function(e) {
-                e.stopPropagation();
-                const index = $(this).data('index');
-                $.post('/delete_item', { item_index: index }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                });
-            });
+$(document).on('click', '.delete-food-btn', function(e) {
+            e.stopPropagation();
+            const foodId = $(this).data('id');
+            const foodName = $(this).closest('.food-item').find('.food-name').text();
+            
+            if (!confirm(`Permanently delete "${foodName}" from database?`)) return;
+            
+            $.post('/delete_food', { food_id: foodId }, function(response) {
+                if (response.success) {
+                    // Remove from UI
+                    $(this).closest('.food-item').remove();
+                    alert('Food item deleted successfully');
+                } else {
+                    alert('Error: ' + (response.error || 'Failed to delete food item'));
+                }
+            }.bind(this));
+        });
 
             // Clear session
             $('#clear-session').click(function() {
@@ -1578,31 +1633,10 @@
                 });
             });
 
-            // Move session to another date
-            $('#move-date').click(function() {
-                moveSessionModal.show();
-            });
-            
-            $('#confirm-move-session').click(function() {
-                const targetDate = $('#target-date-select').val();
-                
-                $.post('/move_to_date', {
-                    source_date: CURRENT_DATE,
-                    target_date: targetDate
-                }, function() {
-                    moveSessionModal.hide();
-                    alert(`Session copied to ${formatDateString(targetDate)}`);
-                    // Refresh current session
-                    $.post('/update_session', { date: CURRENT_DATE }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    });
-                });
-            });
-
             // Item selection
             $(document).on('click', '.group-items .list-group-item', function(e) {
                 if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
-                    return; // Don't select if clicking on buttons
+                    return;
                 }
                 
                 const index = $(this).data('index');
@@ -1614,203 +1648,213 @@
                     selectedItems = selectedItems.filter(i => i !== index);
                 }
                 
-                $('#move-item').prop('disabled', selectedItems.length === 0);
+                // Enable/disable buttons based on selection
+                $('#move-items').prop('disabled', selectedItems.length === 0);
+                
+                // Show recipe button if at least 2 items selected
+                if (selectedItems.length >= 2) {
+                    $('#create-recipe').removeClass('d-none').prop('disabled', false);
+                } else {
+                    $('#create-recipe').addClass('d-none').prop('disabled', true);
+                }
             });
 
-            // Move items to another group
-            $('#move-item').click(function() {
-                moveItemModal.show();
+            // Move button handler
+            $('#move-items').click(function() {
+                $('#moveItemsModal').modal('show');
             });
             
-            $('#confirm-move-item').click(function() {
-                const targetGroup = $('#target-group-select').val();
-                const newGroup = $('#new-group-name').val().trim();
-                const group = newGroup || targetGroup;
-                
-                if (!group) {
-                    alert('Please select a group or enter a new group name');
-                    return;
-                }
-                
-                // Add new group to dropdown if it doesn't exist
-                if (newGroup && $(`#meal-group option[value="${newGroup}"]`).length === 0) {
-                    $('#meal-group').append(new Option(newGroup, newGroup));
-                }
+            // Combined move confirmation
+            $('#confirm-move-items').click(function() {
+                const targetDate = $('#target-date').val();
+                const targetGroup = $('#target-group').val();
                 
                 $.post('/move_items', {
                     date: CURRENT_DATE,
                     item_indices: JSON.stringify(selectedItems),
-                    new_group: group
+                    new_group: targetGroup,
+                    target_date: targetDate
                 }, function(response) {
                     selectedItems = [];
-                    $('#move-item').prop('disabled', true);
-                    moveItemModal.hide();
+                    $('#move-items').prop('disabled', true);
+                    $('#create-recipe').addClass('d-none').prop('disabled', true);
+                    $('#moveItemsModal').modal('hide');
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
                 });
             });
+
+            // Recipe button handler
+            $('#create-recipe').click(function() {
+                // Store selected items for recipe creation
+                selectedItemsForRecipe = selectedItems;
+                $('#recipe-confirm').removeClass('d-none');
+                $('#recipe-name-input').addClass('d-none');
+                $('#recipe-yes').removeClass('d-none');
+                $('#recipe-save').addClass('d-none');
+                $('#recipeModal').modal('show');
+            });
             
-            // Delete food from database
-            $(document).on('click', '.delete-food-btn', function(e) {
-                e.stopPropagation();
-                const foodId = $(this).data('id');
-                const foodName = $(this).closest('.food-item').find('.food-name').text();
+            // Recipe confirmation
+            $('#recipe-yes').click(function() {
+                $('#recipe-confirm').addClass('d-none');
+                $('#recipe-name-input').removeClass('d-none');
+                $('#recipe-yes').addClass('d-none');
+                $('#recipe-save').removeClass('d-none');
+            });
+            
+            // Recipe saving
+            $('#recipe-save').click(function() {
+                const recipeName = $('#recipe-name').val().trim();
+                if (!recipeName) {
+                    alert('Please enter a recipe name');
+                    return;
+                }
                 
-                if (!confirm(`Permanently delete "${foodName}" from database?`)) return;
+                // Get nutrition data for selected items
+                const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
                 
-                $.post('/delete_food', { food_id: foodId }, function(response) {
+                // Calculate total nutrition
+                let totalCalories = 0;
+                let totalCarbs = 0;
+                let totalSugars = 0;
+                let totalFiber = 0;
+                let totalProteins = 0;
+                let totalFats = 0;
+                let totalSaturated = 0;
+                let totalSalt = 0;
+                let totalGrams = 0;
+                
+                recipeItems.forEach(item => {
+                    totalCalories += item.calories;
+                    totalCarbs += item.carbs;
+                    totalSugars += item.sugars || 0;
+                    totalFiber += item.fiber || 0;
+                    totalProteins += item.proteins;
+                    totalFats += item.fats;
+                    totalSaturated += item.saturated || 0;
+                    totalSalt += item.salt || 0;
+                    totalGrams += item.grams;
+                });
+                
+                // Create recipe food data (per 100g)
+                const recipeData = {
+                    name: recipeName,
+                    key: recipeName.toLowerCase().replace(/\s+/g, '_'),
+                    carbs: (totalCarbs / totalGrams) * 100,
+                    sugars: (totalSugars / totalGrams) * 100,
+                    fiber: (totalFiber / totalGrams) * 100,
+                    proteins: (totalProteins / totalGrams) * 100,
+                    fats: (totalFats / totalGrams) * 100,
+                    saturated: (totalSaturated / totalGrams) * 100,
+                    salt: (totalSalt / totalGrams) * 100,
+                    calories: (totalCalories / totalGrams) * 100,
+                    grams: 100
+                };
+                
+                // Save recipe to database
+                $.post('/save_food', recipeData, function(response) {
                     if (response.success) {
-                        // Remove from UI
-                        $(this).closest('.food-item').remove();
-                        alert('Food item deleted successfully');
+                        alert('Recipe created successfully!');
+                        $('#recipeModal').modal('hide');
+                        
+                        // Reset selection
+                        selectedItems = [];
+                        selectedItemsForRecipe = [];
+                        $('#move-items').prop('disabled', true);
+                        $('#create-recipe').addClass('d-none').prop('disabled', true);
+                        
+                        // Refresh foods list
+                        loadTopFoods();
                     } else {
-                        alert('Error: ' + (response.error || 'Failed to delete food item'));
+                        alert('Error creating recipe: ' + response.error);
                     }
-                }.bind(this));
-            });
-            
-            // Nutrition grid toggle functionality
-            let gridVisible = true;
-
-            // Toggle button click handler
-            $('#toggle-grid-btn').click(function() {
-                gridVisible = !gridVisible;
-                updateGridVisibility();
+                });
             });
 
-            // Update grid visibility based on state
-            function updateGridVisibility() {
-                if (gridVisible) {
-                    $('.nutrition-grid-container').show();
-                    $('#toggle-grid-btn').css('background-color', '#b61336');
-                    $('#toggle-grid-btn img').css('filter', 'invert(100%)');
-                } else {
-                    $('.nutrition-grid-container').hide();
-                    $('#toggle-grid-btn').css('background-color', '#6c757d');
-                    $('#toggle-grid-btn img').css('filter', 'invert(80%)');
-                }
-            }
-
-            // Initial positioning and visibility
-            positionNutritionGrid();
-            updateGridVisibility();
-
-            // Enter key in modals
-            $('#editGramsModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#save-grams').click();
-                }
-            });
-
-            $('#moveItemModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#confirm-move-item').click();
-                }
-            });
-
-            $('#moveSessionModal').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#confirm-move-session').click();
-                }
-            });
-
-            // Format date string for display
-            function formatDateString(dateStr) {
-                const dateObj = new Date(dateStr);
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const day = days[dateObj.getDay()];
-                return `${day} (${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()})`;
-            }
-
-            // Helper function to generate nutrition values for group header
-            function generateNutritionValues(groupData) {
-                return `
-                    <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                        <span>${groupData['calories'].toFixed(1)} kcal</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                        <span>${groupData['proteins'].toFixed(1)}g P</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span>${groupData['carbs'].toFixed(1)}g C</span>
-                    </div>
-                    <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                        <span>${groupData['fats'].toFixed(1)}g F</span>
-                    </div>
-                `;
-            }
-            
-            // Helper functions
-        function updateSessionDisplay(session, totals, breakdown) {
-            // Update food log with grouped items
-            let logHtml = '';
-            
-            if (breakdown) {
-                for (const group in breakdown) {
-                    const groupData = breakdown[group];
-                    logHtml += `
-                        <div class="food-group" data-group="${group}">
-                            <div class="group-header bg-dark d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="group-title">-- ${group.toUpperCase()} --</span>
-                                </div>
-                                <div class="group-nutrition-container">
-                                    <div class="group-nutrition">
-                                        ${generateNutritionValues(groupData)}
-                                    </div>
-                                    <button class="btn btn-sm toggle-group ms-1">−</button>
-                                </div>
-                            </div>
-                            <ul class="group-items list-group list-group-flush">
-                    `;
-                    
-                    groupData['items'].forEach((item, index) => {
-                        logHtml += `
-                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="${index}">
-                                <div class="food-item-container">
-                                    <div>
-                                        <div class="d-flex align-items-center">
-                                            <strong>${item.name}</strong>
-                                        </div>
-                                    </div>
-                                    <span class="edit-grams badge edit-grams-btn mx-1"  style="background-color: #ffffff; color: black;"
-                                        data-index="${index}">
-                                        ${item.grams.toFixed(1)}g
-                                    </span>
-                                </div>
-                                <div class="nutrition-and-actions">
-                                    <div class="nutrition-values-container d-flex">
-                                        <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                                            <span>${item.calories.toFixed(1)} kcal</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                            <span>${item.proteins.toFixed(1)}g P</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span>${item.carbs.toFixed(1)}g C</span>
-                                        </div>
-                                        <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                            <span>${item.fats.toFixed(1)}g F</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn delete-item" data-index="${index}">X</button>
-                                </div>
-                            </li>
-                        `;
-                    });
-                    
-                    logHtml += `
-                            </ul>
-                        </div>
-                    `;
-                }
-            }
-            
-            if (logHtml === '') {
-                logHtml = '<div class="list-group-item bg-dark text-light text-center text-muted py-4" style="font-size: 16px;">No food logged yet</div>';
-            }
-            
-            $('#food-log').html(logHtml);
+            function updateSessionDisplay(session, totals, breakdown) {
+                // Store current session for recipe creation
+                currentSession = session;
                 
+                let logHtml = '';
+                
+                if (breakdown) {
+                    for (const group in breakdown) {
+                        const groupData = breakdown[group];
+                        logHtml += `
+                            <div class="food-group" data-group="${group}">
+                                <div class="group-header bg-dark d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="group-title">-- ${group.toUpperCase()} --</span>
+                                    </div>
+                                    <div class="group-nutrition-container">
+                                        <div class="group-nutrition">
+                                            <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                                                <span>${groupData['calories'].toFixed(1)} kcal</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
+                                                <span>${groupData['proteins'].toFixed(1)}g P</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <span>${groupData['carbs'].toFixed(1)}g C</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <span>${groupData['fats'].toFixed(1)}g F</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm toggle-group ms-1">−</button>
+                                    </div>
+                                </div>
+                                <ul class="group-items list-group list-group-flush">
+                        `;
+                        
+                        groupData['items'].forEach((item, index) => {
+                            logHtml += `
+                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="${index}">
+                                    <div class="food-item-container">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <strong>${item.name}</strong>
+                                            </div>
+                                        </div>
+                                        <span class="edit-grams badge edit-grams-btn mx-1" 
+                                            data-index="${index}">
+                                            ${item.grams.toFixed(1)}g
+                                        </span>
+                                    </div>
+                                    <div class="nutrition-and-actions">
+                                        <div class="nutrition-values-container d-flex">
+                                            <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                                                <span>${item.calories.toFixed(1)} kcal</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
+                                                <span>${item.proteins.toFixed(1)}g P</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.carbs.toFixed(1)}g C</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.fats.toFixed(1)}g F</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn delete-item" data-index="${index}">X</button>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                        
+                        logHtml += `
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }
+                
+                if (logHtml === '') {
+                    logHtml = '<div class="empty-state">No food logged yet</div>';
+                }
+                
+                $('#food-log').html(logHtml);
+                    
                 // Update nutrition grid
                 $('#grid-calories').text(totals.calories.toFixed(1));
                 $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
@@ -1875,7 +1919,7 @@
                 cameraModal.show();
                 setTimeout(startCamera, 500);
             });
-                        
+            
             // Toggle camera
             $('#toggle-camera').click(function() {
                 currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
@@ -1896,47 +1940,60 @@
                 startQuagga();
             }
             
-// Update the Quagga initialization
-function startQuagga() {
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#camera-preview'),
-            constraints: {
-                facingMode: currentCamera,
-                focusMode: 'continuous',
-                width: { min: 640 },
-                height: { min: 480 },
-                aspectRatio: 4/3
-            }
-        },
-        // ... rest of config ...
-    }, function(err) {
-        if (err) {
-            console.error("Camera error:", err);
-            $('#scanned-result').text('Camera error: ' + err.message).css('color', '#ff4444');
-            return;
-        }
-        Quagga.start();
-    });
+            // Initialize QuaggaJS for barcode scanning
+            function startQuagga() {
+                Quagga.init({
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        target: document.querySelector('#camera-preview'),
+                        constraints: {
+                            facingMode: currentCamera,
+                            focusMode: 'continuous',
+                            width: { min: 640 },
+                            height: { min: 480 },
+                            aspectRatio: 4/3
+                        }
+                    },
+                    decoder: {
+                        readers: ['code_128_reader'],
+                        debug: {
+                            drawBoundingBox: true,
+                            showFrequency: true,
+                            drawScanline: true,
+                            showPattern: true
+                        }
+                    },
+                    locator: {
+                        halfSample: true,
+                        patchSize: "medium"
+                    },
+                    numOfWorkers: navigator.hardwareConcurrency || 4,
+                    frequency: 10
+                }, function(err) {
+                    if (err) {
+                        console.error("Camera error:", err);
+                        $('#scanned-result').text('Camera error: ' + err.message).css('color', '#ff4444');
+                        return;
+                    }
+                    Quagga.start();
+                });
 
-
-    Quagga.onDetected(function(result) {
-        if (result && result.codeResult && result.codeResult.code) {
-            const code = result.codeResult.code;
-            if (lastScannedCode === code) return;
-            
-            lastScannedCode = code;
-            $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
-            
-            // Stop scanning for a moment
-            Quagga.stop();
-            
-            // Process the scanned code
-            handleScannedCode(code);
-        }
-    });
+                Quagga.onDetected(function(result) {
+                    if (result && result.codeResult && result.codeResult.code) {
+                        const code = result.codeResult.code;
+                        if (lastScannedCode === code) return;
+                        
+                        lastScannedCode = code;
+                        $('#scanned-result').text('Scanned: ' + code).css('color', '#00ff00');
+                        
+                        // Stop scanning for a moment
+                        Quagga.stop();
+                        
+                        // Process the scanned code
+                        handleScannedCode(code);
+                    }
+                });
                 
                 // Draw center guide line for better UX
                 Quagga.onProcessed(function(result) {
@@ -1959,73 +2016,72 @@ function startQuagga() {
             }
             
             // Handle scanned Code-128 barcodes
-    // Update the handleScannedCode function
-    function handleScannedCode(code) {
-        // Validate Code-128 format
-        if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-            $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-            return;
-        }
-        
-        // Close modal immediately and process
-        cameraModal.hide();
-        stopCamera();
-        
-        // DIRECTLY SET SEARCH FIELD VALUE
-        $('#food-search').val(code);
-        
-        // Highlight the search field
-        $('#food-search').addClass('highlight-search');
-        setTimeout(function() {
-            $('#food-search').removeClass('highlight-search');
-        }, 3000);
-        
-        // FOCUS AND TRIGGER SEARCH IMMEDIATELY
-        setTimeout(function() {
-            $('#food-search').focus();
-            const query = $('#food-search').val().trim();
-            if (query.length > 0) {
-                performFoodSearch(query);
-            }
-        }, 100);
-    }
-
-    // Update the performFoodSearch function
-    function performFoodSearch(query) {
-        $.post('/search_foods', { query: query }, function(data) {
-            let resultsHtml = '';
-            if (data.length > 0) {
-                resultsHtml = '<div class="list-group">';
-                data.forEach(food => {
-                    resultsHtml += createFoodItemHtml(food);
-                });
-                resultsHtml += '</div>';
+            function handleScannedCode(code) {
+                // Validate Code-128 format
+                if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
+                    $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
+                    return;
+                }
                 
-                // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+                // Close modal immediately and process
+                cameraModal.hide();
+                stopCamera();
+                
+                // DIRECTLY SET SEARCH FIELD VALUE
+                $('#food-search').val(code);
+                
+                // Highlight the search field
+                $('#food-search').addClass('highlight-search');
                 setTimeout(function() {
-                    if ($('.food-item').length > 0) {
-                        $('.food-item:first').trigger('click');
+                    $('#food-search').removeClass('highlight-search');
+                }, 3000);
+                
+                // FOCUS AND TRIGGER SEARCH IMMEDIATELY
+                setTimeout(function() {
+                    $('#food-search').focus();
+                    const query = $('#food-search').val().trim();
+                    if (query.length > 0) {
+                        performFoodSearch(query);
                     }
-                }, 300);
-            } else {
-                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                }, 100);
             }
-            $('#search-results').html(resultsHtml);
-        });
-    }
-    });
 
-    // Add this to ensure camera is properly stopped
-    function stopCamera() {
-        if (Quagga) {
-            try {
-                Quagga.stop();
-            } catch (e) {
-                console.log("Error stopping camera:", e);
+            // Update the performFoodSearch function
+            function performFoodSearch(query) {
+                $.post('/search_foods', { query: query }, function(data) {
+                    let resultsHtml = '';
+                    if (data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
+                        data.forEach(food => {
+                            resultsHtml += createFoodItemHtml(food);
+                        });
+                        resultsHtml += '</div>';
+                        
+                        // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+                        setTimeout(function() {
+                            if ($('.food-item').length > 0) {
+                                $('.food-item:first').trigger('click');
+                            }
+                        }, 300);
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    }
+                    $('#search-results').html(resultsHtml);
+                });
             }
-        }
-        scanningActive = false;
-    }
+
+            // Add this to ensure camera is properly stopped
+            function stopCamera() {
+                if (Quagga) {
+                    try {
+                        Quagga.stop();
+                    } catch (e) {
+                        console.log("Error stopping camera:", e);
+                    }
+                }
+                scanningActive = false;
+            }
+        });
     </script>
 </body>
 </html>
