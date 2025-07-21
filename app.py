@@ -1,79 +1,242 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
 import os
+import sqlite3
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 
-# Data paths
+# Database path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')
-USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')
+DB_PATH = os.path.join(BASE_DIR, 'data', 'foods.db')
+FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')  # Kept for migration
+USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')  # Kept for migration
 SESSION_FILE = os.path.join(BASE_DIR, 'data', 'session_history.json')
 
-# Initialize data files if they don't exist
-def init_data_files():
-    os.makedirs(os.path.dirname(FOOD_FILE), exist_ok=True)
-    
-    # Initialize foods.json with default foods if empty
-    if not os.path.exists(FOOD_FILE):
-        default_foods = {
-            "broccoli": {
-                "name": "Broccoli",
-                "carbs": 7,
-                "sugars": 1.5,
-                "fiber": 2.6,
-                "proteins": 2.8,
-                "fats": 0.4,
-                "saturated": 0.1,
-                "salt": 0.03,
-                "calories": 34,
-                "grams": 100,
-                "half": 150,
-                "entire": 300,
-                "serving": 85,
-                "ean": None
-            }
-        }
-        with open(FOOD_FILE, 'w') as f:
-            json.dump(default_foods, f, indent=2)
-    
-    # Initialize other files
-    if not os.path.exists(USAGE_FILE):
-        with open(USAGE_FILE, 'w') as f:
-            json.dump({}, f)
-    
-    if not os.path.exists(SESSION_FILE):
-        with open(SESSION_FILE, 'w') as f:
-            json.dump({}, f)
+# Database connection
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-init_data_files()
+# Initialize database
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Create foods table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS foods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            carbs REAL NOT NULL,
+            sugars REAL NOT NULL,
+            fiber REAL NOT NULL,
+            proteins REAL NOT NULL,
+            fats REAL NOT NULL,
+            saturated REAL NOT NULL,
+            salt REAL NOT NULL,
+            calories REAL NOT NULL,
+            grams REAL NOT NULL,
+            half REAL,
+            entire REAL,
+            serving REAL,
+            ean TEXT
+        )
+    ''')
+    
+    # Create food_usage table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS food_usage (
+            food_key TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            FOREIGN KEY (food_key) REFERENCES foods(key)
+        )
+    ''')
+    
+    # Check if foods table is empty
+    cursor.execute("SELECT COUNT(*) FROM foods")
+    if cursor.fetchone()[0] == 0:
+        # Insert default food
+        cursor.execute('''
+            INSERT INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            'broccoli',
+            'Broccoli',
+            7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
+        ))
+    
+    conn.commit()
+    conn.close()
+
+# Migrate JSON data to database
+def migrate_json_to_db():
+    # Migrate foods
+    if os.path.exists(FOOD_FILE):
+        with open(FOOD_FILE, 'r') as f:
+            foods = json.load(f)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        for key, food in foods.items():
+            # Handle EAN field - convert list to string if needed
+            ean = food.get('ean')
+            if isinstance(ean, list):
+                ean = ', '.join(ean) if ean else None
+            
+            try:
+                cursor.execute('''
+                    INSERT INTO foods 
+                    (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    key,
+                    food['name'],
+                    food['carbs'],
+                    food.get('sugars', 0),
+                    food.get('fiber', 0),
+                    food['proteins'],
+                    food['fats'],
+                    food.get('saturated', 0),
+                    food.get('salt', 0),
+                    food['calories'],
+                    food['grams'],
+                    food.get('half'),
+                    food.get('entire'),
+                    food.get('serving'),
+                    ean  # Use the processed EAN value
+                ))
+            except sqlite3.IntegrityError:
+                pass  # Skip duplicates
+        
+        conn.commit()
+        conn.close()
+        if os.path.exists(FOOD_FILE):
+            os.rename(FOOD_FILE, FOOD_FILE + ".bak")
+    
+    # Migrate food_usage
+    if os.path.exists(USAGE_FILE):
+        with open(USAGE_FILE, 'r') as f:
+            usage = json.load(f)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        for key, count in usage.items():
+            try:
+                cursor.execute('''
+                    INSERT INTO food_usage (food_key, count)
+                    VALUES (?, ?)
+                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+                ''', (key, count, count))
+            except sqlite3.IntegrityError:
+                pass
+        
+        conn.commit()
+        conn.close()
+        if os.path.exists(USAGE_FILE):
+            os.rename(USAGE_FILE, USAGE_FILE + ".bak")
+
+    
+    # Migrate food_usage
+    if os.path.exists(USAGE_FILE):
+        with open(USAGE_FILE, 'r') as f:
+            usage = json.load(f)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        for key, count in usage.items():
+            try:
+                cursor.execute('''
+                    INSERT INTO food_usage (food_key, count)
+                    VALUES (?, ?)
+                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+                ''', (key, count, count))
+            except sqlite3.IntegrityError:
+                pass
+        
+        conn.commit()
+        conn.close()
+        os.rename(USAGE_FILE, USAGE_FILE + ".bak")
+
+# Initialize database and migrate data
+init_db()
+migrate_json_to_db()
 
 # Helper functions
 def calculate_calories(carbs, proteins, fats):
     return carbs * 4 + proteins * 4 + fats * 9
 
 def get_foods():
-    with open(FOOD_FILE, 'r') as f:
-        return json.load(f)
+    conn = get_db_connection()
+    foods = conn.execute('SELECT * FROM foods').fetchall()
+    conn.close()
+    return {food['key']: dict(food) for food in foods}
 
-def save_foods(foods):
-    with open(FOOD_FILE, 'w') as f:
-        json.dump(foods, f, indent=2)
+def get_food_by_key(key):
+    conn = get_db_connection()
+    food = conn.execute('SELECT * FROM foods WHERE key = ?', (key,)).fetchone()
+    conn.close()
+    return dict(food) if food else None
+
+def save_food(food_data):
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT OR REPLACE INTO foods 
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            food_data['key'],
+            food_data['name'],
+            food_data['carbs'],
+            food_data['sugars'],
+            food_data['fiber'],
+            food_data['proteins'],
+            food_data['fats'],
+            food_data['saturated'],
+            food_data['salt'],
+            food_data['calories'],
+            food_data['grams'],
+            food_data.get('half'),
+            food_data.get('entire'),
+            food_data.get('serving'),
+            food_data.get('ean')
+        ))
+        conn.commit()
+    finally:
+        conn.close()
 
 def get_food_usage():
-    try:
-        with open(USAGE_FILE, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
+    conn = get_db_connection()
+    usage = conn.execute('SELECT food_key, count FROM food_usage').fetchall()
+    conn.close()
+    return {row['food_key']: row['count'] for row in usage}
 
-def save_food_usage(food_usage):
-    with open(USAGE_FILE, 'w') as f:
-        json.dump(food_usage, f, indent=2)
+def increment_food_usage(food_name):
+    key = food_name.lower()
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO food_usage (food_key, count)
+            VALUES (?, 1)
+            ON CONFLICT(food_key) DO UPDATE SET count = count + 1
+        ''', (key,))
+        conn.commit()
+    finally:
+        conn.close()
 
 def get_session_history():
+    if not os.path.exists(SESSION_FILE):
+        return {}
+    
     with open(SESSION_FILE, 'r') as f:
         try:
             return json.load(f)
@@ -83,11 +246,6 @@ def get_session_history():
 def save_session_history(session_history):
     with open(SESSION_FILE, 'w') as f:
         json.dump(session_history, f, indent=2)
-
-def increment_food_usage(food_name, food_usage):
-    food_name_lower = food_name.lower()
-    food_usage[food_name_lower] = food_usage.get(food_name_lower, 0) + 1
-    save_food_usage(food_usage)
 
 def get_current_session(date=None):
     if date is None:
@@ -154,7 +312,6 @@ def get_daily_totals(day_data):
     return total_calories, total_proteins, total_fats, total_carbs, total_salt
 
 def format_date(date_str):
-    """Format date as 'Weekday (day.month.year)'"""
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%A (%d.%m.%Y)")
 
@@ -166,10 +323,10 @@ def index():
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
     
-    # Generate dates for the selector: 3 days before, today, and 3 days after
+    # Generate dates for selector
     dates = []
     today = datetime.now()
-    for i in range(-3, 4):  # This gives [-3, -2, -1, 0, 1, 2, 3]
+    for i in range(-3, 4):
         date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
         formatted_date = format_date(date_str)
         dates.append((date_str, formatted_date))
@@ -188,39 +345,44 @@ def index():
 @app.route('/search_foods', methods=['POST'])
 def search_foods():
     query = request.form.get('query', '').lower().strip()
-    foods = get_foods()
-    food_usage = get_food_usage()
+    conn = get_db_connection()
     
-    # Get all foods sorted by usage (desc) then name (asc)
-    all_foods = []
-    for key, food in foods.items():
-        usage = food_usage.get(key, 0)
-        all_foods.append({
-            'id': key,
+    if not query:
+        # Get top 10 foods by usage
+        foods = conn.execute('''
+            SELECT f.*, COALESCE(u.count, 0) as usage
+            FROM foods f
+            LEFT JOIN food_usage u ON f.key = u.food_key
+            ORDER BY usage DESC, name ASC
+            LIMIT 10
+        ''').fetchall()
+    else:
+        # Search by name or EAN (supports Code-128)
+        foods = conn.execute('''
+            SELECT f.*, COALESCE(u.count, 0) as usage
+            FROM foods f
+            LEFT JOIN food_usage u ON f.key = u.food_key
+            WHERE LOWER(f.name) LIKE ? OR f.ean LIKE ?
+            ORDER BY usage DESC, name ASC
+            LIMIT 10
+        ''', (f'%{query}%', f'%{query}%')).fetchall()
+    
+    conn.close()
+    
+    results = []
+    for food in foods:
+        results.append({
+            'id': food['key'],
             'name': food['name'],
             'calories': food['calories'],
-            'serving_size': food.get('serving'),
-            'half_size': food.get('half'),
-            'entire_size': food.get('entire'),
-            'usage': usage,
-            'ean': food.get('ean'),
+            'serving_size': food['serving'],
+            'half_size': food['half'],
+            'entire_size': food['entire'],
+            'usage': food['usage'],
+            'ean': food['ean']
         })
     
-    # Sort by usage (desc) then name (asc)
-    all_foods.sort(key=lambda x: (-x['usage'], x['name'].lower()))
-    
-    # If query is empty, return top 10
-    if not query:
-        results = all_foods[:10]
-        return jsonify(results)
-    
-    # Otherwise filter by query
-    results = []
-    for food in all_foods:
-        if query in food['name'].lower() or (food['ean'] and query == str(food['ean']).strip()):
-            results.append(food)
-    
-    return jsonify(results[:10])  # Return max 10 results
+    return jsonify(results)
 
 @app.route('/get_food_details', methods=['POST'])
 def get_food_details():
@@ -228,9 +390,7 @@ def get_food_details():
     unit_type = request.form.get('unit_type')
     units = request.form.get('units')
     
-    foods = get_foods()
-    food = foods.get(food_id)
-    
+    food = get_food_by_key(food_id)
     if not food:
         return jsonify({'error': 'Food not found'}), 404
     
@@ -283,9 +443,7 @@ def log_food():
     meal_group = request.form.get('meal_group')
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    foods = get_foods()
-    food = foods.get(food_id)
-    
+    food = get_food_by_key(food_id)
     if not food:
         return jsonify({'error': 'Food not found'}), 404
     
@@ -334,8 +492,7 @@ def log_food():
     save_current_session(eaten_items, date)
     
     # Update food usage
-    food_usage = get_food_usage()
-    increment_food_usage(food['name'], food_usage)
+    increment_food_usage(food['name'])
     
     # Return updated session, totals and breakdown
     totals = calculate_totals(eaten_items)
@@ -360,25 +517,22 @@ def update_session():
         'current_date_formatted': current_date_formatted,
         'breakdown': group_breakdown
     })
+
 @app.route('/delete_food', methods=['POST'])
 def delete_food():
     food_id = request.form.get('food_id').lower()
-    foods = get_foods()
-    
-    if food_id in foods:
-        # Remove from foods
-        del foods[food_id]
-        save_foods(foods)
-        
-        # Remove from usage
-        food_usage = get_food_usage()
-        if food_id in food_usage:
-            del food_usage[food_id]
-            save_food_usage(food_usage)
-        
+    conn = get_db_connection()
+    try:
+        # Delete from both tables
+        conn.execute('DELETE FROM foods WHERE key = ?', (food_id,))
+        conn.execute('DELETE FROM food_usage WHERE food_key = ?', (food_id,))
+        conn.commit()
         return jsonify(success=True)
-    
-    return jsonify(success=False, error='Food not found'), 404
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
 @app.route('/delete_item', methods=['POST'])
 def delete_item():
     item_index = int(request.form.get('item_index'))
@@ -435,7 +589,6 @@ def create_group():
     if group_name in predefined:
         return jsonify({'error': 'This is a reserved group name'}), 400
     
-    # In a real app, you'd store custom groups in a file/database
     return jsonify({'success': True, 'group_name': group_name})
 
 @app.route('/custom_food')
@@ -443,7 +596,7 @@ def custom_food():
     return render_template('custom_food.html')
 
 @app.route('/save_food', methods=['POST'])
-def save_food():
+def save_food_route():
     # Extract form data
     name = request.form.get('name')
     carbs = float(request.form.get('carbs', 0))
@@ -468,7 +621,8 @@ def save_food():
     calories = calculate_calories(carbs, proteins, fats)
     
     # Create food object
-    food = {
+    food_data = {
+        "key": name.lower(),
         "name": name,
         "carbs": carbs,
         "sugars": sugars,
@@ -486,17 +640,13 @@ def save_food():
     }
     
     # Save to database
-    foods = get_foods()
-    foods[name.lower()] = food
-    save_foods(foods)
+    save_food(food_data)
     
     # Initialize usage count
-    food_usage = get_food_usage()
-    if name.lower() not in food_usage:
-        food_usage[name.lower()] = 0
-        save_food_usage(food_usage)
+    increment_food_usage(name)
     
     return jsonify({'success': True})
+
 def calculate_weekly_averages():
     session_history = get_session_history()
     weekly_data = {}
@@ -546,6 +696,7 @@ def calculate_weekly_averages():
     # Sort by week (newest first)
     result.sort(key=lambda x: x["end_date"], reverse=True)
     return result
+
 @app.route('/history')
 def history():
     # Daily history (last 7 days)
@@ -594,9 +745,7 @@ def update_grams():
         item = eaten_items[item_index]
         
         # Get original food data
-        foods = get_foods()
-        food = foods.get(item['name'].lower())
-        
+        food = get_food_by_key(item['name'].lower())
         if not food:
             return jsonify({'error': 'Food not found'}), 404
         
