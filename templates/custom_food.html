@@ -11,15 +11,16 @@
     <style>
         body {
             font-family: 'Calibri', sans-serif;
-            font-size: 18px;
+            font-size: 16px;
+            background-color: #222 !important;
         }
         .form-control {
-            font-size: 18px;
-            padding: 12px;
+            font-size: 12px;
+            padding: 10px;
             height: auto;
         }
         .form-label {
-            font-size: 18px;
+            font-size: 16px;
             margin-bottom: 8px;
         }
         .btn {
@@ -72,15 +73,16 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 5rem;
-            color: #b61336;
+            color: #f8f8f8;
             z-index: 10000;
             animation: celebrate 1.5s ease-out;
             pointer-events: none;
             text-shadow: 0 0 20px rgba(255,255,255,0.8);
         }
     </style>
+    </style>
 </head>
-<body class="bg-secondary">
+<body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
@@ -94,10 +96,10 @@
                         <a class="nav-link" href="/" style="font-size: 20px;color: #b61336;">Today</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff;">Add Food</a>
+                        <a class="nav-link active" href="/custom_food" style="font-size: 20px;color: #ffffff;">Add Food</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/history" style="font-size: 20px;color: #b61336;">History</a>
+                        <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336;">History</a>
                     </li>
                 </ul>
             </div>
@@ -107,8 +109,8 @@
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-10">
-                <div class="card bg-dark">
-                    <div class="card-header bg-black text-light">
+                <div class="card">
+                    <div class="card-header text-light">
                         <h4 class="mb-0">Add Custom Food</h4>
                     </div>
                     <div class="card-body">
@@ -117,7 +119,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-8">
                                     <label class="form-label">Food Name*</label>
-                                    <input type="text" name="name" class="form-control bg-secondary text-light" required>
+                                    <input type="text" name="name" class="form-control" required>
                                 </div>
                             </div>
                             
@@ -125,7 +127,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-6">
                                     <label class="form-label">EAN/Barcode (optional)</label>
-                                    <input type="text" name="ean" class="form-control bg-secondary text-light">
+                                    <input type="text" name="ean" class="form-control">
                                 </div>
                             </div>
                             
@@ -133,7 +135,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Proteins (g)*</label>
-                                    <input type="number" name="proteins" class="form-control bg-secondary text-light" step="any" min="0" required>
+                                    <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
                                 </div>
                             </div>
                             
@@ -141,11 +143,11 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Fats (g)*</label>
-                                    <input type="number" name="fats" class="form-control bg-secondary text-light" step="any" min="0" required>
+                                    <input type="number" name="fats" class="form-control" step="0.1" min="0" required>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Saturated Fats (g)</label>
-                                    <input type="number" name="saturated" class="form-control bg-secondary text-light" step="any" min="0" value="0">
+                                    <input type="number" name="saturated" class="form-control" step="0.1" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -153,15 +155,15 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Carbohydrates (g)*</label>
-                                    <input type="number" name="carbs" class="form-control bg-secondary text-light" step="any" min="0" required>
+                                    <input type="number" name="carbs" class="form-control" step="0.1" min="0" required>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Sugars (g)</label>
-                                    <input type="number" name="sugars" class="form-control bg-secondary text-light" step="any" min="0" value="0">
+                                    <input type="number" name="sugars" class="form-control" step="0.1" min="0" value="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Fiber (g)</label>
-                                    <input type="number" name="fiber" class="form-control bg-secondary text-light" step="any" min="0" value="0">
+                                    <input type="number" name="fiber" class="form-control" step="0.1" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -169,7 +171,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Salt (g)</label>
-                                    <input type="number" name="salt" class="form-control bg-secondary text-light" step="any" min="0" value="0">
+                                    <input type="number" name="salt" class="form-control" step="0.0001" min="0" value="0">
                                 </div>
                             </div>
                             
@@ -177,15 +179,15 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Serving Size (g)</label>
-                                    <input type="number" name="serving" class="form-control bg-secondary text-light" step="any" min="0">
+                                    <input type="number" name="serving" class="form-control" step="0.1" min="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Half Portion (g)</label>
-                                    <input type="number" name="half" class="form-control bg-secondary text-light" step="any" min="0">
+                                    <input type="number" name="half" class="form-control" step="0.1" min="0">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Entire Portion (g)</label>
-                                    <input type="number" name="entire" class="form-control bg-secondary text-light" step="any" min="0">
+                                    <input type="number" name="entire" class="form-control" step="0.1" min="0">
                                 </div>
                             </div>
                             
@@ -193,7 +195,7 @@
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
                                     <label class="form-label">Base (grams)*</label>
-                                    <input type="number" name="grams" class="form-control bg-secondary text-light" step="any" min="0" value="100" required>
+                                    <input type="number" name="grams" class="form-control" step="0.1" min="0" value="100" required>
                                 </div>
                             </div>
                             
@@ -203,7 +205,8 @@
                                     <div class="alert alert-success d-none" id="success-message">
                                         Food added successfully!
                                     </div>
-                                    <button type="submit" class="btn w-100" style="background-color: #ff4444; color: black;">Save Food</button>
+                                    <div class="alert alert-danger d-none" id="error-message"></div>
+                                    <button type="submit" class="btn w-100" style="background-color: #b61336; color: black;">Save Food</button>
                                 </div>
                             </div>
                         </form>
@@ -228,17 +231,21 @@
             $('#food-form').on('submit', function(e) {
                 e.preventDefault();
                 
+                // Reset messages
+                $('#success-message').addClass('d-none');
+                $('#error-message').addClass('d-none');
+                
                 // Collect form data
                 const formData = {
                     name: $('input[name="name"]').val().trim(),
-                    carbs: parseFloat($('input[name="carbs"]').val()) || 0,
-                    proteins: parseFloat($('input[name="proteins"]').val()) || 0,
-                    fats: parseFloat($('input[name="fats"]').val()) || 0,
-                    sugars: parseFloat($('input[name="sugars"]').val()) || 0,
-                    fiber: parseFloat($('input[name="fiber"]').val()) || 0,
-                    saturated: parseFloat($('input[name="saturated"]').val()) || 0,
-                    salt: parseFloat($('input[name="salt"]').val()) || 0,
-                    grams: parseFloat($('input[name="grams"]').val()) || 100,
+                    carbs: $('input[name="carbs"]').val(),
+                    proteins: $('input[name="proteins"]').val(),
+                    fats: $('input[name="fats"]').val(),
+                    sugars: $('input[name="sugars"]').val(),
+                    fiber: $('input[name="fiber"]').val(),
+                    saturated: $('input[name="saturated"]').val(),
+                    salt: $('input[name="salt"]').val(),
+                    grams: $('input[name="grams"]').val(),
                     ean: $('input[name="ean"]').val().trim() || null
                 };
                 
@@ -247,18 +254,18 @@
                 const half = $('input[name="half"]').val();
                 const entire = $('input[name="entire"]').val();
                 
-                formData.serving = serving ? parseFloat(serving) : null;
-                formData.half = half ? parseFloat(half) : null;
-                formData.entire = entire ? parseFloat(entire) : null;
+                if (serving) formData.serving = serving;
+                if (half) formData.half = half;
+                if (entire) formData.entire = entire;
                 
                 // Validate required fields
                 if (!formData.name) {
-                    alert('Food name is required');
+                    showError('Food name is required');
                     return;
                 }
                 
-                if (isNaN(formData.carbs) || isNaN(formData.proteins) || isNaN(formData.fats)) {
-                    alert('Please enter valid numbers for carbs, proteins, and fats');
+                if (!formData.carbs || !formData.proteins || !formData.fats) {
+                    showError('Carbs, proteins and fats are required');
                     return;
                 }
                 
@@ -267,38 +274,54 @@
                     type: 'POST',
                     url: '/save_food',
                     data: formData,
-                    success: function() {
-                        // Create celebration animation
-                        const celebration = $('<div class="success-animation">✓</div>');
-                        $('body').append(celebration);
-                        
-                        // Remove after animation
-                        setTimeout(() => celebration.remove(), 1500);
-                        
-                        // Show success message with animation
-                        const successMessage = $('#success-message');
-                        successMessage.removeClass('d-none');
-                        
-                        // Add pulse animation to success message
-                        successMessage.css('animation', 'pulse 0.5s');
-                        setTimeout(() => successMessage.css('animation', ''), 500);
-                        
-                        // Reset form after delay
-                        setTimeout(() => {
-                            $('#food-form')[0].reset();
-                            $('input[name="grams"]').val('100');
-                            successMessage.addClass('d-none');
-                        }, 3000);
+                    success: function(response) {
+                        if (response.success) {
+                            // Create celebration animation
+                            const celebration = $('<div class="success-animation">✓</div>');
+                            $('body').append(celebration);
+                            
+                            // Remove after animation
+                            setTimeout(() => celebration.remove(), 1500);
+                            
+                            // Show success message with animation
+                            const successMessage = $('#success-message');
+                            successMessage.removeClass('d-none');
+                            
+                            // Add pulse animation to success message
+                            successMessage.css('animation', 'pulse 0.5s');
+                            setTimeout(() => successMessage.css('animation', ''), 500);
+                            
+                            // Reset form after delay
+                            setTimeout(() => {
+                                $('#food-form')[0].reset();
+                                $('input[name="grams"]').val('100');
+                                successMessage.addClass('d-none');
+                            }, 3000);
+                        } else {
+                            showError(response.error || 'Failed to save food');
+                        }
                     },
                     error: function(xhr) {
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            alert('Error: ' + xhr.responseJSON.error);
-                        } else {
-                            alert('Error saving food');
+                        let errorMsg = 'Error saving food';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.error) {
+                                errorMsg = response.error;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
                         }
+                        showError(errorMsg);
                     }
                 });
             });
+            
+            function showError(message) {
+                const errorMessage = $('#error-message');
+                errorMessage.text(message).removeClass('d-none');
+                errorMessage.css('animation', 'pulse 0.5s');
+                setTimeout(() => errorMessage.css('animation', ''), 500);
+            }
         });
     </script>
 </body>
