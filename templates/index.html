@@ -1897,19 +1897,20 @@
             }
             
             // Initialize QuaggaJS for barcode scanning
-            function startQuagga() {
-                Quagga.init({
-                    inputStream: {
-                        name: "Live",
-                        type: "LiveStream",
-                        target: document.querySelector('#camera-preview'),
-                        constraints: {
-                            facingMode: currentCamera,
-                            focusMode: 'continuous',
-                            width: { min: 1280 },  // Higher resolution for linear codes
-                            height: { min: 720 }
-                        }
-                    },
+    function startQuagga() {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#camera-preview'),
+                constraints: {
+                    facingMode: currentCamera,
+                    focusMode: 'continuous',
+                    width: { min: 640, ideal: 1280 },  // Lower minimum width for less zoom
+                    height: { min: 480, ideal: 720 },
+                    aspectRatio: { ideal: 1.777 }  // 16:9 aspect ratio for wider view
+                }
+            },
                     decoder: {
                         readers: ['code_128_reader'],  // Only use Code-128 reader
                         debug: {
@@ -1985,9 +1986,8 @@
             cameraModal.hide();
             stopCamera();
             
-            // Set search field and trigger search - UPDATED TO ENSURE PROPER COPYING
-            $('#food-search').val(code);
-            $('#food-search').trigger('input');
+            // SET SEARCH FIELD VALUE AND TRIGGER SEARCH
+            $('#food-search').val(code).trigger('input');
             
             // Highlight the search field
             $('#food-search').addClass('highlight-search');
@@ -1995,9 +1995,31 @@
                 $('#food-search').removeClass('highlight-search');
             }, 3000);
             
-            // FORCE UI UPDATE IF NEEDED
-            setTimeout(loadTopFoods, 100);
+            // FORCE SEARCH TO EXECUTE IMMEDIATELY
+            setTimeout(function() {
+                const query = $('#food-search').val().trim();
+                if (query.length > 0) {
+                    performFoodSearch(query);
+                }
+            }, 100);
         }, 1000);
+    }
+    
+    // New function to perform search
+    function performFoodSearch(query) {
+        $.post('/search_foods', { query: query }, function(data) {
+            let resultsHtml = '';
+            if (data.length > 0) {
+                resultsHtml = '<div class="list-group">';
+                data.forEach(food => {
+                    resultsHtml += createFoodItemHtml(food);
+                });
+                resultsHtml += '</div>';
+            } else {
+                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+            }
+            $('#search-results').html(resultsHtml);
+        });
     }
             
             // Cleanup when modal is closed
