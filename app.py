@@ -80,48 +80,84 @@ def init_db():
 # Migrate JSON data to database
 def migrate_json_to_db():
     # Migrate foods
-    if os.path.exists(FOOD_FILE):
-        with open(FOOD_FILE, 'r') as f:
-            foods = json.load(f)
+    if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
+        try:
+            with open(FOOD_FILE, 'r') as f:
+                foods = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Invalid JSON in {FOOD_FILE}, skipping migration")
+            foods = {}
+    else:
+        foods = {}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    for key, food in foods.items():
+        # Handle EAN field - convert list to string if needed
+        ean = food.get('ean')
+        if isinstance(ean, list):
+            ean = ', '.join(ean) if ean else None
         
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        for key, food in foods.items():
-            # Handle EAN field - convert list to string if needed
-            ean = food.get('ean')
-            if isinstance(ean, list):
-                ean = ', '.join(ean) if ean else None
-            
-            try:
-                cursor.execute('''
-                    INSERT INTO foods 
-                    (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    key,
-                    food['name'],
-                    food['carbs'],
-                    food.get('sugars', 0),
-                    food.get('fiber', 0),
-                    food['proteins'],
-                    food['fats'],
-                    food.get('saturated', 0),
-                    food.get('salt', 0),
-                    food['calories'],
-                    food['grams'],
-                    food.get('half'),
-                    food.get('entire'),
-                    food.get('serving'),
-                    ean  # Use the processed EAN value
-                ))
-            except sqlite3.IntegrityError:
-                pass  # Skip duplicates
-        
-        conn.commit()
-        conn.close()
-        if os.path.exists(FOOD_FILE):
-            os.rename(FOOD_FILE, FOOD_FILE + ".bak")
+        try:
+            cursor.execute('''
+                INSERT INTO foods 
+                (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                key,
+                food['name'],
+                food['carbs'],
+                food.get('sugars', 0),
+                food.get('fiber', 0),
+                food['proteins'],
+                food['fats'],
+                food.get('saturated', 0),
+                food.get('salt', 0),
+                food['calories'],
+                food['grams'],
+                food.get('half'),
+                food.get('entire'),
+                food.get('serving'),
+                ean
+            ))
+        except sqlite3.IntegrityError:
+            pass  # Skip duplicates
+    
+    conn.commit()
+    
+    # Only backup if we successfully processed the file
+    if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
+        os.rename(FOOD_FILE, FOOD_FILE + ".bak")
+    
+    # Migrate food_usage
+    if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
+        try:
+            with open(USAGE_FILE, 'r') as f:
+                usage = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Invalid JSON in {USAGE_FILE}, skipping migration")
+            usage = {}
+    else:
+        usage = {}
+    
+    for key, count in usage.items():
+        try:
+            cursor.execute('''
+                INSERT INTO food_usage (food_key, count)
+                VALUES (?, ?)
+                ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+            ''', (key, count, count))
+        except sqlite3.IntegrityError:
+            pass
+    
+    conn.commit()
+    
+    # Only backup if we successfully processed the file
+    if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
+        os.rename(USAGE_FILE, USAGE_FILE + ".bak")
+    
+    conn.close()
     
     # Migrate food_usage
     if os.path.exists(USAGE_FILE):
