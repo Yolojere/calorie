@@ -3,6 +3,7 @@ import json
 import os
 import sqlite3
 from datetime import datetime, timedelta
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -654,31 +655,107 @@ def update_grams():
 def save_food_route():
     try:
         # Extract form data
-        food_data = {
-            'key': request.form.get('key'),
-            'name': request.form.get('name'),
-            'carbs': float(request.form.get('carbs', 0)),
-            'sugars': float(request.form.get('sugars', 0)),
-            'fiber': float(request.form.get('fiber', 0)),
-            'proteins': float(request.form.get('proteins', 0)),
-            'fats': float(request.form.get('fats', 0)),
-            'saturated': float(request.form.get('saturated', 0)),
-            'salt': float(request.form.get('salt', 0)),
-            'calories': float(request.form.get('calories', 0)),
-            'grams': float(request.form.get('grams', 100)),
-            'half': request.form.get('half') or None,
-            'entire': request.form.get('entire') or None,
-            'serving': request.form.get('serving') or None,
-            'ean': request.form.get('ean') or None
-        }
+        name = request.form.get('name').strip()  # Clean up whitespace
         
-        # Save to database
-        save_food(food_data)
+        if not name:
+            return jsonify({'success': False, 'error': 'Name is required'}), 400
+
+        # Generate key from name
+        base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_'))
+        if not base_key:  # Handle empty key case
+            base_key = "custom_food"
+
+        # Convert to floats, default to 0 if empty
+        carbs = float(request.form.get('carbs', 0)) or 0
+        sugars = float(request.form.get('sugars', 0)) or 0
+        fiber = float(request.form.get('fiber', 0)) or 0
+        proteins = float(request.form.get('proteins', 0)) or 0
+        fats = float(request.form.get('fats', 0)) or 0
+        saturated = float(request.form.get('saturated', 0)) or 0
+        salt = float(request.form.get('salt', 0)) or 0
+        ean = request.form.get('ean') or None
+        grams = float(request.form.get('grams', 100))  # default 100g
         
-        # Initialize usage count
-        increment_food_usage(food_data['name'])
+        # Optional portion fields
+        serving = request.form.get('serving')
+        half = request.form.get('half')
+        entire = request.form.get('entire')
         
-        return jsonify({'success': True})
+        serving = float(serving) if serving and serving.strip() else None
+        half = float(half) if half and half.strip() else None
+        entire = float(entire) if entire and entire.strip() else None
+        
+        # Calculate calories
+        calories = calculate_calories(carbs, proteins, fats)
+        
+        # Get database connection
+        conn = get_db_connection()
+        try:
+            # Generate unique key
+            key = base_key
+            counter = 1
+            while True:
+                existing = conn.execute('SELECT 1 FROM foods WHERE key = ?', (key,)).fetchone()
+                if not existing:
+                    break
+                key = f"{base_key}_{counter}"
+                counter += 1
+
+            # Create food object
+            food_data = {
+                "key": key,
+                "name": name,
+                "carbs": carbs,
+                "sugars": sugars,
+                "fiber": fiber,
+                "proteins": proteins,
+                "fats": fats,
+                "saturated": saturated,
+                "salt": salt,
+                "calories": calories,
+                "grams": grams,
+                "half": half,
+                "entire": entire,
+                "serving": serving,
+                "ean": ean
+            }
+            
+            # Save to database
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO foods 
+                (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                food_data['key'],
+                food_data['name'],
+                food_data['carbs'],
+                food_data['sugars'],
+                food_data['fiber'],
+                food_data['proteins'],
+                food_data['fats'],
+                food_data['saturated'],
+                food_data['salt'],
+                food_data['calories'],
+                food_data['grams'],
+                food_data.get('half'),
+                food_data.get('entire'),
+                food_data.get('serving'),
+                food_data.get('ean')
+            ))
+            conn.commit()
+            
+            # Initialize usage count
+            cursor.execute('''
+                INSERT INTO food_usage (food_key, count)
+                VALUES (?, 1)
+                ON CONFLICT(food_key) DO UPDATE SET count = count + 1
+            ''', (key,))
+            conn.commit()
+            
+            return jsonify({'success': True})
+        finally:
+            conn.close()
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
