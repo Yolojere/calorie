@@ -4,6 +4,8 @@ import os
 import sqlite3
 from datetime import datetime, timedelta
 import re
+import uuid
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -660,30 +662,32 @@ def save_food_route():
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
 
-        # Generate key from name
+        # Generate key from name - ensure it's never empty
         base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_'))
         if not base_key:  # Handle empty key case
             base_key = "custom_food"
 
         # Convert to floats, default to 0 if empty
-        carbs = float(request.form.get('carbs', 0)) or 0
-        sugars = float(request.form.get('sugars', 0)) or 0
-        fiber = float(request.form.get('fiber', 0)) or 0
-        proteins = float(request.form.get('proteins', 0)) or 0
-        fats = float(request.form.get('fats', 0)) or 0
-        saturated = float(request.form.get('saturated', 0)) or 0
-        salt = float(request.form.get('salt', 0)) or 0
+        def safe_float(value, default=0.0):
+            try:
+                return float(value) if value and value.strip() else default
+            except ValueError:
+                return default
+                
+        carbs = safe_float(request.form.get('carbs', 0))
+        sugars = safe_float(request.form.get('sugars', 0))
+        fiber = safe_float(request.form.get('fiber', 0))
+        proteins = safe_float(request.form.get('proteins', 0))
+        fats = safe_float(request.form.get('fats', 0))
+        saturated = safe_float(request.form.get('saturated', 0))
+        salt = safe_float(request.form.get('salt', 0))
         ean = request.form.get('ean') or None
-        grams = float(request.form.get('grams', 100))  # default 100g
+        grams = safe_float(request.form.get('grams', 100), 100)  # default 100g
         
         # Optional portion fields
-        serving = request.form.get('serving')
-        half = request.form.get('half')
-        entire = request.form.get('entire')
-        
-        serving = float(serving) if serving and serving.strip() else None
-        half = float(half) if half and half.strip() else None
-        entire = float(entire) if entire and entire.strip() else None
+        serving = safe_float(request.form.get('serving'), None)
+        half = safe_float(request.form.get('half'), None)
+        entire = safe_float(request.form.get('entire'), None)
         
         # Calculate calories
         calories = calculate_calories(carbs, proteins, fats)
@@ -691,7 +695,7 @@ def save_food_route():
         # Get database connection
         conn = get_db_connection()
         try:
-            # Generate unique key
+            # Generate unique key with fallback
             key = base_key
             counter = 1
             while True:
@@ -700,7 +704,15 @@ def save_food_route():
                     break
                 key = f"{base_key}_{counter}"
                 counter += 1
-
+                # Fallback if we have too many duplicates
+                if counter > 100:
+                    key = f"custom_{uuid.uuid4().hex[:8]}"
+                    break
+        
+            # Ensure key is not empty
+            if not key:
+                key = f"food_{int(time.time())}"
+                
             # Create food object
             food_data = {
                 "key": key,
