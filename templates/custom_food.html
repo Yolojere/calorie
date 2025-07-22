@@ -228,8 +228,14 @@
                 }
             });
             
-            $('#food-form').on('submit', function(e) {
-                e.preventDefault();
+$('#food-form').on('submit', function(e) {
+    e.preventDefault();
+    const name = $('input[name="name"]').val().trim();
+    
+    if (!name) {
+        showError('Food name is required');
+        return;
+    }
                 
                 // Reset messages
                 $('#success-message').addClass('d-none');
