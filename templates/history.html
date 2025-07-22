@@ -9,29 +9,70 @@
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 16px;
-        }
-        .history-container {
-            max-width: 1200px;
-            margin: 20px auto;
-        }
-        .card-header {
-            font-size: 20px;
-            padding: 15px 20px;
-        }
-        .table th, .table td {
-            padding: 15px;
-            font-size: 16px;
-        }
-        .nav-tabs .nav-link {
-            font-size: 18px;
-            padding: 10px 20px;
-        }
-        .week-range {
-            font-weight: bold;
-        }
+    body {
+        font-family: 'Calibri', sans-serif;
+        font-size: 16px;
+    }
+
+    .history-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+
+    .card-header {
+        font-size: 20px;
+        padding: 15px 20px;
+    }
+
+    .table th, .table td {
+        padding: 15px;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+
+    .table tbody tr:hover {
+        background-color: #3a3a3a !important;
+        cursor: pointer;
+    }
+
+    /* Tabs Styling */
+    .nav-tabs {
+        border-bottom: 2px solid #b61336;
+        border-radius: 5px;
+    }
+
+    .nav-tabs .nav-link {
+        font-size: 18px;
+        padding: 10px 20px;
+        color: white;
+        background-color: #b61336;
+        border: none;
+        margin-right: 2px;
+        border-radius: 5px 5px 0 0;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    .nav-tabs .nav-link:hover {
+        background-color: #a5112f;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: #7f0f26;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .week-range {
+        font-weight: bold;
+    }
+
+    /* Optional: round table corners inside card */
+    .card-body table {
+        border-radius: 0 0 10px 10px;
+        overflow: hidden;
+    }
     </style>
 </head>
 <body class="bg-secondary">
