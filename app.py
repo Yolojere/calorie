@@ -270,6 +270,7 @@ def calculate_group_breakdown(eaten_items):
                 "carbs": 0,
                 "proteins": 0,
                 "fats": 0,
+                "saturated": 0,
                 "salt": 0
             }
         
@@ -278,6 +279,7 @@ def calculate_group_breakdown(eaten_items):
         groups[group]["carbs"] += item['carbs']
         groups[group]["proteins"] += item['proteins']
         groups[group]["fats"] += item['fats']
+        groups[group]["saturated"] += item.get('saturated', 0)
         groups[group]["salt"] += item.get('salt', 0)
     
     return groups
