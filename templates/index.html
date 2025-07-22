@@ -316,6 +316,72 @@
                 grid-template-rows: 570px 670px !important;
             }
         }
+
+        /* NUTRITION PANEL (MOBILE* /)
+        /* Mobile Nutrition Grid */
+.nutrition-grid-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.grid-row-mobile {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.grid-cell-mobile {
+    flex: 1;
+    background-color: #b61336;
+    border-radius: 10px;
+    padding: 18px 5px;
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.grid-cell-mobile:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.grid-cell-mobile div:first-child {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.grid-cell-mobile .grid-value {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* Special styling for full-width cells */
+.grid-row-mobile:first-child .grid-cell-mobile,
+.grid-row-mobile:nth-child(2) .grid-cell-mobile,
+.grid-row-mobile:nth-child(5) .grid-cell-mobile,
+.grid-row-mobile:last-child .grid-cell-mobile {
+    background-color: #ffffff;
+    color: black;
+}
+
+/* Highlight important metrics */
+#mobile-calories-cell {
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    color: black;
+}
+
+#mobile-proteins-cell {
+    background: linear-gradient(135deg, #b61336 0%, #8a0e29 100%);
+}
         
         /* Mobile Responsive */
         @media (max-width: 991px) {
@@ -987,40 +1053,60 @@
                     <h6>Nutrition Breakdown</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Calories</div>
-                            <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Protein</div>
-                            <div class="grid-value" id="mobile-proteins">{{ totals.proteins | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Carbs</div>
-                            <div class="grid-value" id="mobile-carbs">{{ totals.carbs | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Fats</div>
-                            <div class="grid-value" id="mobile-fats">{{ totals.fats | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Sugars</div>
-                            <div class="grid-value" id="mobile-sugars">{{ totals.sugars | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Fiber</div>
-                            <div class="grid-value" id="mobile-fiber">{{ totals.fiber | round(1) }}g</div>
-                        </div>
-                        <div class="nutrition-value-xxs" style="background-color: #b61336; min-width: 120px;">
-                            <div>Salt</div>
-                            <div class="grid-value" id="mobile-salt">{{ totals.salt | round(1) }}g</div>
-                        </div>
+<div class="nutrition-grid-mobile">
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-calories-cell">
+                        <div>CALORIES</div>
+                        <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
+                    </div>
+                </div>
+                
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-proteins-cell">
+                        <div>PROTEINS</div>
+                        <div class="grid-value" id="mobile-proteins">{{ totals.proteins | round(1) }}g</div>
+                    </div>
+                </div>
+                
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-carbs-cell">
+                        <div>CARBS</div>
+                        <div class="grid-value" id="mobile-carbs">{{ totals.carbs | round(1) }}g</div>
+                    </div>
+                    <div class="grid-cell-mobile" id="mobile-sugars-cell">
+                        <div>SUGARS</div>
+                        <div class="grid-value" id="mobile-sugars">{{ totals.sugars | round(1) }}g</div>
+                    </div>
+                </div>
+                
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-fats-cell">
+                        <div>FATS</div>
+                        <div class="grid-value" id="mobile-fats">{{ totals.fats | round(1) }}g</div>
+                    </div>
+                    <div class="grid-cell-mobile" id="mobile-saturated-cell">
+                        <div>SATURATED</div>
+                        <div class="grid-value" id="mobile-saturated">{{ totals.saturated | round(1) }}g</div>
+                    </div>
+                </div>
+                
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-fiber-cell">
+                        <div>FIBER</div>
+                        <div class="grid-value" id="mobile-fiber">{{ totals.fiber | round(1) }}g</div>
+                    </div>
+                </div>
+                
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile" id="mobile-salt-cell">
+                        <div>SALT</div>
+                        <div class="grid-value" id="mobile-salt">{{ totals.salt | round(1) }}g</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
     
     <!-- Nutrition Grid -->
     <div class="nutrition-grid-container">
@@ -1876,6 +1962,7 @@ $(document).on('click', '.delete-food-btn', function(e) {
                 $('#mobile-sugars').text(totals.sugars.toFixed(1) + 'g');
                 $('#mobile-fiber').text(totals.fiber.toFixed(1) + 'g');
                 $('#mobile-salt').text(totals.salt.toFixed(1) + 'g');
+                $('#mobile-saturated').text(totals.saturated.toFixed(1) + 'g');
             }
             
             function resetFoodForm() {
