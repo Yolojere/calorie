@@ -73,14 +73,12 @@
         .nutrition-value-xxs {
             border-radius: 6px;
             min-width: 70px;
-            padding: 2px 2px !important;
+            padding: 5px 8px;
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 30px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            font-weight: bold !important;
-
-            
         }
         
         .rtb-yay {
@@ -439,7 +437,7 @@
         
         .nutrition-grid {
             display: grid;
-            grid-template-rows: repeat(9, 1fr);
+            grid-template-rows: repeat(8, 1fr);
             height: 100%;
             width: 100%;
             background-color: #1a1a1a;
@@ -482,10 +480,10 @@
             background-color: #b61336;
             color: #000000;
         }
+        
         .grid-cell:nth-child(6),
         .grid-cell:nth-child(7),
-        .grid-cell:nth-child(8),
-        .grid-cell:nth-child(9) {
+        .grid-cell:nth-child(8) {
             background-color: #ffffff;
             color: #000000;
         }
@@ -1129,10 +1127,6 @@
             <div class="grid-cell">
                 Fats
                 <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Saturated
-            <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
             </div>
             <div class="grid-cell">
                 Sugars
@@ -1807,75 +1801,74 @@ $(document).on('click', '.delete-item', function(e) {
             });
             
             // Recipe saving
-$('#recipe-save').click(function() {
-    const recipeName = $('#recipe-name').val().trim();
-    if (!recipeName) {
-        alert('Please enter a recipe name');
-        return;
-    }
-    
-    // Get nutrition data for selected items
-    const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
-    
-    // Calculate total nutrition
-    let totalCalories = 0;
-    let totalCarbs = 0;
-    let totalSugars = 0;
-    let totalFiber = 0;
-    let totalProteins = 0;
-    let totalFats = 0;
-    let totalSaturated = 0;
-    let totalSalt = 0;
-    let totalGrams = 0;
-    
-    recipeItems.forEach(item => {
-        totalCalories += item.calories;
-        totalCarbs += item.carbs;
-        totalSugars += item.sugars || 0;
-        totalFiber += item.fiber || 0;
-        totalProteins += item.proteins;
-        totalFats += item.fats;
-        totalSaturated += item.saturated || 0;
-        totalSalt += item.salt || 0;
-        totalGrams += item.grams;
-    });
-    
-    // Create recipe food data (per 100g)
-    const recipeData = {
-        name: recipeName,
-        key: recipeName.toLowerCase().replace(/\s+/g, '_'),
-        carbs: (totalCarbs / totalGrams) * 100,
-        sugars: (totalSugars / totalGrams) * 100,
-        fiber: (totalFiber / totalGrams) * 100,
-        proteins: (totalProteins / totalGrams) * 100,
-        fats: (totalFats / totalGrams) * 100,
-        saturated: (totalSaturated / totalGrams) * 100,
-        salt: (totalSalt / totalGrams) * 100,
-        calories: (totalCalories / totalGrams) * 100,
-        grams: 100,
-        // ADD ENTIRE PORTION OPTION
-        entire: totalGrams  // Total grams of the recipe
-    };
-    
-    // Save recipe to database
-    $.post('/save_food', recipeData, function(response) {
-        if (response.success) {
-            alert('Recipe created successfully!');
-            $('#recipeModal').modal('hide');
-            
-            // Reset selection
-            selectedItems = [];
-            selectedItemsForRecipe = [];
-            $('#move-items').prop('disabled', true);
-            $('#create-recipe').addClass('d-none').prop('disabled', true);
-            
-            // Refresh foods list
-            loadTopFoods();
-        } else {
-            alert('Error creating recipe: ' + response.error);
-        }
-    });
-});
+            $('#recipe-save').click(function() {
+                const recipeName = $('#recipe-name').val().trim();
+                if (!recipeName) {
+                    alert('Please enter a recipe name');
+                    return;
+                }
+                
+                // Get nutrition data for selected items
+                const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
+                
+                // Calculate total nutrition
+                let totalCalories = 0;
+                let totalCarbs = 0;
+                let totalSugars = 0;
+                let totalFiber = 0;
+                let totalProteins = 0;
+                let totalFats = 0;
+                let totalSaturated = 0;
+                let totalSalt = 0;
+                let totalGrams = 0;
+                
+                recipeItems.forEach(item => {
+                    totalCalories += item.calories;
+                    totalCarbs += item.carbs;
+                    totalSugars += item.sugars || 0;
+                    totalFiber += item.fiber || 0;
+                    totalProteins += item.proteins;
+                    totalFats += item.fats;
+                    totalSaturated += item.saturated || 0;
+                    totalSalt += item.salt || 0;
+                    totalGrams += item.grams;
+                });
+                
+                // Create recipe food data (per 100g)
+                const recipeData = {
+                    name: recipeName,
+                    key: recipeName.toLowerCase().replace(/\s+/g, '_'),
+                    carbs: (totalCarbs / totalGrams) * 100,
+                    sugars: (totalSugars / totalGrams) * 100,
+                    fiber: (totalFiber / totalGrams) * 100,
+                    proteins: (totalProteins / totalGrams) * 100,
+                    fats: (totalFats / totalGrams) * 100,
+                    saturated: (totalSaturated / totalGrams) * 100,
+                    salt: (totalSalt / totalGrams) * 100,
+                    calories: (totalCalories / totalGrams) * 100,
+                    grams: 100
+                };
+                
+                // Save recipe to database
+                $.post('/save_food', recipeData, function(response) {
+                    if (response.success) {
+                        alert('Recipe created successfully!');
+                        $('#recipeModal').modal('hide');
+                        
+                        // Reset selection
+                        selectedItems = [];
+                        selectedItemsForRecipe = [];
+                        $('#move-items').prop('disabled', true);
+                        $('#create-recipe').addClass('d-none').prop('disabled', true);
+                        
+                        // Refresh foods list
+                        loadTopFoods();
+                    } else {
+                        alert('Error creating recipe: ' + response.error);
+                    }
+                });
+            });
+
             function updateSessionDisplay(session, totals, breakdown) {
                 // Store current session for recipe creation
                 currentSession = session;
@@ -1965,7 +1958,6 @@ $('#recipe-save').click(function() {
                 $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
                 $('#grid-carbs').text(totals.carbs.toFixed(1) + 'g');
                 $('#grid-fats').text(totals.fats.toFixed(1) + 'g');
-                $('#grid-saturated').text(totals.saturated.toFixed(1) + 'g');
                 $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
                 $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
                 $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
@@ -2048,7 +2040,6 @@ $('#recipe-save').click(function() {
             }
             
             // Initialize QuaggaJS for barcode scanning
-            function startQuagga() {
         function startQuagga() {
             Quagga.init({
                 inputStream: {
@@ -2124,8 +2115,6 @@ $('#recipe-save').click(function() {
             }
             
             // Handle scanned Code-128 barcodes
-            function handleScannedCode(code) {
-                // Validate Code-128 format
             function handleScannedCode(code) {
                 // Validate Code-128 format
                 if (!/^\d{13}$/.test(code)) {  // Validate 13-digit EAN format
