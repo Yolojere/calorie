@@ -2049,35 +2049,36 @@ $('#recipe-save').click(function() {
             
             // Initialize QuaggaJS for barcode scanning
             function startQuagga() {
-                Quagga.init({
-                    inputStream: {
-                        name: "Live",
-                        type: "LiveStream",
-                        target: document.querySelector('#camera-preview'),
-                        constraints: {
-                            facingMode: currentCamera,
-                            focusMode: 'continuous',
-                            width: { min: 640 },
-                            height: { min: 480 },
-                            aspectRatio: 4/3
-                        }
-                    },
-                    decoder: {
-                        readers: ['code_128_reader'],
-                        debug: {
-                            drawBoundingBox: true,
-                            showFrequency: true,
-                            drawScanline: true,
-                            showPattern: true
-                        }
-                    },
-                    locator: {
-                        halfSample: true,
-                        patchSize: "medium"
-                    },
-                    numOfWorkers: navigator.hardwareConcurrency || 4,
-                    frequency: 10
-                }, function(err) {
+        function startQuagga() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#camera-preview'),
+                    constraints: {
+                        facingMode: currentCamera,
+                        focusMode: 'continuous',
+                        width: { min: 640 },
+                        height: { min: 480 },
+                        aspectRatio: 4/3
+                    }
+                },
+                decoder: {
+                    readers: ['ean_reader'],  // CHANGED TO EAN READER
+                    debug: {
+                        drawBoundingBox: true,
+                        showFrequency: true,
+                        drawScanline: true,
+                        showPattern: true
+                    }
+                },
+                locator: {
+                    halfSample: true,
+                    patchSize: "medium"
+                },
+                numOfWorkers: navigator.hardwareConcurrency || 4,
+                frequency: 10
+            }, function(err) {
                     if (err) {
                         console.error("Camera error:", err);
                         $('#scanned-result').text('Camera error: ' + err.message).css('color', '#ff4444');
@@ -2125,9 +2126,11 @@ $('#recipe-save').click(function() {
             // Handle scanned Code-128 barcodes
             function handleScannedCode(code) {
                 // Validate Code-128 format
-                if (!/^[A-Za-z0-9\-\$\%\*\+\/\. ]+$/.test(code)) {
-                    $('#scanned-result').text('Invalid Code-128: ' + code).css('color', '#ff4444');
-                    return;
+            function handleScannedCode(code) {
+                // Validate Code-128 format
+                if (!/^\d{13}$/.test(code)) {  // Validate 13-digit EAN format
+                $('#scanned-result').text('Invalid EAN-13: ' + code).css('color', '#ff4444');
+                return;
                 }
                 
                 // Close modal immediately and process
