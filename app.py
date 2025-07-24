@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, abort
 import json
 import os
 import sqlite3
@@ -6,15 +6,40 @@ from datetime import datetime, timedelta
 import re
 import uuid
 import time
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bcrypt import Bcrypt
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
+from itsdangerous import URLSafeTimedSerializer as Serializer
+import smtplib
+from email.mime.text import MIMEText
+from functools import wraps
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+
+# Initialize extensions
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
 # Database path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'data', 'foods.db')
-FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')  # Kept for migration
-USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')  # Kept for migration
+FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')
+USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')
 SESSION_FILE = os.path.join(BASE_DIR, 'data', 'session_history.json')
 
 # Database connection
@@ -31,25 +56,14 @@ def init_db():
     
     # Create foods table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS foods (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key TEXT UNIQUE NOT NULL,
-            name TEXT NOT NULL,
-            carbs REAL NOT NULL,
-            sugars REAL NOT NULL,
-            fiber REAL NOT NULL,
-            proteins REAL NOT NULL,
-            fats REAL NOT NULL,
-            saturated REAL NOT NULL,
-            salt REAL NOT NULL,
-            calories REAL NOT NULL,
-            grams REAL NOT NULL,
-            half REAL,
-            entire REAL,    
-            serving REAL,
-            ean TEXT
-        )
-    ''')
+    CREATE TABLE IF NOT EXISTS user_sessions (
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        data TEXT NOT NULL,
+        PRIMARY KEY (user_id, date),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+''')
     
     # Create food_usage table
     cursor.execute('''
@@ -59,6 +73,31 @@ def init_db():
             FOREIGN KEY (food_key) REFERENCES foods(key)
         )
     ''')
+    
+    # Create users table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            role TEXT NOT NULL DEFAULT 'user',
+            reset_token TEXT,
+            reset_token_expiration TIMESTAMP
+        )
+    ''')
+    
+    # Create admin user if not exists
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+    admin_exists = cursor.execute('SELECT 1 FROM users WHERE email = ?', (admin_email,)).fetchone()
+    if not admin_exists:
+        admin_password = os.getenv('ADMIN_PASSWORD', 'admin_password')
+        hashed_password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
+        cursor.execute('''
+            INSERT INTO users (username, email, password, role)
+            VALUES (?, ?, ?, ?)
+        ''', ('admin', admin_email, hashed_password, 'admin'))
     
     # Check if foods table is empty
     cursor.execute("SELECT COUNT(*) FROM foods")
@@ -126,11 +165,11 @@ def migrate_json_to_db():
     
     conn.commit()
     
-    # Only backup if we successfully processed the file
+    # Backup if we successfully processed the file
     if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
         os.rename(FOOD_FILE, FOOD_FILE + ".bak")
     
-    # Migrate food_usage
+    # Migrate food_usage - SINGLE BLOCK (no duplicates)
     if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
         try:
             with open(USAGE_FILE, 'r') as f:
@@ -153,7 +192,7 @@ def migrate_json_to_db():
     
     conn.commit()
     
-    # Only backup if we successfully processed the file
+    # Backup if we successfully processed the file
     if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
         os.rename(USAGE_FILE, USAGE_FILE + ".bak")
     
@@ -208,6 +247,99 @@ def migrate_json_to_db():
 # Initialize database and migrate data
 init_db()
 migrate_json_to_db()
+    # ... existing migration code ... (same as before)
+
+# Forms
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', 
+                                    validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Sign Up')
+
+
+    def validate_username(self, username):
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE username = ?', (username.data,)).fetchone()
+        conn.close()
+        if user:
+            raise ValidationError('Username already taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', (email.data,)).fetchone()
+        conn.close()
+        if user:
+            raise ValidationError('Email already registered. Please use a different email.')
+
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember = BooleanField('Remember Me')
+    submit = SubmitField('Login')
+
+class UpdateProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            conn = get_db_connection()
+            user = conn.execute('SELECT * FROM users WHERE username = ?', (username.data,)).fetchone()
+            conn.close()
+            if user:
+                raise ValidationError('Username already taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            conn = get_db_connection()
+            user = conn.execute('SELECT * FROM users WHERE email = ?', (email.data,)).fetchone()
+            conn.close()
+            if user:
+                raise ValidationError('Email already registered. Please use a different email.')
+
+class RequestResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password',
+                                     validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')
+
+# User model
+class User(UserMixin):
+    def __init__(self, id, username, email, role):
+        self.id = id
+        self.username = username
+        self.email = email
+        self.role = role
+
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return user_id
+
+# User loader
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    if user:
+        return User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+    return None
 
 # Helper functions
 def calculate_calories(carbs, proteins, fats):
@@ -272,31 +404,45 @@ def increment_food_usage(food_name):
     finally:
         conn.close()
 
-def get_session_history():
-    if not os.path.exists(SESSION_FILE):
-        return {}
+def get_session_history(user_id):
+    conn = get_db_connection()
+    sessions = conn.execute(
+        'SELECT date, data FROM user_sessions WHERE user_id = ?',
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return {row['date']: json.loads(row['data']) for row in sessions}
+
+def save_session_history(user_id, session_history):
+    all_history = {}
+    if os.path.exists(SESSION_FILE):
+        with open(SESSION_FILE, 'r') as f:
+            try:
+                all_history = json.load(f)
+            except:
+                pass
     
-    with open(SESSION_FILE, 'r') as f:
-        try:
-            return json.load(f)
-        except:
-            return {}
-
-def save_session_history(session_history):
+    all_history[str(user_id)] = session_history
+    
     with open(SESSION_FILE, 'w') as f:
-        json.dump(session_history, f, indent=2)
+        json.dump(all_history, f, indent=2)
 
-def get_current_session(date=None):
+def get_current_session(user_id, date=None):
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
     
-    session_history = get_session_history()
+    session_history = get_session_history(user_id)
     return session_history.get(date, []), date
 
-def save_current_session(eaten_items, date):
-    session_history = get_session_history()
-    session_history[date] = eaten_items
-    save_session_history(session_history)
+def save_current_session(user_id, eaten_items, date):
+    conn = get_db_connection()
+    data_str = json.dumps(eaten_items)
+    conn.execute('''
+        INSERT OR REPLACE INTO user_sessions (user_id, date, data)
+        VALUES (?, ?, ?)
+    ''', (user_id, date, data_str))
+    conn.commit()
+    conn.close()
 
 def calculate_group_breakdown(eaten_items):
     groups = {}
@@ -345,6 +491,10 @@ def calculate_totals(eaten_items):
     }
 
 def get_daily_totals(day_data):
+    # Handle case where day_data might be None or empty
+    if not day_data:
+        return 0.0, 0.0, 0.0, 0.0, 0.0
+        
     total_calories = sum(item['calories'] for item in day_data)
     total_proteins = sum(item['proteins'] for item in day_data)
     total_fats = sum(item['fats'] for item in day_data)
@@ -356,10 +506,47 @@ def format_date(date_str):
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%A (%d.%m.%Y)")
 
+# Email functions
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = MIMEText(f'''To reset your password, visit the following link:
+{url_for('reset_token', token=token, _external=True)}
+
+If you did not make this request, please ignore this email.
+''')
+    msg['Subject'] = 'Password Reset Request'
+    msg['From'] = app.config['MAIL_USERNAME']
+    msg['To'] = user.email
+    
+    try:
+        with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+            server.starttls()
+            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        app.logger.error(f"Error sending email: {e}")
+        return False
+
+# Admin decorator
+def admin_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)
+        return func(*args, **kwargs)
+    return decorated_function
+
+# Initialize database and migrate data
+init_db()
+migrate_json_to_db()
+
 # Routes
 @app.route('/')
+@login_required
 def index():
-    eaten_items, current_date = get_current_session()
+    user_id = current_user.id
+    eaten_items, current_date = get_current_session(user_id)
     totals = calculate_totals(eaten_items)
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
@@ -384,10 +571,122 @@ def index():
                            group_breakdown=group_breakdown)
 
 @app.route('/custom_food')
+@login_required
 def custom_food():
     return render_template('custom_food.html')
 
+# Authentication routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        conn = get_db_connection()
+        conn.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+                     (form.username.data, form.email.data, hashed_password))
+        conn.commit()
+        conn.close()
+        flash('Your account has been created! You can now log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', (form.email.data,)).fetchone()
+        conn.close()
+        if user and bcrypt.check_password_hash(user['password'], form.password.data):
+            user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+            login_user(user_obj, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
+    return render_template('login.html', title='Login', form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    form = UpdateProfileForm()
+    if form.validate_on_submit():
+        conn = get_db_connection()
+        conn.execute('UPDATE users SET username = ?, email = ? WHERE id = ?',
+                     (form.username.data, form.email.data, current_user.id))
+        conn.commit()
+        conn.close()
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('profile'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    
+    return render_template('profile.html', title='Profile', form=form)
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', (form.email.data,)).fetchone()
+        conn.close()
+        if user:
+            user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+            if send_reset_email(user_obj):
+                flash('An email has been sent with instructions to reset your password.', 'info')
+            else:
+                flash('Could not send email. Please try again later.', 'danger')
+        else:
+            flash('No account found with that email.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Password', form=form)
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user_id = User.verify_reset_token(token)
+    if user_id is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    
+    if not user:
+        flash('User not found', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        conn = get_db_connection()
+        conn.execute('UPDATE users SET password = ? WHERE id = ?', 
+                     (hashed_password, user_obj.id))
+        conn.commit()
+        conn.close()
+        flash('Your password has been updated! You can now log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
+
 @app.route('/search_foods', methods=['POST'])
+@login_required
 def search_foods():
     query = request.form.get('query', '').strip()  # Remove .lower() to preserve case
     conn = get_db_connection()
@@ -430,6 +729,7 @@ def search_foods():
     return jsonify(results)
 
 @app.route('/get_food_details', methods=['POST'])
+@login_required
 def get_food_details():
     food_id = request.form.get('food_id')
     unit_type = request.form.get('unit_type')
@@ -481,7 +781,9 @@ def get_food_details():
     })
 
 @app.route('/log_food', methods=['POST'])
+@login_required
 def log_food():
+    user_id = current_user.id
     food_id = request.form.get('food_id')
     unit_type = request.form.get('unit_type')
     units = float(request.form.get('units'))
@@ -534,7 +836,7 @@ def log_food():
     # Update session
     eaten_items, current_date = get_current_session(date)
     eaten_items.append(item)
-    save_current_session(eaten_items, date)
+    save_current_session(current_user.id, eaten_items, date)
     
     # Update food usage
     increment_food_usage(food['name'])
@@ -549,9 +851,11 @@ def log_food():
     })
 
 @app.route('/update_session', methods=['POST'])
+@login_required
 def update_session():
+    user_id = current_user.id
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    eaten_items, current_date = get_current_session(date)
+    eaten_items, current_date = get_current_session(user_id, date)
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
     current_date_formatted = format_date(current_date)
@@ -564,6 +868,7 @@ def update_session():
     })
 
 @app.route('/delete_food', methods=['POST'])
+@login_required
 def delete_food():
     food_id = request.form.get('food_id').lower()
     conn = get_db_connection()
@@ -579,14 +884,16 @@ def delete_food():
         conn.close()
 
 @app.route('/delete_item', methods=['POST'])
+@login_required
 def delete_item():
+    user_id = current_user.id
     item_index = int(request.form.get('item_index'))
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    eaten_items, current_date = get_current_session(date)
+    eaten_items, current_date = get_current_session(current_user.id, date)
     if 0 <= item_index < len(eaten_items):
         del eaten_items[item_index]
-        save_current_session(eaten_items, date)
+        save_current_session(user_id, eaten_items, date)
     
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
@@ -599,9 +906,11 @@ def delete_item():
     })
 
 @app.route('/clear_session', methods=['POST'])
+@login_required
 def clear_session():
+    user_id = current_user.id
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    save_current_session([], date)
+    save_current_session(user_id, [], date)
     group_breakdown = calculate_group_breakdown([])
     current_date_formatted = format_date(date)
     return jsonify({
@@ -612,13 +921,15 @@ def clear_session():
     })
 
 @app.route('/move_items', methods=['POST'])
+@login_required
 def move_items():
+    user_id = current_user.id
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     item_indices = json.loads(request.form.get('item_indices'))
     new_group = request.form.get('new_group')
     target_date = request.form.get('target_date', date)
     
-    eaten_items, current_date = get_current_session(date)
+    eaten_items, current_date = get_current_session(current_user.id, date)
     
     # Move items to target date and group
     moved_items = []
@@ -629,12 +940,12 @@ def move_items():
             moved_items.append(item)
     
     # Save both sessions
-    save_current_session(eaten_items, date)
+    save_current_session(user_id, eaten_items, date)
     
     # Add to target date (even if same date)
-    target_items, _ = get_current_session(target_date)
+    target_items, _ = get_current_session(current_user.id, target_date)
     target_items.extend(moved_items)
-    save_current_session(target_items, target_date)
+    save_current_session(user_id, target_items, target_date)
     
     # Return updated session
     eaten_items, current_date = get_current_session(date)
@@ -650,12 +961,14 @@ def move_items():
     })
 
 @app.route('/update_grams', methods=['POST'])
+@login_required
 def update_grams():
+    user_id = current_user.id
     item_index = int(request.form.get('item_index'))
     new_grams = float(request.form.get('new_grams'))
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    eaten_items, current_date = get_current_session(date)
+    eaten_items, current_date = get_current_session(current_user.id, date)
     
     if 0 <= item_index < len(eaten_items):
         item = eaten_items[item_index]
@@ -677,7 +990,7 @@ def update_grams():
         item['salt'] = food.get('salt', 0.0) * factor
         item['calories'] = food['calories'] * factor
         
-        save_current_session(eaten_items, date)
+        save_current_session(user_id, eaten_items, date)
     
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
@@ -690,6 +1003,7 @@ def update_grams():
     })
 
 @app.route('/save_food', methods=['POST'])
+@login_required
 def save_food_route():
     try:
         # Extract form data
@@ -807,35 +1121,38 @@ def save_food_route():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-def calculate_weekly_averages():
-    session_history = get_session_history()
+def calculate_weekly_averages(session_history):
     weekly_data = {}
     
     # Group data by week
     for date_str, items in session_history.items():
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        year, week_num, _ = date_obj.isocalendar()
-        week_key = f"{year}-W{week_num}"
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            year, week_num, _ = date_obj.isocalendar()
+            week_key = f"{year}-W{week_num}"
+            
+            if week_key not in weekly_data:
+                weekly_data[week_key] = {
+                    "days": [],
+                    "calories": 0,
+                    "proteins": 0,
+                    "fats": 0,
+                    "carbs": 0,
+                    "salt": 0,
+                    "count": 0
+                }
         
-        if week_key not in weekly_data:
-            weekly_data[week_key] = {
-                "days": [],
-                "calories": 0,
-                "proteins": 0,
-                "fats": 0,
-                "carbs": 0,
-                "salt": 0,
-                "count": 0
-            }
-        
-        calories, proteins, fats, carbs, salt = get_daily_totals(items)
-        weekly_data[week_key]["days"].append(date_str)
-        weekly_data[week_key]["calories"] += calories
-        weekly_data[week_key]["proteins"] += proteins
-        weekly_data[week_key]["fats"] += fats
-        weekly_data[week_key]["carbs"] += carbs
-        weekly_data[week_key]["salt"] += salt
-        weekly_data[week_key]["count"] += 1
+            calories, proteins, fats, carbs, salt = get_daily_totals(items)
+            weekly_data[week_key]["days"].append(date_str)
+            weekly_data[week_key]["calories"] += calories
+            weekly_data[week_key]["proteins"] += proteins
+            weekly_data[week_key]["fats"] += fats
+            weekly_data[week_key]["carbs"] += carbs
+            weekly_data[week_key]["salt"] += salt
+            weekly_data[week_key]["count"] += 1
+        except Exception as e:
+            print(f"Error processing date {date_str}: {e}")
+            continue
     
     # Calculate averages
     result = []
@@ -858,40 +1175,40 @@ def calculate_weekly_averages():
     return result
 
 @app.route('/history')
+@login_required
 def history():
-    # Daily history (last 7 days)
-    session_history = get_session_history()
+    user_id = current_user.id
+    session_history = get_session_history(user_id)
     today = datetime.today()
     daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(-3, 4)]
     
     history_data = []
     for date in daily_dates:
-        if date in session_history:
-            calories, proteins, fats, carbs, salt = get_daily_totals(session_history[date])
-            history_data.append({
-                'date': format_date(date),
-                'calories': calories,
-                'proteins': proteins,
-                'fats': fats,
-                'carbs': carbs,
-                'salt': salt
+        day_data = session_history.get(date, [])
+        calories, proteins, fats, carbs, salt = get_daily_totals(day_data)
+        history_data.append({
+            'date': format_date(date),
+            'calories': calories,
+            'proteins': proteins,
+            'fats': fats,
+            'carbs': carbs,
+            'salt': salt
             })
-        else:
-            history_data.append({
-                'date': format_date(date),
-                'calories': 0,
-                'proteins': 0,
-                'fats': 0,
-                'carbs': 0,
-                'salt': 0
-            })
-    
+        
     # Weekly history
-    weekly_data = calculate_weekly_averages()
+    weekly_data = calculate_weekly_averages(session_history)
     
     return render_template('history.html', 
                            history_data=history_data,
                            weekly_data=weekly_data)
+# Admin route example
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    conn = get_db_connection()
+    users = conn.execute('SELECT id, username, email, role, created_at FROM users').fetchall()
+    conn.close()
+    return render_template('admin.html', users=users)
 
 if __name__ == '__main__':
     app.run(debug=True)
