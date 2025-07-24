@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}Reset Password - Nutrition Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .form-control {
+        background-color: #3b3b3b !important; /* dark background */
+        color: white !important;              /* white text */
+        border-color: #444 !important;        /* optional darker border */
+    }
+
+    .form-control::placeholder {
+        color: white !important;
+        opacity: 1;
+    }
+
+    /* Autofill fix for Chrome */
+    input.form-control:-webkit-autofill {
+        box-shadow: 0 0 0px 1000px #3b3b3b inset !important;
+        -webkit-text-fill-color: white !important;
+        border-color: #444 !important;
+    }
+</style>
+<div class="container-page">
+    <div class="content-section animated">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Reset Your Password</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <fieldset class="form-group">
+                        <legend class="border-bottom mb-4">
+                            <i class="fas fa-key me-2"></i>Enter your email to reset password
+                        </legend>
+                        
+                        <!-- Email Field -->
+                        <div class="form-group mb-4">
+                            {{ form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text" style="background-color: #b61336; border-color: #000000;">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid", placeholder="Enter your account email") }}
+                                {% else %}
+                                    {{ form.email(class="form-control", placeholder="Enter your account email") }}
+                                {% endif %}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block mt-1">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <small class="text-muted">
+                                    We'll send password reset instructions to this email
+                                </small>
+                            {% endif %}
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group d-grid mt-4">
+                        <button type="submit" class="btn btn-accent">
+                            <i class="fas fa-paper-plane me-2"></i> Send Reset Instructions
+                        </button>
+                    </div>
+                    
+                    <!-- Back to Login -->
+                    <div class="mt-4 text-center">
+                        <p class="mb-1">Remember your password?</p>
+                        <a href="{{ url_for('login') }}" class="accent-color fw-bold">
+                            <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Security Features -->
+        <div class="text-center mt-4">
+            <div class="d-flex justify-content-center">
+                <div class="me-4">
+                    <i class="fas fa-shield-alt fa-2x accent-color"></i>
+                    <p class="mt-2">Secure</p>
+                </div>
+                <div class="me-4">
+                    <i class="fas fa-lock fa-2x accent-color"></i>
+                    <p class="mt-2">Encrypted</p>
+                </div>
+                <div>
+                    <i class="fas fa-user-check fa-2x accent-color"></i>
+                    <p class="mt-2">Verified</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Email validation enhancement
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const emailInput = document.getElementById('{{ form.email.id }}');
+        const emailValue = emailInput.value.trim();
+        
+        // Basic email format validation
+        if(emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+            e.preventDefault();
+            
+            // Create error message if it doesn't exist
+            if(!document.querySelector('.email-format-error')) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback d-block mt-1 email-format-error';
+                errorDiv.textContent = 'Please enter a valid email address';
+                emailInput.parentElement.parentElement.appendChild(errorDiv);
+            }
+            
+            emailInput.classList.add('is-invalid');
+        }
+    });
+</script>
+{% endblock %}

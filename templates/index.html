@@ -73,12 +73,14 @@
         .nutrition-value-xxs {
             border-radius: 6px;
             min-width: 70px;
-            padding: 5px 8px;
+            padding: 2px 2px !important;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 30px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            font-weight: bold !important;
+
+            
         }
         
         .rtb-yay {
@@ -437,7 +439,7 @@
         
         .nutrition-grid {
             display: grid;
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-rows: repeat(9, 1fr);
             height: 100%;
             width: 100%;
             background-color: #1a1a1a;
@@ -480,10 +482,10 @@
             background-color: #b61336;
             color: #000000;
         }
-        
         .grid-cell:nth-child(6),
         .grid-cell:nth-child(7),
-        .grid-cell:nth-child(8) {
+        .grid-cell:nth-child(8),
+        .grid-cell:nth-child(9) {
             background-color: #ffffff;
             color: #000000;
         }
@@ -843,28 +845,63 @@
     <!-- Admin toggle button -->
     <button id="admin-toggle" class="btn">ADMIN MODE</button>
     
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-        <div class="container">
-             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-            <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336; ">- Track, eat, repeat - </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/" style="font-size: 20px;color: #b61336; ">Today</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336; ">History</a>
-                    </li>
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
+    <div class="container">
+        <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+        <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336; ">- Track, eat, repeat - </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <!-- Always show these links -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/" style="font-size: 20px;color: #b61336; ">Today</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336; ">History</a>
+                </li>
+                
+                <!-- Enhanced dropdown for authenticated users -->
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" 
+                       href="#" 
+                       id="navbarDropdown" 
+                       role="button" 
+                       data-bs-toggle="dropdown" 
+                       aria-expanded="false"
+                       style="color: #ffffff; position: relative; padding-right: 25px;">
+                        Account
+                        <i class="fas fa-user ms-1" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" 
+                        aria-labelledby="navbarDropdown"
+                        style="background-color: #222; border: 1px solid #b61336; border-radius: 5px;">
+                        <li>
+                            <a class="dropdown-item" 
+                               href="{{ url_for('profile') }}"
+                               style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                <i class="fas fa-user-circle me-2"></i>Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                               href="{{ url_for('logout') }}"
+                               style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Mobile Tab Bar -->
     <div class="mobile-tab-bar d-block d-lg-none">
@@ -1127,6 +1164,10 @@
             <div class="grid-cell">
                 Fats
                 <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
+            </div>
+            <div class="grid-cell">
+                Saturated
+            <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
             </div>
             <div class="grid-cell">
                 Sugars
@@ -1801,74 +1842,75 @@ $(document).on('click', '.delete-item', function(e) {
             });
             
             // Recipe saving
-            $('#recipe-save').click(function() {
-                const recipeName = $('#recipe-name').val().trim();
-                if (!recipeName) {
-                    alert('Please enter a recipe name');
-                    return;
-                }
-                
-                // Get nutrition data for selected items
-                const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
-                
-                // Calculate total nutrition
-                let totalCalories = 0;
-                let totalCarbs = 0;
-                let totalSugars = 0;
-                let totalFiber = 0;
-                let totalProteins = 0;
-                let totalFats = 0;
-                let totalSaturated = 0;
-                let totalSalt = 0;
-                let totalGrams = 0;
-                
-                recipeItems.forEach(item => {
-                    totalCalories += item.calories;
-                    totalCarbs += item.carbs;
-                    totalSugars += item.sugars || 0;
-                    totalFiber += item.fiber || 0;
-                    totalProteins += item.proteins;
-                    totalFats += item.fats;
-                    totalSaturated += item.saturated || 0;
-                    totalSalt += item.salt || 0;
-                    totalGrams += item.grams;
-                });
-                
-                // Create recipe food data (per 100g)
-                const recipeData = {
-                    name: recipeName,
-                    key: recipeName.toLowerCase().replace(/\s+/g, '_'),
-                    carbs: (totalCarbs / totalGrams) * 100,
-                    sugars: (totalSugars / totalGrams) * 100,
-                    fiber: (totalFiber / totalGrams) * 100,
-                    proteins: (totalProteins / totalGrams) * 100,
-                    fats: (totalFats / totalGrams) * 100,
-                    saturated: (totalSaturated / totalGrams) * 100,
-                    salt: (totalSalt / totalGrams) * 100,
-                    calories: (totalCalories / totalGrams) * 100,
-                    grams: 100
-                };
-                
-                // Save recipe to database
-                $.post('/save_food', recipeData, function(response) {
-                    if (response.success) {
-                        alert('Recipe created successfully!');
-                        $('#recipeModal').modal('hide');
-                        
-                        // Reset selection
-                        selectedItems = [];
-                        selectedItemsForRecipe = [];
-                        $('#move-items').prop('disabled', true);
-                        $('#create-recipe').addClass('d-none').prop('disabled', true);
-                        
-                        // Refresh foods list
-                        loadTopFoods();
-                    } else {
-                        alert('Error creating recipe: ' + response.error);
-                    }
-                });
-            });
-
+$('#recipe-save').click(function() {
+    const recipeName = $('#recipe-name').val().trim();
+    if (!recipeName) {
+        alert('Please enter a recipe name');
+        return;
+    }
+    
+    // Get nutrition data for selected items
+    const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
+    
+    // Calculate total nutrition
+    let totalCalories = 0;
+    let totalCarbs = 0;
+    let totalSugars = 0;
+    let totalFiber = 0;
+    let totalProteins = 0;
+    let totalFats = 0;
+    let totalSaturated = 0;
+    let totalSalt = 0;
+    let totalGrams = 0;
+    
+    recipeItems.forEach(item => {
+        totalCalories += item.calories;
+        totalCarbs += item.carbs;
+        totalSugars += item.sugars || 0;
+        totalFiber += item.fiber || 0;
+        totalProteins += item.proteins;
+        totalFats += item.fats;
+        totalSaturated += item.saturated || 0;
+        totalSalt += item.salt || 0;
+        totalGrams += item.grams;
+    });
+    
+    // Create recipe food data (per 100g)
+    const recipeData = {
+        name: recipeName,
+        key: recipeName.toLowerCase().replace(/\s+/g, '_'),
+        carbs: (totalCarbs / totalGrams) * 100,
+        sugars: (totalSugars / totalGrams) * 100,
+        fiber: (totalFiber / totalGrams) * 100,
+        proteins: (totalProteins / totalGrams) * 100,
+        fats: (totalFats / totalGrams) * 100,
+        saturated: (totalSaturated / totalGrams) * 100,
+        salt: (totalSalt / totalGrams) * 100,
+        calories: (totalCalories / totalGrams) * 100,
+        grams: 100,
+        // ADD ENTIRE PORTION OPTION
+        entire: totalGrams  // Total grams of the recipe
+    };
+    
+    // Save recipe to database
+    $.post('/save_food', recipeData, function(response) {
+        if (response.success) {
+            alert('Recipe created successfully!');
+            $('#recipeModal').modal('hide');
+            
+            // Reset selection
+            selectedItems = [];
+            selectedItemsForRecipe = [];
+            $('#move-items').prop('disabled', true);
+            $('#create-recipe').addClass('d-none').prop('disabled', true);
+            
+            // Refresh foods list
+            loadTopFoods();
+        } else {
+            alert('Error creating recipe: ' + response.error);
+        }
+    });
+});
             function updateSessionDisplay(session, totals, breakdown) {
                 // Store current session for recipe creation
                 currentSession = session;
@@ -1958,6 +2000,7 @@ $(document).on('click', '.delete-item', function(e) {
                 $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
                 $('#grid-carbs').text(totals.carbs.toFixed(1) + 'g');
                 $('#grid-fats').text(totals.fats.toFixed(1) + 'g');
+                $('#grid-saturated').text(totals.saturated.toFixed(1) + 'g');
                 $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
                 $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
                 $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
@@ -2117,8 +2160,8 @@ $(document).on('click', '.delete-item', function(e) {
             // Handle scanned Code-128 barcodes
             function handleScannedCode(code) {
                 // Validate Code-128 format
-                if (!/^\d{13}$/.test(code)) {  // Validate 13-digit EAN format
-                $('#scanned-result').text('Invalid EAN-13: ' + code).css('color', '#ff4444');
+                if (!/^\d{13}$/.test(code)) {
+                    $('#scanned-result').text('Invalid EAN-13: ' + code).css('color', '#ff4444');
                 return;
                 }
                 
@@ -2184,3 +2227,4 @@ $(document).on('click', '.delete-item', function(e) {
     </script>
 </body>
 </html>
+
