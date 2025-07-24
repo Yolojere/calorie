@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Calibri', sans-serif;
@@ -83,28 +84,62 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-        <div class="container">
-            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-            <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336;">- Track, eat, repeat - </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/" style="font-size: 20px;color: #b61336;">Today</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/custom_food" style="font-size: 20px;color: #ffffff;">Add Food</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336;">History</a>
-                    </li>
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
+    <div class="container">
+        <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+        <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336;">- Track, eat, repeat - </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/" style="font-size: 20px;color: #b61336;">Today</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/custom_food" style="font-size: 20px;color: #ffffff;">Add Food</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336;">History</a>
+                </li>
+                
+                <!-- Add this account dropdown section -->
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" 
+                       href="#" 
+                       id="navbarDropdown" 
+                       role="button" 
+                       data-bs-toggle="dropdown" 
+                       aria-expanded="false"
+                       style="color: #ffffff; position: relative; padding-right: 25px;">
+                        Account
+                        <i class="fas fa-user ms-1" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" 
+                        aria-labelledby="navbarDropdown"
+                        style="background-color: #222; border: 1px solid #b61336; border-radius: 5px;">
+                        <li>
+                            <a class="dropdown-item" 
+                               href="{{ url_for('profile') }}"
+                               style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                <i class="fas fa-user-circle me-2"></i>Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                               href="{{ url_for('logout') }}"
+                               style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <div class="container py-4">
         <div class="row justify-content-center">
