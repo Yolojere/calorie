@@ -300,4 +300,36 @@ body {
 #clear-search:active {
     transform: scale(0.95);
 }
->>>>>>> 33f60c035badb401450b770d703d7807793e5238
+
+.nav-link {
+    font-size: 20px;
+}
+
+.nav-link.dropdown-toggle {
+    position: relative;
+    padding-right: 25px;
+}
+
+.nav-link.dropdown-toggle i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.dropdown-menu {
+    background-color: #222;
+    border: 1px solid #b61336;
+    border-radius: 5px;
+}
+
+.dropdown-item {
+    color: #e0e0e0;
+    padding: 8px 15px;
+}
+
+.dropdown-item:not(:last-child) {
+    border-bottom: 1px solid #444;
+}
+
+    
