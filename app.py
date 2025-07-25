@@ -421,8 +421,8 @@ def get_food_usage():
     conn.close()
     return {row['food_key']: row['count'] for row in usage}
 
-def increment_food_usage(food_name):
-    key = food_name.lower()
+def increment_food_usage(food_key):
+    key = re.sub(r'[^a-z0-9_]', '', food_key.lower().replace(' ', '_'))
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -892,7 +892,7 @@ def log_food():
     save_current_session(current_user.id, eaten_items, date)
     
     # Update food usage
-    increment_food_usage(food['name'])
+    increment_food_usage(food['key'])
     
     # Return updated session, totals and breakdown
     totals = calculate_totals(eaten_items)
@@ -959,7 +959,7 @@ def delete_item():
         'breakdown': group_breakdown
     })
 
-app.route('/clear_session', methods=['POST'])
+@app.route('/clear_session', methods=['POST'])
 @login_required
 def clear_session():
     user_id = current_user.id
@@ -984,7 +984,8 @@ def move_items():
     new_group = request.form.get('new_group')
     target_date = request.form.get('target_date', date)
     
-    eaten_items, current_date = get_current_session(current_user.id, date)
+    # Get source session
+    eaten_items, current_date = get_current_session(user_id, date)
     
     # Move items to target date and group
     moved_items = []
@@ -994,24 +995,24 @@ def move_items():
             item['group'] = new_group
             moved_items.append(item)
     
-    # Save both sessions
+    # Save source session
     save_current_session(user_id, eaten_items, date)
     
-    # Add to target date (even if same date)
-    target_items, _ = get_current_session(current_user.id, target_date)
+    # Get target session and add moved items
+    target_items, _ = get_current_session(user_id, target_date)
     target_items.extend(moved_items)
     save_current_session(user_id, target_items, target_date)
     
-    # Return updated session
-    eaten_items, current_date = get_current_session(date)
+    # Calculate totals using current data (no need to refetch)
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
+    current_date_formatted = format_date(date)
     
     return jsonify({
         'session': eaten_items,
         'totals': totals,
-        'current_date': current_date,
-        'current_date_formatted': format_date(current_date),
+        'current_date': date,
+        'current_date_formatted': current_date_formatted,
         'breakdown': group_breakdown
     })
 
@@ -1062,10 +1063,10 @@ def update_grams():
 def save_food_route():
     try:
         # Extract form data
-        name = request.form.get('name').strip()
-        
+        name = request.form.get('name', '').strip()
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
+        
 
         # Generate key from name - ensure it's never empty
         base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_'))
@@ -1073,9 +1074,14 @@ def save_food_route():
             base_key = "custom_food"
 
         # Convert to floats, default to 0 if empty
-        def safe_float(value, default=0.0):
+        def safe_float(value, default=0.0, min_val=0.0, max_val=10000.0):
             try:
-                return float(value) if value and value.strip() else default
+                num = float(value) if value and value.strip() else default
+                if num < min_val:
+                    return min_val
+                if num > max_val:
+                    return max_val
+                return num
             except ValueError:
                 return default
                 
