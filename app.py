@@ -1,7 +1,9 @@
+# Backend - Updated for PostgreSQL
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, abort
 import json
 import os
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor, RealDictCursor
 from datetime import datetime, timedelta
 import re
 import uuid
@@ -15,8 +17,10 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 import smtplib
 from email.mime.text import MIMEText
 from functools import wraps
+from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
+
 
 # Load environment variables
 load_dotenv()
@@ -35,49 +39,38 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
-# Database path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'data', 'foods.db')
-FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')
-USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')
-SESSION_FILE = os.path.join(BASE_DIR, 'data', 'session_history.json')
-
-# Database connection
+# Database connection using Neon.tech URL
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    print(f"Connecting to database: {DATABASE_URL.split('@')[-1]}")
+    try:
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        conn.autocommit = True
+        return conn
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        raise
+    result = urlparse(DATABASE_URL)
+    conn = psycopg2.connect(
+        database=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port,
+        sslmode='require'
+    )
+    conn.autocommit = True
     return conn
 
 # Initialize database
 def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Create foods table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS user_sessions (
-        user_id INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        data TEXT NOT NULL,
-        PRIMARY KEY (user_id, date),
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    )
-''')
-    
-    # Create food_usage table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS food_usage (
-            food_key TEXT PRIMARY KEY,
-            count INTEGER DEFAULT 0,
-            FOREIGN KEY (food_key) REFERENCES foods(key)
-        )
-    ''')
-    
-    # Create users table
+    # 1. Create users table first
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
@@ -88,15 +81,58 @@ def init_db():
         )
     ''')
     
+    # 2. Create foods table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS foods (
+            key TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            carbs REAL NOT NULL,
+            sugars REAL,
+            fiber REAL,
+            proteins REAL NOT NULL,
+            fats REAL NOT NULL,
+            saturated REAL,
+            salt REAL,
+            calories REAL NOT NULL,
+            grams REAL,
+            half REAL,
+            entire REAL,
+            serving REAL,
+            ean TEXT
+        )
+    ''')
+    
+    # 3. Create food_usage table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS food_usage (
+            food_key TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            FOREIGN KEY (food_key) REFERENCES foods(key)
+        )
+    ''')
+    
+    # 4. Create user_sessions table last (depends on users)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            user_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            data TEXT NOT NULL,
+            PRIMARY KEY (user_id, date),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
     # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
-    admin_exists = cursor.execute('SELECT 1 FROM users WHERE email = ?', (admin_email,)).fetchone()
+    cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
+    admin_exists = cursor.fetchone()
     if not admin_exists:
         admin_password = os.getenv('ADMIN_PASSWORD', 'admin_password')
         hashed_password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
         cursor.execute('''
             INSERT INTO users (username, email, password, role)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (email) DO NOTHING
         ''', ('admin', admin_email, hashed_password, 'admin'))
     
     # Check if foods table is empty
@@ -106,7 +142,7 @@ def init_db():
         cursor.execute('''
             INSERT INTO foods 
             (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             'broccoli',
             'Broccoli',
@@ -118,16 +154,18 @@ def init_db():
 
 # Migrate JSON data to database
 def migrate_json_to_db():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')
+    USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')
+    
     # Migrate foods
+    foods = {}
     if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
         try:
             with open(FOOD_FILE, 'r') as f:
                 foods = json.load(f)
         except json.JSONDecodeError:
             print(f"Invalid JSON in {FOOD_FILE}, skipping migration")
-            foods = {}
-    else:
-        foods = {}
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -142,7 +180,22 @@ def migrate_json_to_db():
             cursor.execute('''
                 INSERT INTO foods 
                 (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (key) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    carbs = EXCLUDED.carbs,
+                    sugars = EXCLUDED.sugars,
+                    fiber = EXCLUDED.fiber,
+                    proteins = EXCLUDED.proteins,
+                    fats = EXCLUDED.fats,
+                    saturated = EXCLUDED.saturated,
+                    salt = EXCLUDED.salt,
+                    calories = EXCLUDED.calories,
+                    grams = EXCLUDED.grams,
+                    half = EXCLUDED.half,
+                    entire = EXCLUDED.entire,
+                    serving = EXCLUDED.serving,
+                    ean = EXCLUDED.ean
             ''', (
                 key,
                 food['name'],
@@ -160,8 +213,8 @@ def migrate_json_to_db():
                 food.get('serving'),
                 ean
             ))
-        except sqlite3.IntegrityError:
-            pass  # Skip duplicates
+        except Exception as e:
+            print(f"Error inserting food {key}: {e}")
     
     conn.commit()
     
@@ -169,87 +222,33 @@ def migrate_json_to_db():
     if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
         os.rename(FOOD_FILE, FOOD_FILE + ".bak")
     
-    # Migrate food_usage - SINGLE BLOCK (no duplicates)
+    # Migrate food_usage
+    usage = {}
     if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
         try:
             with open(USAGE_FILE, 'r') as f:
                 usage = json.load(f)
         except json.JSONDecodeError:
             print(f"Invalid JSON in {USAGE_FILE}, skipping migration")
-            usage = {}
-    else:
-        usage = {}
     
     for key, count in usage.items():
         try:
             cursor.execute('''
                 INSERT INTO food_usage (food_key, count)
-                VALUES (?, ?)
-                ON CONFLICT(food_key) DO UPDATE SET count = count + ?
+                VALUES (%s, %s)
+                ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + %s
             ''', (key, count, count))
-        except sqlite3.IntegrityError:
-            pass
+        except Exception as e:
+            print(f"Error inserting usage for {key}: {e}")
     
     conn.commit()
+    conn.close()
     
     # Backup if we successfully processed the file
     if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
         os.rename(USAGE_FILE, USAGE_FILE + ".bak")
-    
-    conn.close()
-    
-    # Migrate food_usage
-    if os.path.exists(USAGE_FILE):
-        with open(USAGE_FILE, 'r') as f:
-            usage = json.load(f)
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        for key, count in usage.items():
-            try:
-                cursor.execute('''
-                    INSERT INTO food_usage (food_key, count)
-                    VALUES (?, ?)
-                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
-                ''', (key, count, count))
-            except sqlite3.IntegrityError:
-                pass
-        
-        conn.commit()
-        conn.close()
-        if os.path.exists(USAGE_FILE):
-            os.rename(USAGE_FILE, USAGE_FILE + ".bak")
 
-    
-    # Migrate food_usage
-    if os.path.exists(USAGE_FILE):
-        with open(USAGE_FILE, 'r') as f:
-            usage = json.load(f)
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        for key, count in usage.items():
-            try:
-                cursor.execute('''
-                    INSERT INTO food_usage (food_key, count)
-                    VALUES (?, ?)
-                    ON CONFLICT(food_key) DO UPDATE SET count = count + ?
-                ''', (key, count, count))
-            except sqlite3.IntegrityError:
-                pass
-        
-        conn.commit()
-        conn.close()
-        os.rename(USAGE_FILE, USAGE_FILE + ".bak")
-
-# Initialize database and migrate data
-init_db()
-migrate_json_to_db()
-    # ... existing migration code ... (same as before)
-
-# Forms
+# Forms (unchanged)
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -258,17 +257,20 @@ class RegistrationForm(FlaskForm):
                                     validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
-
     def validate_username(self, username):
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE username = ?', (username.data,)).fetchone()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username.data,))
+        user = cursor.fetchone()
         conn.close()
         if user:
             raise ValidationError('Username already taken. Please choose a different one.')
 
     def validate_email(self, email):
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE email = ?', (email.data,)).fetchone()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE email = %s', (email.data,))
+        user = cursor.fetchone()
         conn.close()
         if user:
             raise ValidationError('Email already registered. Please use a different email.')
@@ -287,7 +289,9 @@ class UpdateProfileForm(FlaskForm):
     def validate_username(self, username):
         if username.data != current_user.username:
             conn = get_db_connection()
-            user = conn.execute('SELECT * FROM users WHERE username = ?', (username.data,)).fetchone()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE username = %s', (username.data,))
+            user = cursor.fetchone()
             conn.close()
             if user:
                 raise ValidationError('Username already taken. Please choose a different one.')
@@ -295,7 +299,9 @@ class UpdateProfileForm(FlaskForm):
     def validate_email(self, email):
         if email.data != current_user.email:
             conn = get_db_connection()
-            user = conn.execute('SELECT * FROM users WHERE email = ?', (email.data,)).fetchone()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE email = %s', (email.data,))
+            user = cursor.fetchone()
             conn.close()
             if user:
                 raise ValidationError('Email already registered. Please use a different email.')
@@ -335,7 +341,9 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+    user = cursor.fetchone()
     conn.close()
     if user:
         return User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
@@ -347,23 +355,43 @@ def calculate_calories(carbs, proteins, fats):
 
 def get_foods():
     conn = get_db_connection()
-    foods = conn.execute('SELECT * FROM foods').fetchall()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT * FROM foods')
+    foods = cursor.fetchall()
     conn.close()
     return {food['key']: dict(food) for food in foods}
 
 def get_food_by_key(key):
     conn = get_db_connection()
-    food = conn.execute('SELECT * FROM foods WHERE key = ?', (key,)).fetchone()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT * FROM foods WHERE key = %s', (key,))
+    food = cursor.fetchone()
     conn.close()
     return dict(food) if food else None
 
 def save_food(food_data):
     conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        conn.execute('''
-            INSERT OR REPLACE INTO foods 
+        cursor.execute('''
+            INSERT INTO foods 
             (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (key) DO UPDATE SET
+                name = EXCLUDED.name,
+                carbs = EXCLUDED.carbs,
+                sugars = EXCLUDED.sugars,
+                fiber = EXCLUDED.fiber,
+                proteins = EXCLUDED.proteins,
+                fats = EXCLUDED.fats,
+                saturated = EXCLUDED.saturated,
+                salt = EXCLUDED.salt,
+                calories = EXCLUDED.calories,
+                grams = EXCLUDED.grams,
+                half = EXCLUDED.half,
+                entire = EXCLUDED.entire,
+                serving = EXCLUDED.serving,
+                ean = EXCLUDED.ean
         ''', (
             food_data['key'],
             food_data['name'],
@@ -387,18 +415,21 @@ def save_food(food_data):
 
 def get_food_usage():
     conn = get_db_connection()
-    usage = conn.execute('SELECT food_key, count FROM food_usage').fetchall()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT food_key, count FROM food_usage')
+    usage = cursor.fetchall()
     conn.close()
     return {row['food_key']: row['count'] for row in usage}
 
 def increment_food_usage(food_name):
     key = food_name.lower()
     conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        conn.execute('''
+        cursor.execute('''
             INSERT INTO food_usage (food_key, count)
-            VALUES (?, 1)
-            ON CONFLICT(food_key) DO UPDATE SET count = count + 1
+            VALUES (%s, 1)
+            ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
         ''', (key,))
         conn.commit()
     finally:
@@ -406,26 +437,18 @@ def increment_food_usage(food_name):
 
 def get_session_history(user_id):
     conn = get_db_connection()
-    sessions = conn.execute(
-        'SELECT date, data FROM user_sessions WHERE user_id = ?',
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute(
+        'SELECT date, data FROM user_sessions WHERE user_id = %s',
         (user_id,)
-    ).fetchall()
+    )
+    sessions = cursor.fetchall()
     conn.close()
     return {row['date']: json.loads(row['data']) for row in sessions}
 
 def save_session_history(user_id, session_history):
-    all_history = {}
-    if os.path.exists(SESSION_FILE):
-        with open(SESSION_FILE, 'r') as f:
-            try:
-                all_history = json.load(f)
-            except:
-                pass
-    
-    all_history[str(user_id)] = session_history
-    
-    with open(SESSION_FILE, 'w') as f:
-        json.dump(all_history, f, indent=2)
+    # This function is kept for compatibility but not used in PostgreSQL version
+    pass
 
 def get_current_session(user_id, date=None):
     if date is None:
@@ -436,13 +459,17 @@ def get_current_session(user_id, date=None):
 
 def save_current_session(user_id, eaten_items, date):
     conn = get_db_connection()
+    cursor = conn.cursor()
     data_str = json.dumps(eaten_items)
-    conn.execute('''
-        INSERT OR REPLACE INTO user_sessions (user_id, date, data)
-        VALUES (?, ?, ?)
-    ''', (user_id, date, data_str))
-    conn.commit()
-    conn.close()
+    try:
+        cursor.execute('''
+            INSERT INTO user_sessions (user_id, date, data)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id, date) DO UPDATE SET data = EXCLUDED.data
+        ''', (user_id, date, data_str))
+        conn.commit()
+    finally:
+        conn.close()
 
 def calculate_group_breakdown(eaten_items):
     groups = {}
@@ -554,7 +581,7 @@ def index():
     # Generate dates for selector - 3 days past, today, 3 days future
     dates = []
     today = datetime.now()
-    for i in range(-3, 4):  # This creates a range from -3 to +3 (7 days total)
+    for i in range(-3, 4):
         date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
         formatted_date = format_date(date_str)
         dates.append((date_str, formatted_date))
@@ -580,16 +607,27 @@ def custom_food():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
     form = RegistrationForm()
+    
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         conn = get_db_connection()
-        conn.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                     (form.username.data, form.email.data, hashed_password))
-        conn.commit()
-        conn.close()
-        flash('Your account has been created! You can now log in', 'success')
-        return redirect(url_for('login'))
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                'INSERT INTO users (username, email, password) VALUES (%s, %s, %s)',
+                (form.username.data, form.email.data, hashed_password)
+            )
+            conn.commit()
+            flash('Your account has been created! You can now log in', 'success')
+            return redirect(url_for('login'))
+        except psycopg2.IntegrityError as e:
+            flash('Username or email already exists', 'danger')
+            app.logger.error(f"Registration error: {e}")
+        finally:
+            conn.close()
+    
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -599,7 +637,9 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE email = ?', (form.email.data,)).fetchone()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute('SELECT * FROM users WHERE email = %s', (form.email.data,))
+        user = cursor.fetchone()
         conn.close()
         if user and bcrypt.check_password_hash(user['password'], form.password.data):
             user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
@@ -622,16 +662,22 @@ def profile():
     form = UpdateProfileForm()
     if form.validate_on_submit():
         conn = get_db_connection()
-        conn.execute('UPDATE users SET username = ?, email = ? WHERE id = ?',
-                     (form.username.data, form.email.data, current_user.id))
-        conn.commit()
-        conn.close()
-        flash('Your profile has been updated!', 'success')
-        return redirect(url_for('profile'))
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                'UPDATE users SET username = %s, email = %s WHERE id = %s',
+                (form.username.data, form.email.data, current_user.id)
+            )
+            conn.commit()
+            flash('Your profile has been updated!', 'success')
+            return redirect(url_for('profile'))
+        except psycopg2.IntegrityError:
+            flash('Username or email already taken', 'danger')
+        finally:
+            conn.close()
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    
     return render_template('profile.html', title='Profile', form=form)
 
 @app.route("/reset_password", methods=['GET', 'POST'])
@@ -641,7 +687,9 @@ def reset_request():
     form = RequestResetForm()
     if form.validate_on_submit():
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE email = ?', (form.email.data,)).fetchone()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute('SELECT * FROM users WHERE email = %s', (form.email.data,))
+        user = cursor.fetchone()
         conn.close()
         if user:
             user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
@@ -664,7 +712,9 @@ def reset_token(token):
         return redirect(url_for('reset_request'))
     
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+    user = cursor.fetchone()
     conn.close()
     
     if not user:
@@ -677,8 +727,11 @@ def reset_token(token):
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         conn = get_db_connection()
-        conn.execute('UPDATE users SET password = ? WHERE id = ?', 
-                     (hashed_password, user_obj.id))
+        cursor = conn.cursor()
+        cursor.execute(
+            'UPDATE users SET password = %s WHERE id = %s', 
+            (hashed_password, user_obj.id)
+        )
         conn.commit()
         conn.close()
         flash('Your password has been updated! You can now log in', 'success')
@@ -688,29 +741,29 @@ def reset_token(token):
 @app.route('/search_foods', methods=['POST'])
 @login_required
 def search_foods():
-    query = request.form.get('query', '').strip()  # Remove .lower() to preserve case
+    query = request.form.get('query', '').strip()
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
     
     if not query:
-        # Get top 10 foods by usage
-        foods = conn.execute('''
+        cursor.execute('''
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
             ORDER BY usage DESC, name ASC
             LIMIT 10
-        ''').fetchall()
+        ''')
     else:
-        # Search by name OR EAN (case-sensitive exact match)
-        foods = conn.execute('''
+        cursor.execute('''
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
-            WHERE LOWER(f.name) LIKE ? OR f.ean = ?
+            WHERE LOWER(f.name) LIKE %s OR f.ean = %s
             ORDER BY usage DESC, name ASC
             LIMIT 10
-        ''', (f'%{query.lower()}%', query)).fetchall()
+        ''', (f'%{query.lower()}%', query))
     
+    foods = cursor.fetchall()
     conn.close()
     
     results = []
@@ -834,7 +887,7 @@ def log_food():
     }
     
     # Update session
-    eaten_items, current_date = get_current_session(date)
+    eaten_items, current_date = get_current_session(user_id, date)
     eaten_items.append(item)
     save_current_session(current_user.id, eaten_items, date)
     
@@ -872,10 +925,11 @@ def update_session():
 def delete_food():
     food_id = request.form.get('food_id').lower()
     conn = get_db_connection()
+    cursor = conn.cursor()
     try:
         # Delete from both tables
-        conn.execute('DELETE FROM foods WHERE key = ?', (food_id,))
-        conn.execute('DELETE FROM food_usage WHERE food_key = ?', (food_id,))
+        cursor.execute('DELETE FROM food_usage WHERE food_key = %s', (food_id,))
+        cursor.execute('DELETE FROM foods WHERE key = %s', (food_id,))
         conn.commit()
         return jsonify(success=True)
     except Exception as e:
@@ -883,7 +937,7 @@ def delete_food():
     finally:
         conn.close()
 
-@app.route('/delete_item', methods=['POST'])
+app.route('/delete_item', methods=['POST'])
 @login_required
 def delete_item():
     user_id = current_user.id
@@ -905,7 +959,7 @@ def delete_item():
         'breakdown': group_breakdown
     })
 
-@app.route('/clear_session', methods=['POST'])
+app.route('/clear_session', methods=['POST'])
 @login_required
 def clear_session():
     user_id = current_user.id
@@ -919,6 +973,7 @@ def clear_session():
         'current_date_formatted': current_date_formatted,
         'breakdown': group_breakdown
     })
+
 
 @app.route('/move_items', methods=['POST'])
 @login_required
@@ -1007,7 +1062,7 @@ def update_grams():
 def save_food_route():
     try:
         # Extract form data
-        name = request.form.get('name').strip()  # Clean up whitespace
+        name = request.form.get('name').strip()
         
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
@@ -1044,12 +1099,14 @@ def save_food_route():
         
         # Get database connection
         conn = get_db_connection()
+        cursor = conn.cursor()
         try:
             # Generate unique key with fallback
             key = base_key
             counter = 1
             while True:
-                existing = conn.execute('SELECT 1 FROM foods WHERE key = ?', (key,)).fetchone()
+                cursor.execute('SELECT 1 FROM foods WHERE key = %s', (key,))
+                existing = cursor.fetchone()
                 if not existing:
                     break
                 key = f"{base_key}_{counter}"
@@ -1083,11 +1140,25 @@ def save_food_route():
             }
             
             # Save to database
-            cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO foods 
                 (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (key) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    carbs = EXCLUDED.carbs,
+                    sugars = EXCLUDED.sugars,
+                    fiber = EXCLUDED.fiber,
+                    proteins = EXCLUDED.proteins,
+                    fats = EXCLUDED.fats,
+                    saturated = EXCLUDED.saturated,
+                    salt = EXCLUDED.salt,
+                    calories = EXCLUDED.calories,
+                    grams = EXCLUDED.grams,
+                    half = EXCLUDED.half,
+                    entire = EXCLUDED.entire,
+                    serving = EXCLUDED.serving,
+                    ean = EXCLUDED.ean
             ''', (
                 food_data['key'],
                 food_data['name'],
@@ -1110,8 +1181,8 @@ def save_food_route():
             # Initialize usage count
             cursor.execute('''
                 INSERT INTO food_usage (food_key, count)
-                VALUES (?, 1)
-                ON CONFLICT(food_key) DO UPDATE SET count = count + 1
+                VALUES (%s, 1)
+                ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
             ''', (key,))
             conn.commit()
             
@@ -1129,7 +1200,7 @@ def calculate_weekly_averages(session_history):
         try:
             date_obj = datetime.strptime(date_str, "%Y-%m-%d")
             year, week_num, _ = date_obj.isocalendar()
-            week_key = f"{year}-W{week_num}"
+            week_key = f"{year}-W{week_num:02d}"
             
             if week_key not in weekly_data:
                 weekly_data[week_key] = {
@@ -1151,7 +1222,7 @@ def calculate_weekly_averages(session_history):
             weekly_data[week_key]["salt"] += salt
             weekly_data[week_key]["count"] += 1
         except Exception as e:
-            print(f"Error processing date {date_str}: {e}")
+            app.logger.error(f"Error processing date {date_str}: {e}")
             continue
     
     # Calculate averages
@@ -1201,14 +1272,18 @@ def history():
     return render_template('history.html', 
                            history_data=history_data,
                            weekly_data=weekly_data)
-# Admin route example
+
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
     conn = get_db_connection()
-    users = conn.execute('SELECT id, username, email, role, created_at FROM users').fetchall()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT id, username, email, role, created_at FROM users')
+    users = cursor.fetchall()
     conn.close()
     return render_template('admin.html', users=users)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+        init_db()
+        migrate_json_to_db()
+        app.run(debug=True)
