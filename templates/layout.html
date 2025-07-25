@@ -224,25 +224,33 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link accent-color" href="/">Today</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/custom_food">Add Food</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link accent-color" href="/history">History</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Account
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">Logout</a></li>
-                        </ul>
+  <ul class="navbar-nav ms-auto">
+    <li class="nav-item">
+        <a class="nav-link accent-color" href="{{ url_for('index') }}">Today</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('custom_food') }}">Add Food</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link accent-color" href="{{ url_for('history') }}">History</a>
+    </li>
+    {% if current_user.is_authenticated %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+            Account
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('profile') }}">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </li>
+    {% else %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+    </li>
+    {% endif %}
+</ul>
                     </li>
                 </ul>
             </div>
