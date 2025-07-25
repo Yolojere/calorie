@@ -937,14 +937,14 @@ def delete_food():
     finally:
         conn.close()
 
-app.route('/delete_item', methods=['POST'])
+@app.route('/delete_item', methods=['POST'])
 @login_required
 def delete_item():
     user_id = current_user.id
     item_index = int(request.form.get('item_index'))
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    eaten_items, current_date = get_current_session(current_user.id, date)
+    eaten_items, current_date = get_current_session(user_id, date)
     if 0 <= item_index < len(eaten_items):
         del eaten_items[item_index]
         save_current_session(user_id, eaten_items, date)
