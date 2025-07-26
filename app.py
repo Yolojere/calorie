@@ -20,6 +20,7 @@ from functools import wraps
 from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
+import traceback
 
 
 # Load environment variables
@@ -362,12 +363,28 @@ def get_foods():
     return {food['key']: dict(food) for food in foods}
 
 def get_food_by_key(key):
+    print(f"🔍 Looking up food key: '{key}'")
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    cursor.execute('SELECT * FROM foods WHERE key = %s', (key,))
-    food = cursor.fetchone()
-    conn.close()
-    return dict(food) if food else None
+    try:
+        cursor.execute('SELECT * FROM foods WHERE key = %s', (key,))
+        food = cursor.fetchone()
+        
+        if food:
+            print(f"✔️ Found food: {food['name']} (key: {food['key']})")
+            return dict(food)
+        else:
+            # Try to find by similar name as fallback
+            cursor.execute('SELECT * FROM foods WHERE LOWER(name) = LOWER(%s)', (key,))
+            food = cursor.fetchone()
+            if food:
+                print(f"⚠️ Found by name fallback: {food['name']} (key: {food['key']})")
+                return dict(food)
+            
+            print(f"❌ Food not found for key: '{key}'")
+            return None
+    finally:
+        conn.close()
 
 def save_food(food_data):
     conn = get_db_connection()
@@ -568,6 +585,43 @@ def admin_required(func):
 init_db()
 migrate_json_to_db()
 
+def normalize_food_keys():
+    print("Normalizing food keys...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get all foods
+        cursor.execute("SELECT key, name FROM foods")
+        foods = cursor.fetchall()
+        
+        for key, name in foods:
+            # Create normalized key
+            normalized_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_'))
+            
+            if key != normalized_key:
+                print(f"Updating key: {key} -> {normalized_key}")
+                
+                # Update foods table
+                cursor.execute(
+                    "UPDATE foods SET key = %s WHERE key = %s",
+                    (normalized_key, key)
+                )
+                
+                # Update food_usage table
+                cursor.execute(
+                    "UPDATE food_usage SET food_key = %s WHERE food_key = %s",
+                    (normalized_key, key)
+                )
+        
+        conn.commit()
+        print("Food keys normalized successfully")
+    except Exception as e:
+        print(f"Error normalizing keys: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
 # Routes
 @app.route('/')
 @login_required
@@ -649,6 +703,16 @@ def login():
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', title='Login', form=form)
+
+@app.route('/debug_foods')
+def debug_foods():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('SELECT key, name FROM foods')
+    foods = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{'key': f['key'], 'name': f['name']} for f in foods])
 
 @app.route('/logout')
 @login_required
@@ -784,124 +848,166 @@ def search_foods():
 @app.route('/get_food_details', methods=['POST'])
 @login_required
 def get_food_details():
-    food_id = request.form.get('food_id')
-    unit_type = request.form.get('unit_type')
-    units = request.form.get('units')
-    
-    food = get_food_by_key(food_id)
-    if not food:
-        return jsonify({'error': 'Food not found'}), 404
-    
-    # Default to grams if no units provided
-    if not units or float(units) <= 0:
-        units = 100
-        unit_type = 'grams'
-    else:
-        units = float(units)
-    
-    # Convert units to grams
-    if unit_type == 'grams':
-        grams = units
-    elif unit_type == 'half' and food.get('half') is not None:
-        grams = units * food['half']
-    elif unit_type == 'entire' and food.get('entire') is not None:
-        grams = units * food['entire']
-    elif unit_type == 'serving' and food.get('serving') is not None:
-        grams = units * food['serving']
-    else:
-        grams = units
-        unit_type = 'grams'
-    
-    factor = grams / 100
-    carbs = food['carbs'] * factor
-    proteins = food['proteins'] * factor
-    fats = food['fats'] * factor
-    salt = food.get('salt', 0.0) * factor
-    calories = food['calories'] * factor
-    
-    return jsonify({
-        'name': food['name'],
-        'units': units,
-        'unit_type': unit_type,
-        'carbs': carbs,
-        'proteins': proteins,
-        'fats': fats,
-        'salt': salt,
-        'calories': calories,
-        'serving_size': food.get('serving'),
-        'half_size': food.get('half'),
-        'entire_size': food.get('entire')
-    })
+    try:
+        food_id = request.form.get('food_id')
+        unit_type = request.form.get('unit_type')
+        units = request.form.get('units')
+        
+        print(f"\n=== /get_food_details REQUEST ===")
+        print(f"Raw food_id: '{food_id}'")
+        print(f"Unit type: '{unit_type}'")
+        print(f"Units: '{units}'")
+        
+        # Normalize the key
+        normalized_key = re.sub(r'[^a-z0-9_]', '', food_id.lower().replace(' ', '_'))
+        print(f"Normalized key: '{normalized_key}'")
+        
+        # Get all keys for debugging
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT key FROM foods')
+        all_keys = [row[0] for row in cursor.fetchall()]
+        print(f"All keys in database: {all_keys}")
+        conn.close()
+        
+        food = get_food_by_key(normalized_key)
+        if not food:
+            print(f"❌ Food not found: '{normalized_key}'")
+            return jsonify({'error': 'Food not found', 'requested_key': food_id, 'normalized_key': normalized_key, 'all_keys': all_keys}), 404
+        
+        # Default to grams if no units provided
+        if not units or float(units) <= 0:
+            units = 100
+            unit_type = 'grams'
+        else:
+            units = float(units)
+        
+        # Convert units to grams
+        grams = units  # Default to grams
+        if unit_type == 'half' and food.get('half') is not None:
+            grams = units * food['half']
+        elif unit_type == 'entire' and food.get('entire') is not None:
+            grams = units * food['entire']
+        elif unit_type == 'serving' and food.get('serving') is not None:
+            grams = units * food['serving']
+        else:
+            unit_type = 'grams'
+        
+        factor = grams / 100
+        carbs = food['carbs'] * factor
+        proteins = food['proteins'] * factor
+        fats = food['fats'] * factor
+        salt = food.get('salt', 0.0) * factor
+        calories = food['calories'] * factor
+        
+        print(f"✅ Found food: {food['name']}")
+        print(f"Calculated nutrition for {grams}g:")
+        print(f"- Calories: {calories}")
+        print(f"- Carbs: {carbs}")
+        print(f"- Proteins: {proteins}")
+        print(f"- Fats: {fats}")
+        
+        return jsonify({
+            'name': food['name'],
+            'units': units,
+            'unit_type': unit_type,
+            'carbs': carbs,
+            'proteins': proteins,
+            'fats': fats,
+            'salt': salt,
+            'calories': calories,
+            'serving_size': food.get('serving'),
+            'half_size': food.get('half'),
+            'entire_size': food.get('entire')
+        })
+    except Exception as e:
+        print(f"🔥 Error in get_food_details: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/log_food', methods=['POST'])
 @login_required
 def log_food():
-    user_id = current_user.id
-    food_id = request.form.get('food_id')
-    unit_type = request.form.get('unit_type')
-    units = float(request.form.get('units'))
-    meal_group = request.form.get('meal_group')
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    
-    food = get_food_by_key(food_id)
-    if not food:
-        return jsonify({'error': 'Food not found'}), 404
-    
-    # Convert units to grams
-    if unit_type == 'grams':
-        grams = units
-    elif unit_type == 'half' and food.get('half') is not None:
-        grams = units * food['half']
-    elif unit_type == 'entire' and food.get('entire') is not None:
-        grams = units * food['entire']
-    elif unit_type == 'serving' and food.get('serving') is not None:
-        grams = units * food['serving']
-    else:
-        grams = units
-        unit_type = 'grams'
-    
-    factor = grams / 100
-    carbs = food['carbs'] * factor
-    proteins = food['proteins'] * factor
-    fats = food['fats'] * factor
-    salt = food.get('salt', 0.0) * factor
-    sugars = food.get('sugars', 0.0) * factor
-    fiber = food.get('fiber', 0.0) * factor
-    saturated = food.get('saturated', 0.0) * factor
-    calories = food['calories'] * factor
-    
-    item = {
-        "name": food['name'],
-        "grams": grams,
-        "units": units,
-        "unit_type": unit_type,
-        "carbs": carbs,
-        "sugars": sugars,
-        "fiber": fiber,
-        "proteins": proteins,
-        "fats": fats,
-        "saturated": saturated,
-        "salt": salt,
-        "calories": calories,
-        "group": meal_group
-    }
-    
-    # Update session
-    eaten_items, current_date = get_current_session(user_id, date)
-    eaten_items.append(item)
-    save_current_session(current_user.id, eaten_items, date)
-    
-    # Update food usage
-    increment_food_usage(food['key'])
-    
-    # Return updated session, totals and breakdown
-    totals = calculate_totals(eaten_items)
-    group_breakdown = calculate_group_breakdown(eaten_items)
-    return jsonify({
-        'session': eaten_items,
-        'totals': totals,
-        'breakdown': group_breakdown
-    })
+    try:
+        user_id = current_user.id
+        food_id = request.form.get('food_id')
+        unit_type = request.form.get('unit_type')
+        units = float(request.form.get('units'))
+        meal_group = request.form.get('meal_group')
+        date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+        
+        # Normalize the key
+        normalized_key = re.sub(r'[^a-z0-9_]', '', food_id.lower().replace(' ', '_'))
+        print(f"Logging food: original='{food_id}', normalized='{normalized_key}'")
+        
+        food = get_food_by_key(normalized_key)
+        if not food:
+            print(f"Food not found: '{normalized_key}'")
+            return jsonify({'error': 'Food not found'}), 404
+
+        # ... rest of your function code goes here ...
+        # Convert units to grams
+        if unit_type == 'grams':
+            grams = units
+        elif unit_type == 'half' and food.get('half') is not None:
+            grams = units * food['half']
+        elif unit_type == 'entire' and food.get('entire') is not None:
+            grams = units * food['entire']
+        elif unit_type == 'serving' and food.get('serving') is not None:
+            grams = units * food['serving']
+        else:
+            grams = units
+            unit_type = 'grams'
+        
+        factor = grams / 100
+        carbs = food['carbs'] * factor
+        proteins = food['proteins'] * factor
+        fats = food['fats'] * factor
+        salt = food.get('salt', 0.0) * factor
+        sugars = food.get('sugars', 0.0) * factor
+        fiber = food.get('fiber', 0.0) * factor
+        saturated = food.get('saturated', 0.0) * factor
+        calories = food['calories'] * factor
+        
+        item = {
+            "name": food['name'],
+            "grams": grams,
+            "units": units,
+            "unit_type": unit_type,
+            "carbs": carbs,
+            "sugars": sugars,
+            "fiber": fiber,
+            "proteins": proteins,
+            "fats": fats,
+            "saturated": saturated,
+            "salt": salt,
+            "calories": calories,
+            "group": meal_group
+        }
+        
+        # Update session
+        eaten_items, current_date = get_current_session(user_id, date)
+        eaten_items.append(item)
+        save_current_session(user_id, eaten_items, date)
+        
+        # Update food usage
+        increment_food_usage(food['key'])
+        
+        # Return updated session, totals and breakdown
+        totals = calculate_totals(eaten_items)
+        group_breakdown = calculate_group_breakdown(eaten_items)
+        return jsonify({
+            'session': eaten_items,
+            'totals': totals,
+            'breakdown': group_breakdown
+        })
+        
+    except Exception as e:
+        print(f"Error in log_food: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/update_session', methods=['POST'])
 @login_required
@@ -1016,47 +1122,59 @@ def move_items():
         'breakdown': group_breakdown
     })
 
+
+
 @app.route('/update_grams', methods=['POST'])
 @login_required
 def update_grams():
-    user_id = current_user.id
-    item_index = int(request.form.get('item_index'))
-    new_grams = float(request.form.get('new_grams'))
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    
-    eaten_items, current_date = get_current_session(current_user.id, date)
-    
-    if 0 <= item_index < len(eaten_items):
-        item = eaten_items[item_index]
+    try:
+        print("Received update_grams request")
+        user_id = current_user.id
+        item_index = int(request.form.get('item_index'))
+        new_grams = float(request.form.get('new_grams'))
+        date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
         
-        # Get original food data
-        food = get_food_by_key(item['name'].lower())
-        if not food:
-            return jsonify({'error': 'Food not found'}), 404
+        print(f"Params: index={item_index}, grams={new_grams}, date={date}")
         
-        # Update grams and recalculate nutrition
-        item['grams'] = new_grams
-        item['units'] = new_grams
-        item['unit_type'] = 'grams'
+        eaten_items, current_date = get_current_session(user_id, date)
+        print(f"Current session has {len(eaten_items)} items")
         
-        factor = new_grams / 100
-        item['carbs'] = food['carbs'] * factor
-        item['proteins'] = food['proteins'] * factor
-        item['fats'] = food['fats'] * factor
-        item['salt'] = food.get('salt', 0.0) * factor
-        item['calories'] = food['calories'] * factor
+        if 0 <= item_index < len(eaten_items):
+            item = eaten_items[item_index]
+            print(f"Food name from session: {item['name']}")
+            
+            food = get_food_by_key(item['name'])
+            if not food:
+                print(f"Food not found in database!")
+                return jsonify({'error': 'Food not found'}), 404
+            
+            # Recalculate nutrition
+            factor = new_grams / 100
+            item['grams'] = new_grams
+            item['units'] = new_grams
+            item['unit_type'] = 'grams'
+            item['carbs'] = food['carbs'] * factor
+            item['proteins'] = food['proteins'] * factor
+            item['fats'] = food['fats'] * factor
+            item['salt'] = food.get('salt', 0.0) * factor
+            item['calories'] = food['calories'] * factor
+            
+            save_current_session(user_id, eaten_items, date)
         
-        save_current_session(user_id, eaten_items, date)
-    
-    totals = calculate_totals(eaten_items)
-    group_breakdown = calculate_group_breakdown(eaten_items)
-    current_date_formatted = format_date(current_date)
-    return jsonify({
-        'session': eaten_items,
-        'totals': totals,
-        'current_date_formatted': current_date_formatted,
-        'breakdown': group_breakdown
-    })
+        totals = calculate_totals(eaten_items)
+        group_breakdown = calculate_group_breakdown(eaten_items)
+        current_date_formatted = format_date(current_date)
+        return jsonify({
+            'session': eaten_items,
+            'totals': totals,
+            'current_date_formatted': current_date_formatted,
+            'breakdown': group_breakdown
+        })
+    except Exception as e:
+        print(f"Error in update_grams: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/save_food', methods=['POST'])
 @login_required
