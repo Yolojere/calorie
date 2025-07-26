@@ -1458,7 +1458,12 @@
                 }
                 
                 $.post('/search_foods', { query: query }, function(data) {
+                    
                     let resultsHtml = '';
+                    console.log("Search results:", data);
+if (data.length > 0) {
+    console.log("First food key:", data[0].id);
+}
                     if (data.length > 0) {
                         resultsHtml = '<div class="list-group">';
                         data.forEach(food => {
@@ -1701,27 +1706,32 @@
             });
             
             // Save grams
-            $('#save-grams').click(function() {
-                const index = $('#edit-grams-index').val();
-                const newGrams = $('#edit-grams-input').val();
-                
-                if (parseFloat(newGrams) === 0) {
-                    // Delete item
-                    $.post('/delete_item', { item_index: index }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                        editGramsModal.hide();
-                    });
-                } else {
-                    // Update grams
-                    $.post('/update_grams', {
-                        item_index: index,
-                        new_grams: newGrams
-                    }, function(response) {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                        editGramsModal.hide();
-                    });
-                }
-            });
+$('#save-grams').click(function() {
+    const index = $('#edit-grams-index').val();
+    const newGrams = $('#edit-grams-input').val();
+    const date = $('#date-selector').val();  // Get current date
+
+    if (parseFloat(newGrams) === 0) {
+        // Delete item
+        $.post('/delete_item', { 
+            item_index: index,
+            date: date   // Add date parameter
+        }, function(response) {
+            updateSessionDisplay(response.session, response.totals, response.breakdown);
+            editGramsModal.hide();
+        });
+    } else {
+        // Update grams
+        $.post('/update_grams', {
+            item_index: index,
+            new_grams: newGrams,
+            date: date   // Add date parameter
+        }, function(response) {
+            updateSessionDisplay(response.session, response.totals, response.breakdown);
+            editGramsModal.hide();
+        });
+    }
+});
 
             // Delete food item
 $(document).on('click', '.delete-food-btn', function(e) {
@@ -1745,11 +1755,11 @@ $(document).on('click', '.delete-food-btn', function(e) {
 $(document).on('click', '.delete-item', function(e) {
     e.stopPropagation();
     const index = $(this).data('index');
-    const date = $('#date-selector').val();
+    const date = $('#date-selector').val();  // Get current date
     
     $.post('/delete_item', {
         item_index: index,
-        date: date
+        date: date   // Add date parameter
     }, function(response) {
         updateSessionDisplay(response.session, response.totals, response.breakdown);
     });
