@@ -40,6 +40,32 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
+# Update the normalize_key function
+def normalize_key(key):
+    """Normalize food key while preserving non-ASCII characters"""
+    if key is None:
+        return ""
+    # Preserve all Unicode letters and numbers, plus allowed special characters
+    normalized = re.sub(r'[^\w\s\-.,%+]', '', key, flags=re.UNICODE)
+    # Collapse multiple spaces and trim
+    normalized = re.sub(r'\s+', ' ', normalized).strip().lower()
+    return normalized
+
+# Add the safe_float function here
+def safe_float(value, default=0.0, min_val=0.001, max_val=10000.0):
+    """Safely convert to float with clamping and default handling"""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return default
+    try:
+        num = float(value)
+        if num < min_val:
+            return min_val
+        if num > max_val:
+            return max_val
+        return num
+    except ValueError:
+        return default
+
 # Database connection using Neon.tech URL
 def get_db_connection():
     DATABASE_URL = os.getenv('DATABASE_URL')
@@ -122,7 +148,8 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
+
+
     # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
@@ -172,6 +199,7 @@ def migrate_json_to_db():
     cursor = conn.cursor()
     
     for key, food in foods.items():
+        normalized_key = normalize_key(key)
         # Handle EAN field - convert list to string if needed
         ean = food.get('ean')
         if isinstance(ean, list):
@@ -337,6 +365,7 @@ class User(UserMixin):
         except:
             return None
         return user_id
+        
 
 # User loader
 @login_manager.user_loader
@@ -363,26 +392,40 @@ def get_foods():
     return {food['key']: dict(food) for food in foods}
 
 def get_food_by_key(key):
-    print(f"🔍 Looking up food key: '{key}'")
+    normalized_key = normalize_key(key)
+    print(f"🔍 Looking up food key: '{key}' → normalized: '{normalized_key}'")
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     try:
-        cursor.execute('SELECT * FROM foods WHERE key = %s', (key,))
+        # First try exact match with normalized key
+        cursor.execute('SELECT * FROM foods WHERE key = %s', (normalized_key,))
         food = cursor.fetchone()
         
         if food:
-            print(f"✔️ Found food: {food['name']} (key: {food['key']})")
+            print(f"✔️ Found food by exact match: {food['name']}")
             return dict(food)
-        else:
-            # Try to find by similar name as fallback
-            cursor.execute('SELECT * FROM foods WHERE LOWER(name) = LOWER(%s)', (key,))
-            food = cursor.fetchone()
-            if food:
-                print(f"⚠️ Found by name fallback: {food['name']} (key: {food['key']})")
-                return dict(food)
-            
-            print(f"❌ Food not found for key: '{key}'")
-            return None
+        
+        # Fallback to case-insensitive search if exact match fails
+        print("⚠️ No exact match, trying case-insensitive search")
+        cursor.execute('SELECT * FROM foods WHERE LOWER(key) = LOWER(%s)', (normalized_key,))
+        food = cursor.fetchone()
+        
+        if food:
+            print(f"⚠️ Found by case-insensitive fallback: {food['name']}")
+            return dict(food)
+        
+        # Try searching by name as a last resort
+        print("⚠️ No key match, trying name search")
+        cursor.execute('SELECT * FROM foods WHERE LOWER(name) = LOWER(%s)', (normalized_key,))
+        food = cursor.fetchone()
+        
+        if food:
+            print(f"⚠️ Found by name match: {food['name']}")
+            return dict(food)
+        
+        print(f"❌ Food not found for key: '{normalized_key}'")
+        return None
     finally:
         conn.close()
 
@@ -439,7 +482,7 @@ def get_food_usage():
     return {row['food_key']: row['count'] for row in usage}
 
 def increment_food_usage(food_key):
-    key = re.sub(r'[^a-z0-9_]', '', food_key.lower().replace(' ', '_'))
+    normalized_key = normalize_key(food_key)
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -447,7 +490,7 @@ def increment_food_usage(food_key):
             INSERT INTO food_usage (food_key, count)
             VALUES (%s, 1)
             ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
-        ''', (key,))
+        ''', (normalized_key,))
         conn.commit()
     finally:
         conn.close()
@@ -581,15 +624,55 @@ def admin_required(func):
         return func(*args, **kwargs)
     return decorated_function
 
+def update_food_keys_normalization():
+    print("Normalizing food keys to new standard...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    updated_count = 0
+    
+    try:
+        cursor.execute("SELECT key, name FROM foods")
+        foods = cursor.fetchall()
+        
+        for old_key, name in foods:
+            new_key = normalize_key(old_key)
+            
+            if old_key != new_key:
+                print(f"Updating key: {old_key} -> {new_key}")
+                updated_count += 1
+                
+                # Update foods table
+                cursor.execute(
+                    "UPDATE foods SET key = %s WHERE key = %s",
+                    (new_key, old_key)
+                )
+                
+                # Update food_usage table
+                cursor.execute(
+                    "UPDATE food_usage SET food_key = %s WHERE food_key = %s",
+                    (new_key, old_key)
+                )
+        
+        conn.commit()
+        print(f"Food keys normalized successfully. Updated {updated_count} keys.")
+    except Exception as e:
+        print(f"Error normalizing keys: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
 # Initialize database and migrate data
 init_db()
 migrate_json_to_db()
+update_food_keys_normalization()
+
 
 def normalize_food_keys():
     print("Normalizing food keys...")
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+    update_food_keys_normalization()
+
     try:
         # Get all foods
         cursor.execute("SELECT key, name FROM foods")
@@ -853,27 +936,29 @@ def get_food_details():
         unit_type = request.form.get('unit_type')
         units = request.form.get('units')
         
+        # Use the standard normalize_key function
+        normalized_key = normalize_key(food_id)
+        
         print(f"\n=== /get_food_details REQUEST ===")
         print(f"Raw food_id: '{food_id}'")
-        print(f"Unit type: '{unit_type}'")
-        print(f"Units: '{units}'")
-        
-        # Normalize the key
-        normalized_key = re.sub(r'[^a-z0-9_]', '', food_id.lower().replace(' ', '_'))
         print(f"Normalized key: '{normalized_key}'")
-        
-        # Get all keys for debugging
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT key FROM foods')
-        all_keys = [row[0] for row in cursor.fetchall()]
-        print(f"All keys in database: {all_keys}")
-        conn.close()
         
         food = get_food_by_key(normalized_key)
         if not food:
+            # Get all keys only when needed
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT key FROM foods')
+            all_keys = [row[0] for row in cursor.fetchall()]
+            conn.close()
+            
             print(f"❌ Food not found: '{normalized_key}'")
-            return jsonify({'error': 'Food not found', 'requested_key': food_id, 'normalized_key': normalized_key, 'all_keys': all_keys}), 404
+            return jsonify({
+                'error': 'Food not found',
+                'requested_key': food_id,
+                'normalized_key': normalized_key,
+                'all_keys_in_db': all_keys  # Fixed variable name
+            }), 404 
         
         # Default to grams if no units provided
         if not units or float(units) <= 0:
@@ -932,15 +1017,15 @@ def log_food():
     try:
         user_id = current_user.id
         food_id = request.form.get('food_id')
+        normalized_key = normalize_key(food_id)
         unit_type = request.form.get('unit_type')
         units = float(request.form.get('units'))
         meal_group = request.form.get('meal_group')
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-        
-        # Normalize the key
-        normalized_key = re.sub(r'[^a-z0-9_]', '', food_id.lower().replace(' ', '_'))
+
+                # Print for debugging
         print(f"Logging food: original='{food_id}', normalized='{normalized_key}'")
-        
+              
         food = get_food_by_key(normalized_key)
         if not food:
             print(f"Food not found: '{normalized_key}'")
@@ -1027,14 +1112,16 @@ def update_session():
     })
 
 @app.route('/delete_food', methods=['POST'])
-@login_required
+@admin_required
 def delete_food():
-    food_id = request.form.get('food_id').lower()
+    food_id = request.form.get('food_id')  # Get raw food ID without normalization
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Delete from both tables
+        # Delete usage first
         cursor.execute('DELETE FROM food_usage WHERE food_key = %s', (food_id,))
+        # Then delete food
         cursor.execute('DELETE FROM foods WHERE key = %s', (food_id,))
         conn.commit()
         return jsonify(success=True)
@@ -1190,19 +1277,8 @@ def save_food_route():
         base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_'))
         if not base_key:  # Handle empty key case
             base_key = "custom_food"
-
-        # Convert to floats, default to 0 if empty
-        def safe_float(value, default=0.0, min_val=0.0, max_val=10000.0):
-            try:
-                num = float(value) if value and value.strip() else default
-                if num < min_val:
-                    return min_val
-                if num > max_val:
-                    return max_val
-                return num
-            except ValueError:
-                return default
-                
+              
+        # Convert to floats with safe_float
         carbs = safe_float(request.form.get('carbs', 0))
         sugars = safe_float(request.form.get('sugars', 0))
         fiber = safe_float(request.form.get('fiber', 0))
@@ -1211,13 +1287,20 @@ def save_food_route():
         saturated = safe_float(request.form.get('saturated', 0))
         salt = safe_float(request.form.get('salt', 0))
         ean = request.form.get('ean') or None
-        grams = safe_float(request.form.get('grams', 100), 100)  # default 100g
         
-        # Optional portion fields
-        serving = safe_float(request.form.get('serving'), None)
-        half = safe_float(request.form.get('half'), None)
-        entire = safe_float(request.form.get('entire'), None)
+        # Handle optional portion fields properly
+        serving_val = request.form.get('serving')
+        half_val = request.form.get('half')
+        entire_val = request.form.get('entire')
         
+        # Convert to float if provided, otherwise None
+        serving = safe_float(serving_val, None) if serving_val else None
+        half = safe_float(half_val, None) if half_val else None
+        entire = safe_float(entire_val, None) if entire_val else None
+        
+        # Base grams handling
+        grams_val = request.form.get('grams', '100')
+        grams = safe_float(grams_val, 100, min_val=0.001)
         # Calculate calories
         calories = calculate_calories(carbs, proteins, fats)
         
@@ -1410,4 +1493,5 @@ def admin_dashboard():
 if __name__ == '__main__':
         init_db()
         migrate_json_to_db()
+        update_food_keys_normalization()
         app.run(debug=True)
