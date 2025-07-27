@@ -1208,7 +1208,7 @@
                         <label class="form-label">Grams</label>
                         <input type="number" id="edit-grams-input" class="form-control bg-secondary text-light" min="0" step="0.1">
                     </div>
-                    <input type="hidden" id="edit-grams-index">
+                    <input type="hidden" id="edit-grams-id">
                 </div>
                 <div class="modal-footer bg-black py-1">
                     <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #ff4444; color: black;">Cancel</button>
@@ -1223,7 +1223,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark">
             <div class="modal-header bg-black py-1">
-                <h5 class="modal-title">Move Items</h5>
+                <h5 class="modal-title">Move or Copy Items</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -1231,7 +1231,7 @@
                     <label class="form-label">Select Date</label>
                     <select id="target-date" class="form-select bg-secondary text-light">
                         {% for date_str, formatted in dates %}
-                            <option value="{{ date_str }}">{{ formatted }}</option>
+                            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -1245,10 +1245,17 @@
                         <option value="other">Other</option>
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Action</label>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" id="action-move" class="btn btn-danger">Move</button>
+                        <button type="button" id="action-copy" class="btn btn-success">Copy</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer bg-black py-1">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirm-move-items" class="btn" style="background-color: #ff4444; color: black;">Move Items</button>
+                <button type="button" id="confirm-action" class="btn" style="background-color: #ff4444; color: black;">Confirm</button>
             </div>
         </div>
     </div>
@@ -1331,6 +1338,62 @@
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
+
+                // ===== MOVE/COPY FUNCTIONALITY ===== //
+    let selectedAction = 'move';
+    
+    // Action selection
+    $('#action-move').click(function() {
+        selectedAction = 'move';
+        $(this).addClass('active').addClass('btn-danger').removeClass('btn-outline-danger');
+        $('#action-copy').removeClass('active').removeClass('btn-success').addClass('btn-outline-success');
+    });
+    
+    $('#action-copy').click(function() {
+        selectedAction = 'copy';
+        $(this).addClass('active').addClass('btn-success').removeClass('btn-outline-success');
+        $('#action-move').removeClass('active').removeClass('btn-danger').addClass('btn-outline-danger');
+    });
+    
+    // Move button handler
+    $(document).on('click', '#move-items', function() {
+        $('#moveItemsModal').modal('hide');
+    });
+    
+// Confirm action handler
+$('#confirm-action').click(function() {
+    const targetDate = $('#target-date').val();
+    const targetGroup = $('#target-group').val();
+    const currentDate = $('#date-selector').val();
+    
+    // Extract indices for move/copy
+    const indices = selectedItems.map(item => item.index);
+    
+    $.post('/' + selectedAction + '_items', {
+        date: currentDate,
+        item_indices: JSON.stringify(indices),
+        new_group: targetGroup,
+        target_date: targetDate
+    }, function(response) {
+        selectedItems = [];
+        $('#move-items').prop('disabled', true);
+        $('#create-recipe').addClass('d-none').prop('disabled', true);
+        $('#moveItemsModal').modal('hide');
+        
+        updateSessionDisplay(response.session, response.totals, response.breakdown);
+        refreshDateSelector();
+    });
+});
+
+            function refreshDateSelector() {
+    const currentDate = $('#date-selector').val();
+    
+    $.post('/update_session', { date: currentDate }, function(response) {
+        updateSessionDisplay(response.session, response.totals, response.breakdown);
+        $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
+    });
+}
+
             
             // Camera variables
             let currentCamera = 'environment';
@@ -1738,20 +1801,21 @@ if (data.length > 0) {
 
             // Edit grams
             $(document).on('click', '.edit-grams', function() {
-                const index = $(this).data('index');
+                const itemId = $(this).data('id');
                 const grams = $(this).text().replace('g', '');
-                $('#edit-grams-index').val(index);
+                $('#edit-grams-id').val(itemId);
                 $('#edit-grams-input').val(grams);
                 editGramsModal.show();
             });
             
             // Edit grams input keypress handler
-            $(document).on('keypress', '#edit-grams-input', function(e) {
-                if (e.which === 13) { // Enter key
-                    e.preventDefault(); // Prevent form submission
-                    $('#save-grams').click();
-                }
-            });
+$(document).on('click', '.edit-grams', function() {
+    const itemId = $(this).data('id');
+    const grams = $(this).text().replace('g', '');
+    $('#edit-grams-id').val(itemId);
+    $('#edit-grams-input').val(grams);
+    editGramsModal.show();
+});
             
             // Focus on grams input when modal opens
             $('#editGramsModal').on('shown.bs.modal', function () {
@@ -1760,7 +1824,7 @@ if (data.length > 0) {
             
             // Save grams
 $('#save-grams').click(function() {
-    const index = $('#edit-grams-index').val();
+    const itemId = $('#edit-grams-id').val();
     const newGrams = $('#edit-grams-input').val();
     const date = $('#date-selector').val();  // Get current date
 
@@ -1776,7 +1840,7 @@ $('#save-grams').click(function() {
     } else {
         // Update grams
         $.post('/update_grams', {
-            item_index: index,
+            item_id: itemId,
             new_grams: newGrams,
             date: date   // Add date parameter
         }, function(response) {
@@ -1804,15 +1868,15 @@ $(document).on('click', '.delete-food-btn', function(e) {
                 }
             }.bind(this));
         });
-// Delete item from food log
+// Delete item - keep using IDs
 $(document).on('click', '.delete-item', function(e) {
     e.stopPropagation();
-    const index = $(this).data('index');
-    const date = $('#date-selector').val();  // Get current date
+    const itemId = $(this).data('id');
+    const date = $('#date-selector').val();
     
     $.post('/delete_item', {
-        item_index: index,
-        date: date   // Add date parameter
+        item_id: itemId,
+        date: date
     }, function(response) {
         updateSessionDisplay(response.session, response.totals, response.breakdown);
     });
@@ -1835,31 +1899,36 @@ $(document).on('click', '.delete-item', function(e) {
                 });
             });
 
-            // Item selection
-            $(document).on('click', '.group-items .list-group-item', function(e) {
-                if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
-                    return;
-                }
-                
-                const index = $(this).data('index');
-                $(this).toggleClass('selected');
-                
-                if ($(this).hasClass('selected')) {
-                    selectedItems.push(index);
-                } else {
-                    selectedItems = selectedItems.filter(i => i !== index);
-                }
-                
-                // Enable/disable buttons based on selection
-                $('#move-items').prop('disabled', selectedItems.length === 0);
-                
-                // Show recipe button if at least 2 items selected
-                if (selectedItems.length >= 2) {
-                    $('#create-recipe').removeClass('d-none').prop('disabled', false);
-                } else {
-                    $('#create-recipe').addClass('d-none').prop('disabled', true);
-                }
-            });
+// Update the item selection handler
+$(document).on('click', '.group-items .list-group-item', function(e) {
+    if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
+        return;
+    }
+    
+    const index = $(this).index(); // Get position in list
+    const itemId = $(this).data('id');
+    
+    $(this).toggleClass('selected');
+    
+    if ($(this).hasClass('selected')) {
+        selectedItems.push({
+            id: itemId,
+            index: index
+        });
+    } else {
+        selectedItems = selectedItems.filter(item => item.id !== itemId);
+    }
+    
+    // Enable/disable buttons based on selection
+    $('#move-items').prop('disabled', selectedItems.length === 0);
+    
+    // Show recipe button if at least 2 items selected
+    if (selectedItems.length >= 2) {
+        $('#create-recipe').removeClass('d-none').prop('disabled', false);
+    } else {
+        $('#create-recipe').addClass('d-none').prop('disabled', true);
+    }
+});
 
             // Move button handler
             $('#move-items').click(function() {
@@ -1887,15 +1956,15 @@ $(document).on('click', '.delete-item', function(e) {
 
             // Recipe button handler
             $('#create-recipe').click(function() {
-                // Store selected items for recipe creation
                 selectedItemsForRecipe = selectedItems;
+                
                 $('#recipe-confirm').removeClass('d-none');
                 $('#recipe-name-input').addClass('d-none');
                 $('#recipe-yes').removeClass('d-none');
                 $('#recipe-save').addClass('d-none');
-                $('#recipeModal').modal('show');
+                recipeModal.show();
             });
-            
+                        
             // Recipe confirmation
             $('#recipe-yes').click(function() {
                 $('#recipe-confirm').addClass('d-none');
@@ -1904,7 +1973,27 @@ $(document).on('click', '.delete-item', function(e) {
                 $('#recipe-save').removeClass('d-none');
             });
             
-            // Recipe saving
+// Recipe button handler
+$('#create-recipe').click(function() {
+    // Store selected item IDs
+    selectedItemsForRecipe = selectedItems.map(itemId => itemId);
+    
+    $('#recipe-confirm').removeClass('d-none');
+    $('#recipe-name-input').addClass('d-none');
+    $('#recipe-yes').removeClass('d-none');
+    $('#recipe-save').addClass('d-none');
+    recipeModal.show();
+});
+
+// Recipe confirmation
+$('#recipe-yes').click(function() {
+    $('#recipe-confirm').addClass('d-none');
+    $('#recipe-name-input').removeClass('d-none');
+    $('#recipe-yes').addClass('d-none');
+    $('#recipe-save').removeClass('d-none');
+});
+
+// Recipe saving
 $('#recipe-save').click(function() {
     const recipeName = $('#recipe-name').val().trim();
     if (!recipeName) {
@@ -1912,8 +2001,8 @@ $('#recipe-save').click(function() {
         return;
     }
     
-    // Get nutrition data for selected items
-    const recipeItems = selectedItemsForRecipe.map(index => currentSession[index]);
+    // Get selected items by ID
+    const recipeItems = selectedItemsForRecipe.map(item => currentSession[item.index]);
     
     // Calculate total nutrition
     let totalCalories = 0;
@@ -1951,14 +2040,12 @@ $('#recipe-save').click(function() {
         salt: (totalSalt / totalGrams) * 100,
         calories: (totalCalories / totalGrams) * 100,
         grams: 100,
-        // ADD ENTIRE PORTION OPTION
         entire: totalGrams  // Total grams of the recipe
     };
     
     // Save recipe to database
     $.post('/save_food', recipeData, function(response) {
         if (response.success) {
-            // Show success message and close modal
             alert('Successfully added recipe! :)');
             $('#recipeModal').modal('hide');
             
@@ -1972,7 +2059,6 @@ $('#recipe-save').click(function() {
             alert('Error creating recipe: ' + response.error);
         }
     }).fail(function(xhr) {
-        // Handle server errors
         alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
     });
 });
@@ -2014,7 +2100,7 @@ $('#recipe-save').click(function() {
                         
                         groupData['items'].forEach((item, index) => {
                             logHtml += `
-                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="${index}">
+                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-id="${item.id}">
                                     <div class="food-item-container">
                                         <div>
                                             <div class="d-flex align-items-center">
@@ -2022,7 +2108,7 @@ $('#recipe-save').click(function() {
                                             </div>
                                         </div>
                                         <span class="edit-grams badge edit-grams-btn mx-1" 
-                                            data-index="${index}">
+                                            data-id="${item.id}">
                                             ${item.grams.toFixed(1)}g
                                         </span>
                                     </div>
@@ -2041,7 +2127,7 @@ $('#recipe-save').click(function() {
                                                 <span>${item.fats.toFixed(1)}g F</span>
                                             </div>
                                         </div>
-                                        <button class="btn delete-item" data-index="${index}">X</button>
+                                        <button class="btn delete-item" data-id="${item.id}">X</button>
                                     </div>
                                 </li>
                             `;
@@ -2061,6 +2147,7 @@ $('#recipe-save').click(function() {
                 $('#food-log').html(logHtml);
                     
                 // Update nutrition grid
+            function updateNutritionGrid(totals) {
                 $('#grid-calories').text(totals.calories.toFixed(1));
                 $('#grid-proteins').text(totals.proteins.toFixed(1) + 'g');
                 $('#grid-carbs').text(totals.carbs.toFixed(1) + 'g');
@@ -2069,21 +2156,22 @@ $('#recipe-save').click(function() {
                 $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
                 $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
                 $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
+}
                 
                 // Update mobile nutrition panel
                 updateMobileNutrition(totals);
             }
             
-            function updateMobileNutrition(totals) {
-                $('#mobile-calories').text(totals.calories.toFixed(1));
-                $('#mobile-proteins').text(totals.proteins.toFixed(1) + 'g');
-                $('#mobile-carbs').text(totals.carbs.toFixed(1) + 'g');
-                $('#mobile-fats').text(totals.fats.toFixed(1) + 'g');
-                $('#mobile-sugars').text(totals.sugars.toFixed(1) + 'g');
-                $('#mobile-fiber').text(totals.fiber.toFixed(1) + 'g');
-                $('#mobile-salt').text(totals.salt.toFixed(1) + 'g');
-                $('#mobile-saturated').text(totals.saturated.toFixed(1) + 'g');
-            }
+                    function updateMobileNutrition(totals) {
+            $('#mobile-calories').text(totals.calories.toFixed(1));
+            $('#mobile-proteins').text(totals.proteins.toFixed(1) + 'g');
+            $('#mobile-carbs').text(totals.carbs.toFixed(1) + 'g');
+            $('#mobile-fats').text(totals.fats.toFixed(1) + 'g');
+            $('#mobile-sugars').text(totals.sugars.toFixed(1) + 'g');
+            $('#mobile-fiber').text(totals.fiber.toFixed(1) + 'g');
+            $('#mobile-salt').text(totals.salt.toFixed(1) + 'g');
+            $('#mobile-saturated').text(totals.saturated.toFixed(1) + 'g');
+        }
             
             function resetFoodForm() {
                 $('#food-search').val('');
@@ -2289,6 +2377,7 @@ $('#recipe-save').click(function() {
                 scanningActive = false;
             }
         });
+
     </script>
 </body>
 </html>
