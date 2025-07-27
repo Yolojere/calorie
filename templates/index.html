@@ -95,6 +95,17 @@
             min-width: 60px !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
+        .rtb-value {
+    display: block;
+    font-weight: bold;
+    text-align: center;
+    transition: font-size 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 2px;
+    width: 100%;
+}
         
         /* Layout & Components */
         .modal-dialog-centered {
@@ -934,20 +945,20 @@
                     <div id="search-results" class="mt-3"></div>
                     <!-- Real-time Breakdown -->
                     <div id="rt-breakdown-container" class="d-none">
-                        <div class="d-flex justify-content-center gap-1 mb-2">
-                            <div class="rtb-yay" style="background-color: #ffffff; color: black;">
-                                <span id="rt-calories">0</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336; color: black;">
-                                <span id="rt-proteins">0g</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336;color: black;">
-                                <span id="rt-carbs">0g</span>
-                            </div>
-                            <div class="rtb-yay" style="background-color: #b61336;color: black;">
-                                <span id="rt-fats">0g</span>
-                            </div>
-                        </div>
+<div class="d-flex justify-content-center gap-1 mb-2">
+    <div class="rtb-yay" style="background-color: #ffffff; color: black;">
+        <span id="rt-calories" class="rtb-value">0</span>
+    </div>
+    <div class="rtb-yay" style="background-color: #b61336; color: black;">
+        <span id="rt-proteins" class="rtb-value">0g</span>
+    </div>
+    <div class="rtb-yay" style="background-color: #b61336;color: black;">
+        <span id="rt-carbs" class="rtb-value">0g</span>
+    </div>
+    <div class="rtb-yay" style="background-color: #b61336;color: black;">
+        <span id="rt-fats" class="rtb-value">0g</span>
+    </div>
+</div>
                         <div class="mt-3 text-center" style="font-size: 15px;">
                             <span>Per Grams: </span>
                             <strong id="rt-grams" style="font-size: 15px;">0g</strong>
@@ -1369,6 +1380,7 @@
             
             // Re-position on scroll to keep it fixed
             $(window).scroll(positionNutritionGrid);
+
             
             // Konami code detection
             $(document).keydown(function(e) {
@@ -1409,28 +1421,41 @@
             gridVisible = !gridVisible;
             updateGridVisibility();
         });
+
+  // Add a helper function to format calories
+function formatCalories(calories) {
+    // Convert to float and round to 2 decimal places
+    const num = parseFloat(calories);
+    if (isNaN(num)) return "0";
+    
+    // Format to maximum of 5 characters
+    const formatted = num.toFixed(2);
+    return formatted.length > 5 ? num.toFixed(1) : formatted;
+}      
             // Load top 10 foods on page load
             loadTopFoods();
             
-            function createFoodItemHtml(food) {
-                return `
-                    <a class="list-group-item list-group-item-action food-item small text-start" 
-                       data-id="${food.id}" 
-                       data-serving="${food.serving_size || ''}"
-                       data-half="${food.half_size || ''}"
-                       data-entire="${food.entire_size || ''}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="food-name">${food.name}</span>
-                            <div>
-                                <span class="calorie-badge">${food.calories} cal/100g</span>
-                                <button class="delete-food-btn" data-id="${food.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            }
+function createFoodItemHtml(food) {
+    const displayCalories = formatCalories(food.calories) + ' cal/100g';
+    
+    return `
+        <a class="list-group-item list-group-item-action food-item small text-start" 
+           data-id="${food.id}" 
+           data-serving="${food.serving_size || ''}"
+           data-half="${food.half_size || ''}"
+           data-entire="${food.entire_size || ''}">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="food-name">${food.name}</span>
+                <div>
+                    <span class="calorie-badge">${displayCalories}</span>
+                    <button class="delete-food-btn" data-id="${food.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </a>
+    `;
+}
             
             function loadTopFoods() {
                 $.post('/search_foods', { query: '' }, function(data) {
@@ -1644,22 +1669,50 @@ if (data.length > 0) {
                 updateRealTimeBreakdown(updatedData);
             }
 
-            // Update real-time breakdown display
-            function updateRealTimeBreakdown(data) {
-                if (!data || !data.calories) {
-                    $('#rt-breakdown-container').addClass('d-none');
-                    return;
-                }
-                
-                $('#rt-breakdown-container').removeClass('d-none');
-                
-                $('#rt-calories').text(data.calories.toFixed(1)+ ' kcal');
-                $('#rt-proteins').text(data.proteins.toFixed(1) + ' P');
-                $('#rt-carbs').text(data.carbs.toFixed(1) + ' C');
-                $('#rt-fats').text(data.fats.toFixed(1) + ' F');
-                $('#rt-grams').text(data.grams.toFixed(1) + 'g');
-            }
+              // ADD THIS NEW FUNCTION
+    function adjustFontSize(element, baseSize) {
+        const text = element.textContent;
+        const length = text.length;
+        let fontSize = baseSize;
+        
+        // Reduce font size for longer numbers
+        if (length > 8) fontSize = baseSize * 0.7;
+        else if (length > 6) fontSize = baseSize * 0.8;
+        else if (length > 4) fontSize = baseSize * 0.9;
+        
+        element.style.fontSize = `${fontSize}px`;
+    }
 
+            // Update real-time breakdown display
+    function updateRealTimeBreakdown(data) {
+        if (!data || !data.calories) {
+            $('#rt-breakdown-container').addClass('d-none');
+            return;
+        }
+        
+        $('#rt-breakdown-container').removeClass('d-none');
+        
+        // Create formatted strings
+        const caloriesStr = data.calories.toFixed(1);
+        const proteinsStr = data.proteins.toFixed(1) + 'g';
+        const carbsStr = data.carbs.toFixed(1) + 'g';
+        const fatsStr = data.fats.toFixed(1) + 'g';
+        const gramsStr = data.grams.toFixed(1) + 'g';
+        
+        // Update elements
+        $('#rt-calories').text(caloriesStr);
+        $('#rt-proteins').text(proteinsStr);
+        $('#rt-carbs').text(carbsStr);
+        $('#rt-fats').text(fatsStr);
+        $('#rt-grams').text(gramsStr);
+        
+        // Adjust font sizes - ADD THIS SECTION
+        adjustFontSize($('#rt-calories')[0], 18);
+        adjustFontSize($('#rt-proteins')[0], 18);
+        adjustFontSize($('#rt-carbs')[0], 18);
+        adjustFontSize($('#rt-fats')[0], 18);
+        adjustFontSize($('#rt-grams')[0], 15);
+    }
             // Toggle food group
             $(document).on('click', '.toggle-group', function() {
                 const groupHeader = $(this).closest('.group-header');
@@ -1905,20 +1958,22 @@ $('#recipe-save').click(function() {
     // Save recipe to database
     $.post('/save_food', recipeData, function(response) {
         if (response.success) {
-            alert('Recipe created successfully!');
+            // Show success message and close modal
+            alert('Successfully added recipe! :)');
             $('#recipeModal').modal('hide');
             
-            // Reset selection
+            // Reset selection and refresh
             selectedItems = [];
             selectedItemsForRecipe = [];
             $('#move-items').prop('disabled', true);
             $('#create-recipe').addClass('d-none').prop('disabled', true);
-            
-            // Refresh foods list
             loadTopFoods();
         } else {
             alert('Error creating recipe: ' + response.error);
         }
+    }).fail(function(xhr) {
+        // Handle server errors
+        alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
     });
 });
             function updateSessionDisplay(session, totals, breakdown) {
