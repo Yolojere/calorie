@@ -1056,6 +1056,7 @@ def log_food():
         calories = food['calories'] * factor
         
         item = {
+            "id": str(uuid.uuid4()),
             "name": food['name'],
             "grams": grams,
             "units": units,
@@ -1134,13 +1135,13 @@ def delete_food():
 @login_required
 def delete_item():
     user_id = current_user.id
-    item_index = int(request.form.get('item_index'))
+    item_id = request.form.get('item_id')
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
     eaten_items, current_date = get_current_session(user_id, date)
-    if 0 <= item_index < len(eaten_items):
-        del eaten_items[item_index]
-        save_current_session(user_id, eaten_items, date)
+    eaten_items = [item for item in eaten_items if item.get('id') != item_id]
+        
+    save_current_session(user_id, eaten_items, date)
     
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
@@ -1168,46 +1169,91 @@ def clear_session():
     })
 
 
+# ===== MOVE/COPY FUNCTIONALITY ===== #
 @app.route('/move_items', methods=['POST'])
 @login_required
 def move_items():
-    user_id = current_user.id
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-    item_indices = json.loads(request.form.get('item_indices'))
-    new_group = request.form.get('new_group')
-    target_date = request.form.get('target_date', date)
-    
-    # Get source session
-    eaten_items, current_date = get_current_session(user_id, date)
-    
-    # Move items to target date and group
-    moved_items = []
-    for idx in sorted(item_indices, reverse=True):
-        if 0 <= idx < len(eaten_items):
-            item = eaten_items.pop(idx)
-            item['group'] = new_group
-            moved_items.append(item)
-    
-    # Save source session
-    save_current_session(user_id, eaten_items, date)
-    
-    # Get target session and add moved items
-    target_items, _ = get_current_session(user_id, target_date)
-    target_items.extend(moved_items)
-    save_current_session(user_id, target_items, target_date)
-    
-    # Calculate totals using current data (no need to refetch)
-    totals = calculate_totals(eaten_items)
-    group_breakdown = calculate_group_breakdown(eaten_items)
-    current_date_formatted = format_date(date)
-    
-    return jsonify({
-        'session': eaten_items,
-        'totals': totals,
-        'current_date': date,
-        'current_date_formatted': current_date_formatted,
-        'breakdown': group_breakdown
-    })
+    return move_or_copy_items(remove_original=True)
+
+@app.route('/copy_items', methods=['POST'])
+@login_required
+def copy_items():
+    return move_or_copy_items(remove_original=False)
+
+def move_or_copy_items(remove_original=True):
+    try:
+        user_id = current_user.id
+        date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+        item_indices_json = request.form.get('item_indices')
+        
+        # Handle case where item_indices might be None
+        if not item_indices_json:
+            item_indices = []
+        else:
+            item_indices = json.loads(item_indices_json)
+        
+        # Convert to integers safely
+        item_indices = [int(idx) for idx in item_indices if idx is not None]
+        
+        new_group = request.form.get('new_group')
+        target_date = request.form.get('target_date', date)
+        
+        # Get source session
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute(
+            'SELECT data FROM user_sessions WHERE user_id = %s AND date = %s',
+            (user_id, date)
+        )
+        session_data = cursor.fetchone()
+        eaten_items = json.loads(session_data['data']) if session_data else []
+        
+        # Prepare items to transfer
+        items_to_transfer = []
+        for idx in item_indices:
+            if 0 <= idx < len(eaten_items):
+                item = eaten_items[idx].copy()
+                item['group'] = new_group
+                items_to_transfer.append(item)
+        
+        # If moving, remove original items
+        if remove_original:
+            # Sort indices in reverse order to avoid index shifting
+            for idx in sorted(item_indices, reverse=True):
+                if 0 <= idx < len(eaten_items):
+                    del eaten_items[idx]
+        
+        # Save source session
+        save_current_session(user_id, eaten_items, date)
+        
+        # Get target session
+        cursor.execute(
+            'SELECT data FROM user_sessions WHERE user_id = %s AND date = %s',
+            (user_id, target_date)
+        )
+        target_data = cursor.fetchone()
+        target_items = json.loads(target_data['data']) if target_data else []
+        
+        # Add items to target session
+        target_items.extend(items_to_transfer)
+        save_current_session(user_id, target_items, target_date)
+        
+        # Return updated session
+        totals = calculate_totals(eaten_items)
+        group_breakdown = calculate_group_breakdown(eaten_items)
+        current_date_formatted = format_date(date)
+        
+        return jsonify({
+            'session': eaten_items,
+            'totals': totals,
+            'current_date': date,
+            'current_date_formatted': current_date_formatted,
+            'breakdown': group_breakdown
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 
@@ -1217,36 +1263,46 @@ def update_grams():
     try:
         print("Received update_grams request")
         user_id = current_user.id
-        item_index = int(request.form.get('item_index'))
+        item_id = request.form.get('item_id')
         new_grams = float(request.form.get('new_grams'))
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
         
-        print(f"Params: index={item_index}, grams={new_grams}, date={date}")
+        print(f"Params: id={item_id}, grams={new_grams}, date={date}")
         
         eaten_items, current_date = get_current_session(user_id, date)
         print(f"Current session has {len(eaten_items)} items")
         
-        if 0 <= item_index < len(eaten_items):
-            item = eaten_items[item_index]
-            print(f"Food name from session: {item['name']}")
-            
-            food = get_food_by_key(item['name'])
-            if not food:
-                print(f"Food not found in database!")
-                return jsonify({'error': 'Food not found'}), 404
-            
-            # Recalculate nutrition
-            factor = new_grams / 100
-            item['grams'] = new_grams
-            item['units'] = new_grams
-            item['unit_type'] = 'grams'
-            item['carbs'] = food['carbs'] * factor
-            item['proteins'] = food['proteins'] * factor
-            item['fats'] = food['fats'] * factor
-            item['salt'] = food.get('salt', 0.0) * factor
-            item['calories'] = food['calories'] * factor
-            
-            save_current_session(user_id, eaten_items, date)
+        # Find item by ID
+        item_index = None
+        for i, item in enumerate(eaten_items):
+            if item.get('id') == item_id:
+                item_index = i
+                break
+
+        if item_index is None:
+            print(f"❌ Item not found with id: {item_id}")
+            return jsonify({'error': 'Item not found'}), 404
+
+        item = eaten_items[item_index]
+        print(f"Food name from session: {item['name']}")
+        
+        food = get_food_by_key(item['name'])
+        if not food:
+            print(f"Food not found in database!")
+            return jsonify({'error': 'Food not found'}), 404
+        
+        # Convert units to grams
+        factor = new_grams / 100
+        item['grams'] = new_grams
+        item['units'] = new_grams
+        item['unit_type'] = 'grams'
+        item['carbs'] = food['carbs'] * factor
+        item['proteins'] = food['proteins'] * factor
+        item['fats'] = food['fats'] * factor
+        item['salt'] = food.get('salt', 0.0) * factor
+        item['calories'] = food['calories'] * factor
+        
+        save_current_session(user_id, eaten_items, date)
         
         totals = calculate_totals(eaten_items)
         group_breakdown = calculate_group_breakdown(eaten_items)
