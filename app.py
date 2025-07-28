@@ -46,7 +46,7 @@ def normalize_key(key):
     if key is None:
         return ""
     # Preserve all Unicode letters and numbers, plus allowed special characters
-    normalized = re.sub(r'[^\w\s\-.,%+]', '', key, flags=re.UNICODE)
+    normalized = re.sub(r'[^\w\s\-.,%+&]', '', key, flags=re.UNICODE)
     # Collapse multiple spaces and trim
     normalized = re.sub(r'\s+', ' ', normalized).strip().lower()
     return normalized
