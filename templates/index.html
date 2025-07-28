@@ -48,7 +48,139 @@
             color: #e0e0e0;
             border-color: #666;
         }
-        
+        .breakfast .group-header:hover {
+    background: linear-gradient(to right, 
+        color-mix(in srgb, var(--group-color) 60%, white 40%), 
+        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+}
+
+.lunch .group-header:hover {
+    background: linear-gradient(to right, 
+        color-mix(in srgb, var(--group-color) 60%, white 40%), 
+        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+}
+
+.dinner .group-header:hover {
+    background: linear-gradient(to right, 
+        color-mix(in srgb, var(--group-color) 60%, white 40%), 
+        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+}
+
+.snack .group-header:hover {
+    background: linear-gradient(to right, 
+        color-mix(in srgb, var(--group-color) 60%, white 40%), 
+        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+}
+
+.other .group-header:hover {
+    background: linear-gradient(to right, 
+        color-mix(in srgb, var(--group-color) 60%, white 40%), 
+        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+}
+        /* NEW STYLES FOR ENHANCED MEAL GROUPS */
+        /* Color definitions for meal groups */
+        .breakfast {
+            --group-color: #ff9e6d;
+        }
+
+        .lunch {
+            --group-color: #6dc0d5;
+        }
+
+        .dinner {
+            --group-color: #b989f0;
+        }
+
+        .snack {
+            --group-color: #ffd166;
+        }
+
+        .other {
+            --group-color: #7bc8a4;
+        }
+
+        /* Group header styling - UPDATED */
+        .group-header {
+            background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.8)) !important;
+            padding: 12px 15px !important;
+            border-radius: 8px 8px 0 0 !important;
+            margin: 8px 0 0 0 !important;
+            border: none !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            animation: pulse 4s infinite;
+        }
+
+        .group-title {
+            font-weight: bold;
+            font-size: 16px !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Nutrition badges color coding */
+        .nutrition-value-xxs[style*="background-color: #b61336"] {
+            background: var(--group-color) !important;
+            color: #000 !important;
+        }
+
+        .nutrition-value-xxs.nutrition-calories {
+            background: linear-gradient(135deg, #ffffff, #e0e0e0) !important;
+            color: #000 !important;
+        }
+
+        /* Food item animations */
+        .food-item-container {
+            transition: transform 0.3s ease;
+        }
+
+        .food-item-container:hover {
+            transform: translateX(5px);
+        }
+
+        /* Nutrition summary in header */
+        .group-nutrition-container .nutrition-value-xxs {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .group-nutrition-container .nutrition-value-xxs:hover {
+            transform: scale(1.05);
+        }
+
+        /* Animation keyframes */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .food-group {
+            animation: fadeIn 0.5s ease-out;
+        }
+
         /* Nutrition Value Styles */
         .nutrition-value-sm, .nutrition-value-xs, .nutrition-value-xxs, .nutrition-value-xxxs {
             border-radius: 8px;
@@ -79,8 +211,6 @@
             align-items: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             font-weight: bold !important;
-
-            
         }
         
         .rtb-yay {
@@ -95,17 +225,18 @@
             min-width: 60px !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
+        
         .rtb-value {
-    display: block;
-    font-weight: bold;
-    text-align: center;
-    transition: font-size 0.2s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 2px;
-    width: 100%;
-}
+            display: block;
+            font-weight: bold;
+            text-align: center;
+            transition: font-size 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 2px;
+            width: 100%;
+        }
         
         /* Layout & Components */
         .modal-dialog-centered {
@@ -151,21 +282,7 @@
             min-height: unset !important;
         }
         
-        .group-header {
-            cursor: pointer;
-            padding: 0.5rem 1rem !important;
-            background: #111111 !important;
-            border: none !important;
-            border-radius: 6px;
-            margin: 8px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .group-header:hover {
-            background: linear-gradient(to right, #555454, #000000) !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-            transform: translateY(-2px);
-        }
+
         
         .group-items {
             max-height: none !important;
@@ -313,8 +430,8 @@
             position: fixed;
             top: 120px;
             left: calc(50% + 590px + 20px);
-            width: 100px;
-            height: 530px;
+            width: 120px;
+            height: 900px;
             z-index: 100;
         }
         
@@ -330,71 +447,71 @@
             }
         }
 
-        /* NUTRITION PANEL (MOBILE* /)
+        /* NUTRITION PANEL (MOBILE) */
         /* Mobile Nutrition Grid */
-.nutrition-grid-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-}
+        .nutrition-grid-mobile {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
 
-.grid-row-mobile {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
+        .grid-row-mobile {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
 
-.grid-cell-mobile {
-    flex: 1;
-    background-color: #b61336;
-    border-radius: 10px;
-    padding: 18px 5px;
-    text-align: center;
-    min-height: 90px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
+        .grid-cell-mobile {
+            flex: 1;
+            background-color: #b61336;
+            border-radius: 10px;
+            padding: 18px 5px;
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
 
-.grid-cell-mobile:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
+        .grid-cell-mobile:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
 
-.grid-cell-mobile div:first-child {
-    font-size: 16px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
+        .grid-cell-mobile div:first-child {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
 
-.grid-cell-mobile .grid-value {
-    font-size: 22px;
-    font-weight: bold;
-}
+        .grid-cell-mobile .grid-value {
+            font-size: 22px;
+            font-weight: bold;
+        }
 
-/* Special styling for full-width cells */
-.grid-row-mobile:first-child .grid-cell-mobile,
-.grid-row-mobile:nth-child(2) .grid-cell-mobile,
-.grid-row-mobile:nth-child(5) .grid-cell-mobile,
-.grid-row-mobile:last-child .grid-cell-mobile {
-    background-color: #ffffff;
-    color: black;
-}
+        /* Special styling for full-width cells */
+        .grid-row-mobile:first-child .grid-cell-mobile,
+        .grid-row-mobile:nth-child(2) .grid-cell-mobile,
+        .grid-row-mobile:nth-child(5) .grid-cell-mobile,
+        .grid-row-mobile:last-child .grid-cell-mobile {
+            background-color: #ffffff;
+            color: black;
+        }
 
-/* Highlight important metrics */
-#mobile-calories-cell {
-    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-    color: black;
-}
+        /* Highlight important metrics */
+        #mobile-calories-cell {
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            color: black;
+        }
 
-#mobile-proteins-cell {
-    background: linear-gradient(135deg, #b61336 0%, #8a0e29 100%);
-}
+        #mobile-proteins-cell {
+            background: linear-gradient(135deg, #b61336 0%, #8a0e29 100%);
+        }
         
         /* Mobile Responsive */
         @media (max-width: 991px) {
@@ -621,18 +738,21 @@
                 flex: none !important;
             }
             
-            .mobile-tab-bar {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: #000;
-                z-index: 1000;
-                padding: 10px;
-                justify-content: space-around;
-                border-top: 1px solid #444;
-            }
+        .mobile-tab-bar {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000;
+            z-index: 1000;
+            padding: 10px;
+            justify-content: center; /* Center buttons horizontally */
+            align-items: center; /* Center buttons vertically */
+            border-top: 1px solid #444;
+            gap: 10px; /* Space between buttons */
+            flex-direction: row; /* Ensure horizontal layout */
+        }
             
             .mobile-tab-btn {
                 background: #333;
@@ -850,6 +970,283 @@
             50% { box-shadow: 0 0 20px #b61336; }
             100% { box-shadow: 0 0 5px #b61336; }
         }
+        /* Nutrition Grid Styles */
+    .nutrition-grid {
+        display: grid;
+        grid-template-rows: repeat(9, 1fr);
+        height: 100%;
+        width: 100%;
+        background-color: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .grid-cell {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 5px; /* Increased padding */
+        font-size: 15px; /* Slightly larger font */
+        text-align: center;
+        border-bottom: 1px solid #2b2b2b;
+        transition: all 0.3s ease;
+    }
+
+.grid-cell:last-child {
+    border-bottom: none;
+}
+
+.grid-cell:hover {
+    transform: scale(1.03);
+    z-index: 2;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.grid-cell i {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.grid-value {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+.grid-header {
+    background: linear-gradient(135deg, #b61336, #8a0e29);
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.grid-calories {
+    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    color: #000;
+}
+
+.grid-proteins {
+    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    color: #000;
+}
+
+.grid-carbs {
+    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    color: #000;
+}
+
+.grid-fats {
+    background: linear-gradient(135deg, #b989f0, #a478d8);
+    color: #000;
+}
+
+.grid-saturated {
+    background: linear-gradient(135deg, #ffd166, #e6bb5c);
+    color: #000;
+}
+
+.grid-sugars {
+    background: linear-gradient(135deg, #7bc8a4, #6cb193);
+    color: #000;
+}
+
+.grid-fiber {
+    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    color: #000;
+}
+
+.grid-salt {
+    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    color: #000;
+}
+
+/* Mobile Nutrition Grid */
+.nutrition-grid-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.grid-row-mobile {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.grid-cell-mobile {
+    flex: 1;
+    border-radius: 12px;
+    padding: 18px 12px;
+    text-align: center;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.grid-cell-mobile:active {
+    transform: scale(0.98);
+}
+
+.grid-cell-mobile div {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.grid-cell-mobile .grid-value {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.grid-header-mobile {
+    background: linear-gradient(135deg, #b61336, #8a0e29);
+    color: white !important;
+}
+
+.grid-calories-mobile {
+    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    color: #000;
+}
+
+.grid-proteins-mobile {
+    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    color: #000;
+}
+
+.grid-carbs-mobile {
+    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    color: #000;
+}
+
+.grid-sugars-mobile {
+    background: linear-gradient(135deg, #7bc8a4, #6cb193);
+    color: #000;
+}
+
+.grid-fats-mobile {
+    background: linear-gradient(135deg, #b989f0, #a478d8);
+    color: #000;
+}
+
+.grid-saturated-mobile {
+    background: linear-gradient(135deg, #ffd166, #e6bb5c);
+    color: #000;
+}
+
+.grid-fiber-mobile {
+    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    color: #000;
+}
+
+.grid-salt-mobile {
+    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    color: #000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .grid-cell-mobile {
+        padding: 14px 8px;
+        min-height: 90px;
+    }
+    
+    .grid-cell-mobile div {
+        font-size: 14px;
+    }
+    
+    .grid-cell-mobile .grid-value {
+        font-size: 20px;
+    }
+    .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #000;
+    z-index: 1000;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid #444;
+    flex-direction: row;
+
+    
+}
+
+        .mobile-tab-btn {
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            font-size: 20px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+.mobile-tab-btn i {
+    font-size: 24px;
+}
+
+.mobile-tab-btn.active {
+    transform: translateY(-10px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+
+.mobile-tab-btn:not(.active):hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+/* Nutrition grid adjustments */
+.nutrition-grid {
+    grid-template-rows: repeat(9, 1fr);
+}
+
+.grid-sugars {
+    background: linear-gradient(135deg, #7bc8a4, #6cb193);
+    color: #000;
+}
+
+.grid-fiber {
+    background: linear-gradient(135deg, #ffd166, #e6bb5c);
+    color: #000;
+}
+
+.grid-salt {
+    background: linear-gradient(135deg, #b989f0, #a478d8);
+    color: #000;
+}
+
+/* Mobile nutrition panel adjustments */
+#nutrition-panel .card-body {
+    padding: 15px;
+}
+
+.nutrition-grid-mobile {
+    gap: 10px;
+}
+
+.grid-cell-mobile {
+    min-height: 90px;
+    padding: 15px 10px;
+}
+}
     </style>
 </head>
 <body>
@@ -914,12 +1311,18 @@
     </div>
 </nav>
 
-    <!-- Mobile Tab Bar -->
-    <div class="mobile-tab-bar d-block d-lg-none">
-        <button class="mobile-tab-btn active" data-panel="add-food-panel">Add Food</button>
-        <button class="mobile-tab-btn" data-panel="food-log-panel">Food Log</button>
-        <button class="mobile-tab-btn" data-panel="nutrition-panel">Nutrition</button>
-    </div>
+<!-- Update mobile tab bar -->
+<div class="mobile-tab-bar d-block d-lg-none">
+    <button class="mobile-tab-btn active" data-panel="add-food-panel" style="background-color: #ff9e6d;">
+        <i class="fas fa-plus-circle"></i>
+    </button>
+    <button class="mobile-tab-btn" data-panel="food-log-panel" style="background-color: #6dc0d5;">
+        <i class="fas fa-utensils"></i>
+    </button>
+    <button class="mobile-tab-btn" data-panel="nutrition-panel" style="background-color: #b989f0;">
+        <i class="fas fa-chart-pie"></i>
+    </button>
+</div>
 
     <div class="container-main">
         <!-- Top: Add Food (Full Width) -->
@@ -1020,10 +1423,23 @@
                     <div id="food-log" class="flex-grow-1" style="overflow: auto;">
                         {% if group_breakdown %}
                             {% for group, group_data in group_breakdown.items() %}
-                            <div class="food-group" data-group="{{ group }}">
-                                <div class="group-header bg-dark d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="group-title">-- {{ group | upper }} --</span>
+                            <div class="food-group {{ group }}" data-group="{{ group }}">
+                                <div class="group-header d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="group-icon">
+                                            {% if group == 'breakfast' %}
+                                                <i class="fas fa-sun"></i>
+                                            {% elif group == 'lunch' %}
+                                                <i class="fas fa-utensils"></i>
+                                            {% elif group == 'dinner' %}
+                                                <i class="fas fa-moon"></i>
+                                            {% elif group == 'snack' %}
+                                                <i class="fas fa-apple-alt"></i>
+                                            {% else %}
+                                                <i class="fas fa-question"></i>
+                                            {% endif %}
+                                        </div>
+                                        <span class="group-title">{{ group | upper }}</span>
                                     </div>
                                     <div class="group-nutrition-container">
                                         <div class="group-nutrition">
@@ -1094,60 +1510,69 @@
             </div>
         </div>
         
-        <!-- Nutrition Panel -->
-        <div class="grid-panel mobile-panel" id="nutrition-panel">
-            <div class="card bg-dark h-100">
-                <div class="card-header bg-black text-light">
-                    <h6>Nutrition Breakdown</h6>
-                </div>
-                <div class="card-body">
-<div class="nutrition-grid-mobile">
+<!-- Nutrition Panel (Mobile) -->
+<div class="grid-panel mobile-panel" id="nutrition-panel">
+    <div class="card bg-dark h-100">
+        <div class="card-header bg-black text-light">
+            <h6>Nutrition Breakdown</h6>
+        </div>
+        <div class="card-body">
+            <div class="nutrition-grid-mobile">
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-calories-cell">
-                        <div>CALORIES</div>
+                    <div class="grid-cell-mobile grid-header-mobile">
+                        <i class="fas fa-calculator"></i>
+                        <span>NUTRITION</span>
+                    </div>
+                </div>
+                <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile grid-calories-mobile" id="mobile-calories-cell">
+                        <i class="fas fa-fire"></i>
+                        <span>CALORIES</span>
                         <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
                     </div>
                 </div>
-                
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-proteins-cell">
-                        <div>PROTEINS</div>
+                    <div class="grid-cell-mobile grid-proteins-mobile" id="mobile-proteins-cell">
+                        <i class="fas fa-drumstick-bite"></i>
+                        <span>PROTEINS</span>
                         <div class="grid-value" id="mobile-proteins">{{ totals.proteins | round(1) }}g</div>
                     </div>
                 </div>
-                
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-carbs-cell">
-                        <div>CARBS</div>
+                    <div class="grid-cell-mobile grid-carbs-mobile" id="mobile-carbs-cell">
+                        <i class="fas fa-bread-slice"></i>
+                        <span>CARBS</span>
                         <div class="grid-value" id="mobile-carbs">{{ totals.carbs | round(1) }}g</div>
                     </div>
-                    <div class="grid-cell-mobile" id="mobile-sugars-cell">
-                        <div>SUGARS</div>
+                    <div class="grid-cell-mobile grid-sugars-mobile" id="mobile-sugars-cell">
+                        <i class="fas fa-candy-cane"></i>
+                        <span>SUGARS</span>
                         <div class="grid-value" id="mobile-sugars">{{ totals.sugars | round(1) }}g</div>
                     </div>
                 </div>
-                
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-fats-cell">
-                        <div>FATS</div>
+                    <div class="grid-cell-mobile grid-fats-mobile" id="mobile-fats-cell">
+                        <i class="fas fa-bacon"></i>
+                        <span>FATS</span>
                         <div class="grid-value" id="mobile-fats">{{ totals.fats | round(1) }}g</div>
                     </div>
-                    <div class="grid-cell-mobile" id="mobile-saturated-cell">
-                        <div>SATURATED</div>
+                    <div class="grid-cell-mobile grid-saturated-mobile" id="mobile-saturated-cell">
+                        <i class="fas fa-oil-can"></i>
+                        <span>SATURATED</span>
                         <div class="grid-value" id="mobile-saturated">{{ totals.saturated | round(1) }}g</div>
                     </div>
                 </div>
-                
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-fiber-cell">
-                        <div>FIBER</div>
+                    <div class="grid-cell-mobile grid-fiber-mobile" id="mobile-fiber-cell">
+                        <i class="fas fa-apple-alt"></i>
+                        <span>FIBER</span>
                         <div class="grid-value" id="mobile-fiber">{{ totals.fiber | round(1) }}g</div>
                     </div>
                 </div>
-                
                 <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile" id="mobile-salt-cell">
-                        <div>SALT</div>
+                    <div class="grid-cell-mobile grid-salt-mobile" id="mobile-salt-cell">
+                        <i class="fas fa-mortar-pestle"></i>
+                        <span>SALT</span>
                         <div class="grid-value" id="mobile-salt">{{ totals.salt | round(1) }}g</div>
                     </div>
                 </div>
@@ -1156,44 +1581,55 @@
     </div>
 </div>
     
-    <!-- Nutrition Grid -->
-    <div class="nutrition-grid-container">
-        <div class="nutrition-grid">
-            <div class="grid-cell">Totals</div>
-            <div class="grid-cell">
-                Calories
-                <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
-            </div>
-            <div class="grid-cell">
-                Proteins
-                <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Carbs
-                <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Fats
-                <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Saturated
+<!-- Updated nutrition grid with all 9 metrics -->
+<div class="nutrition-grid-container">
+    <div class="nutrition-grid">
+        <div class="grid-cell grid-header">
+            <i class="fas fa-calculator"></i>
+            <span>Nutrition</span>
+        </div>
+        <div class="grid-cell grid-calories">
+            <i class="fas fa-fire"></i>
+            <span>Calories</span>
+            <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
+        </div>
+        <div class="grid-cell grid-proteins">
+            <i class="fas fa-drumstick-bite"></i>
+            <span>Proteins</span>
+            <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
+        </div>
+        <div class="grid-cell grid-carbs">
+            <i class="fas fa-bread-slice"></i>
+            <span>Carbs</span>
+            <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
+        </div>
+        <div class="grid-cell grid-sugars">
+            <i class="fas fa-candy-cane"></i>
+            <span>Sugars</span>
+            <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
+        </div>
+        <div class="grid-cell grid-fats">
+            <i class="fas fa-bacon"></i>
+            <span>Fats</span>
+            <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
+        </div>
+        <div class="grid-cell grid-saturated">
+            <i class="fas fa-oil-can"></i>
+            <span>Saturated</span>
             <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Sugars
-                <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Fiber
-                <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
-            </div>
-            <div class="grid-cell">
-                Salt
-                <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
-            </div>
+        </div>
+        <div class="grid-cell grid-fiber">
+            <i class="fas fa-apple-alt"></i>
+            <span>Fiber</span>
+            <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
+        </div>
+        <div class="grid-cell grid-salt">
+            <i class="fas fa-mortar-pestle"></i>
+            <span>Salt</span>
+            <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
         </div>
     </div>
+</div>
     
     <!-- Edit Grams Modal -->
     <div class="modal fade" id="editGramsModal" tabindex="-1" aria-hidden="true">
@@ -1800,14 +2236,7 @@ if (data.length > 0) {
             });
 
             // Edit grams
-            $(document).on('click', '.edit-grams', function() {
-                const itemId = $(this).data('id');
-                const grams = $(this).text().replace('g', '');
-                $('#edit-grams-id').val(itemId);
-                $('#edit-grams-input').val(grams);
-                editGramsModal.show();
-            });
-            
+
             // Edit grams input keypress handler
 $(document).on('click', '.edit-grams', function() {
     const itemId = $(this).data('id');
@@ -1821,6 +2250,11 @@ $(document).on('click', '.edit-grams', function() {
             $('#editGramsModal').on('shown.bs.modal', function () {
                 $('#edit-grams-input').trigger('focus');
             });
+                    $('#edit-grams-input').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                $('#save-grams').click();
+            }
+        });
             
             // Save grams
 $('#save-grams').click(function() {
@@ -2072,10 +2506,23 @@ $('#recipe-save').click(function() {
                     for (const group in breakdown) {
                         const groupData = breakdown[group];
                         logHtml += `
-                            <div class="food-group" data-group="${group}">
-                                <div class="group-header bg-dark d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="group-title">-- ${group.toUpperCase()} --</span>
+                            <div class="food-group ${group}" data-group="${group}">
+                                <div class="group-header d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="group-icon">
+                                            {% if group == 'breakfast' %}
+                                                <i class="fas fa-sun"></i>
+                                            {% elif group == 'lunch' %}
+                                                <i class="fas fa-utensils"></i>
+                                            {% elif group == 'dinner' %}
+                                                <i class="fas fa-moon"></i>
+                                            {% elif group == 'snack' %}
+                                                <i class="fas fa-apple-alt"></i>
+                                            {% else %}
+                                                <i class="fas fa-question"></i>
+                                            {% endif %}
+                                        </div>
+                                        <span class="group-title">${group.toUpperCase()}</span>
                                     </div>
                                     <div class="group-nutrition-container">
                                         <div class="group-nutrition">
@@ -2381,4 +2828,3 @@ $('#recipe-save').click(function() {
     </script>
 </body>
 </html>
-
