@@ -7,11 +7,13 @@
     <title>Nutrition History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
     body {
         font-family: 'Calibri', sans-serif;
-        font-size: 16px;
+        font-size: 18px;
         background-color: #222 !important;
         color: #e0e0e0;
     }
@@ -47,7 +49,7 @@
 
     /* Tabs Styling */
     .nav-tabs {
-        border-bottom: 2px solid #ffffff;
+        border-bottom: 2px solid #f08e0e;
         border-radius: 5px;
     }
 
@@ -55,7 +57,7 @@
         font-size: 18px;
         padding: 10px 20px;
         color: white;
-        background-color: #ffffff;
+        background-color: #f08e0e;
         border: none;
         margin-right: 2px;
         border-radius: 5px 5px 0 0;
@@ -63,13 +65,13 @@
     }
 
     .nav-tabs .nav-link:hover {
-        background-color: #a5112f;
+        background-color: #d97706;
         color: #fff;
         cursor: pointer;
     }
 
     .nav-tabs .nav-link.active {
-        background-color: #7f0f26;
+        background-color: #ff961e;
         color: #fff;
         font-weight: bold;
     }
@@ -136,7 +138,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" 
                         aria-labelledby="navbarDropdown"
-                        style="background-color: #222; border: 1px solid #b61336; border-radius: 5px;">
+                        style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
                         <li>
                             <a class="dropdown-item" 
                                href="{{ url_for('profile') }}"
