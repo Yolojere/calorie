@@ -248,15 +248,16 @@
     position: relative;
     overflow: hidden;
     color: rgb(0, 0, 0);
-    min-width: 70px;
+    min-width: 22% !important;
     padding: 5px 8px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    height: 45px !important;
+    height: 60px !important;
     min-width: 60px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
 }
 .icon-bg {
     position: absolute;
@@ -290,13 +291,13 @@
     text-overflow: ellipsis;
     padding: 0 2px;
     width: 100%;
-    font-size: 26px !important;
-    line-height: 1.1;
+    font-size: 18px !important;
+    line-height: 1;
 }
 /* NEW: Label styles */
 .rtb-label {
     display: block;
-    font-size: 9px;
+    font-size: 8px !important;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -328,11 +329,11 @@
         
         #rt-breakdown-container {
             margin: 15px 0;
-            padding: 15px;
+            padding: 10px !important;
             border: 1px solid #444;
             border-radius: 4px;
             background-color: #000000;
-            height: 100px;
+            height: auto !important;
             width: 980px;
         }
         
@@ -1890,6 +1891,11 @@
         $(this).addClass('active').addClass('btn-success').removeClass('btn-outline-success');
         $('#action-move').removeClass('active').removeClass('btn-danger').addClass('btn-outline-danger');
     });
+    $(window).resize(function() {
+    if (currentFood) {
+        updateRealTimeBreakdownFromForm();
+    }
+});
     
     // Move button handler
     $(document).on('click', '#move-items', function() {
@@ -2269,49 +2275,65 @@ if (data.length > 0) {
             }
 
               // ADD THIS NEW FUNCTION
-    function adjustFontSize(element, baseSize) {
-        const text = element.textContent;
-        const length = text.length;
-        let fontSize = baseSize;
-        
-        // Reduce font size for longer numbers
+function adjustFontSize(element, baseSize) {
+    const text = element.textContent;
+    const length = text.length;
+    let fontSize = baseSize;
+    
+    // Mobile needs more aggressive scaling
+    const isMobile = $(window).width() < 992;
+    
+    if (isMobile) {
+        if (length > 8) fontSize = baseSize * 0.65;
+        else if (length > 6) fontSize = baseSize * 0.75;
+        else if (length > 4) fontSize = baseSize * 0.85;
+    } else {
         if (length > 8) fontSize = baseSize * 0.7;
         else if (length > 6) fontSize = baseSize * 0.8;
         else if (length > 4) fontSize = baseSize * 0.9;
-        
-        element.style.fontSize = `${fontSize}px`;
     }
+    
+    element.style.fontSize = `${fontSize}px`;
+}
 
-            // Update real-time breakdown display
-    function updateRealTimeBreakdown(data) {
-        if (!data || !data.calories) {
-            $('#rt-breakdown-container').addClass('d-none');
-            return;
-        }
-        
-        $('#rt-breakdown-container').removeClass('d-none');
-        
-        // Create formatted strings
-        const caloriesStr = data.calories.toFixed(1);
-        const proteinsStr = data.proteins.toFixed(1) + 'g';
-        const carbsStr = data.carbs.toFixed(1) + 'g';
-        const fatsStr = data.fats.toFixed(1) + 'g';
-        const gramsStr = data.grams.toFixed(1) + 'g';
-        
-        // Update elements
-        $('#rt-calories').text(caloriesStr);
-        $('#rt-proteins').text(proteinsStr);
-        $('#rt-carbs').text(carbsStr);
-        $('#rt-fats').text(fatsStr);
-        $('#rt-grams').text(gramsStr);
-        
-        // Adjust font sizes - ADD THIS SECTION
-        adjustFontSize($('#rt-calories')[0], 18);
-        adjustFontSize($('#rt-proteins')[0], 18);
-        adjustFontSize($('#rt-carbs')[0], 18);
-        adjustFontSize($('#rt-fats')[0], 18);
-        adjustFontSize($('#rt-grams')[0], 15);
+// Replace the existing updateRealTimeBreakdown function with this version
+function updateRealTimeBreakdown(data) {
+    if (!$('#rt-breakdown-container').is(':visible')) return;
+    
+    const caloriesStr = data.calories.toFixed(1);
+    const proteinsStr = data.proteins.toFixed(1) + 'g';
+    const carbsStr = data.carbs.toFixed(1) + 'g';
+    const fatsStr = data.fats.toFixed(1) + 'g';
+    const gramsStr = data.grams.toFixed(1) + 'g';
+
+    // Update elements
+    $('#rt-calories').text(caloriesStr);
+    $('#rt-proteins').text(proteinsStr);
+    $('#rt-carbs').text(carbsStr);
+    $('#rt-fats').text(fatsStr);
+    $('#rt-grams').text(gramsStr);
+
+    // Mobile-specific adjustments
+    if ($(window).width() < 992) {
+        adjustMobileFontSize($('#rt-calories')[0], 20);
+        adjustMobileFontSize($('#rt-proteins')[0], 20);
+        adjustMobileFontSize($('#rt-carbs')[0], 20);
+        adjustMobileFontSize($('#rt-fats')[0], 20);
     }
+}
+
+// Add this new function below updateRealTimeBreakdown
+function adjustMobileFontSize(element, baseSize) {
+    const text = element.textContent;
+    const length = text.length;
+    let fontSize = baseSize;
+    
+    // Reduce font size for longer numbers
+    if (length > 6) fontSize = baseSize * 0.85;
+    else if (length > 4) fontSize = baseSize * 0.9;
+    
+    element.style.fontSize = `${fontSize}px`;
+}
             // Toggle food group
             $(document).on('click', '.toggle-group', function() {
                 const groupHeader = $(this).closest('.group-header');
