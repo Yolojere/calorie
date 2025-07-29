@@ -44,39 +44,70 @@
         }
         
         .form-control:focus, .form-select:focus {
-            background-color: #333;
-            color: #e0e0e0;
-            border-color: #666;
+            background-color: #b4b4b4;
+            color: #ffffff;
+            border-color: #d1d1d1;
         }
         .breakfast .group-header:hover {
-    background: linear-gradient(to right, 
-        color-mix(in srgb, var(--group-color) 60%, white 40%), 
-        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+    position: relative;
+    filter: brightness(1.15);
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+    border: 2px solid white;
+     color: black;
+    font-weight: bold;
+            
 }
 
 .lunch .group-header:hover {
-    background: linear-gradient(to right, 
-        color-mix(in srgb, var(--group-color) 60%, white 40%), 
-        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+    position: relative;
+    filter: brightness(1.15);
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+    border: 2px solid white;
+     color: black;
+    font-weight: bold;
+            
 }
 
 .dinner .group-header:hover {
-    background: linear-gradient(to right, 
-        color-mix(in srgb, var(--group-color) 60%, white 40%), 
-        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+    position: relative;
+    filter: brightness(1.15);
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+    border: 2px solid white;
+     color: black;
+    font-weight: bold;
+            
 }
 
 .snack .group-header:hover {
-    background: linear-gradient(to right, 
-        color-mix(in srgb, var(--group-color) 60%, white 40%), 
-        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+    position: relative;
+    filter: brightness(1.15);
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+    border: 2px solid white;
+     color: black;
+    font-weight: bold;
+            
 }
 
 .other .group-header:hover {
-    background: linear-gradient(to right, 
-        color-mix(in srgb, var(--group-color) 60%, white 40%), 
-        color-mix(in srgb, var(--group-color) 30%, white 70%)) !important;
+    position: relative;
+    filter: brightness(1.15);
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+    border: 2px solid white;
+     color: black;
+    font-weight: bold;
+            
 }
+
         /* NEW STYLES FOR ENHANCED MEAL GROUPS */
         /* Color definitions for meal groups */
         .breakfast {
@@ -235,7 +266,7 @@
     font-size: 30px !important;
     color: rgba(0, 0, 0, 0.3) !important;
     z-index: 1;
-    opacity: 0.7;
+    opacity: 0.9;
     pointer-events: none;
 }
 /* NEW: Container for value + label */
@@ -259,7 +290,7 @@
     text-overflow: ellipsis;
     padding: 0 2px;
     width: 100%;
-    font-size: 22px !important;
+    font-size: 26px !important;
     line-height: 1.1;
 }
 /* NEW: Label styles */
@@ -544,16 +575,7 @@
             color: black;
         }
 
-        /* Highlight important metrics */
-        #mobile-calories-cell {
-            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-            color: black;
-        }
-
-        #mobile-proteins-cell {
-            background: linear-gradient(135deg, #b61336 0%, #8a0e29 100%);
-        }
-        
+ 
         /* Mobile Responsive */
         @media (max-width: 991px) {
             /* Show nutrition panel on mobile */
@@ -572,7 +594,7 @@
                 height: 36px;
                 width: 36px;
                 border-radius: 4px;
-                background-color: #b61336 !important;
+                background-color: #111111 !important;
                 transition: background-color 0.2s ease, transform 0.2s ease;
             }
             
@@ -1077,49 +1099,49 @@
 }
 
 .grid-header {
-    background: linear-gradient(135deg, #b61336, #8a0e29);
+    background: linear-gradient(135deg, #494949, #080808);
     color: white;
     font-weight: bold;
     font-size: 16px;
 }
 
 .grid-calories {
-    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    background: linear-gradient(135deg, #ffffff, #929292);
     color: #000;
 }
 
 .grid-proteins {
-    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    background: linear-gradient(135deg, #b989f0, #929292);
     color: #000;
 }
 
 .grid-carbs {
-    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    background: linear-gradient(135deg, #6dc0d5, #929292);
     color: #000;
 }
 
 .grid-fats {
-    background: linear-gradient(135deg, #b989f0, #a478d8);
+    background: linear-gradient(135deg, #ff9e6d, #929292);
     color: #000;
 }
 
 .grid-saturated {
-    background: linear-gradient(135deg, #ffd166, #e6bb5c);
+    background: linear-gradient(135deg, #ffd166, #929292);
     color: #000;
 }
 
 .grid-sugars {
-    background: linear-gradient(135deg, #7bc8a4, #6cb193);
+    background: linear-gradient(135deg, #7bc8a4, #929292);
     color: #000;
 }
 
 .grid-fiber {
-    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    background: linear-gradient(135deg, #ffbe9e, #929292);
     color: #000;
 }
 
 .grid-salt {
-    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    background: linear-gradient(135deg, #6dc0d5, #929292);
     color: #000;
 }
 
@@ -1170,47 +1192,47 @@
 }
 
 .grid-header-mobile {
-    background: linear-gradient(135deg, #b61336, #8a0e29);
+    background: linear-gradient(135deg, #494949, #080808);
     color: white !important;
 }
 
 .grid-calories-mobile {
-    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    background: linear-gradient(135deg, #ffffff, #929292);
     color: #000;
 }
 
 .grid-proteins-mobile {
-    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    background: linear-gradient(135deg, #b989f0, #929292);
     color: #000;
 }
 
 .grid-carbs-mobile {
-    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    background: linear-gradient(135deg, #6dc0d5, #929292);
     color: #000;
 }
 
 .grid-sugars-mobile {
-    background: linear-gradient(135deg, #7bc8a4, #6cb193);
+    background: linear-gradient(135deg, #7bc8a4, #929292);
     color: #000;
 }
 
 .grid-fats-mobile {
-    background: linear-gradient(135deg, #b989f0, #a478d8);
+    background: linear-gradient(135deg, #ff9e6d, #929292);
     color: #000;
 }
 
 .grid-saturated-mobile {
-    background: linear-gradient(135deg, #ffd166, #e6bb5c);
+    background: linear-gradient(135deg, #ffd166, #929292);
     color: #000;
 }
 
 .grid-fiber-mobile {
-    background: linear-gradient(135deg, #ff9e6d, #e08d5d);
+    background: linear-gradient(135deg, #ffbe9e, #929292);
     color: #000;
 }
 
 .grid-salt-mobile {
-    background: linear-gradient(135deg, #6dc0d5, #5da8b9);
+    background: linear-gradient(135deg, #6dc0d5, #929292);
     color: #000;
 }
 
@@ -1307,7 +1329,7 @@
     min-height: 90px;
     padding: 15px 10px;
 }
-}
+
     </style>
 </head>
 <body>
@@ -1317,7 +1339,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
     <div class="container">
         <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-        <a class="navbar-brand" href="/" style="font-size: 15px;color: #b61336; ">- Track, eat, repeat - </a>
+        <a class="navbar-brand" href="/" style="font-size: 15px;color: #ffffff; ">- Track, eat, repeat - </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -1325,13 +1347,13 @@
             <ul class="navbar-nav ms-auto">
                 <!-- Always show these links -->
                 <li class="nav-item">
-                    <a class="nav-link" href="/" style="font-size: 20px;color: #b61336; ">Today</a>
+                    <a class="nav-link" href="/" style="font-size: 20px;color: #ffffff; ">Today</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/history" style="font-size: 20px;color: #b61336; ">History</a>
+                    <a class="nav-link" href="/history" style="font-size: 20px;color: #ffffff; ">History</a>
                 </li>
                 
                 <!-- Enhanced dropdown for authenticated users -->
@@ -1349,7 +1371,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" 
                         aria-labelledby="navbarDropdown"
-                        style="background-color: #222; border: 1px solid #b61336; border-radius: 5px;">
+                        style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
                         <li>
                             <a class="dropdown-item" 
                                href="{{ url_for('profile') }}"
@@ -1396,7 +1418,7 @@
                     <div class="input-group mb-3 position-relative">
     <input type="text" id="food-search" class="form-control bg-secondary text-light" placeholder="Search food or scan EAN...">
     <div class="position-absolute" style="right: 50px; top: 50%; transform: translateY(-50%); z-index: 10;">
-        <button id="scan-ean" class="btn p-1" type="button" style="background-color: #b61336; height: 32px; width: 32px;">
+        <button id="scan-ean" class="btn p-1" type="button" style="background-color: #111111; height: 32px; width: 32px;">
             <img src="{{ url_for('static', filename='images/camera.svg') }}" alt="Scan EAN" style="width: 20px; height: 20px; filter: invert(1);">
         </button>
     </div>
@@ -1432,13 +1454,14 @@
             </div>
         </div>
        <div class="rtb-yay" style="background: linear-gradient(to right, #ff9e6d, #ff9e6d, #8f5639);">
-            <i class="fas fa-bacon icon-bg"></i>
+            <i class="fas fa-oil-can icon-bg"></i>
             <div class="rtb-text-container">
                 <span id="rt-fats" class="rtb-value">0g</span>
                 <span class="rtb-label">Fats</span>
             </div>
         </div>
 </div>
+
                         <div class="mt-3 text-center" style="font-size: 15px;">
                             <span>Per Grams: </span>
                             <strong id="rt-grams" style="font-size: 15px;">0g</strong>
@@ -1469,7 +1492,7 @@
                             </select>
                         </div>
                         
-                        <button id="add-food" class="btn w-200  mt-3" style="background-color: #b61336; color: black; padding: 10px; font-size: 18px;">Add Food</button>
+                        <button id="add-food" class="btn w-200  mt-3" style="background-color: #f08e0e; color: black; padding: 10px; font-size: 18px;">Add Food</button>
                     </div>
                 </div>
             </div>
@@ -1482,7 +1505,7 @@
     <div class="d-flex align-items-center">
         <h6>Food Log</h6>
         <!-- Toggle Grid Button -->
-        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #b61336;color:#000000 padding: 5px;">
+        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #838383;color:#000000 padding: 5px;">
             <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
                 alt="Toggle Nutrition Grid" 
                 style="width: 24px; height: 24px; filter: invert(100%);">
@@ -1579,10 +1602,10 @@
                 </div>
                 <div class="card-footer bg-black py-2 d-flex justify-content-between">
                     <div>
-                        <button id="move-items" class="btn me-2" style="background-color: #b61336; color: black; padding: 8px 12px;">MOVE</button>
+                        <button id="move-items" class="btn me-2" style="background-color: #c0bfbf; color: black; padding: 8px 12px;">MOVE</button>
                         <button id="create-recipe" class="btn d-none" style="background-color: #28a745; color: black; padding: 8px 12px;" disabled>Recipe</button>
                     </div>
-                    <button id="clear-session" class="btn" style="background-color: #b61336; color: black; padding: 8px 12px;">Clear All</button>
+                    <button id="clear-session" class="btn" style="background-color: #c0bfbf; color: black; padding: 8px 12px;">Clear All</button>
                 </div>
             </div>
         </div>
@@ -1629,12 +1652,12 @@
                 </div>
                 <div class="grid-row-mobile">
                     <div class="grid-cell-mobile grid-fats-mobile" id="mobile-fats-cell">
-                        <i class="fas fa-bacon"></i>
+                        <i class="fas fa-oil-can"></i>
                         <span>FATS</span>
                         <div class="grid-value" id="mobile-fats">{{ totals.fats | round(1) }}g</div>
                     </div>
                     <div class="grid-cell-mobile grid-saturated-mobile" id="mobile-saturated-cell">
-                        <i class="fas fa-oil-can"></i>
+                        <i class="fas fa-bacon"></i>
                         <span>SATURATED</span>
                         <div class="grid-value" id="mobile-saturated">{{ totals.saturated | round(1) }}g</div>
                     </div>
@@ -1663,7 +1686,7 @@
     <div class="nutrition-grid">
         <div class="grid-cell grid-header">
             <i class="fas fa-calculator"></i>
-            <span>Nutrition</span>
+            <span>Totals</span>
         </div>
         <div class="grid-cell grid-calories">
             <i class="fas fa-fire"></i>
@@ -1680,18 +1703,18 @@
             <span>Carbs</span>
             <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
         </div>
+        <div class="grid-cell grid-fats">
+            <i class="fas fa-oil-can"></i>
+            <span>Fats</span>
+            <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
+        </div>
         <div class="grid-cell grid-sugars">
             <i class="fas fa-candy-cane"></i>
             <span>Sugars</span>
             <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
         </div>
-        <div class="grid-cell grid-fats">
-            <i class="fas fa-bacon"></i>
-            <span>Fats</span>
-            <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
-        </div>
         <div class="grid-cell grid-saturated">
-            <i class="fas fa-oil-can"></i>
+            <i class="fas fa-bacon"></i>
             <span>Saturated</span>
             <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
         </div>
@@ -1724,8 +1747,8 @@
                     <input type="hidden" id="edit-grams-id">
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #ff4444; color: black;">Cancel</button>
-                    <button type="button" id="save-grams" class="btn" style="background-color: #ff4444; color: black;">Save</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Cancel</button>
+                    <button type="button" id="save-grams" class="btn" style="background-color: #c0bfbf; color: black;">Save</button>
                 </div>
             </div>
         </div>
