@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <style>
         /* Base Styles */
@@ -26,7 +27,36 @@
             background-color: #222;
             color: #e0e0e0;
             border: 1px solid #444;
+            
         }
+
+        @keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+        /* MODAL STYLES (MOVE/EDIT ETC.) */
+
+        .modal-content .btn:not(.btn-close) {
+    transition: all 0.3s ease;
+}
+
+.modal-content .btn:not(.btn-close):hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Specific style for confirm button */
+#confirm-action {
+    background: linear-gradient(to right, #ff4444, #cc0000) !important;
+    color: white !important;
+}
+
+#save-grams {
+    background: linear-gradient(to right, #28a745, #218838) !important;
+    color: white !important;
+}
         
         .card-header {
             background-color: #000;
@@ -69,6 +99,7 @@
     border: 2px solid white;
      color: black;
     font-weight: bold;
+    
             
 }
 
@@ -108,6 +139,8 @@
             
 }
 
+
+
         /* NEW STYLES FOR ENHANCED MEAL GROUPS */
         /* Color definitions for meal groups */
         .breakfast {
@@ -142,19 +175,24 @@
         }
 
         .group-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 16px;
-            color: white;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            animation: pulse 4s infinite;
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 16px;
+        color: white;
+        /* ADD THESE LINES */
+        border: 2px solid var(--group-color);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.2) inset, 0 0 0 1px rgba(0,0,0,0.3);
+        animation: pulse 4s infinite;
         }
+
+        
+        
 
         .group-title {
             font-weight: bold;
@@ -243,6 +281,79 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             font-weight: bold !important;
         }
+
+        #toggle-grid-btn {
+  position: relative;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s ease;
+  border: none;
+  overflow: hidden;
+  z-index: 2;
+  background-color: #838383; /* Default background */
+}
+
+#toggle-grid-btn.active {
+  background: linear-gradient(135deg, #6a0dad, #8a2be2) !important;
+}
+
+/* Conic gradient animation */
+#toggle-grid-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(
+    transparent 120deg,
+    #ffffff 120deg,
+    #ffffff 240deg,
+    transparent 240deg
+  );
+  border-radius: 50%;
+  animation: rotate 2s linear infinite;
+  z-index: -1;
+}
+
+/* Inner circle to hide center of gradient */
+#toggle-grid-btn.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #9164fa, #9e54ff);
+  border-radius: 50%;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+/* Icon styling */
+#toggle-grid-btn i {
+  font-size: 1.5rem;
+  color: white;
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+/* Rotation effect on icon when active */
+#toggle-grid-btn.active i {
+  transform: rotate(360deg);
+}
+
+/* Hover effect */
+#toggle-grid-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+}
         
 .rtb-yay {
     position: relative;
@@ -258,6 +369,12 @@
     min-width: 60px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     margin-bottom: 5px;
+}
+.rtb-yay:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+    filter: brightness(1.1) !important;
+    z-index: 2;
 }
 .icon-bg {
     position: absolute;
@@ -333,6 +450,8 @@
             border: 1px solid #444;
             border-radius: 4px;
             background-color: #000000;
+            background: linear-gradient(to bottom, #1a1a1a, #2a2a2a) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             height: auto !important;
             width: 980px;
         }
@@ -393,6 +512,19 @@
             font-weight: bold;
             transition: all 0.5s ease;
         }
+        /* Food Log Buttons */
+#move-items, #clear-session {
+    background: linear-gradient(to bottom, #ffffff, #e0e0e0) !important;
+    color: #000 !important;
+    border: 1px solid #888 !important;
+    transition: all 0.3s ease;
+}
+
+#move-items:hover, #clear-session:hover {
+    background: linear-gradient(to bottom, #e0e0e0, #b0b0b0) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transform: scale(1.03);
+}
         
         .delete-item:hover, #clear-search:hover {
             background-color: #4b4a4a !important;
@@ -485,10 +617,32 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* ADD FOOD MODAL */
+        #add-food {
+    background: linear-gradient(to right, #f08e0e, #d17d0c) !important;
+    color: black;
+    padding: 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#add-food:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to right, #d17d0c, #b36c0a) !important;
+}
         
         .card-footer {
             margin-top: auto; /* Push to bottom */
         }
+        .card-footer .btn {
+    background: none !important;
+    color: white !important;
+}
         
         .navbar-brand {
             font-size: 26px;
@@ -501,12 +655,43 @@
         /* Nutrition Grid */
         .nutrition-grid-container {
             position: fixed;
-            top: 120px;
+            top: 100px;
             left: calc(50% + 590px + 20px);
             width: 120px;
             height: 900px;
             z-index: 100;
+            /* New responsive properties */
+            max-height: 85vh;
+            overflow-y: auto;
+            transform-origin: top left;
+            transform: scale(0.80);
+            transform: scale(calc(0.7 + 0.3 * (100vw - 1200px) / 800));
         }
+            /* MEDIA FOR 1400 px */
+        @media (max-width: 1400px) {
+    .nutrition-grid-container {
+        left: calc(50% + 500px); /* Adjust position for medium screens */
+        width: 11vw;
+    }
+}
+    @media (max-width: 1200px) {
+    .nutrition-grid-container {
+        left: calc(50% + 450px);
+        width: 10vw;
+    }
+}
+@media (max-height: 800px) {
+    .grid-cell {
+        padding: 4px 1px !important;
+        min-height: 50px !important;
+    }
+    .grid-cell i {
+        font-size: 1.5vh !important;
+    }
+    .grid-value {
+        font-size: 1.3vh !important;
+    }
+}
         
         /* NEW: Hide nutrition panel on desktop */
         @media (min-width: 992px) {
@@ -583,6 +768,10 @@
             #nutrition-panel {
                 display: block;
             }
+            #toggle-grid-btn {
+        display: none;
+            }
+            
             /* Camera button positioning and sizing */
             
             #scan-ean {
@@ -638,20 +827,22 @@
             border: 1px solid #2b2b2b;
         }
         
-        .grid-cell {
+            .grid-cell {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 1px;
-            font-size: 15px;
+            padding: 6px 2px !important;
+            font-size: 1.3vh !important;
             text-align: center;
-            border: 1px solid #2b2b2b;
-        }
+            border-bottom: 1px solid #2b2b2b;
+            min-height: 55px !important;
+            box-sizing: border-box;
+}
         
         .grid-value {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 1.8vh !important;
             margin-top: 2px;
         }
         
@@ -1089,13 +1280,13 @@
 }
 
 .grid-cell i {
-    font-size: 20px;
-    margin-bottom: 5px;
+    font-size: 1.8vh !important;
+    margin-bottom: 3px !important;
 }
 
 .grid-value {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 1.5vh !important;
     margin-top: 5px;
 }
 
@@ -1331,6 +1522,62 @@
     padding: 15px 10px;
 }
 
+
+#create-recipe {
+    background: linear-gradient(to right, #28a745, #218838) !important;
+    color: white !important;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#create-recipe:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to right, #218838, #1e7e34) !important;
+}
+
+@media (max-height: 900px) {
+    .nutrition-grid-container {
+        transform: scale(0.8);
+        height: 80vh;
+    }
+    
+    .grid-cell {
+        padding: 8px 3px !important;
+    }
+    
+    .grid-cell i {
+        font-size: 16px !important;
+    }
+    
+    .grid-value {
+        font-size: 14px !important;
+    }
+}
+
+@media (max-height: 768px) {
+    .nutrition-grid-container {
+        transform: scale(0.75);
+        height: 75vh;
+    }
+    
+    .grid-cell {
+        padding: 6px 2px !important;
+        font-size: 13px !important;
+    }
+    
+    .grid-cell i {
+        font-size: 14px !important;
+    }
+    
+    .grid-value {
+        font-size: 12px !important;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -1506,11 +1753,9 @@
     <div class="d-flex align-items-center">
         <h6>Food Log</h6>
         <!-- Toggle Grid Button -->
-        <button id="toggle-grid-btn" class="btn btn-sm ms-3" style="background-color: #838383;color:#000000 padding: 5px;">
-            <img src="{{ url_for('static', filename='images/pencil-square.svg') }}" 
-                alt="Toggle Nutrition Grid" 
-                style="width: 24px; height: 24px; filter: invert(100%);">
-        </button>
+            <button id="toggle-grid-btn" class="btn btn-sm ms-3 p-1">
+                    <i class="bi bi-file-bar-graph"></i>
+                </button>
     </div>
     <div>
         <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
@@ -1601,12 +1846,13 @@
                         {% endif %}
                     </div>
                 </div>
+
                 <div class="card-footer bg-black py-2 d-flex justify-content-between">
                     <div>
-                        <button id="move-items" class="btn me-2" style="background-color: #c0bfbf; color: black; padding: 8px 12px;">MOVE</button>
-                        <button id="create-recipe" class="btn d-none" style="background-color: #28a745; color: black; padding: 8px 12px;" disabled>Recipe</button>
+                        <button id="move-items" class="btn me-2">MOVE</button>
+                        <button id="create-recipe" class="btn d-none" disabled>Recipe</button>
                     </div>
-                    <button id="clear-session" class="btn" style="background-color: #c0bfbf; color: black; padding: 8px 12px;">Clear All</button>
+                    <button id="clear-session" class="btn">Clear All</button>
                 </div>
             </div>
         </div>
@@ -1684,7 +1930,7 @@
     
 <!-- Updated nutrition grid with all 9 metrics -->
 <div class="nutrition-grid-container">
-    <div class="nutrition-grid">
+    <div class="nutrition-grid" style="height: 100%;">
         <div class="grid-cell grid-header">
             <i class="fas fa-calculator"></i>
             <span>Totals</span>
@@ -1748,8 +1994,8 @@
                     <input type="hidden" id="edit-grams-id">
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Cancel</button>
-                    <button type="button" id="save-grams" class="btn" style="background-color: #c0bfbf; color: black;">Save</button>
+<button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Cancel</button>
+<button type="button" id="save-grams" class="btn" style="background-color: #c0bfbf; color: black;">Save</button>
                 </div>
             </div>
         </div>
@@ -1792,7 +2038,7 @@
             </div>
             <div class="modal-footer bg-black py-1">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirm-action" class="btn" style="background-color: #ff4444; color: black;">Confirm</button>
+<button type="button" id="confirm-action" class="btn">Confirm</button>
             </div>
         </div>
     </div>
@@ -1818,9 +2064,9 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="recipe-yes" class="btn" style="background-color: #ff4444; color: black;">Yes</button>
-                    <button type="button" id="recipe-save" class="btn d-none" style="background-color: #ff4444; color: black;">Save Recipe</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="recipe-yes" class="btn">Yes</button>
+                <button type="button" id="recipe-save" class="btn d-none">Save Recipe</button>
                 </div>
             </div>
         </div>
@@ -1936,6 +2182,39 @@ $('#confirm-action').click(function() {
     });
 }
 
+$(window).on('resize orientationchange', function() {
+    positionNutritionGrid();
+    updateGridFontSizes();
+});
+
+// New function to adjust font sizes
+function updateGridFontSizes() {
+    const baseSize = Math.min(16, window.innerWidth * 0.012); // Responsive base
+    $('.grid-cell').css('font-size', baseSize + 'px');
+    $('.grid-value').css('font-size', (baseSize * 1.1) + 'px');
+    $('.grid-cell i').css('font-size', (baseSize * 1.4) + 'px');
+}
+
+function adjustGridScale() {
+    const grid = $('.nutrition-grid-container');
+    const windowHeight = window.innerHeight;
+    const gridHeight = grid.height();
+    
+    if (windowHeight < 900) {
+        const scale = Math.max(0.7, Math.min(1, windowHeight / 1000));
+        grid.css('transform', `scale(${scale})`);
+        
+        // Adjust cell padding dynamically
+        const cellPadding = Math.max(4, 8 * scale);
+        $('.grid-cell').css('padding', `${cellPadding}px 3px`);
+    }
+}
+
+// Initial adjustment
+adjustGridScale();
+
+// Adjust on resize
+$(window).resize(adjustGridScale);
             
             // Camera variables
             let currentCamera = 'environment';
@@ -1954,27 +2233,32 @@ $('#confirm-action').click(function() {
                 const containerOffset = container.offset();
                 const containerWidth = container.width();
                 
-                // Calculate position: right of container + spacing
-                const gridLeft = containerOffset.left + containerWidth + 10;
+                // Calculate responsive position
+                const responsiveOffset = Math.min(40, window.innerWidth * 0.02); // 2% of screen width
+                const gridLeft = containerOffset.left + containerWidth + responsiveOffset;
+                
+                // Apply responsive sizing
+                const gridHeight = Math.min(900, window.innerHeight * 0.7);
                 
                 $('.nutrition-grid-container').css({
                     'top': navbarHeight + 20,
-                    'left': gridLeft
+                    'left': gridLeft,
+                    'height': gridHeight + 'px'
                 });
             }
+            
 
                     // Update grid visibility
-        function updateGridVisibility() {
-            if (gridVisible) {
-                $('.nutrition-grid-container').show();
-                $('#toggle-grid-btn').css('background-color', '#b61336');
-                $('#toggle-grid-btn img').css('filter', 'invert(100%)');
-            } else {
-                $('.nutrition-grid-container').hide();
-                $('#toggle-grid-btn').css('background-color', '#6c757d');
-                $('#toggle-grid-btn img').css('filter', 'invert(80%)');
-            }
-        }
+function updateGridVisibility() {
+    const icon = $('#toggle-grid-btn i');
+    
+    if (gridVisible) {
+        $('.nutrition-grid-container').show();
+    } else {
+        $('.nutrition-grid-container').hide();
+    }
+}
+
         
             
             // Initial positioning
@@ -2025,6 +2309,7 @@ $('#confirm-action').click(function() {
         $('#toggle-grid-btn').click(function() {
             gridVisible = !gridVisible;
             updateGridVisibility();
+            $(this).toggleClass('active', gridVisible);
         });
 
   // Add a helper function to format calories
