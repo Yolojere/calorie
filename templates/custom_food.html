@@ -253,117 +253,117 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Enter key support for form submission
-            $('#food-form input').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
-                    $('#food-form').submit();
-                    return false;
-                }
-            });
-            
-$('#food-form').on('submit', function(e) {
-    e.preventDefault();
-    const name = $('input[name="name"]').val().trim();
-    
-    if (!name) {
-        showError('Food name is required');
-        return;
-    }
-                
-                // Reset messages
-                $('#success-message').addClass('d-none');
-                $('#error-message').addClass('d-none');
-                
-                // Collect form data
-                const formData = {
-                    name: $('input[name="name"]').val().trim(),
-                    carbs: $('input[name="carbs"]').val(),
-                    proteins: $('input[name="proteins"]').val(),
-                    fats: $('input[name="fats"]').val(),
-                    sugars: $('input[name="sugars"]').val(),
-                    fiber: $('input[name="fiber"]').val(),
-                    saturated: $('input[name="saturated"]').val(),
-                    salt: $('input[name="salt"]').val(),
-                    grams: $('input[name="grams"]').val(),
-                    ean: $('input[name="ean"]').val().trim() || null
-                };
-                
-                // Get optional fields
-                const serving = $('input[name="serving"]').val();
-                const half = $('input[name="half"]').val();
-                const entire = $('input[name="entire"]').val();
-                
-                if (serving) formData.serving = serving;
-                if (half) formData.half = half;
-                if (entire) formData.entire = entire;
-                
-                // Validate required fields
-                if (!formData.name) {
-                    showError('Food name is required');
-                    return;
-                }
-                
-                if (!formData.carbs || !formData.proteins || !formData.fats) {
-                    showError('Carbs, proteins and fats are required');
-                    return;
-                }
-                
-                // Submit the form
-                $.ajax({
-                    type: 'POST',
-                    url: '/save_food',
-                    data: formData,
-                    success: function(response) {
-                        if (response.success) {
-                            // Create celebration animation
-                            const celebration = $('<div class="success-animation">✓</div>');
-                            $('body').append(celebration);
-                            
-                            // Remove after animation
-                            setTimeout(() => celebration.remove(), 1500);
-                            
-                            // Show success message with animation
-                            const successMessage = $('#success-message');
-                            successMessage.removeClass('d-none');
-                            
-                            // Add pulse animation to success message
-                            successMessage.css('animation', 'pulse 0.5s');
-                            setTimeout(() => successMessage.css('animation', ''), 500);
-                            
-                            // Reset form after delay
-                            setTimeout(() => {
-                                $('#food-form')[0].reset();
-                                $('input[name="grams"]').val('100');
-                                successMessage.addClass('d-none');
-                            }, 3000);
-                        } else {
-                            showError(response.error || 'Failed to save food');
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMsg = 'Error saving food';
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.error) {
-                                errorMsg = response.error;
-                            }
-                        } catch (e) {
-                            console.error('Error parsing response:', e);
-                        }
-                        showError(errorMsg);
-                    }
-                });
-            });
-            
-            function showError(message) {
-                const errorMessage = $('#error-message');
-                errorMessage.text(message).removeClass('d-none');
-                errorMessage.css('animation', 'pulse 0.5s');
-                setTimeout(() => errorMessage.css('animation', ''), 500);
+<script>
+    $(document).ready(function() {
+        // Enter key support for form submission
+        $('#food-form input').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                $('#food-form').submit();
+                return false;
             }
         });
-    </script>
+        
+        $('#food-form').on('submit', function(e) {
+            e.preventDefault();
+            const name = $('input[name="name"]').val().trim();
+            
+            if (!name) {
+                showError('Food name is required');
+                return;
+            }
+            
+            // Reset messages
+            $('#success-message').addClass('d-none');
+            $('#error-message').addClass('d-none');
+            
+            // Collect form data
+            const formData = {
+                name: $('input[name="name"]').val().trim(),
+                carbs: $('input[name="carbs"]').val(),
+                proteins: $('input[name="proteins"]').val(),
+                fats: $('input[name="fats"]').val(),
+                sugars: $('input[name="sugars"]').val(),
+                fiber: $('input[name="fiber"]').val(),
+                saturated: $('input[name="saturated"]').val(),
+                salt: $('input[name="salt"]').val(),
+                grams: $('input[name="grams"]').val(),
+                ean: $('input[name="ean"]').val().trim() || null
+            };
+            
+            // Get optional fields
+            const serving = $('input[name="serving"]').val();
+            const half = $('input[name="half"]').val();
+            const entire = $('input[name="entire"]').val();
+            
+            if (serving) formData.serving = serving;
+            if (half) formData.half = half;
+            if (entire) formData.entire = entire;
+            
+            // Validate required fields
+            if (!formData.name) {
+                showError('Food name is required');
+                return;
+            }
+            
+            if (!formData.carbs || !formData.proteins || !formData.fats) {
+                showError('Carbs, proteins and fats are required');
+                return;
+            }
+            
+            // Submit the form
+            $.ajax({
+                type: 'POST',
+                url: '/save_food',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        // Create celebration animation
+                        const celebration = $('<div class="success-animation">✓</div>');
+                        $('body').append(celebration);
+                        
+                        // Remove after animation
+                        setTimeout(() => celebration.remove(), 1500);
+                        
+                        // Show success message with animation
+                        const successMessage = $('#success-message');
+                        successMessage.removeClass('d-none');
+                        
+                        // Add pulse animation to success message
+                        successMessage.css('animation', 'pulse 0.5s');
+                        setTimeout(() => successMessage.css('animation', ''), 500);
+                        
+                        // Reset form after delay
+                        setTimeout(() => {
+                            $('#food-form')[0].reset();
+                            $('input[name="grams"]').val('100');
+                            successMessage.addClass('d-none');
+                        }, 3000);
+                    } else {
+                        showError(response.error || 'Failed to save food');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Error saving food';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMsg = response.error;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+                    }
+                    showError(errorMsg);
+                }
+            });
+        });
+        
+        function showError(message) {
+            const errorMessage = $('#error-message');
+            errorMessage.text(message).removeClass('d-none');
+            errorMessage.css('animation', 'pulse 0.5s');
+            setTimeout(() => errorMessage.css('animation', ''), 500);
+        }
+    });
+</script>
 </body>
 </html>
