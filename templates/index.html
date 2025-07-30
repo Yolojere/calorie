@@ -2326,7 +2326,7 @@ function formatCalories(calories) {
             loadTopFoods();
             
 function createFoodItemHtml(food) {
-    const displayCalories = formatCalories(food.calories) + ' cal/100g';
+    const displayCalories = formatCalories(food.calories) + ' kcal';
     
     return `
         <a class="list-group-item list-group-item-action food-item small text-start" 
