@@ -2,122 +2,202 @@
 
 {% block title %}Account - {{ current_user.username }}{% endblock %}
 
-{% block content %}
+{% block head %}
 <style>
-    .form-control::placeholder {
-        color: rgb(0, 0, 0);
-        opacity: 1; /* Ensure full opacity */
+    /* === PROFILE PAGE SPECIFIC STYLES === */
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(to right, #414141, #c7c6c6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .account-heading {
+        color: #ffffff;
+        font-weight: bold;
+    }
+    
+    .text-secondary {
+        color: #b0b0b0 !important;
+    }
+    
+    .accent-color {
+        color: #ffffff;
+    }
+    
+    legend {
+        color: #ffffff;
+        font-size: 1.3rem;
+        border-bottom: 2px solid #444;
+        padding-bottom: 10px;
+    }
+    
+    .input-group-text {
+        background-color: #333 !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #555 !important;
+    }
+    
+    .btn-accent {
+        background: linear-gradient(to right, #ffffff, #b3b3b3) !important;
+        color: #000 !important;
+        font-weight: bold;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-accent:hover {
+        background: linear-gradient(to right, #ffffff, #ffffff) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .border-top {
+        border-top: 1px solid #444 !important;
+    }
+    
+    /* Security icons */
+    .fa-shield-alt, .fa-lock, .fa-user-shield {
+        color:white !important;
+        transition: transform 0.3s ease;
+    }
+    
+    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .account-heading {
+            font-size: 1.4rem;
+        }
+        
+        legend {
+            font-size: 1.1rem;
+        }
     }
 </style>
-<div class="container-page">
-    <div class="content-section animated">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Your Account Profile</h3>
-            </div>
-            <div class="card-body p-4">
-                <!-- User Profile Section -->
-                <div class="media mb-5 p-4 bg-dark rounded">
-                    <div class="d-flex align-items-center">
-                        <div class="me-4">
-                            <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: #b61336; font-size: 2rem;">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        </div>
-                        <div class="media-body">
-                            <h2 class="account-heading accent-color">{{ current_user.username }}</h2>
-                            <p class="text-secondary mb-1">{{ current_user.email }}</p>
-                            <p class="text-info mb-0">
-                                <i class="fas fa-user-shield me-1"></i> Account Type: {{ role|capitalize }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+{% endblock %}
 
-                <!-- Update Form -->
-                <form method="POST" action="">
-                    {{ form.hidden_tag() }}
-                    <fieldset class="form-group">
-                        <legend class="border-bottom mb-4">
-                            <i class="fas fa-user-cog me-2"></i>Update Account Information
-                        </legend>
-                        
-                        <!-- Username Field -->
-                        <div class="form-group mb-4">
-                            {{ form.username.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #ffffff; border-color: #000000;">
-                                    <i class="fas fa-user-edit"></i>
-                                </span>
-                                {% if form.username.errors %}
-                                    {{ form.username(class="form-control is-invalid") }}
-                                {% else %}
-                                    {{ form.username(class="form-control") }}
-                                {% endif %}
-                            </div>
-                            {% if form.username.errors %}
-                                <div class="invalid-feedback d-block mt-1">
-                                    {% for error in form.username.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Email Field -->
-                        <div class="form-group mb-4">
-                            {{ form.email.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #ffffff; border-color: #000000;">
-                                    <i class="fas fa-envelope"></i>
-                                </span>
-                                {% if form.email.errors %}
-                                    {{ form.email(class="form-control is-invalid") }}
-                                {% else %}
-                                    {{ form.email(class="form-control") }}
-                                {% endif %}
-                            </div>
-                            {% if form.email.errors %}
-                                <div class="invalid-feedback d-block mt-1">
-                                    {% for error in form.email.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </fieldset>
-                    
-                    <!-- Submit Button -->
-                    <div class="form-group d-grid mt-4">
-                        <button type="submit" class="btn btn-accent">
-                            <i class="fas fa-save me-2"></i> Update Account
-                        </button>
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-center">Your Account Profile</h3>
+    </div>
+    <div class="card-body p-4">
+        <!-- User Profile Section -->
+        <div class="media mb-5 p-4 bg-dark rounded">
+            <div class="d-flex align-items-center">
+                <div class="me-4">
+                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user"></i>
                     </div>
-                </form>
+                </div>
+                <div class="media-body">
+                    <h2 class="account-heading">{{ current_user.username }}</h2>
+                    <p class="text-secondary mb-1">{{ current_user.email }}</p>
+                    <p class="text-info mb-0">
+                        <i class="fas fa-user-shield me-1"></i> Account Type: {{ role|capitalize }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Form -->
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">
+                    <i class="fas fa-user-cog me-2"></i>Update Account Information
+                </legend>
                 
-                <!-- Password Reset Link -->
-                <div class="border-top pt-3 mt-4 text-center">
-                    <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-                        <i class="fas fa-key me-1"></i> Request Password Reset
-                    </a>
+                <!-- Username Field -->
+                <div class="form-group mb-4">
+                    {{ form.username.label(class="form-label") }}
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-user-edit"></i>
+                        </span>
+                        {% if form.username.errors %}
+                            {{ form.username(class="form-control is-invalid") }}
+                        {% else %}
+                            {{ form.username(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 
-                <!-- Security Features -->
-                <div class="mt-5 pt-4 border-top">
-                    <div class="d-flex justify-content-center">
-                        <div class="me-4">
-                            <i class="fas fa-shield-alt fa-2x accent-color"></i>
-                            <p class="mt-2">Secure</p>
-                        </div>
-                        <div class="me-4">
-                            <i class="fas fa-lock fa-2x accent-color"></i>
-                            <p class="mt-2">Encrypted</p>
-                        </div>
-                        <div>
-                            <i class="fas fa-user-shield fa-2x accent-color"></i>
-                            <p class="mt-2">Protected</p>
-                        </div>
+                <!-- Email Field -->
+                <div class="form-group mb-4">
+                    {{ form.email.label(class="form-label") }}
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        {% if form.email.errors %}
+                            {{ form.email(class="form-control is-invalid") }}
+                        {% else %}
+                            {{ form.email(class="form-control") }}
+                        {% endif %}
                     </div>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.email.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </fieldset>
+            
+            <!-- Submit Button -->
+            <div class="form-group d-grid mt-4">
+                <button type="submit" class="btn btn-accent">
+                    <i class="fas fa-save me-2"></i> Update Account
+                </button>
+            </div>
+        </form>
+        
+        <!-- Password Reset Link -->
+        <div class="border-top pt-3 mt-4 text-center">
+            <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
+                <i class="fas fa-key me-1"></i> Request Password Reset
+            </a>
+        </div>
+        
+        <!-- Security Features -->
+        <div class="mt-5 pt-4 border-top">
+            <div class="d-flex justify-content-center">
+                <div class="me-4 text-center">
+                    <i class="fas fa-shield-alt fa-2x"></i>
+                    <p class="mt-2">Secure</p>
+                </div>
+                <div class="me-4 text-center">
+                    <i class="fas fa-lock fa-2x"></i>
+                    <p class="mt-2">Encrypted</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-user-shield fa-2x"></i>
+                    <p class="mt-2">Protected</p>
                 </div>
             </div>
         </div>
@@ -128,13 +208,13 @@
     // Input focus enhancement
     document.querySelectorAll('.form-control').forEach(input => {
         input.addEventListener('focus', function() {
-            this.parentElement.querySelector('.input-group-text').style.borderColor = '#b61336';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#222';
+            this.parentElement.querySelector('.input-group-text').style.borderColor = '#f08e0e';
+            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#444';
         });
         
         input.addEventListener('blur', function() {
             this.parentElement.querySelector('.input-group-text').style.borderColor = '#555';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#000';
+            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#333';
         });
     });
 </script>
