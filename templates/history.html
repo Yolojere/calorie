@@ -1,4 +1,3 @@
-<!-- templates/history.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,159 +6,345 @@
     <title>Nutrition History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-    body {
-        font-family: 'Calibri', sans-serif;
-        font-size: 18px;
-        background-color: #222 !important;
-        color: #e0e0e0;
-    }
+        /* === MAIN STYLES FROM INDEX PAGE === */
+        body {
+            font-family: 'Calibri', sans-serif;
+            font-size: 15px;
+            background-color: #222 !important;
+            color: #e0e0e0;
+        }
+        
+        .bg-black, .modal-header, .modal-footer {
+            background-color: #000 !important;
+            border-color: #444;
+        }
+        
+        .card, .list-group-item, .modal-content {
+            background-color: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        .form-control, .form-select {
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            font-size: 14px !important;
+            padding: 6px 8px !important;
+            height: 36px !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #b4b4b4;
+            color: #ffffff;
+            border-color: #d1d1d1;
+        }
+        
+        .nav-link-box {
+            background-color: white !important;
+            color: black !important;
+            border-radius: 20px;
+            padding: 10px !important;
+            margin: 0 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+        }
+        
+        .nav-link-box:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link-box i {
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+        
+        .mobile-settings-btn {
+            background-color: white !important;
+            color: black !important;
+            border-radius: 50%;
+            padding: 10px !important;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        .mobile-settings-btn:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .mobile-settings-btn i {
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
 
-    .history-container {
-        max-width: 1200px;
-        margin: 20px auto;
-        padding: 0 15px;
-    }
-
-    .card {
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .card-header {
-        font-size: 20px;
-        padding: 15px 20px;
-        background-color: #000;
-        border-bottom: 1px solid #444;
-    }
-
-    .table th, .table td {
-        padding: 15px;
-        font-size: 16px;
-        transition: background-color 0.3s;
-    }
-
-    .table tbody tr:hover {
-        background-color: #3a3a3a !important;
-        cursor: pointer;
-    }
-
-    /* Tabs Styling */
-    .nav-tabs {
-        border-bottom: 2px solid #f08e0e;
-        border-radius: 5px;
-    }
-
-    .nav-tabs .nav-link {
-        font-size: 18px;
-        padding: 10px 20px;
-        color: white;
-        background-color: #f08e0e;
-        border: none;
-        margin-right: 2px;
-        border-radius: 5px 5px 0 0;
-        transition: background-color 0.3s, color 0.3s;
-    }
-
-    .nav-tabs .nav-link:hover {
-        background-color: #d97706;
-        color: #fff;
-        cursor: pointer;
-    }
-
-    .nav-tabs .nav-link.active {
-        background-color: #ff961e;
-        color: #fff;
-        font-weight: bold;
-    }
-
-    .week-range {
-        font-weight: bold;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
+        /* === HISTORY PAGE SPECIFIC STYLES === */
         .history-container {
-            margin: 10px auto;
-            padding: 0 10px;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
         }
-        
+
         .card-header {
-            font-size: 18px;
-            padding: 12px 15px;
+            font-size: 20px;
+            padding: 15px 20px;
+            background-color: #000 !important;
+            border-bottom: 1px solid #444;
         }
-        
-        .table th, .table td {
-            padding: 10px;
-            font-size: 14px;
+
+        /* Tabs Styling */
+        .nav-tabs {
+            border-bottom: 2px solid #ffffff;
+            border-radius: 5px;
+            padding: 0 15px;
         }
-        
+
         .nav-tabs .nav-link {
-            font-size: 16px;
-            padding: 8px 15px;
+            font-size: 18px;
+            padding: 10px 20px;
+            color: white;
+            background-color: #222;
+            border: 1px solid #444;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
         }
-    }
+
+        .nav-tabs .nav-link:hover {
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(to right, #ffffff, #b1b0b0);
+            color: #000;
+            font-weight: bold;
+            border-bottom: 2px solid #d3d3d3;
+        }
+
+        .week-range {
+            font-weight: bold;
+        }
+
+        /* Table Styling */
+        .table {
+            color: #e0e0e0;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: #000;
+            border-bottom: 2px solid #444;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        .table td {
+            border-bottom: 1px solid #444;
+        }
+        
+        .table-dark {
+            --bs-table-bg: #222;
+            --bs-table-striped-bg: #1a1a1a;
+            --bs-table-hover-bg: #333;
+        }
+        
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            --bs-table-accent-bg: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .table-hover>tbody>tr:hover>* {
+            --bs-table-accent-bg: #333;
+            color: #fff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .history-container {
+                margin: 10px auto;
+                padding: 0 10px;
+            }
+            
+            .card-header {
+                font-size: 18px;
+                padding: 12px 15px;
+            }
+            
+            .table th, .table td {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .nav-tabs .nav-link {
+                font-size: 16px;
+                padding: 8px 15px;
+            }
+        }
+        
+        /* Animation for table rows */
+        @keyframes fadeInRow {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table tbody tr {
+            animation: fadeInRow 0.3s ease-out;
+        }
+        
+        .table th {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .table th:hover {
+            background-color: #333;
+        }
+        
+        .table th::after {
+            content: "↕";
+            margin-left: 5px;
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+        
+        .table th.sorted-asc::after {
+            content: "↑";
+            opacity: 1;
+        }
+        
+        .table th.sorted-desc::after {
+            content: "↓";
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-black">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 26px;">Track You</a>
-        <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 15px;color: #ffffff; ">- Track, eat, repeat - </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}" style="font-size: 20px;color: #ffffff; ">Today</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('custom_food') }}" style="font-size: 20px;color: #ffffff; ">Add Food</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('history') }}" style="font-size: 20px;color: #ffffff; ">History</a>
-                </li>
-                
-                {% if current_user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" 
-                       href="#" 
-                       id="navbarDropdown" 
-                       role="button" 
-                       data-bs-toggle="dropdown" 
-                       aria-expanded="false"
-                       style="color: #ffffff; position: relative; padding-right: 25px;">
-                        Account
-                        <i class="fas fa-user ms-1" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" 
-                        aria-labelledby="navbarDropdown"
-                        style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
-                        <li>
-                            <a class="dropdown-item" 
-                               href="{{ url_for('profile') }}"
-                               style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i>Profile
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" 
-                               href="{{ url_for('logout') }}"
-                               style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                {% endif %}
-            </ul>
+    <!-- Updated Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
+                - Track, eat, repeat -
+            </a>
+            
+            <!-- Mobile Settings Dropdown (right-aligned) -->
+            <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
+                <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-wrench-adjustable"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" 
+                    aria-labelledby="navbarDropdownMobile"
+                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/custom_food"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/history"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-chart-pie me-2"></i>History
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="{{ url_for('profile') }}"
+                           style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                            <i class="fas fa-user-circle me-2"></i>Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="{{ url_for('logout') }}"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link nav-link-box" href="/" 
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                            <i class="fa-solid fa-house-chimney-window"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link add-link nav-link-box" href="/custom_food"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link history-link nav-link-box active" href="/history"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle nav-link-box" 
+                           href="#" 
+                           id="navbarDropdownDesktop" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
+                           style="position: relative;">
+                            <i class="bi bi-wrench-adjustable"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" 
+                            aria-labelledby="navbarDropdownDesktop"
+                            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="{{ url_for('profile') }}"
+                                   style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                    <i class="fas fa-user-circle me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="{{ url_for('logout') }}"
+                                   style="color: #e0e0e0; padding: 8px 15px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
     <div class="history-container">
         <div class="card bg-dark">
             <div class="card-header bg-black text-light">
@@ -178,69 +363,73 @@
                 <div class="tab-content">
                     <!-- Daily History Tab -->
                     <div class="tab-pane fade show active" id="daily" role="tabpanel">
-                        <table class="table table-dark table-striped mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Calories</th>
-                                    <th>Protein (g)</th>
-                                    <th>Carbs (g)</th>
-                                    <th>Fats (g)</th>
-                                    <th>Salt (g)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for entry in history_data %}
-                                <tr>
-                                    <td>{{ entry.date }}</td>
-                                    <td>{{ entry.calories | round(1) }}</td>
-                                    <td>{{ entry.proteins | round(1) }}</td>
-                                    <td>{{ entry.carbs | round(1) }}</td>
-                                    <td>{{ entry.fats | round(1) }}</td>
-                                    <td>{{ entry.salt | round(1) }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">No daily data available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Calories</th>
+                                        <th>Protein (g)</th>
+                                        <th>Carbs (g)</th>
+                                        <th>Fats (g)</th>
+                                        <th>Salt (g)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in history_data %}
+                                    <tr>
+                                        <td>{{ entry.date }}</td>
+                                        <td>{{ entry.calories | round(1) }}</td>
+                                        <td>{{ entry.proteins | round(1) }}</td>
+                                        <td>{{ entry.carbs | round(1) }}</td>
+                                        <td>{{ entry.fats | round(1) }}</td>
+                                        <td>{{ entry.salt | round(1) }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">No daily data available</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     
                     <!-- Weekly History Tab -->
                     <div class="tab-pane fade" id="weekly" role="tabpanel">
-                        <table class="table table-dark table-striped mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Week</th>
-                                    <th>Avg Calories</th>
-                                    <th>Avg Protein (g)</th> <!-- Fixed typo here -->
-                                    <th>Avg Carbs (g)</th>
-                                    <th>Avg Fats (g)</th>
-                                    <th>Avg Salt (g)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for week in weekly_data %}
-                                <tr>
-                                    <td>
-                                        <span class="week-range">{{ week.week }}</span><br>
-                                        <small>{{ week.start_date }} to {{ week.end_date }}</small>
-                                    </td>
-                                    <td>{{ week.avg_calories | round(1) }}</td>
-                                    <td>{{ week.avg_proteins | round(1) }}</td>
-                                    <td>{{ week.avg_carbs | round(1) }}</td>
-                                    <td>{{ week.avg_fats | round(1) }}</td>
-                                    <td>{{ week.avg_salt | round(1) }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">No weekly data available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Week</th>
+                                        <th>Avg Calories</th>
+                                        <th>Avg Protein (g)</th>
+                                        <th>Avg Carbs (g)</th>
+                                        <th>Avg Fats (g)</th>
+                                        <th>Avg Salt (g)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for week in weekly_data %}
+                                    <tr>
+                                        <td>
+                                            <span class="week-range">{{ week.week }}</span><br>
+                                            <small>{{ week.start_date }} to {{ week.end_date }}</small>
+                                        </td>
+                                        <td>{{ week.avg_calories | round(1) }}</td>
+                                        <td>{{ week.avg_proteins | round(1) }}</td>
+                                        <td>{{ week.avg_carbs | round(1) }}</td>
+                                        <td>{{ week.avg_fats | round(1) }}</td>
+                                        <td>{{ week.avg_salt | round(1) }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">No weekly data available</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -258,31 +447,45 @@
                 $(this).tab('show');
             });
             
-            // Add tooltips to table headers
-            $('th').attr('title', 'Click to sort').tooltip({
-                trigger: 'hover',
-                placement: 'top'
+            // Add sorting indicators to table headers
+            $('th').each(function() {
+                $(this).append('<span class="sort-indicator">↕</span>');
             });
             
-            // Simple table sorting functionality
+            // Table sorting functionality
             $('th').on('click', function() {
                 const table = $(this).parents('table').eq(0);
-                const rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()));
-                this.asc = !this.asc;
-                if (!this.asc) {
-                    rows = rows.reverse();
+                const rows = table.find('tr:gt(0)').toArray();
+                const index = $(this).index();
+                const isAsc = $(this).hasClass('sorted-asc');
+                
+                // Clear previous sorting classes
+                $(this).siblings().removeClass('sorted-asc sorted-desc');
+                $(this).removeClass('sorted-asc sorted-desc');
+                
+                // Sort rows
+                rows.sort(comparer(index, isAsc));
+                
+                // Toggle sort direction
+                if (!isAsc) {
+                    $(this).addClass('sorted-asc');
+                } else {
+                    $(this).addClass('sorted-desc');
+                    rows.reverse();
                 }
+                
+                // Re-add sorted rows
                 for (let i = 0; i < rows.length; i++) {
                     table.append(rows[i]);
                 }
             });
             
-            function comparer(index) {
+            function comparer(index, isAsc) {
                 return function(a, b) {
                     const valA = getCellValue(a, index);
                     const valB = getCellValue(b, index);
                     return $.isNumeric(valA) && $.isNumeric(valB) ? 
-                        valA - valB : valA.localeCompare(valB);
+                        valA - valB : valA.toString().localeCompare(valB);
                 };
             }
             
