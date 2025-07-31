@@ -16,34 +16,34 @@
             background-color: #222 !important;
         }
         .form-control {
-            font-size: 16px;
-            padding: 10px;
+            font-size: 14px;
+            padding: 6px;
             height: auto;
         }
         .form-label {
-            font-size: 16px;
-            margin-bottom: 8px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
         .btn {
-            font-size: 18px;
-            padding: 12px;
+            font-size: 15px;
+            padding: 8px;
         }
         .card {
             border-radius: 8px;
         }
         .card-header {
-            font-size: 22px;
-            padding: 15px 20px;
+            font-size: 18px !important;
+            padding: 10px 20px;
         }
         .card-body {
-            padding: 25px;
+            padding: 45px;
         }
         .alert {
             font-size: 18px;
             padding: 15px;
         }
         .nutrition-row {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .nutrition-row .col-md-4, .nutrition极 .col-md-6 {
             padding-right: 10px;
@@ -165,15 +165,12 @@
                                     <input type="text" name="ean" class="form-control">
                                 </div>
                             </div>
-                            
-                            <!-- Row 3: Proteins -->
                             <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Proteins (g)*</label>
-                                    <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
-                                </div>
-                            </div>
-                            
+                            <div class="col-md-2">
+                                <label class="form-label">Calories (per 100g) (optional)</label>
+                                <input type="number" name="calories" class="form-control" step="0.1" min="0">
+                                
+                            </div>                            
                             <!-- Row 4: Fats, Saturated Fat -->
                             <div class="row nutrition-row">
                                 <div class="col-md-2">
@@ -201,6 +198,13 @@
                                     <input type="number" name="fiber" class="form-control" step="0.1" min="0" value="0">
                                 </div>
                             </div>
+                            <!-- Row 3: Proteins -->
+                            <div class="row nutrition-row">
+                                <div class="col-md-2">
+                                    <label class="form-label">Proteins (g)*</label>
+                                    <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
+                                </div>
+                            </div>
                             
                             <!-- Row 6: Salt -->
                             <div class="row nutrition-row">
@@ -209,6 +213,8 @@
                                     <input type="number" name="salt" class="form-control" step="0.0001" min="0" value="0">
                                 </div>
                             </div>
+                           
+                            
                             
                             <!-- Row 7: Serving Sizes -->
                             <div class="row nutrition-row">
@@ -279,6 +285,7 @@
             // Collect form data
             const formData = {
                 name: $('input[name="name"]').val().trim(),
+                calories: $('input[name="calories"]').val() || null,
                 carbs: $('input[name="carbs"]').val(),
                 proteins: $('input[name="proteins"]').val(),
                 fats: $('input[name="fats"]').val(),
