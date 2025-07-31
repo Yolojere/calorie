@@ -4,6 +4,15 @@
 
 {% block content %}
 <style>
+        /* Security icons */
+    .fa-shield-alt, .fa-lock, .fa-user-check {
+        color:white !important;
+        transition: transform 0.3s ease;
+    }
+    
+    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-check:hover {
+        transform: scale(1.2);
+    }
     .form-control {
         background-color: #3b3b3b !important; /* dark background */
         color: white !important;              /* white text */
@@ -16,21 +25,32 @@
     }
 
     /* Autofill fix for Chrome */
-    input.form-control:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px #3b3b3b inset !important;
-        -webkit-text-fill-color: white !important;
-        border-color: #444 !important;
+      input.form-control:-webkit-autofill {
+        box-shadow: 0 0 0px 1000px #333 inset !important;
+        -webkit-text-fill-color: #e0e0e0 !important;
+        border-color: #555 !important;
     }
     .btn-accent {
-        background-color: #f08e0e;   /* Example: orange */
-        color: white;
+        background: linear-gradient(to right, #e0e0e0, #807f7f) !important;
+        color: #000 !important;
+        font-weight: bold;
         border: none;
+        padding: 10px 20px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
     }
 
     .btn-accent:hover {
-        background-color: #d97706;   /* Slightly darker on hover */
-        color: white;
+        background: linear-gradient(to right, #e0e0e0, #e0e0e0) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
+    .input-group-text {
+        background-color: #333 !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #555 !important;
+    }
+    
     </style>
 <div class="container-page">
     <div class="content-section animated">
