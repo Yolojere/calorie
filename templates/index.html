@@ -30,6 +30,7 @@
             
         }
 
+
         @keyframes rotate {
   100% {
     transform: rotate(360deg);
@@ -445,15 +446,15 @@
         }
         
         #rt-breakdown-container {
-            margin: 15px 0;
-            padding: 10px !important;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background-color: #000000;
-            background: linear-gradient(to bottom, #1a1a1a, #2a2a2a) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            height: auto !important;
-            width: 980px;
+        margin: 15px 0;
+        padding: 8px !important;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #000000;
+        background: linear-gradient(to bottom, #1a1a1a, #2a2a2a) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        height: auto !important;
+        width: 100%;
         }
         
         .food-log-container {
@@ -623,9 +624,9 @@
     background: linear-gradient(to right, #f08e0e, #d17d0c) !important;
     color: black;
     padding: 10px;
-    font-size: 18px;
+    font-size: 14px !important;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -648,9 +649,7 @@
             font-size: 26px;
         }
         
-        .nav-link {
-            font-size: 20px;
-        }
+
         
         /* Nutrition Grid */
         .nutrition-grid-container {
@@ -695,10 +694,62 @@
         
         /* NEW: Hide nutrition panel on desktop */
         @media (min-width: 992px) {
-            #nutrition-panel {
-                display: none !important;
+            .navbar-nav .nav-link {
+        font-size: 17px !important;
+    }
+/* White box styling for nav links */
+            .nav-link-box {
+                background-color: white !important;
+                color: black !important;
+                border-radius: 20px;
+                padding: 10px !important;
+                margin: 0 3px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 45px;
+                height: 45px;
             }
             
+            .nav-link-box:hover {
+                background-color: #f0f0f0 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+            
+            /* Icon sizing */
+            .nav-link-box i {
+                font-size: 20px !important;
+                margin: 0 !important;
+            }
+            
+            /* Remove caret from dropdown */
+            .nav-link-box.dropdown-toggle::after {
+                display: none;
+            }
+
+            #nutrition-panel {
+                display: none !important;
+            }    .rtb-yay {
+        min-width: 24% !important; /* Slightly wider */
+        height: 65px !important;   /* Slightly taller */
+        min-width: 95px !important; 
+    }
+    
+    .rtb-value {
+        font-size: 20px !important; /* Slightly larger text */
+    }
+    
+    .rtb-label {
+        font-size: 9px !important; /* Slightly larger label */
+    }
+    
+    .icon-bg {
+        font-size: 32px !important; /* Slightly larger icon */
+    }
+}
             /* Adjust main container to only have 2 rows */
             .container-main {
                 grid-template-rows: 570px 670px !important;
@@ -1585,59 +1636,73 @@
     <button id="admin-toggle" class="btn">ADMIN MODE</button>
     
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-    <div class="container">
-        <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-        <a class="navbar-brand" href="/" style="font-size: 15px;color: #ffffff; ">- Track, eat, repeat - </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <!-- Always show these links -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/" style="font-size: 20px;color: #ffffff; ">Today</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/custom_food" style="font-size: 20px;color: #ffffff; ">Add Food</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/history" style="font-size: 20px;color: #ffffff; ">History</a>
-                </li>
-                
-                <!-- Enhanced dropdown for authenticated users -->
-                {% if current_user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" 
-                       href="#" 
-                       id="navbarDropdown" 
-                       role="button" 
-                       data-bs-toggle="dropdown" 
-                       aria-expanded="false"
-                       style="color: #ffffff; position: relative; padding-right: 25px;">
-                        Account
-                        <i class="fas fa-user ms-1" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" 
-                        aria-labelledby="navbarDropdown"
-                        style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
-                        <li>
-                            <a class="dropdown-item" 
-                               href="{{ url_for('profile') }}"
-                               style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i>Profile
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" 
-                               href="{{ url_for('logout') }}"
-                               style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                {% endif %}
-            </ul>
+        <div class="container">
+            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
+                - Track, eat, repeat -
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Updated navigation links -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link nav-link-box" href="/" 
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                            <span class="d-lg-none">Home</span>
+                            <i class="fa-solid fa-house-chimney-window"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link add-link nav-link-box" href="/custom_food"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                            <span class="d-lg-none">Add Food</span>
+                            <i class="fa-solid fa-file-circle-plus d-none d-lg-inline"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link history-link nav-link-box" href="/history"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                            <span class="d-lg-none">History</span>
+                            <i class="fa-solid fa-chart-pie d-none d-lg-inline"></i>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle nav-link-box" 
+                           href="#" 
+                           id="navbarDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
+                           style="position: relative; padding-right: 25px;">
+                            <span class="d-lg-none">Settings</span>
+                            <i class="bi bi-wrench-adjustable d-none d-lg-inline"></i>
+                        </a>
+        <ul class="dropdown-menu dropdown-menu-end" 
+            aria-labelledby="navbarDropdown"
+            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+            <li>
+                <a class="dropdown-item" 
+                   href="{{ url_for('profile') }}"
+                   style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                    <i class="fas fa-user-circle me-2"></i>Profile
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" 
+                   href="{{ url_for('logout') }}"
+                   style="color: #e0e0e0; padding: 8px 15px;">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </li>
+    {% endif %}
+</ul>
         </div>
     </div>
 </nav>
@@ -1679,7 +1744,7 @@
                     <div id="search-results" class="mt-3"></div>
                     <!-- Real-time Breakdown -->
                     <div id="rt-breakdown-container" class="d-none">
-   <div class="d-flex justify-content-center gap-1 mb-2">
+   <div class="d-flex justify-content-center gap-1 mb-2 flex-wrap">
         <div class="rtb-yay" style="background: linear-gradient(to right, #ffffff, #ffffff, #636161);">
             <i class="fas fa-fire icon-bg"></i>
             <div class="rtb-text-container">
