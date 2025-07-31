@@ -1326,6 +1326,8 @@ def save_food_route():
     try:
         # Extract form data
         name = request.form.get('name', '').strip()
+        calories_input = request.form.get('calories')  # MOVE THIS LINE UP
+        
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
         
@@ -1368,8 +1370,16 @@ def save_food_route():
         grams_val = request.form.get('grams', '100')
         grams = safe_float(grams_val, 100, min_val=0.001)
         
-        # Calculate calories
-        calories = calculate_calories(carbs, proteins, fats)
+        # Handle calories - use if provided, otherwise calculate
+        if calories_input and calories_input.strip():
+            try:
+                calories = float(calories_input)
+            except ValueError:
+                # Fallback to calculation if invalid input
+                calories = calculate_calories(carbs, proteins, fats)
+        else:
+            # Calculate calories if not provided
+            calories = calculate_calories(carbs, proteins, fats)
         
         # Generate unique key
         base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_')) or "custom_food"
@@ -1384,7 +1394,7 @@ def save_food_route():
             if counter > 100:  # Fallback for too many duplicates
                 key = f"custom_{uuid.uuid4().hex[:8]}"
                 break
-        
+            
         # Create food object
         food_data = {
             "key": key,
