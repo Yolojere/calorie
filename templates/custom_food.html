@@ -301,108 +301,112 @@
                         <h4 class="mb-0">Add Custom Food</h4>
                     </div>
                     <div class="card-body">
-                        <form id="food-form">
-                            <!-- Row 1: Food Name -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-8">
-                                    <label class="form-label">Food Name*</label>
-                                    <input type="text" name="name" class="form-control" required minlength="1">
-                                </div>
-                            </div>
-                            
-                            <!-- Row 2: EAN -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-6">
-                                    <label class="form-label">EAN/Barcode (optional)</label>
-                                    <input type="text" name="ean" class="form-control">
-                                </div>
-                            </div>
-                            <div class="row nutrition-row">
-                            <div class="col-md-2">
-                                <label class="form-label">Calories (per 100g) (optional)</label>
-                                <input type="number" name="calories" class="form-control" step="0.1" min="0">
-                                
-                            </div>                            
-                            <!-- Row 4: Fats, Saturated Fat -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Fats (g)*</label>
-                                    <input type="number" name="fats" class="form-control" step="0.1" min="0" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Saturated Fats (g)</label>
-                                    <input type="number" name="saturated" class="form-control" step="0.1" min="0" value="0">
-                                </div>
-                            </div>
-                            
-                            <!-- Row 5: Carbs, Sugars, Fiber -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Carbohydrates (g)*</label>
-                                    <input type="number" name="carbs" class="form-control" step="0.1" min="0" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Sugars (g)</label>
-                                    <input type="number" name="sugars" class="form-control" step="0.1" min="0" value="0">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Fiber (g)</label>
-                                    <input type="number" name="fiber" class="form-control" step="0.1" min="0" value="0">
-                                </div>
-                            </div>
-                            <!-- Row 3: Proteins -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Proteins (g)*</label>
-                                    <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
-                                </div>
-                            </div>
-                            
-                            <!-- Row 6: Salt -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Salt (g)</label>
-                                    <input type="number" name="salt" class="form-control" step="0.0001" min="0" value="0">
-                                </div>
-                            </div>
-                           
-                            
-                            
-                            <!-- Row 7: Serving Sizes -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Serving Size (g)</label>
-                                    <input type="number" name="serving" class="form-control" step="0.1" min="0">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Half Portion (g)</label>
-                                    <input type="number" name="half" class="form-control" step="0.1" min="0">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Entire Portion (g)</label>
-                                    <input type="number" name="entire" class="form-control" step="0.1" min="0">
-                                </div>
-                            </div>
-                            
-                            <!-- Row 8: Base Grams -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-2">
-                                    <label class="form-label">Base (grams)*</label>
-                                    <input type="number" name="grams" class="form-control" step="0.1" min="0" value="100" required>
-                                </div>
-                            </div>
-                            
-                            <!-- Row 9: Save Food -->
-                            <div class="row nutrition-row">
-                                <div class="col-md-6">
-                                    <div class="alert alert-success d-none" id="success-message">
-                                        Food added successfully!
-                                    </div>
-                                    <div class="alert alert-danger d-none" id="error-message"></div>
-                                    <button type="submit" class="btn-primary w-100">Save Food</button>
-                                </div>
-                            </div>
-                        </form>
+                        <!-- Updated Form Structure -->
+<form id="food-form">
+    <!-- Row 1: Food Name -->
+    <div class="row nutrition-row">
+        <div class="col-md-8">
+            <label class="form-label">Food Name*</label>
+            <input type="text" name="name" class="form-control" required minlength="1">
+        </div>
+    </div>
+    
+    <!-- Row 2: EAN -->
+    <div class="row nutrition-row">
+        <div class="col-md-6">
+            <label class="form-label">EAN/Barcode (optional)</label>
+            <input type="text" name="ean" class="form-control">
+        </div>
+    </div>
+    
+    <!-- Row 3: Calories -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Calories (per 100g) (optional)</label>
+            <input type="number" name="calories" class="form-control" step="0.1" min="0">
+        </div>
+    </div>
+    
+    <!-- Row 4: Fats, Saturated Fat -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Fats (g)*</label>
+            <input type="number" name="fats" class="form-control" step="0.1" min="0" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Saturated Fats (g)</label>
+            <input type="number" name="saturated" class="form-control" step="0.1" min="0" value="0">
+        </div>
+    </div>
+    
+    <!-- Row 5: Carbs, Sugars, Fiber -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Carbohydrates (g)*</label>
+            <input type="number" name="carbs" class="form-control" step="0.1" min="0" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Sugars (g)</label>
+            <input type="number" name="sugars" class="form-control" step="0.1" min="0" value="0">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Fiber (g)</label>
+            <input type="number" name="fiber" class="form-control" step="0.1" min="0" value="0">
+        </div>
+    </div>
+    
+    <!-- Row 6: Proteins -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Proteins (g)*</label>
+            <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
+        </div>
+    </div>
+    
+    <!-- Row 7: Salt -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Salt (g)</label>
+            <input type="number" name="salt" class="form-control" step="0.0001" min="0" value="0">
+        </div>
+    </div>
+   
+    <!-- Row 8: Serving Sizes -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Serving Size (g)</label>
+            <input type="number" name="serving" class="form-control" step="0.1" min="0">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Half Portion (g)</label>
+            <input type="number" name="half" class="form-control" step="0.1" min="0">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Entire Portion (g)</label>
+            <input type="number" name="entire" class="form-control" step="0.1" min="0">
+        </div>
+    </div>
+    
+    <!-- Row 9: Base Grams -->
+    <div class="row nutrition-row">
+        <div class="col-md-2">
+            <label class="form-label">Base (grams)*</label>
+            <input type="number" name="grams" class="form-control" step="0.1" min="0" value="100" required>
+        </div>
+    </div>
+    
+    <!-- Row 10: Save Food -->
+    <div class="row nutrition-row">
+        <div class="col-md-6">
+            <div class="alert alert-success d-none" id="success-message">
+                Food added successfully!
+            </div>
+            <div class="alert alert-danger d-none" id="error-message"></div>
+            <!-- Changed button type to submit -->
+            <button type="submit" class="btn-primary w-100">Save Food</button>
+        </div>
+    </div>
+</form>
                     </div>
                 </div>
             </div>
