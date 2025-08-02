@@ -492,7 +492,7 @@
     border: none;
     color: #ffffff !important;
     padding: 0;
-    width: 20px; /* Reduced by 15% from original 24px */
+    width: 20px; 
     height: 20px;
     display: flex;
     align-items: center;
@@ -508,6 +508,11 @@
     opacity: 1;
     background-color: rgba(255, 0, 0, 0.1) !important;
 }
+       /* Add this to ensure delete icons are properly styled */
+        .delete-item i {
+            font-size: 18px !important;
+            color: white !important;
+        }
         /* Food Log Buttons */
 /* Add new styles matching .portion-btn */
 #move-items, #clear-session, #create-recipe {
@@ -2374,6 +2379,14 @@
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
 
+            // Function to initialize icons ===== FIXED ICONS =====
+    function initializeIcons() {
+        // Reinitialize Font Awesome icons for dynamically added content
+        if (window.FontAwesome) {
+            FontAwesome.dom.i2svg();
+        }
+    }
+
                 // ===== MOVE/COPY FUNCTIONALITY ===== //
     let selectedAction = 'move';
     
@@ -2963,17 +2976,17 @@ $(document).on('click', '.delete-food-btn', function(e) {
         });
 // Delete item - keep using IDs
 $(document).on('click', '.delete-item', function(e) {
-    e.stopPropagation();
-    const itemId = $(this).data('id');
-    const date = $('#date-selector').val();
-    
-    $.post('/delete_item', {
-        item_id: itemId,
-        date: date
-    }, function(response) {
-        updateSessionDisplay(response.session, response.totals, response.breakdown);
-    });
-});
+                e.stopPropagation();
+                const itemId = $(this).data('id');
+                const date = $('#date-selector').val();
+                
+                $.post('/delete_item', {
+                    item_id: itemId,
+                    date: date
+                }, function(response) {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                });
+            });
             // Clear session
             $('#clear-session').click(function() {
                 if (!confirm('Are you sure you want to clear all items?')) return;
@@ -3233,8 +3246,9 @@ $('#recipe-save').click(function() {
                                                 <span>${item.fats.toFixed(1)}g F</span>
                                             </div>
                                         </div>
-                                        <button class="btn delete-item" data-id="${item.id}">x<>
-</button>
+                                        <button class="btn delete-item" data-id="${item.id}">
+                                            <i class="fa-solid fa-circle-xmark"></i>
+                                             </button>
                                     </div>
                                 </li>
                             `;
@@ -3278,7 +3292,9 @@ $('#recipe-save').click(function() {
             $('#mobile-fiber').text(totals.fiber.toFixed(1) + 'g');
             $('#mobile-salt').text(totals.salt.toFixed(1) + 'g');
             $('#mobile-saturated').text(totals.saturated.toFixed(1) + 'g');
+            initializeIcons();
         }
+        
             
             function resetFoodForm() {
                 $('#food-search').val('');
@@ -3288,6 +3304,7 @@ $('#recipe-save').click(function() {
                 currentFood = null;
                 $('#rt-breakdown-container').addClass('d-none');
                  loadTopFoods();
+                 initializeIcons();
             }
             
             // Mobile tab switching
@@ -3484,7 +3501,16 @@ $('#recipe-save').click(function() {
                 scanningActive = false;
             }
         });
+        </script>
+        <script>
+        // Initialize Font Awesome
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.FontAwesome) {
+                FontAwesome.dom.watch();
+            }
+        });
 
     </script>
+    
 </body>
 </html>
