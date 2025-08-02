@@ -132,6 +132,19 @@
             padding-right: 10px;
             padding-left: 10px;
         }
+        .save-food-btn {
+            background-color: #c0bfbf !important;
+            color: black !important;
+            padding: 10px !important;
+            font-size: 18px !important;
+            }
+            .save-food-btn:hover, .save-food-btn.active {
+    background: linear-gradient(to bottom, #b9b9b9, #ffffff) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+
         
         /* Animation for success */
         @keyframes pulse {
@@ -403,7 +416,10 @@
             </div>
             <div class="alert alert-danger d-none" id="error-message"></div>
             <!-- Changed button type to submit -->
-            <button type="submit" class="btn-primary w-100">Save Food</button>
+            <button type="submit" class="btn w-100 save-food-btn">
+  <i class="fa-solid fa-circle-plus me-2"></i>
+  Save Food
+</button>
         </div>
     </div>
 </form>
