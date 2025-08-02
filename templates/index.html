@@ -3168,7 +3168,7 @@ $('#recipe-save').click(function() {
         alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
     });
 });
-            function updateSessionDisplay(session, totals, breakdown) {
+function updateSessionDisplay(session, totals, breakdown) {
                 // Store current session for recipe creation
                 currentSession = session;
                 
@@ -3182,17 +3182,11 @@ $('#recipe-save').click(function() {
                                 <div class="group-header d-flex justify-content-between align-items-center">
                                     <div class="d-flex align-items-center">
                                         <div class="group-icon">
-                                            {% if group == 'breakfast' %}
-                                                <i class="fas fa-sun"></i>
-                                            {% elif group == 'lunch' %}
-                                                <i class="fas fa-utensils"></i>
-                                            {% elif group == 'dinner' %}
-                                                <i class="fas fa-moon"></i>
-                                            {% elif group == 'snack' %}
-                                                <i class="fas fa-apple-alt"></i>
-                                            {% else %}
-                                                <i class="fas fa-question"></i>
-                                            {% endif %}
+                                            ${group === 'breakfast' ? '<i class="fas fa-sun"></i>' : 
+                                              group === 'lunch' ? '<i class="fas fa-utensils"></i>' : 
+                                              group === 'dinner' ? '<i class="fas fa-moon"></i>' : 
+                                              group === 'snack' ? '<i class="fas fa-apple-alt"></i>' : 
+                                              '<i class="fas fa-question"></i>'}
                                         </div>
                                         <span class="group-title">${group.toUpperCase()}</span>
                                     </div>
@@ -3248,7 +3242,7 @@ $('#recipe-save').click(function() {
                                         </div>
                                         <button class="btn delete-item" data-id="${item.id}">
                                             <i class="fa-solid fa-circle-xmark"></i>
-                                             </button>
+                                        </button>
                                     </div>
                                 </li>
                             `;
@@ -3259,6 +3253,10 @@ $('#recipe-save').click(function() {
                             </div>
                         `;
                     }
+                }
+                
+                if (logHtml === '') {
+                    logHtml = '<div class="empty-state">No food logged yet</div>';
                 }
                 
                 if (logHtml === '') {
