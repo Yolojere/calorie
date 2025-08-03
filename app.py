@@ -176,9 +176,75 @@ def init_db():
             'Broccoli',
             7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
         ))
+
+     
+def init_workout_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Exercises table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS exercises (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            muscle_group TEXT NOT NULL,
+            description TEXT,
+            created_by_admin BOOLEAN DEFAULT TRUE
+        )
+    ''')
+    
+    # Workout sessions table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_sessions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            date DATE NOT NULL,
+            muscle_group TEXT NOT NULL,
+            notes TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    # Workout sets table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_sets (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER NOT NULL,
+            exercise_id INTEGER NOT NULL,
+            reps INTEGER NOT NULL,
+            weight REAL NOT NULL,
+            volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
+            FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (exercise_id) REFERENCES exercises(id)
+        )
+    ''')
+    
+    # Add default exercises if they don't exist
+    default_exercises = [
+        ("Barbell Bench Press", "Chest", "Lie on bench, lower bar to chest, press up"),
+        ("Incline Dumbbell Press", "Chest", "Adjust bench to 45°, press dumbbells upward"),
+        ("Cable Triceps Pushdown", "Triceps", "Use rope attachment, push down with elbows fixed"),
+        ("Deadlift", "Back", "Lift barbell from floor to hip level"),
+        ("Lat Pulldown", "Back", "Pull bar down to chest while seated"),
+        ("Squats", "Legs", "Lower hips with barbell on shoulders"),
+        ("Leg Press", "Legs", "Push weight away with legs while seated"),
+        ("Bicep Curls", "Biceps", "Curl dumbbells upward with palms facing up")
+    ]
+    
+    for name, group, desc in default_exercises:
+        cursor.execute(
+            "INSERT INTO exercises (name, muscle_group, description) "
+            "SELECT %s, %s, %s WHERE NOT EXISTS "
+            "(SELECT 1 FROM exercises WHERE name = %s)",
+            (name, group, desc, name)
+        )
     
     conn.commit()
     conn.close()
+
+# Initialize workout DB
+init_workout_db()
+    
 
 # Migrate JSON data to database
 def migrate_json_to_db():
@@ -269,7 +335,8 @@ def migrate_json_to_db():
             ''', (key, count, count))
         except Exception as e:
             print(f"Error inserting usage for {key}: {e}")
-    
+            
+        
     conn.commit()
     conn.close()
     
@@ -1184,19 +1251,10 @@ def move_or_copy_items(remove_original=True):
     try:
         user_id = current_user.id
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-        item_indices_json = request.form.get('item_indices')
-        
-        # Handle case where item_indices might be None
-        if not item_indices_json:
-            item_indices = []
-        else:
-            item_indices = json.loads(item_indices_json)
-        
-        # Convert to integers safely
-        item_indices = [int(idx) for idx in item_indices if idx is not None]
         
         new_group = request.form.get('new_group')
         target_date = request.form.get('target_date', date)
+        item_ids = json.loads(request.form.get('item_ids', '[]'))
         
         # Get source session
         conn = get_db_connection()
@@ -1208,20 +1266,19 @@ def move_or_copy_items(remove_original=True):
         session_data = cursor.fetchone()
         eaten_items = json.loads(session_data['data']) if session_data else []
         
-        # Prepare items to transfer
+        # Prepare items to transfer by matching IDs
         items_to_transfer = []
-        for idx in item_indices:
-            if 0 <= idx < len(eaten_items):
-                item = eaten_items[idx].copy()
-                item['group'] = new_group
-                items_to_transfer.append(item)
+        for item in eaten_items:
+            if item['id'] in item_ids:
+                # Create a copy and update the group
+                new_item = item.copy()
+                new_item['group'] = new_group
+                items_to_transfer.append(new_item)
         
-        # If moving, remove original items
+        # If moving, remove original items by ID
         if remove_original:
-            # Sort indices in reverse order to avoid index shifting
-            for idx in sorted(item_indices, reverse=True):
-                if 0 <= idx < len(eaten_items):
-                    del eaten_items[idx]
+            # Create a new list without the moved items
+            eaten_items = [item for item in eaten_items if item['id'] not in item_ids]
         
         # Save source session
         save_current_session(user_id, eaten_items, date)
@@ -1544,6 +1601,307 @@ def admin_dashboard():
     users = cursor.fetchall()
     conn.close()
     return render_template('admin.html', users=users)
+
+# ===== WORKOUT ROUTES =====
+@app.route('/workout')
+@login_required
+def workout():
+    return render_template('workout.html')
+
+@app.route('/workout/get_current_week', methods=['GET'])
+@login_required
+def get_current_week():
+    today = datetime.today()
+    start_date = today - timedelta(days=today.weekday())  # Monday
+    dates = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    return jsonify(dates=dates, current_date=today.strftime("%Y-%m-%d"))
+
+@app.route('/workout/get_exercises', methods=['GET'])
+@login_required
+def get_exercises():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute("SELECT id, name, muscle_group, description FROM exercises ORDER BY name")
+    exercises = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(exercises=exercises)
+
+@app.route('/workout/get_session', methods=['POST'])
+@login_required
+def get_workout_session():
+    user_id = current_user.id
+    date_str = request.form.get('date')
+    
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify(error="Invalid date format"), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    # Get session data
+    cursor.execute(
+        "SELECT id, muscle_group, notes FROM workout_sessions "
+        "WHERE user_id = %s AND date = %s",
+        (user_id, date)
+    )
+    session_data = cursor.fetchone()
+    
+    if not session_data:
+        return jsonify(session=None, sets=[])
+    
+    session_id = session_data['id']
+    
+    # Get sets for this session and group by exercise
+    cursor.execute(
+        "SELECT s.id, e.id AS exercise_id, e.name AS exercise_name, "
+        "e.muscle_group, s.reps, s.weight, s.volume "
+        "FROM workout_sets s "
+        "JOIN exercises e ON s.exercise_id = e.id "
+        "WHERE session_id = %s "
+        "ORDER BY e.name, s.id",
+        (session_id,)
+    )
+    sets = cursor.fetchall()
+    
+    # Group sets by exercise
+    exercises = {}
+    for row in sets:
+        ex_id = row['exercise_id']
+        if ex_id not in exercises:
+            exercises[ex_id] = {
+                'id': ex_id,
+                'name': row['exercise_name'],
+                'muscle_group': row['muscle_group'],
+                'sets': []
+            }
+        exercises[ex_id]['sets'].append({
+            'id': row['id'],
+            'reps': row['reps'],
+            'weight': row['weight'],
+            'volume': row['volume']
+        })
+    
+    conn.close()
+    
+    return jsonify(session=dict(session_data), exercises=list(exercises.values()))
+
+@app.route('/workout/save_set', methods=['POST'])
+@login_required
+def save_workout_set():
+    user_id = current_user.id
+    date_str = request.form.get('date')
+    exercise_id = request.form.get('exercise_id')
+    reps = request.form.get('reps')
+    weight = request.form.get('weight')
+    muscle_group = request.form.get('muscle_group')
+    
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        reps = int(reps)
+        weight = float(weight)
+    except (ValueError, TypeError):
+        return jsonify(success=False, error="Invalid input data"), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get or create session
+        cursor.execute(
+            "SELECT id FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, date)
+        )
+        session = cursor.fetchone()
+        
+        if not session:
+            cursor.execute(
+                "INSERT INTO workout_sessions (user_id, date, muscle_group) "
+                "VALUES (%s, %s, %s) RETURNING id",
+                (user_id, date, muscle_group)
+            )
+            session_id = cursor.fetchone()[0]
+        else:
+            session_id = session[0]
+        
+        # Insert set
+        cursor.execute(
+            "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) "
+            "VALUES (%s, %s, %s, %s) RETURNING id",
+            (session_id, exercise_id, reps, weight)
+        )
+        set_id = cursor.fetchone()[0]
+        
+        conn.commit()
+        return jsonify(success=True, set_id=set_id)
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/delete_set', methods=['POST'])
+@login_required
+def delete_workout_set():
+    set_id = request.form.get('set_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "DELETE FROM workout_sets WHERE id = %s",
+            (set_id,)
+        )
+        conn.commit()
+        return jsonify(success=True)
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/add_exercise', methods=['POST'])
+@admin_required
+def add_exercise():
+    name = request.form.get('name')
+    muscle_group = request.form.get('muscle_group')
+    description = request.form.get('description')
+    
+    if not name or not muscle_group:
+        return jsonify(success=False, error="Name and muscle group are required"), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "INSERT INTO exercises (name, muscle_group, description) "
+            "VALUES (%s, %s, %s) RETURNING id",
+            (name, muscle_group, description)
+        )
+        exercise_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify(success=True, exercise_id=exercise_id)
+    
+    except psycopg2.IntegrityError:
+        return jsonify(success=False, error="Exercise name already exists"), 400
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/delete_exercise', methods=['POST'])
+@admin_required
+def delete_exercise():
+    exercise_id = request.form.get('exercise_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "DELETE FROM exercises WHERE id = %s",
+            (exercise_id,)
+        )
+        conn.commit()
+        return jsonify(success=True)
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/history', methods=['GET'])
+@login_required
+def workout_history():
+    user_id = current_user.id
+    period = request.args.get('period', 'weekly')  # daily, weekly, monthly
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        if period == 'daily':
+            cursor.execute('''
+            SELECT date, muscle_group, 
+                   COUNT(sets.id) as sets_count,
+                   SUM(sets.reps) as total_reps,
+                   SUM(sets.volume) as total_volume
+            FROM workout_sessions sessions
+            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+            WHERE user_id = %s
+            GROUP BY sessions.id
+            ORDER BY date DESC LIMIT 30
+        ''', (user_id,))
+    
+        elif period == 'weekly':
+            cursor.execute('''
+            SELECT DATE_TRUNC('week', date)::DATE as week_start,
+                   COUNT(DISTINCT sessions.id) as sessions_count,
+                   STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
+                   COUNT(sets.id) as total_sets,
+                   SUM(sets.reps) as total_reps,
+                   SUM(sets.volume) as total_volume
+            FROM workout_sessions sessions
+            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+            WHERE user_id = %s
+            GROUP BY week_start
+            ORDER BY week_start DESC LIMIT 12
+        ''', (user_id,))
+    
+        else:  # monthly
+            cursor.execute('''
+            SELECT DATE_TRUNC('month', date)::DATE as month_start,
+                   COUNT(DISTINCT sessions.id) as sessions_count,
+                   STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
+                   COUNT(sets.id) as total_sets,
+                   SUM(sets.reps) as total_reps,
+                   SUM(sets.volume) as total_volume
+            FROM workout_sessions sessions
+            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+            WHERE user_id = %s
+            GROUP BY month_start
+            ORDER BY month_start DESC LIMIT 6
+        ''', (user_id,))
+            
+            history = [dict(row) for row in cursor.fetchall()]
+            
+        return jsonify(history=history, period=period)
+    
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/update_set', methods=['POST'])
+@login_required
+def update_workout_set():
+            set_id = request.form.get('set_id')
+            reps = request.form.get('reps')
+            weight = request.form.get('weight')
+    
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE workout_sets 
+                    SET reps = %s, weight = %s 
+                    WHERE id = %s
+                ''', (int(reps), float(weight), set_id))
+                conn.commit()
+                return jsonify(success=True)
+            except Exception as e:
+                return jsonify(success=False, error=str(e)), 500
+            finally:
+                conn.close()
+        
 
 if __name__ == '__main__':
         init_db()
