@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition History</title>
+    <title>Nutrition & Workout History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        /* === MAIN STYLES FROM INDEX PAGE === */
+        /* === MAIN STYLES === */
         body {
             font-family: 'Calibri', sans-serif;
             font-size: 15px;
@@ -140,6 +140,16 @@
             border-bottom: 2px solid #d3d3d3;
         }
 
+        .workout-tab {
+            background: linear-gradient(to right, #4a4a4a, #222);
+            color: #ffd166 !important;
+        }
+        
+        .workout-tab.active {
+            background: linear-gradient(to right, #ffd166, #ff9e6d) !important;
+            color: #000 !important;
+        }
+
         .week-range {
             font-weight: bold;
         }
@@ -176,6 +186,22 @@
         .table-hover>tbody>tr:hover>* {
             --bs-table-accent-bg: #333;
             color: #fff;
+        }
+        
+        .workout-volume {
+            color: #ffd166;
+            font-weight: bold;
+        }
+
+        /* Nested workout tabs */
+        .workout-subtabs .nav-link {
+            font-size: 16px;
+            padding: 8px 15px;
+        }
+        
+        .workout-subtabs .nav-link.active {
+            background: linear-gradient(to right, #ffd166, #ff9e6d);
+            color: #000;
         }
 
         /* Responsive adjustments */
@@ -239,7 +265,7 @@
     </style>
 </head>
 <body>
-    <!-- Updated Navbar -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
@@ -247,7 +273,7 @@
                 - Track, eat, repeat -
             </a>
             
-            <!-- Mobile Settings Dropdown (right-aligned) -->
+            <!-- Mobile Settings Dropdown -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                 <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-wrench-adjustable"></i>
@@ -267,6 +293,13 @@
                            href="/history"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-chart-pie me-2"></i>History
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="{{ url_for('workout') }}"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-dumbbell me-2"></i>Workouts
                         </a>
                     </li>
                     <li>
@@ -348,20 +381,23 @@
     <div class="history-container">
         <div class="card bg-dark">
             <div class="card-header bg-black text-light">
-                <h5 class="mb-0">Nutrition History</h5>
+                <h5 class="mb-0">Nutrition & Workout History</h5>
             </div>
             <div class="card-body p-0">
                 <ul class="nav nav-tabs" id="historyTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily</button>
+                        <button class="nav-link active" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Nutrition Daily</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly" type="button" role="tab">Weekly</button>
+                        <button class="nav-link" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly" type="button" role="tab">Nutrition Weekly</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link workout-tab" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">Workouts</button>
                     </li>
                 </ul>
                 
                 <div class="tab-content">
-                    <!-- Daily History Tab -->
+                    <!-- Daily Nutrition Tab -->
                     <div class="tab-pane fade show active" id="daily" role="tabpanel">
                         <div class="table-responsive">
                             <table class="table table-dark table-striped table-hover mb-0">
@@ -395,7 +431,7 @@
                         </div>
                     </div>
                     
-                    <!-- Weekly History Tab -->
+                    <!-- Weekly Nutrition Tab -->
                     <div class="tab-pane fade" id="weekly" role="tabpanel">
                         <div class="table-responsive">
                             <table class="table table-dark table-striped table-hover mb-0">
@@ -429,6 +465,84 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Workout History Tab -->
+                    <div class="tab-pane fade" id="workouts" role="tabpanel">
+                        <div class="p-3">
+                            <ul class="nav nav-tabs workout-subtabs" id="workoutHistoryTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="daily-workout-tab" data-bs-toggle="tab" data-bs-target="#daily-workout" type="button" role="tab">Daily</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="weekly-workout-tab" data-bs-toggle="tab" data-bs-target="#weekly-workout" type="button" role="tab">Weekly</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="monthly-workout-tab" data-bs-toggle="tab" data-bs-target="#monthly-workout" type="button" role="tab">Monthly</button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content mt-3">
+                                <div class="tab-pane fade show active" id="daily-workout" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-dark table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Muscle Group</th>
+                                                    <th>Sets</th>
+                                                    <th>Total Reps</th>
+                                                    <th>Total Volume</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="daily-workout-history">
+                                                <!-- Workout daily history will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="weekly-workout" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-dark table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Week</th>
+                                                    <th>Sessions</th>
+                                                    <th>Muscle Groups</th>
+                                                    <th>Sets</th>
+                                                    <th>Total Reps</th>
+                                                    <th>Total Volume</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="weekly-workout-history">
+                                                <!-- Workout weekly history will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="monthly-workout" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-dark table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Month</th>
+                                                    <th>Sessions</th>
+                                                    <th>Muscle Groups</th>
+                                                    <th>Sets</th>
+                                                    <th>Total Reps</th>
+                                                    <th>Total Volume</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="monthly-workout-history">
+                                                <!-- Workout monthly history will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -492,7 +606,93 @@
             function getCellValue(row, index) {
                 return $(row).children('td').eq(index).text();
             }
+            
+            // Load workout history when Workouts tab is activated
+            $('#workouts-tab').on('shown.bs.tab', function() {
+                loadWorkoutHistory('daily');
+                
+                // Set up workout history tabs
+                $('#workoutHistoryTabs button').click(function() {
+                    const period = $(this).data("bsTarget").replace('#', '').replace('-workout', '');
+                    loadWorkoutHistory(period);
+                });
+            });
         });
+
+        // Load workout history data
+        function loadWorkoutHistory(period) {
+            $.get("/workout/history?period=" + period, function(data) {
+                renderWorkoutHistory(data.history, period);
+            });
+        }
+
+        // Render workout history in tables
+        function renderWorkoutHistory(history, period) {
+            const containerId = period + "-workout-history";
+            const container = $("#" + containerId);
+            container.empty();
+            
+            if (history.length === 0) {
+                container.append(`<tr><td colspan="4" class="text-center">No data available</td></tr>`);
+                return;
+            }
+            
+            history.forEach(item => {
+                let row;
+                
+                if (period === 'daily') {
+                    const date = new Date(item.date);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    row = `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${item.muscle_group}</td>
+                            <td>${item.sets_count}</td>
+                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                        </tr>
+                    `;
+                } 
+                else if (period === 'weekly') {
+                    const weekStart = new Date(item.week_start);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+                    
+                    const formattedWeek = `
+                        ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                        ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    `;
+                    
+                    row = `
+                        <tr>
+                            <td>${formattedWeek}</td>
+                            <td>${item.sessions_count}</td>
+                            <td>${item.muscle_groups}</td>
+                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                        </tr>
+                    `;
+                } 
+                else { // monthly
+                    const monthStart = new Date(item.month_start);
+                    const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    
+                    row = `
+                        <tr>
+                            <td>${monthName}</td>
+                            <td>${item.sessions_count}</td>
+                            <td>${item.muscle_groups}</td>
+                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                        </tr>
+                    `;
+                }
+                
+                container.append(row);
+            });
+        }
     </script>
 </body>
 </html>
