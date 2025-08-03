@@ -454,6 +454,7 @@
         .group-items {
             max-height: none !important;
             flex: 1;
+            overflow-anchor: none;
             overflow: auto;
             min-height: 0;
             overflow-y: auto;
@@ -1337,9 +1338,9 @@
             left: 10%;
             width: 80%;
             height: 3px;
-            background: #b61336;
+            background: #ffffff;
             animation: scan 2s infinite linear;
-            box-shadow: 0 0 10px rgba(182, 19, 54, 0.7);
+            box-shadow: 0 0 10px rgba(189, 189, 189, 0.7);
         }
         
         @keyframes scan {
@@ -1354,7 +1355,7 @@
             left: 15%;
             width: 70%;
             height: 50%;
-            border: 2px solid #b61336;
+            border: 2px solid #ffffff;
             border-radius: 8px;
             box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7);
         }
@@ -1365,7 +1366,7 @@
             left: 0;
             width: 100%;
             text-align: center;
-            color: #b61336;
+            color: #ffffff;
             font-weight: bold;
             text-shadow: 0 0 3px rgba(0,0,0,0.5);
             font-size: 18px;
@@ -1385,15 +1386,15 @@
         }
         
         .highlight-search {
-            box-shadow: 0 0 10px #b61336;
-            border: 2px solid #b61336;
+            box-shadow: 0 0 10px #ffffff;
+            border: 2px solid #ffffff;
             animation: pulse 1.5s infinite;
         }
         
         @keyframes pulse {
-            0% { box-shadow: 0 0 5px #b61336; }
-            50% { box-shadow: 0 0 20px #b61336; }
-            100% { box-shadow: 0 0 5px #b61336; }
+            0% { box-shadow: 0 0 5px #ffffff; }
+            50% { box-shadow: 0 0 20px #ffffff; }
+            100% { box-shadow: 0 0 5px #ffffff; }
         }
         /* Nutrition Grid Styles */
     .nutrition-grid {
@@ -1790,6 +1791,13 @@
                         </a>
                     </li>
                     <li>
+        <a class="dropdown-item" 
+           href="{{ url_for('workout') }}"
+           style="color: #e0e0e0; padding: 8px 15px;">
+            <i class="fas fa-dumbbell me-2"></i>Workouts
+        </a>
+    </li>
+                    <li>
                         <a class="dropdown-item" 
                            href="{{ url_for('profile') }}"
                            style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
@@ -1803,6 +1811,7 @@
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
                     </li>
+                    
                 </ul>
             </div>
             
@@ -1814,6 +1823,12 @@
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
                             <i class="fa-solid fa-house-chimney-window"></i>
                         </a>
+                        <li class="nav-item">
+    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+        <i class="fa-solid fa-dumbbell"></i>
+    </a>
+</li>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link add-link nav-link-box" href="/custom_food"
@@ -1843,6 +1858,7 @@
                         <ul class="dropdown-menu dropdown-menu-end" 
                             aria-labelledby="navbarDropdownDesktop"
                             style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                            
                             <li>
                                 <a class="dropdown-item" 
                                    href="{{ url_for('profile') }}"
@@ -2419,12 +2435,9 @@ $('#confirm-action').click(function() {
     const targetGroup = $('#target-group').val();
     const currentDate = $('#date-selector').val();
     
-    // Extract indices for move/copy
-    const indices = selectedItems.map(item => item.index);
-    
     $.post('/' + selectedAction + '_items', {
         date: currentDate,
-        item_indices: JSON.stringify(indices),
+        item_ids: JSON.stringify(selectedItems), // Changed to item_ids
         new_group: targetGroup,
         target_date: targetDate
     }, function(response) {
@@ -2798,11 +2811,17 @@ const button = $(`
                     unit_type: unitType,
                     units: units,
                     meal_group: mealGroup
-                }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    resetFoodForm();
-                });
-            });
+    }, function(response) {
+        // Save scroll position before updating
+        const scrollPos = $('#food-log').scrollTop();
+        
+        updateSessionDisplay(response.session, response.totals, response.breakdown);
+        
+        // Restore scroll position after update
+        $('#food-log').scrollTop(scrollPos);
+        resetFoodForm();
+    });
+});
 
             // Update real-time breakdown from form
             function updateRealTimeBreakdownFromForm() {
@@ -3011,29 +3030,22 @@ $(document).on('click', '.group-items .list-group-item', function(e) {
         return;
     }
     
-    const index = $(this).index(); // Get position in list
     const itemId = $(this).data('id');
     
     $(this).toggleClass('selected');
     
     if ($(this).hasClass('selected')) {
-        selectedItems.push({
-            id: itemId,
-            index: index
-        });
+        selectedItems.push(itemId);
     } else {
-        selectedItems = selectedItems.filter(item => item.id !== itemId);
+        selectedItems = selectedItems.filter(id => id !== itemId);
     }
     
     // Enable/disable buttons based on selection
     $('#move-items').prop('disabled', selectedItems.length === 0);
     
     // Show recipe button if at least 2 items selected
-    if (selectedItems.length >= 2) {
-        $('#create-recipe').removeClass('d-none').prop('disabled', false);
-    } else {
-        $('#create-recipe').addClass('d-none').prop('disabled', true);
-    }
+    $('#create-recipe').toggleClass('d-none', selectedItems.length < 2);
+    $('#create-recipe').prop('disabled', selectedItems.length < 2);
 });
 
             // Move button handler
@@ -3169,9 +3181,15 @@ $('#recipe-save').click(function() {
     });
 });
 function updateSessionDisplay(session, totals, breakdown) {
-                // Store current session for recipe creation
-                currentSession = session;
-                
+    updateNutritionGrid(totals);
+    updateMobileNutrition(totals);
+    
+    // Add this block to remember collapsed states
+    const collapseStates = {};
+    $('.food-group').each(function() {
+        const group = $(this).data('group');
+        collapseStates[group] = $(this).hasClass('collapsed-group');
+    });
                 let logHtml = '';
                 
                 if (breakdown) {
@@ -3264,6 +3282,15 @@ function updateSessionDisplay(session, totals, breakdown) {
                 }
                 
                 $('#food-log').html(logHtml);
+
+// Add this block to reapply collapse states
+                    Object.keys(collapseStates).forEach(group => {
+        if (collapseStates[group]) {
+            $(`.food-group[data-group="${group}"]`).addClass('collapsed-group');
+            $(`.food-group[data-group="${group}"] .group-items`).hide();
+            $(`.food-group[data-group="${group}"] .toggle-group`).text('+');
+        }
+    });
                     
                 // Update nutrition grid
             function updateNutritionGrid(totals) {
