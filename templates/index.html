@@ -2525,10 +2525,11 @@ adjustGridScale();
 // Adjust on resize
 $(window).resize(adjustGridScale);
             
-            // Camera variables
-            let currentCamera = 'environment';
+            // Camera variables - ADDED CAMERA PREFERENCE
+            let currentCamera = localStorage.getItem('cameraPreference') || 'user'; // Default to user-facing camera
             let scanningActive = false;
             let lastScannedCode = null;
+            let cameraInitializationAttempts = 0;
             
             // Admin mode variables
             let isAdminMode = false;
@@ -3389,142 +3390,242 @@ function updateSessionDisplay(session, totals, breakdown) {
                 $('[data-panel="add-food-panel"]').addClass('active');
             }
             
-            // Camera scanning with QuaggaJS
-            $('#scan-ean').click(function() {
-                cameraModal.show();
-                setTimeout(startCamera, 500);
-            });
-            
-            // Toggle camera
-            $('#toggle-camera').click(function() {
-                currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-                stopCamera();
-                setTimeout(startCamera, 300);
-            });
-            
-            // Resume scanning
-            $('#resume-scan').click(function() {
-                lastScannedCode = null;
-                $('#scanned-result').text('');
-                startQuagga();
-            });
-            
-            // Start camera function
-            function startCamera() {
-                scanningActive = true;
-                startQuagga();
-            }
-            
-            // Initialize QuaggaJS for barcode scanning
-        function startQuagga() {
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: document.querySelector('#camera-preview'),
-                    constraints: {
-                        facingMode: currentCamera,
-                        focusMode: 'continuous',
-                        width: { min: 640 },
-                        height: { min: 480 },
-                        aspectRatio: 4/3
-                    }
-                },
-                decoder: {
-                    readers: ['ean_reader'],  // CHANGED TO EAN READER
-                    debug: {
-                        drawBoundingBox: true,
-                        showFrequency: true,
-                        drawScanline: true,
-                        showPattern: true
-                    }
-                },
-                locator: {
-                    halfSample: true,
-                    patchSize: "medium"
-                },
-                numOfWorkers: navigator.hardwareConcurrency || 4,
-                frequency: 10
-            }, function(err) {
-                    if (err) {
-                        console.error("Camera error:", err);
-                        $('#scanned-result').text('Camera error: ' + err.message).css('color', '#ff4444');
-                        return;
-                    }
-                    Quagga.start();
-                });
+            // Update camera feedback UI
+function updateCameraStatus(status, message) {
+    const feedback = $('#camera-feedback');
+    const statusElement = $('.camera-status');
+    const indicator = $('.camera-indicator');
+    
+    feedback.find('.scan-hint').text(message || '');
+    
+    switch(status) {
+        case 'active':
+            statusElement.removeClass('status-warning status-error').addClass('status-good');
+            indicator.removeClass('indicator-inactive').addClass('indicator-active');
+            statusElement.find('span:last').text('Camera Active');
+            break;
+        case 'warning':
+            statusElement.removeClass('status-good status-error').addClass('status-warning');
+            indicator.removeClass('indicator-active').addClass('indicator-inactive');
+            statusElement.find('span:last').text('Camera Issue');
+            break;
+        case 'error':
+            statusElement.removeClass('status-good status-warning').addClass('status-error');
+            indicator.removeClass('indicator-active').addClass('indicator-inactive');
+            statusElement.find('span:last').text('Camera Error');
+            break;
+    }
+}
 
-                Quagga.onDetected(function(result) {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        const code = result.codeResult.code;
-                        if (lastScannedCode === code) return;
-                        
-                        lastScannedCode = code;
-                            $('#scanned-result').text('Scanned: ' + code)
-            .css({
-                'color': '#00ff00',
-                'font-size': '26px',
-                'animation': 'pulse 0.5s 3'
-            });
-                        
-                        // Stop scanning for a moment
-                        Quagga.stop();
-                        
-                        // Process the scanned code
-                        handleScannedCode(code);
-                    }
-                });
-                
-                // Draw center guide line for better UX
-                Quagga.onProcessed(function(result) {
-                    const drawingCtx = Quagga.canvas.ctx.overlay;
-                    const drawingCanvas = Quagga.canvas.dom.overlay;
-                    
-                    if (!result) return;
-                    
-                    // Clear canvas
-                    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-                    
-                    // Draw center guide line
-                    drawingCtx.beginPath();
-                    drawingCtx.moveTo(drawingCanvas.width/2, 0);
-                    drawingCtx.lineTo(drawingCanvas.width/2, drawingCanvas.height);
-                    drawingCtx.strokeStyle = '#b61336';
-                    drawingCtx.lineWidth = 2;
-                    drawingCtx.stroke();
-                });
+// Camera scanning with QuaggaJS
+$('#scan-ean').click(function() {
+    cameraModal.show();
+    setTimeout(startCamera, 500);
+});
+
+// Toggle camera
+$('#toggle-camera').click(function() {
+    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    localStorage.setItem('cameraPreference', currentCamera);
+    stopCamera();
+    setTimeout(startCamera, 300);
+});
+
+// Resume scanning
+$('#resume-scan').click(function() {
+    lastScannedCode = null;
+    $('#scanned-result').text('');
+    startQuagga();
+});
+
+// Start camera function
+function startCamera() {
+    scanningActive = true;
+    startQuagga();
+}
+
+// Initialize QuaggaJS for barcode scanning - UPDATED
+function startQuagga() {
+    updateCameraStatus('active', 'Initializing camera...');
+    
+    const constraints = {
+        facingMode: currentCamera,
+        focusMode: 'continuous',
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 },
+        aspectRatio: { ideal: 1.7777777778 } // 16:9
+    };
+    
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#camera-preview'),
+            constraints: constraints
+        },
+        decoder: {
+            readers: [
+                'code_128_reader',
+                'ean_reader',
+                'ean_8_reader',
+                'code_39_reader',
+                'code_39_vin_reader',
+                'codabar_reader',
+                'upc_reader',
+                'upc_e_reader'
+            ],
+            debug: {
+                drawBoundingBox: false,
+                showFrequency: false,
+                drawScanline: false,
+                showPattern: false
             }
+        },
+        locator: {
+            halfSample: true,
+            patchSize: "medium"
+        },
+        numOfWorkers: navigator.hardwareConcurrency || 4,
+        frequency: 20 // Increased frequency
+    }, function(err) {
+        if (err) {
+            console.error("Camera error:", err);
+            cameraInitializationAttempts++;
             
-            // Handle scanned Code-128 barcodes
-            function handleScannedCode(code) {
-                // Validate Code-128 format
-                if (!/^\d{13}$/.test(code)) {
-                    $('#scanned-result').text('Invalid EAN-13: ' + code).css('color', '#ff4444');
-                return;
-                }
-                
-                // Close modal immediately and process
-                cameraModal.hide();
-                stopCamera();
-                
-                // DIRECTLY SET SEARCH FIELD VALUE
-                $('#food-search').val(code);
-                
-                // Highlight the search field
-                $('#food-search').addClass('highlight-search');
-                setTimeout(function() {
-                    $('#food-search').removeClass('highlight-search');
-                }, 3000);
-                
-                // FOCUS AND TRIGGER SEARCH IMMEDIATELY
-                setTimeout(function() {
-                    $('#food-search').focus();
-                    const query = $('#food-search').val().trim();
-                    if (query.length > 0) {
-                        performFoodSearch(query);
-                    }
-                }, 100);
+            if (cameraInitializationAttempts <= 2) {
+                // Try switching camera
+                currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+                updateCameraStatus('warning', 'Trying alternative camera...');
+                setTimeout(startQuagga, 1000);
+            } else {
+                updateCameraStatus('error', 'Camera initialization failed: ' + err.message);
             }
+            return;
+        }
+        
+        cameraInitializationAttempts = 0;
+        updateCameraStatus('active', 'Hold steady and center barcode in the frame');
+        Quagga.start();
+    });
+
+    Quagga.onDetected(function(result) {
+        if (result && result.codeResult && result.codeResult.code) {
+            const code = result.codeResult.code;
+            if (lastScannedCode === code) return;
+            
+            lastScannedCode = code;
+            $('#scanned-result').text('Scanned: ' + code)
+                .css({
+                    'color': '#00ff00',
+                    'font-size': '26px',
+                    'animation': 'pulse 0.5s 3'
+                });
+            
+            // Stop scanning for a moment
+            Quagga.stop();
+            
+            // Process the scanned code
+            handleScannedCode(code);
+        }
+    });
+    
+    // Draw center guide line for better UX
+    Quagga.onProcessed(function(result) {
+        const drawingCtx = Quagga.canvas.ctx.overlay;
+        const drawingCanvas = Quagga.canvas.dom.overlay;
+        
+        if (!result) return;
+        
+        // Clear canvas
+        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        
+        // Draw center guide line
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(drawingCanvas.width/2, 0);
+        drawingCtx.lineTo(drawingCanvas.width/2, drawingCanvas.height);
+        drawingCtx.strokeStyle = '#b61336';
+        drawingCtx.lineWidth = 2;
+        drawingCtx.stroke();
+        
+        // Draw scan area guide
+        const guideWidth = drawingCanvas.width * 0.8;
+        const guideHeight = drawingCanvas.height * 0.3;
+        const guideX = (drawingCanvas.width - guideWidth) / 2;
+        const guideY = (drawingCanvas.height - guideHeight) / 2;
+        
+        drawingCtx.beginPath();
+        drawingCtx.rect(guideX, guideY, guideWidth, guideHeight);
+        drawingCtx.strokeStyle = 'rgba(140, 0, 255, 0.5)';
+        drawingCtx.lineWidth = 2;
+        drawingCtx.stroke();
+    });
+}
+
+// Handle scanned barcodes - UPDATED
+function handleScannedCode(code) {
+    // Validate barcode format
+    if (!isValidBarcode(code)) {
+        $('#scanned-result').text('Invalid barcode: ' + code).css('color', '#ff4444');
+        setTimeout(function() {
+            startQuagga();
+        }, 2000);
+        return;
+    }
+    
+    // Close modal immediately and process
+    cameraModal.hide();
+    stopCamera();
+    
+    // DIRECTLY SET SEARCH FIELD VALUE
+    $('#food-search').val(code);
+    
+    // Highlight the search field
+    $('#food-search').addClass('highlight-search');
+    setTimeout(function() {
+        $('#food-search').removeClass('highlight-search');
+    }, 3000);
+    
+    // FOCUS AND TRIGGER SEARCH IMMEDIATELY
+    setTimeout(function() {
+        $('#food-search').focus();
+        const query = $('#food-search').val().trim();
+        if (query.length > 0) {
+            performFoodSearch(query);
+        }
+    }, 100);
+}
+
+// Validate barcode format
+function isValidBarcode(code) {
+    // Common barcode patterns
+    const patterns = [
+        /^\d{8}$/,       // EAN-8
+        /^\d{12,13}$/,   // EAN-13/UPC
+        /^[0-9A-Za-z]{6,20}$/, // Code 128, Code 39
+        /^[0-9]{14,18}$/ // GTIN
+    ];
+    
+    return patterns.some(pattern => pattern.test(code));
+}
+
+// Add this to ensure camera is properly stopped
+function stopCamera() {
+    if (Quagga) {
+        try {
+            Quagga.stop();
+            updateCameraStatus('inactive', 'Camera stopped');
+        } catch (e) {
+            console.log("Error stopping camera:", e);
+            updateCameraStatus('error', 'Error stopping camera');
+        }
+    }
+    scanningActive = false;
+}
+
+// Camera modal closed handler
+$('#cameraModal').on('hidden.bs.modal', function () {
+    stopCamera();
+});
 
             // Update the performFoodSearch function
             function performFoodSearch(query) {
@@ -3548,18 +3649,6 @@ function updateSessionDisplay(session, totals, breakdown) {
                     }
                     $('#search-results').html(resultsHtml);
                 });
-            }
-
-            // Add this to ensure camera is properly stopped
-            function stopCamera() {
-                if (Quagga) {
-                    try {
-                        Quagga.stop();
-                    } catch (e) {
-                        console.log("Error stopping camera:", e);
-                    }
-                }
-                scanningActive = false;
             }
         });
         </script>
