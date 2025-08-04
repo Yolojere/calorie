@@ -1337,29 +1337,30 @@
             z-index: 10;
         }
         
-        .scan-line {
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            width: 80%;
-            height: 4px;
-            background: #b700ff;
-            animation: scan 2s infinite linear;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.9);
-        }
+        .scan-guide {
+        position: absolute;
+        top: 35% !important; /* Lower position */
+        left: 10% !important;
+        width: 80% !important; /* Wider area */
+        height: 30% !important; /* Taller area */
+        border: 3px solid #8c00ff;
+        border-radius: 8px;
+        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.85);
+        z-index: 20;
+    }
         
         @keyframes scan {
-            0% { top: 10%; }
-            50% { top: 90%; }
-            100% { top: 10%; }
+        0% { top: 35%; }
+        50% { top: 65%; }
+        100% { top: 35%; }
         }
         
         .scan-guide {
             position: absolute;
-            top: 25%;
-            left: 15%;
-            width: 70%;
-            height: 50%;
+            top: 35% !important; /* Lower position */
+            left: 10% !important;
+            width: 80% !important; /* Wider area */
+            height: 30% !important; /* Taller area */
             border: 3px solid #8c00ff;
             border-radius: 8px;
             box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.85);
@@ -2372,6 +2373,10 @@
     
     <!-- Camera Modal -->
     <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+        <!-- Zoom indicator -->
+    <div class="position-absolute top-0 start-0 m-2 p-2 bg-dark text-white rounded">
+        Zoom: <span id="zoom-level">100%</span>
+    </div>
         <div class="modal-dialog modal-lg">
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black">
@@ -2530,6 +2535,16 @@ $(window).resize(adjustGridScale);
             let scanningActive = false;
             let lastScannedCode = null;
             let cameraInitializationAttempts = 0;
+            let scale = 1;
+document.getElementById('camera-preview').addEventListener('wheel', e => {
+    e.preventDefault();
+    scale += e.deltaY * -0.01;
+    scale = Math.min(Math.max(0.5, scale), 3); // Limit zoom range
+    document.querySelector('#camera-preview video').style.transform = `scale(${scale})`;
+    document.querySelector('#camera-preview canvas').style.transform = `scale(${scale})`;
+    $('#zoom-level').text(Math.round(scale * 100) + '%');
+});
+
             
             // Admin mode variables
             let isAdminMode = false;
@@ -3451,83 +3466,98 @@ function startQuagga() {
     const constraints = {
         facingMode: currentCamera,
         focusMode: 'continuous',
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 480, ideal: 720, max: 1080 },
-        aspectRatio: { ideal: 1.7777777778 } // 16:9
+         width: { min: 320, ideal: 640, max: 1280 },
+        height: { min: 240, ideal: 480, max: 720 },
+        aspectRatio: 4/3 // Wider aspect ratio
     };
     
     Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#camera-preview'),
-            constraints: constraints
-        },
-        decoder: {
-            readers: [
-                'code_128_reader',
-                'ean_reader',
-                'ean_8_reader',
-                'code_39_reader',
-                'code_39_vin_reader',
-                'codabar_reader',
-                'upc_reader',
-                'upc_e_reader'
-            ],
-            debug: {
-                drawBoundingBox: false,
-                showFrequency: false,
-                drawScanline: false,
-                showPattern: false
-            }
-        },
-        locator: {
-            halfSample: true,
-            patchSize: "medium"
-        },
-        numOfWorkers: navigator.hardwareConcurrency || 4,
-        frequency: 20 // Increased frequency
-    }, function(err) {
-        if (err) {
-            console.error("Camera error:", err);
-            cameraInitializationAttempts++;
-            
-            if (cameraInitializationAttempts <= 2) {
-                // Try switching camera
-                currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-                updateCameraStatus('warning', 'Trying alternative camera...');
-                setTimeout(startQuagga, 1000);
-            } else {
-                updateCameraStatus('error', 'Camera initialization failed: ' + err.message);
-            }
-            return;
+    inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector('#camera-preview'),
+        constraints: {
+            facingMode: currentCamera,
+            focusMode: 'continuous',
+            width: { min: 320, ideal: 640, max: 1280 }, // Lower resolution
+            height: { min: 240, ideal: 480, max: 720 },
+            aspectRatio: 4/3 // Wider aspect ratio
         }
+    },
+    decoder: {
+        readers: ['ean_reader'], // Focus only on EAN
+        debug: {
+            drawBoundingBox: true, // Enable for debugging
+            showFrequency: false,
+            drawScanline: false,
+            showPattern: false
+        }
+    },
+    locator: {
+        halfSample: true,
+        patchSize: "medium", // Better for smaller barcodes
+        debug: {
+            showCanvas: true,
+            showPatches: true,
+            showFoundPatches: true,
+            showSkeleton: true
+        }
+    },
+    numOfWorkers: 0, // Disable workers for mobile compatibility
+    frequency: 10, // Slower processing but more accurate
+    locate: true, // Enable locate feature
+}, function(err) {
+        if (err) {
+    console.error("Camera error:", err);
+    cameraInitializationAttempts++;
+    
+    if (cameraInitializationAttempts <= 3) {
+        currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+        updateCameraStatus('warning', 'Trying alternative camera...');
+        setTimeout(startQuagga, 1000);
+    } else {
+        updateCameraStatus('error', 'Camera initialization failed: ' + err.message);
+        $('#resume-scan').prop('disabled', true);
+    }
+    return;
+}
         
         cameraInitializationAttempts = 0;
         updateCameraStatus('active', 'Hold steady and center barcode in the frame');
         Quagga.start();
+
+        Quagga.onProcessed(() => {
+    setTimeout(() => {
+        const stream = Quagga.getStream();
+        if (stream) {
+            const track = stream.getVideoTracks()[0];
+            if (track && track.getCapabilities().focusMode === 'continuous') {
+                track.applyConstraints({
+                    advanced: [{focusMode: 'continuous'}]
+                });
+            }
+        }
+    }, 500);
+});
     });
 
     Quagga.onDetected(function(result) {
-        if (result && result.codeResult && result.codeResult.code) {
-            const code = result.codeResult.code;
-            if (lastScannedCode === code) return;
-            
-            lastScannedCode = code;
-            $('#scanned-result').text('Scanned: ' + code)
-                .css({
-                    'color': '#00ff00',
-                    'font-size': '26px',
-                    'animation': 'pulse 0.5s 3'
-                });
-            
-            // Stop scanning for a moment
-            Quagga.stop();
-            
-            // Process the scanned code
-            handleScannedCode(code);
-        }
-    });
+    if (result && result.codeResult && result.codeResult.code) {
+        const code = result.codeResult.code;
+        if (lastScannedCode === code) return;
+        
+        lastScannedCode = code;
+        $('#scanned-result').html('Scanned: ' + code + '<br>Processing...')
+            .css({
+                'color': '#00ff00',
+                'font-size': '24px',
+                'animation': 'pulse 0.5s 3'
+            });
+        
+        Quagga.stop();
+        handleScannedCode(code);
+    }
+});
     
     // Draw center guide line for better UX
     Quagga.onProcessed(function(result) {
