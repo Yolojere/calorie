@@ -55,12 +55,12 @@
 
 /* Specific style for confirm button */
 #confirm-action {
-    background: linear-gradient(to right, #ff4444, #cc0000) !important;
+    background: linear-gradient(to right, #b989f0, #ad75ec) !important;
     color: white !important;
 }
 
 #save-grams {
-    background: linear-gradient(to right, #28a745, #218838) !important;
+    background: linear-gradient(to right, #c0bfbf, #9b9a9a) !important;
     color: white !important;
 }
         
@@ -194,7 +194,7 @@
 
         /* Food item animations */
         .food-item-container {
-            transition: transform 0.3s ease;
+            transition: transform 0.1s ease;
         }
 
         .food-item-container:hover {
@@ -629,6 +629,7 @@
             overflow: auto;
             display: flex;
             flex-direction: column;
+            overflow-anchor: none;
         }
         .position-relative {
     position: relative;
@@ -720,6 +721,11 @@
     .form-col {
         margin-bottom: 15px;
     }
+    .nutrition-value-xxs.nutrition-calories {
+            background: transparent !important;
+            color: #ffffff !important;
+            
+        }
 }
 
         /* ADD FOOD MODAL */
@@ -1755,6 +1761,7 @@
     }
 }
 
+
     </style>
 </head>
 <body>
@@ -2084,7 +2091,7 @@
                                                 </div>
                                             </div>
                                             <span class="edit-grams badge edit-grams-btn mx-1" 
-                                                data-index="{{ loop.index0 }}">
+                                                data-id="{{ item.id }}">
                                                 {{ item.grams|round(1) }}g
                                             </span>
                                         </div>
@@ -2402,6 +2409,12 @@
             FontAwesome.dom.i2svg();
         }
     }
+    // Keep session alive
+setInterval(function() {
+    $.get('/keepalive', function() {
+        console.log('Session kept alive');
+    });
+}, 5 * 60 * 1000);  // Ping every 5 minutes
 
                 // ===== MOVE/COPY FUNCTIONALITY ===== //
     let selectedAction = 'move';
