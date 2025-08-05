@@ -182,7 +182,7 @@ def init_workout_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Exercises table
+    # Exercises table (unchanged)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS exercises (
             id SERIAL PRIMARY KEY,
@@ -193,7 +193,7 @@ def init_workout_db():
         )
     ''')
     
-    # Workout sessions table
+    # Workout sessions table (unchanged)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_sessions (
             id SERIAL PRIMARY KEY,
@@ -205,7 +205,7 @@ def init_workout_db():
         )
     ''')
     
-    # Workout sets table
+    # Workout sets table - ADD NEW COLUMNS
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_sets (
             id SERIAL PRIMARY KEY,
@@ -214,21 +214,31 @@ def init_workout_db():
             reps INTEGER NOT NULL,
             weight REAL NOT NULL,
             volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
+            rir REAL,
+            comments TEXT,
             FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
             FOREIGN KEY (exercise_id) REFERENCES exercises(id)
         )
     ''')
+
+    try:
+        cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS rir REAL")
+        cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS comments TEXT")
+    except Exception as e:
+        print(f"Error adding columns: {e}")
+
+    try:
+        cursor.execute("""
+            ALTER TABLE workout_sessions
+            ADD COLUMN IF NOT EXISTS is_saved BOOLEAN DEFAULT FALSE,
+            ADD COLUMN IF NOT EXISTS workout_type TEXT DEFAULT 'strength'
+        """)
+    except Exception as e:
+        print(f"Error adding columns to workout_sessions: {e}")        
     
     # Add default exercises if they don't exist
     default_exercises = [
-        ("Barbell Bench Press", "Chest", "Lie on bench, lower bar to chest, press up"),
-        ("Incline Dumbbell Press", "Chest", "Adjust bench to 45°, press dumbbells upward"),
-        ("Cable Triceps Pushdown", "Triceps", "Use rope attachment, push down with elbows fixed"),
-        ("Deadlift", "Back", "Lift barbell from floor to hip level"),
-        ("Lat Pulldown", "Back", "Pull bar down to chest while seated"),
-        ("Squats", "Legs", "Lower hips with barbell on shoulders"),
-        ("Leg Press", "Legs", "Push weight away with legs while seated"),
-        ("Bicep Curls", "Biceps", "Curl dumbbells upward with palms facing up")
+
     ]
     
     for name, group, desc in default_exercises:
@@ -1090,15 +1100,14 @@ def log_food():
         meal_group = request.form.get('meal_group')
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
 
-                # Print for debugging
+        # Print for debugging
         print(f"Logging food: original='{food_id}', normalized='{normalized_key}'")
-              
+        
         food = get_food_by_key(normalized_key)
         if not food:
             print(f"Food not found: '{normalized_key}'")
             return jsonify({'error': 'Food not found'}), 404
 
-        # ... rest of your function code goes here ...
         # Convert units to grams
         if unit_type == 'grams':
             grams = units
@@ -1121,7 +1130,7 @@ def log_food():
         fiber = food.get('fiber', 0.0) * factor
         saturated = food.get('saturated', 0.0) * factor
         calories = food['calories'] * factor
-        
+
         item = {
             "id": str(uuid.uuid4()),
             "name": food['name'],
@@ -1138,15 +1147,15 @@ def log_food():
             "calories": calories,
             "group": meal_group
         }
-        
+
         # Update session
         eaten_items, current_date = get_current_session(user_id, date)
         eaten_items.append(item)
         save_current_session(user_id, eaten_items, date)
-        
+
         # Update food usage
         increment_food_usage(food['key'])
-        
+
         # Return updated session, totals and breakdown
         totals = calculate_totals(eaten_items)
         group_breakdown = calculate_group_breakdown(eaten_items)
@@ -1155,12 +1164,15 @@ def log_food():
             'totals': totals,
             'breakdown': group_breakdown
         })
-        
+
     except Exception as e:
         print(f"Error in log_food: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+
+
 
 @app.route('/update_session', methods=['POST'])
 @login_required
@@ -1321,43 +1333,47 @@ def update_grams():
         print("Received update_grams request")
         user_id = current_user.id
         item_id = request.form.get('item_id')
-        new_grams = float(request.form.get('new_grams'))
+        new_grams = request.form.get('new_grams')
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
         
         print(f"Params: id={item_id}, grams={new_grams}, date={date}")
+        
+        if not item_id:
+            print("⚠️ Empty item_id received!")
+            return jsonify({'error': 'Empty item ID'}), 400
         
         eaten_items, current_date = get_current_session(user_id, date)
         print(f"Current session has {len(eaten_items)} items")
         
         # Find item by ID
-        item_index = None
-        for i, item in enumerate(eaten_items):
+        item_found = None
+        for item in eaten_items:
             if item.get('id') == item_id:
-                item_index = i
+                item_found = item
                 break
 
-        if item_index is None:
-            print(f"❌ Item not found with id: {item_id}")
+        if not item_found:
+            print(f"❌ Item not found with id: '{item_id}'. Available IDs: {[item.get('id') for item in eaten_items]}")
             return jsonify({'error': 'Item not found'}), 404
 
-        item = eaten_items[item_index]
-        print(f"Food name from session: {item['name']}")
+        print(f"Food name from session: {item_found['name']}")
         
-        food = get_food_by_key(item['name'])
+        # Use the name to lookup food details
+        food = get_food_by_key(item_found['name'])
         if not food:
-            print(f"Food not found in database!")
+            print(f"Food not found in database for key: '{item_found['name']}'")
             return jsonify({'error': 'Food not found'}), 404
         
         # Convert units to grams
-        factor = new_grams / 100
-        item['grams'] = new_grams
-        item['units'] = new_grams
-        item['unit_type'] = 'grams'
-        item['carbs'] = food['carbs'] * factor
-        item['proteins'] = food['proteins'] * factor
-        item['fats'] = food['fats'] * factor
-        item['salt'] = food.get('salt', 0.0) * factor
-        item['calories'] = food['calories'] * factor
+        factor = float(new_grams) / 100
+        item_found['grams'] = float(new_grams)
+        item_found['units'] = float(new_grams)
+        item_found['unit_type'] = 'grams'
+        item_found['carbs'] = food['carbs'] * factor
+        item_found['proteins'] = food['proteins'] * factor
+        item_found['fats'] = food['fats'] * factor
+        item_found['salt'] = food.get('salt', 0.0) * factor
+        item_found['calories'] = food['calories'] * factor
         
         save_current_session(user_id, eaten_items, date)
         
@@ -1592,6 +1608,49 @@ def history():
                            history_data=history_data,
                            weekly_data=weekly_data)
 
+@app.route('/save_recipe', methods=['POST'])
+@login_required
+def save_recipe():
+    try:
+        recipe_name = request.form.get('recipe_name')
+        selected_ids = json.loads(request.form.get('selected_ids'))
+        date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+        
+        # Get the current session
+        user_id = current_user.id
+        eaten_items, _ = get_current_session(user_id, date)
+        
+        # Filter selected items
+        recipe_items = [item for item in eaten_items if item['id'] in selected_ids]
+        
+        if not recipe_items:
+            return jsonify(success=False, error="No items selected for recipe"), 400
+        
+        # Calculate total nutrition
+        total_grams = sum(item['grams'] for item in recipe_items)
+        recipe_data = {
+            "name": recipe_name,
+            "key": normalize_key(recipe_name),
+            "carbs": sum(item['carbs'] for item in recipe_items) / total_grams * 100,
+            "sugars": sum(item.get('sugars', 0) for item in recipe_items) / total_grams * 100,
+            "fiber": sum(item.get('fiber', 0) for item in recipe_items) / total_grams * 100,
+            "proteins": sum(item['proteins'] for item in recipe_items) / total_grams * 100,
+            "fats": sum(item['fats'] for item in recipe_items) / total_grams * 100,
+            "saturated": sum(item.get('saturated', 0) for item in recipe_items) / total_grams * 100,
+            "salt": sum(item.get('salt', 0) for item in recipe_items) / total_grams * 100,
+            "calories": sum(item['calories'] for item in recipe_items) / total_grams * 100,
+            "grams": 100,
+            "entire": total_grams  # Total grams of the recipe
+        }
+        
+        # Save the recipe
+        save_food(recipe_data)
+        
+        return jsonify(success=True)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify(success=False, error=str(e)), 500
+
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -1614,7 +1673,31 @@ def get_current_week():
     today = datetime.today()
     start_date = today - timedelta(days=today.weekday())  # Monday
     dates = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-    return jsonify(dates=dates, current_date=today.strftime("%Y-%m-%d"))
+    current_date = today.strftime("%Y-%m-%d")
+    return jsonify(dates=dates, current_date=current_date)
+
+@app.route('/workout/init_session', methods=['POST'])
+@login_required
+def init_workout_session():
+    user_id = current_user.id
+    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO workout_sessions (user_id, date, muscle_group) "
+            "VALUES (%s, %s, 'General') ON CONFLICT (user_id, date) DO NOTHING "
+            "RETURNING id",
+            (user_id, date)
+        )
+        session_id = cursor.fetchone()[0] if cursor.rowcount > 0 else None
+        conn.commit()
+        return jsonify(success=True, session_id=session_id)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
 
 @app.route('/workout/get_exercises', methods=['GET'])
 @login_required
@@ -1640,53 +1723,81 @@ def get_workout_session():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     
-    # Get session data
-    cursor.execute(
-        "SELECT id, muscle_group, notes FROM workout_sessions "
-        "WHERE user_id = %s AND date = %s",
-        (user_id, date)
-    )
-    session_data = cursor.fetchone()
-    
-    if not session_data:
-        return jsonify(session=None, sets=[])
-    
-    session_id = session_data['id']
-    
-    # Get sets for this session and group by exercise
-    cursor.execute(
-        "SELECT s.id, e.id AS exercise_id, e.name AS exercise_name, "
-        "e.muscle_group, s.reps, s.weight, s.volume "
-        "FROM workout_sets s "
-        "JOIN exercises e ON s.exercise_id = e.id "
-        "WHERE session_id = %s "
-        "ORDER BY e.name, s.id",
-        (session_id,)
-    )
-    sets = cursor.fetchall()
-    
-    # Group sets by exercise
-    exercises = {}
-    for row in sets:
-        ex_id = row['exercise_id']
-        if ex_id not in exercises:
-            exercises[ex_id] = {
-                'id': ex_id,
-                'name': row['exercise_name'],
-                'muscle_group': row['muscle_group'],
-                'sets': []
-            }
-        exercises[ex_id]['sets'].append({
-            'id': row['id'],
-            'reps': row['reps'],
-            'weight': row['weight'],
-            'volume': row['volume']
-        })
-    
-    conn.close()
-    
-    return jsonify(session=dict(session_data), exercises=list(exercises.values()))
+    try:
+        # Updated query to include new columns
+        cursor.execute(
+            "SELECT id, muscle_group, notes, is_saved, workout_type FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, date)
+        )
+        session_data = cursor.fetchone()
+        
+        if not session_data:
+            conn.close()
+            return jsonify({
+                'success': True,
+                'session': None,
+                'exercises': []
+            })
+        
+        # Now includes all needed columns
+        session = {
+            "id": session_data['id'],
+            "muscle_group": session_data['muscle_group'],
+            "notes": session_data['notes'],
+            "is_saved": session_data['is_saved'],
+            "workout_type": session_data['workout_type']
+        }
 
+        session_id = session['id']
+        
+        # Get sets for this session and group by exercise - ADD NEW FIELDS
+        cursor.execute(
+            "SELECT s.id, e.id AS exercise_id, e.name AS exercise_name, "
+            "e.muscle_group, s.reps, s.weight, s.volume, s.rir, s.comments "  # Added rir and comments
+            "FROM workout_sets s "
+            "JOIN exercises e ON s.exercise_id = e.id "
+            "WHERE session_id = %s "
+            "ORDER BY e.name, s.id",
+            (session_id,)
+        )
+        sets = cursor.fetchall()
+        
+        # Group sets by exercise
+        exercises = {}
+        for row in sets:
+            ex_id = row['exercise_id']
+            if ex_id not in exercises:
+                exercises[ex_id] = {
+                    'id': ex_id,
+                    'name': row['exercise_name'],
+                    'muscle_group': row['muscle_group'],
+                    'sets': []
+                }
+            exercises[ex_id]['sets'].append({
+                'id': row['id'],
+                'reps': row['reps'],
+                'weight': row['weight'],
+                'volume': row['volume'],
+                'rir': row['rir'],  # NEW FIELD
+                'comments': row['comments']  # NEW FIELD
+            })
+        
+        conn.close()
+    
+        return jsonify({
+            'success': True,
+            'session': dict(session_data),
+            'exercises': list(exercises.values())
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+        
+    
 @app.route('/workout/save_set', methods=['POST'])
 @login_required
 def save_workout_set():
@@ -1696,16 +1807,27 @@ def save_workout_set():
     reps = request.form.get('reps')
     weight = request.form.get('weight')
     muscle_group = request.form.get('muscle_group')
+    rir = request.form.get('rir')
+    if rir and rir.strip():
+        rir = float(rir)
+    else:
+        rir = None
+    comments = request.form.get('comments')
+    
+    # Get sets_count from form data
+    sets_count = int(request.form.get('sets_count', 1))
     
     try:
         date = datetime.strptime(date_str, "%Y-%m-%d").date()
         reps = int(reps)
         weight = float(weight)
-    except (ValueError, TypeError):
-        return jsonify(success=False, error="Invalid input data"), 400
+        rir = float(rir) if rir else None
+    except (ValueError, TypeError) as e:
+        return jsonify(success=False, error=f"Invalid input data: {str(e)}"), 400
     
     conn = get_db_connection()
     cursor = conn.cursor()
+    set_ids = []
     
     try:
         # Get or create session
@@ -1726,19 +1848,22 @@ def save_workout_set():
         else:
             session_id = session[0]
         
-        # Insert set
-        cursor.execute(
-            "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) "
-            "VALUES (%s, %s, %s, %s) RETURNING id",
-            (session_id, exercise_id, reps, weight)
-        )
-        set_id = cursor.fetchone()[0]
+        # Insert multiple sets
+        for i in range(sets_count):
+            cursor.execute(
+                "INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments) "
+                "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+                (session_id, exercise_id, reps, weight, rir, comments)
+            )
+            set_ids.append(cursor.fetchone()[0])
         
         conn.commit()
-        return jsonify(success=True, set_id=set_id)
+        return jsonify(success=True, set_ids=set_ids)
     
     except Exception as e:
         conn.rollback()
+        app.logger.error(f"Error saving workout set: {str(e)}")
+        app.logger.error(traceback.format_exc())
         return jsonify(success=False, error=str(e)), 500
     finally:
         conn.close()
@@ -1840,6 +1965,7 @@ def workout_history():
             GROUP BY sessions.id
             ORDER BY date DESC LIMIT 30
         ''', (user_id,))
+            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
     
         elif period == 'weekly':
             cursor.execute('''
@@ -1855,6 +1981,7 @@ def workout_history():
             GROUP BY week_start
             ORDER BY week_start DESC LIMIT 12
         ''', (user_id,))
+            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
     
         else:  # monthly
             cursor.execute('''
@@ -1870,8 +1997,7 @@ def workout_history():
             GROUP BY month_start
             ORDER BY month_start DESC LIMIT 6
         ''', (user_id,))
-            
-            history = [dict(row) for row in cursor.fetchall()]
+            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
             
         return jsonify(history=history, period=period)
     
@@ -1883,28 +2009,58 @@ def workout_history():
 @app.route('/workout/update_set', methods=['POST'])
 @login_required
 def update_workout_set():
-            set_id = request.form.get('set_id')
-            reps = request.form.get('reps')
-            weight = request.form.get('weight')
+    set_id = request.form.get('set_id')
+    reps = request.form.get('reps')
+    weight = request.form.get('weight')
     
-            try:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute('''
-                    UPDATE workout_sets 
-                    SET reps = %s, weight = %s 
-                    WHERE id = %s
-                ''', (int(reps), float(weight), set_id))
-                conn.commit()
-                return jsonify(success=True)
-            except Exception as e:
-                return jsonify(success=False, error=str(e)), 500
-            finally:
-                conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE workout_sets 
+            SET reps = %s, weight = %s 
+            WHERE id = %s
+        ''', (int(reps), float(weight), set_id))
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/save_workout', methods=['POST'])
+@login_required
+def save_workout():
+    user_id = current_user.id
+    date = request.form.get('date')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE workout_sessions SET is_saved = TRUE "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, date)
+        )
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()       
+        
+
+@app.route('/keepalive')
+@login_required
+def keepalive():
+    """Keep session alive by updating the session modified timestamp"""
+    session.modified = True
+    return jsonify(status="alive")                
         
 
 if __name__ == '__main__':
         init_db()
+        init_workout_db()
         migrate_json_to_db()
         update_food_keys_normalization()
         app.run(debug=True)
