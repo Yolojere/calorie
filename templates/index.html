@@ -1323,7 +1323,7 @@
             position: relative;
             width: 100%;
             height: 300px;
-            background-color: #000;
+            background-color: #000000;
             overflow: hidden;
         }
         
@@ -1343,9 +1343,9 @@
         left: 10% !important;
         width: 80% !important; /* Wider area */
         height: 30% !important; /* Taller area */
-        border: 3px solid #8c00ff;
+        border: 3px solid #ffffff;
         border-radius: 8px;
-        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.85);
+        box-shadow: 0 0 0 1000px rgba(32, 32, 32, 0.85);
         z-index: 20;
     }
         
@@ -1392,7 +1392,7 @@
             font-weight: bold;
             background: rgba(0,0,0,0.85);
             padding: 12px;
-            font-size: 24px;
+            font-size: 12px;
         }
         
         .highlight-search {
@@ -3161,72 +3161,38 @@ $('#recipe-yes').click(function() {
 // Recipe saving
 $('#recipe-save').click(function() {
     const recipeName = $('#recipe-name').val().trim();
+    const date = $('#date-selector').val();  // Get current date
+    
     if (!recipeName) {
         alert('Please enter a recipe name');
         return;
     }
     
-    // Get selected items by ID
-    const recipeItems = selectedItemsForRecipe.map(item => currentSession[item.index]);
-    
-    // Calculate total nutrition
-    let totalCalories = 0;
-    let totalCarbs = 0;
-    let totalSugars = 0;
-    let totalFiber = 0;
-    let totalProteins = 0;
-    let totalFats = 0;
-    let totalSaturated = 0;
-    let totalSalt = 0;
-    let totalGrams = 0;
-    
-    recipeItems.forEach(item => {
-        totalCalories += item.calories;
-        totalCarbs += item.carbs;
-        totalSugars += item.sugars || 0;
-        totalFiber += item.fiber || 0;
-        totalProteins += item.proteins;
-        totalFats += item.fats;
-        totalSaturated += item.saturated || 0;
-        totalSalt += item.salt || 0;
-        totalGrams += item.grams;
-    });
-    
-    // Create recipe food data (per 100g)
-    const recipeData = {
-        name: recipeName,
-        key: recipeName.toLowerCase().replace(/\s+/g, '_'),
-        carbs: (totalCarbs / totalGrams) * 100,
-        sugars: (totalSugars / totalGrams) * 100,
-        fiber: (totalFiber / totalGrams) * 100,
-        proteins: (totalProteins / totalGrams) * 100,
-        fats: (totalFats / totalGrams) * 100,
-        saturated: (totalSaturated / totalGrams) * 100,
-        salt: (totalSalt / totalGrams) * 100,
-        calories: (totalCalories / totalGrams) * 100,
-        grams: 100,
-        entire: totalGrams  // Total grams of the recipe
-    };
-    
-    // Save recipe to database
-    $.post('/save_food', recipeData, function(response) {
+    $.post('/save_recipe', {
+        recipe_name: recipeName,
+        selected_ids: JSON.stringify(selectedItemsForRecipe),
+        date: date
+    }, function(response) {
         if (response.success) {
-            alert('Successfully added recipe! :)');
-            $('#recipeModal').modal('hide');
-            
-            // Reset selection and refresh
-            selectedItems = [];
-            selectedItemsForRecipe = [];
-            $('#move-items').prop('disabled', true);
-            $('#create-recipe').addClass('d-none').prop('disabled', true);
+            alert('Recipe saved successfully!');
+            recipeModal.hide();
+            resetRecipeSelection();
             loadTopFoods();
         } else {
-            alert('Error creating recipe: ' + response.error);
+            alert('Error: ' + (response.error || 'Failed to save recipe'));
         }
     }).fail(function(xhr) {
         alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
     });
 });
+
+function resetRecipeSelection() {
+    selectedItems = [];
+    selectedItemsForRecipe = [];
+    $('.list-group-item.selected').removeClass('selected');
+    $('#move-items').prop('disabled', true);
+    $('#create-recipe').addClass('d-none').prop('disabled', true);
+}
 function updateSessionDisplay(session, totals, breakdown) {
     updateNutritionGrid(totals);
     updateMobileNutrition(totals);
