@@ -144,7 +144,7 @@
     
     .mobile-tab-pane {
         display: none;
-        padding: 0 15px;
+        padding: 0;
     }
     .mobile-tab-pane .card {
  margin: 0;
@@ -546,6 +546,8 @@
     .workout-group {
         animation: fadeIn 0.5s ease-out;
     }
+    
+
 
     /* === IMPROVED COLLAPSE ICONS === */
     .toggle-icon {
@@ -623,6 +625,20 @@
         .workout-grid-container {
             display: none;
         }
+        .workout-group .group-items {
+        padding: 15px 0; /* Top/bottom padding only */
+        border-left: none;
+        border-right: none;
+    }
+    .group-items {
+        padding-left: 0;
+        padding-right: 0;
+        border-left: none;
+        border-right: none;
+    }
+    .workout-group .group-header {
+        padding: 12px 10px !important; /* Reduced horizontal padding */
+    }
         .workout-container {
         padding: 0 !important;
         margin: 0 !important;
@@ -718,9 +734,11 @@
         
         #workout-session-container-mobile {
             min-height: 150px;
-            padding: 10px !important;
+            padding: 0px !important;
         }
-        
+        #add-set-tab .card-body {
+        padding: 15px;
+    }
         /* Volume column adjustments */
         .volume-display {
             font-size: 14px;
