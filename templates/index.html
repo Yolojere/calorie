@@ -238,11 +238,11 @@
         }
         
         .nutrition-value-sm .value {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
         
         .nutrition-value-xs .value {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
         
         .nutrition-value-xxs {
@@ -441,7 +441,7 @@
             margin-bottom: 6px;
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            min-height: auto;
         }
         
         .collapsed-group {
@@ -455,9 +455,9 @@
             max-height: none !important;
             flex: 1;
             overflow-anchor: none;
-            overflow: auto;
-            min-height: 0;
-            overflow-y: auto;
+            overflow: visible !important;
+            min-height: auto;
+            overflow-y: visible !important;
             border-left: 3px solid #00000079;
             border-right: 3px solid #00000079;
             border-bottom: 3px solid #00000079;
@@ -3660,3 +3660,4 @@ $('#cameraModal').on('hidden.bs.modal', function () {
     
 </body>
 </html>
+
