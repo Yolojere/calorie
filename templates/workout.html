@@ -95,52 +95,54 @@
         margin: 0 !important;
     }
 
-    /* GRID STYLE */
-    .workout-grid-container {
-        display: grid;
-        grid-template-rows: auto auto 1fr;
-        gap: 20px;
-        height: calc(100vh - 150px); /* Adjust based on navbar height */
+    /* === NEW TAB STYLES === */
+    .mobile-tabs-container {
+        display: none; /* Hidden by default, shown on mobile */
     }
     
-    .grid-header {
-        grid-row: 1;
+    .mobile-tabs {
+        display: flex;
+        justify-content: space-around;
+        background-color: #000;
+        border-bottom: 1px solid #444;
+        position: sticky;
+        top: 0;
+        z-index: 100;
     }
     
-    .grid-add-set {
-        grid-row: 2;
+    .mobile-tab {
+        flex: 1;
+        text-align: center;
+        padding: 15px 0;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        border-bottom: 3px solid transparent;
     }
     
-    .grid-log {
-        grid-row: 3;
-        overflow-y: auto; /* Make log scrollable */
-        min-height: 300px; /* Minimum height */
+    .mobile-tab.active {
+        border-bottom: 3px solid #4caf50;
+        color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.1);
     }
     
-    /* Add a scrollbar style */
-    .grid-log::-webkit-scrollbar {
-        width: 8px;
+    .mobile-tab i {
+        margin-right: 5px;
     }
     
-    .grid-log::-webkit-scrollbar-track {
-        background: #333;
+    .mobile-tab-content {
+        height: calc(100vh - 200px);
+        overflow-y: auto;
     }
     
-    .grid-log::-webkit-scrollbar-thumb {
-        background: #555;
-        border-radius: 4px;
+    .mobile-tab-pane {
+        display: none;
+        padding: 15px;
     }
     
-    .grid-log::-webkit-scrollbar-thumb:hover {
-        background: #777;
-    }
-    
-    /* Adjust existing styles for grid layout */
-    .workout-container {
-        max-width: 1200px;
-        margin: 20px auto;
-        padding: 0 15px;
-        height: 100%;
+    .mobile-tab-pane.active {
+        display: block;
     }
 
     /* === WORKOUT PAGE SPECIFIC STYLES === */
@@ -599,25 +601,20 @@
         align-items: center;
     }
 
-    /* Responsive adjustments */
+    /* === MOBILE WORKOUT LOG IMPROVEMENTS === */
     @media (max-width: 768px) {
+        /* Hide desktop layout on mobile */
         .workout-grid-container {
-            display: flex;
-            flex-direction: column;
-            height: auto;
-            gap: 15px;
+            display: none;
         }
         
-        .grid-log {
-            overflow-y: auto;
-            min-height: 300px;
-            height: 60vh;
-            max-height: calc(100vh - 300px);
+        /* Show mobile tabs on mobile */
+        .mobile-tabs-container {
+            display: block;
         }
-
-        .workout-container {
-            padding: 0 10px;
-            height: auto;
+        
+        .workout-header {
+            margin-top: 10px;
         }
         
         .workout-table th, .workout-table td {
@@ -647,13 +644,29 @@
             flex-direction: row;
             flex-wrap: wrap;
         }
-        .set-details {
+        
+        /* Set column adjustments */
+        .set-number-cell {
             flex-direction: column;
             align-items: flex-start;
         }
         
+        .set-number-cell > div:first-child {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .set-details {
+            flex-direction: row;
+            align-items: center;
+            margin-top: 3px;
+            font-size: 12px;
+            gap: 5px;
+        }
+        
         .rir-badge {
-            margin-bottom: 1px;
+            margin-bottom: 0;
+            font-size: 11px;
         }
         
         .exercise-header {
@@ -672,8 +685,62 @@
             font-size: 12px;
         }
         
-        .workout-header {
-            margin-top: 10px;
+        /* Adjust form layout for mobile */
+        .row.g-3 > div {
+            margin-bottom: 10px;
+        }
+        
+        #workout-session-container-mobile {
+            min-height: 150px;
+        }
+        
+        /* Volume column adjustments */
+        .volume-display {
+            font-size: 14px;
+            font-weight: normal;
+        }
+        
+        /* Remove "kg" from volume display */
+        .volume-display::after {
+            content: "" !important;
+        }
+        
+        /* Hide "Actions" header */
+        .workout-table thead th:last-child {
+            display: none;
+        }
+        
+        /* Adjust table columns */
+        .workout-table th:nth-child(1),
+        .workout-table td:nth-child(1) {
+            width: 25%;
+        }
+        
+        .workout-table th:nth-child(2),
+        .workout-table td:nth-child(2) {
+            width: 20%;
+        }
+        
+        .workout-table th:nth-child(3),
+        .workout-table td:nth-child(3) {
+            width: 20%;
+        }
+        
+        .workout-table th:nth-child(4),
+        .workout-table td:nth-child(4) {
+            width: 20%;
+        }
+        
+        .workout-table th:nth-child(5),
+        .workout-table td:nth-child(5) {
+            width: 15%;
+        }
+        
+        /* Actions button styling */
+        .delete-item {
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
         }
     }
     
@@ -682,7 +749,7 @@
         font-size: 16px;
     }
     
-    #workout-session-container {
+    #workout-session-container, #workout-session-container-mobile {
         min-height: 200px; /* Ensure it has some height even when empty */
     }
 </style>
@@ -830,7 +897,7 @@
             </div>
         </div>
         
-        <!-- NEW GRID CONTAINER -->
+        <!-- Desktop Layout - Grid Container -->
         <div class="workout-grid-container">
             <!-- Add Set Panel -->
             <div class="grid-add-set">
@@ -931,6 +998,119 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Mobile Layout - Tabs Container -->
+        <div class="mobile-tabs-container">
+            <div class="mobile-tabs">
+                <div class="mobile-tab active" data-tab="add-set-tab">
+                    <i class="fas fa-plus-circle"></i> Add Set
+                </div>
+                <div class="mobile-tab" data-tab="workout-log-tab">
+                    <i class="fas fa-history"></i> Workout Log
+                </div>
+            </div>
+            
+            <div class="mobile-tab-content">
+                <!-- Add Set Tab Content -->
+                <div id="add-set-tab" class="mobile-tab-pane active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Add New Set</h5>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Muscle Group</label>
+                                    <select id="muscle-group-select-mobile" class="form-select">
+                                        <option value="Chest">Chest</option>
+                                        <option value="Back">Back</option>
+                                        <option value="Legs">Legs</option>
+                                        <option value="Shoulders">Shoulders</option>
+                                        <option value="Arms">Arms</option>
+                                        <option value="Core">Core</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Exercise</label>
+                                    <select id="exercise-select-mobile" class="form-select">
+                                        <!-- Populated by JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label">Sets</label>
+                                    <select id="sets-input-mobile" class="form-select">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label">Reps</label>
+                                    <input type="number" id="reps-input-mobile" class="form-control" min="1" value="">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label">Weight (kg)</label>
+                                    <input type="number" id="weight-input-mobile" class="form-control" min="0.5" step="0.5" value="">
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-12">
+                                    <label class="form-label">RiR (Reps in Reserve)</label>
+                                    <select id="rir-input-mobile" class="form-select">
+                                        <option value="">None</option>
+                                        <option value="0">0 (Failure)</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Comments</label>
+                                    <input type="text" id="comments-input-mobile" class="form-control" placeholder="Optional notes about the set">
+                                </div>
+                                <div class="col-12 d-flex align-items-end">
+                                    <button id="save-set-btn-mobile" class="btn btn-success w-100">
+                                        <i class="fas fa-plus me-1"></i> Add Set
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Workout Log Tab Content -->
+                <div id="workout-log-tab" class="mobile-tab-pane">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5>Workout Log</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="workout-session-container-mobile" class="p-3">
+                                <!-- Initial loading message -->
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i> Loading workout data...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
         
     <!-- Add Exercise Modal (Admin Only) -->
@@ -1000,7 +1180,25 @@
         loadExercises();
         setupEventListeners();
         initTooltips();
+        setupMobileTabs();
     });
+    
+    function setupMobileTabs() {
+        $('.mobile-tab').click(function() {
+            // Remove active class from all tabs
+            $('.mobile-tab').removeClass('active');
+            
+            // Add active class to clicked tab
+            $(this).addClass('active');
+            
+            // Hide all panes
+            $('.mobile-tab-pane').removeClass('active');
+            
+            // Show the corresponding pane
+            const tabId = $(this).data('tab');
+            $('#' + tabId).addClass('active');
+        });
+    }
     
     function loadCollapseState() {
         const savedState = localStorage.getItem('workoutCollapseState');
@@ -1040,7 +1238,9 @@
     // Load workout session for a date
     function loadWorkoutSession(date) {
         // Show loading indicator
-        $("#workout-session-container").html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+        $("#workout-session-container, #workout-session-container-mobile").html(
+            '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
+        );
     
         $.post("/workout/get_session", { date: date }, function(data) {
             renderWorkoutSession(data.session, data.exercises);
@@ -1049,14 +1249,14 @@
     }
     
     // Save a new set
-    function saveSet() {
-        const exerciseId = $("#exercise-select").val();
-        const reps = $("#reps-input").val();
-        const weight = $("#weight-input").val();
-        const muscleGroup = $("#muscle-group-select").val();
-        const setsCount = $("#sets-input").val();
-        const rir = $("#rir-input").val();
-        const comments = $("#comments-input").val();
+    function saveSet(isMobile = false) {
+        const exerciseId = isMobile ? $("#exercise-select-mobile").val() : $("#exercise-select").val();
+        const reps = isMobile ? $("#reps-input-mobile").val() : $("#reps-input").val();
+        const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
+        const muscleGroup = isMobile ? $("#muscle-group-select-mobile").val() : $("#muscle-group-select").val();
+        const setsCount = isMobile ? $("#sets-input-mobile").val() : $("#sets-input").val();
+        const rir = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
+        const comments = isMobile ? $("#comments-input-mobile").val() : $("#comments-input").val();
         const date = $(".workout-date.active").data("date");
         
         $.post("/workout/save_set", {
@@ -1071,7 +1271,15 @@
         }, function(response) {
             if (response.success) {
                 loadWorkoutSession(date);
-                resetSetForm();
+                resetSetForm(isMobile);
+                
+                // On mobile, switch to workout log tab after adding a set
+                if (isMobile) {
+                    $('.mobile-tab').removeClass('active');
+                    $('[data-tab="workout-log-tab"]').addClass('active');
+                    $('.mobile-tab-pane').removeClass('active');
+                    $('#workout-log-tab').addClass('active');
+                }
             } else {
                 alert("Error: " + response.error);
             }
@@ -1179,29 +1387,43 @@
         return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
     }
     
-    // SINGLE renderExerciseOptions function
+    // Render exercise options for both desktop and mobile
     function renderExerciseOptions() {
         const muscleGroup = $("#muscle-group-select").val();
         const select = $("#exercise-select");
         select.empty();
+        
+        const muscleGroupMobile = $("#muscle-group-select-mobile").val();
+        const selectMobile = $("#exercise-select-mobile");
+        selectMobile.empty();
         
         exercises
             .filter(ex => ex.muscle_group === muscleGroup)
             .forEach(exercise => {
                 select.append(`<option value="${exercise.id}">${exercise.name}</option>`);
             });
+            
+        exercises
+            .filter(ex => ex.muscle_group === muscleGroupMobile)
+            .forEach(exercise => {
+                selectMobile.append(`<option value="${exercise.id}">${exercise.name}</option>`);
+            });
     }
     
     function renderWorkoutSession(session, exercises) {
         const container = $("#workout-session-container");
+        const mobileContainer = $("#workout-session-container-mobile");
         container.empty();
+        mobileContainer.empty();
         
         if (!session || !exercises || exercises.length === 0) {
-            container.html(`
+            const message = `
                 <div class="alert alert-info">
                     No workout recorded for this day. Add your first set below!
                 </div>
-            `);
+            `;
+            container.html(message);
+            mobileContainer.html(message);
             return;
         }
         
@@ -1297,7 +1519,7 @@
                                         <th>Reps</th>
                                         <th>Weight</th>
                                         <th>Volume</th>
-                                        <th>Actions</th>
+                                        <th class="actions-header">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1319,7 +1541,7 @@
                     sessionHTML += `
                         <tr class="set-row" data-set-id="${set.id}">
                             <td class="set-number-cell">
-                                <div>Set ${index + 1}</div>
+                                <div>${index + 1}</div>
                                 <div class="set-details">
                                     ${rirBadge}
                                     ${commentIcon}
@@ -1333,7 +1555,7 @@
                                 <input type="number" class="form-control set-weight set-input" 
                                        value="${set.weight}" data-original="${set.weight}" step="0.5">
                             </td>
-                            <td class="volume-display">${set.volume.toFixed(1)} kg</td>
+                            <td class="volume-display">${set.volume.toFixed(1)}</td>
                             <td class="actions-cell">
                                 <button class="btn delete-item">
                                     <i class="fas fa-trash"></i>
@@ -1358,6 +1580,7 @@
         }
         
         container.html(sessionHTML);
+        mobileContainer.html(sessionHTML);
         
         // Add group toggle functionality
         $(".toggle-group").click(function() {
@@ -1446,7 +1669,7 @@
                 if (response.success) {
                     // Update volume display
                     const volume = (reps * weight).toFixed(1);
-                    volumeDisplay.text(volume + " kg");
+                    volumeDisplay.text(volume);
                     
                     // Update original values
                     row.find(".set-reps").data("original", reps);
@@ -1461,7 +1684,7 @@
                     row.find(".set-weight").val(row.find(".set-weight").data("original"));
                     volumeDisplay.text(
                         (row.find(".set-reps").data("original") * 
-                         row.find(".set-weight").data("original")).toFixed(1) + " kg"
+                         row.find(".set-weight").data("original")).toFixed(1)
                     );
                 }
             });
@@ -1469,12 +1692,20 @@
     }
 
     // Helper functions
-    function resetSetForm() {
-        $("#sets-input").val("1");
-        $("#reps-input").val("");
-        $("#weight-input").val("");
-        $("#rir-input").val("");
-        $("#comments-input").val("");
+    function resetSetForm(isMobile = false) {
+        if (isMobile) {
+            $("#sets-input-mobile").val("1");
+            $("#reps-input-mobile").val("");
+            $("#weight-input-mobile").val("");
+            $("#rir-input-mobile").val("");
+            $("#comments-input-mobile").val("");
+        } else {
+            $("#sets-input").val("1");
+            $("#reps-input").val("");
+            $("#weight-input").val("");
+            $("#rir-input").val("");
+            $("#comments-input").val("");
+        }
     }
     
     function resetExerciseForm() {
@@ -1495,11 +1726,12 @@
     }
     
     function setupEventListeners() {
-        // Setup muscle group change listener
-        $("#muscle-group-select").change(renderExerciseOptions);
+        // Setup muscle group change listener for both desktop and mobile
+        $("#muscle-group-select, #muscle-group-select-mobile").change(renderExerciseOptions);
         
-        // Save set
-        $("#save-set-btn").click(saveSet);
+        // Save set listeners for both desktop and mobile
+        $("#save-set-btn").click(() => saveSet(false));
+        $("#save-set-btn-mobile").click(() => saveSet(true));
         
         // Add exercise
         $("#save-exercise-btn").click(addExercise);
@@ -1508,10 +1740,10 @@
         $("#prev-week-btn").click(() => navigateWeek('prev'));
         $("#next-week-btn").click(() => navigateWeek('next'));
         
-        // Allow Enter key to submit set
-        $("#comments-input").keypress(function(e) {
+        // Allow Enter key to submit set on both desktop and mobile
+        $("#comments-input, #comments-input-mobile").keypress(function(e) {
             if (e.which === 13) { // Enter key
-                saveSet();
+                saveSet($(this).attr('id') === 'comments-input-mobile');
             }
         });
     }
