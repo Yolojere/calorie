@@ -1356,20 +1356,30 @@
        position: absolute;
             top: 35%;
             left: 10%;
-            width: 80%;
+            width: 90%;
             height: 30%;
-            border: 3px solid #28a745; /* Green border for better visibility */
+            border: 3px solid rgba(0, 0, 0, 0.7);
             border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+            background-color: rgba(0, 0, 0, 0.05); /* Very subtle background */
             z-index: 20;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     }
-        
+        .scan-line {
+    position: absolute;
+    top: 35%;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: rgba(241, 76, 200, 0.7);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    animation: scan 2s infinite linear;
+    z-index: 25;
+}
         @keyframes scan {
-        0% { top: 35%; }
-        50% { top: 65%; }
-        100% { top: 35%; }
-        }
+    0% { top: 35%; }
+    50% { top: 65%; }
+    100% { top: 35%; }
+}
         
         
         .scanning-text {
@@ -1379,7 +1389,7 @@
             left: 0;
             width: 100%;
             text-align: center;
-            color: #777575; /* Darker text for better visibility */
+            color: rgba(255, 255, 255, 0.8); /* Darker text for better visibility */
             font-weight: bold;
             font-size: 18px;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
@@ -1404,18 +1414,7 @@
          
 
          /* Modal adjustments */
-        #cameraModal .modal-content {
-            background-color: #f8f9fa;
-        }
-        
-        #cameraModal .modal-header {
-            background-color: #e9ecef;
-            color: #212529;
-        }
-        
-        #cameraModal .modal-footer {
-            background-color: #e9ecef;
-        }
+   
 
 
         .highlight-search {
@@ -1426,19 +1425,20 @@
 
         /* Camera buttons */
         #toggle-camera, #resume-scan {
-            background: linear-gradient(to bottom, #6c757d, #495057) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 5px;
+             background: linear-gradient(to bottom, #ffffff, #b2b0b0) !important;
+    color: rgb(255, 0, 115) !important;
+    border: 1px solid #ffffff !important;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
         }
 
-#toggle-camera:hover, #resume-scan:hover {
-    background: linear-gradient(to bottom, #b9b9b9, #353535) !important;
-}
         
         @keyframes pulse {
             0% { box-shadow: 0 0 5px #ffffff; }
@@ -1802,6 +1802,46 @@
     
     .grid-value {
         font-size: 12px !important;
+    }
+}
+
+/* real time scaling for mobile */
+@media (max-width: 767px) {
+    #rt-breakdown-container .d-flex {
+        flex-wrap: nowrap !important; /* Force single row */
+        overflow-x: auto; /* Allow horizontal scrolling */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        padding-bottom: 8px; /* Space for scrollbar */
+        scrollbar-width: thin; /* Firefox */
+    }
+
+    /* Hide scrollbar for cleaner look */
+    #rt-breakdown-container .d-flex::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    #rt-breakdown-container .d-flex::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 2px;
+    }
+    
+    .rtb-yay {
+        flex-shrink: 0 !important; /* Prevent shrinking */
+        min-width: 80px !important; /* Minimum width */
+        height: 65px !important;
+    }
+    
+    .rtb-value {
+        font-size: 16px !important; /* Smaller base size */
+        transition: none !important; /* Disable animations */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    
+    .rtb-label {
+        font-size: 8px !important;
     }
 }
 
@@ -2890,6 +2930,9 @@ const button = $(`
         // Restore scroll position after update
         $('#food-log').scrollTop(scrollPos);
         resetFoodForm();
+        if (response.is_mobile) {
+            $('.mobile-tab-btn[data-panel="food-log-panel"]').click();
+        }
     });
 });
 
@@ -2953,11 +2996,11 @@ function updateRealTimeBreakdown(data) {
     $('#rt-grams').text(gramsStr);
 
     // Mobile-specific adjustments
-    if ($(window).width() < 992) {
-        adjustMobileFontSize($('#rt-calories')[0], 20);
-        adjustMobileFontSize($('#rt-proteins')[0], 20);
-        adjustMobileFontSize($('#rt-carbs')[0], 20);
-        adjustMobileFontSize($('#rt-fats')[0], 20);
+   if ($(window).width() < 992) {
+        adjustMobileFontSize($('#rt-calories')[0], 16);
+        adjustMobileFontSize($('#rt-proteins')[0], 16);
+        adjustMobileFontSize($('#rt-carbs')[0], 16);
+        adjustMobileFontSize($('#rt-fats')[0], 16);
     }
 }
 
@@ -2966,10 +3009,21 @@ function adjustMobileFontSize(element, baseSize) {
     const text = element.textContent;
     const length = text.length;
     let fontSize = baseSize;
+    const containerWidth = $(element).closest('.rtb-yay').width();
+    const textWidth = element.scrollWidth;
     
     // Reduce font size for longer numbers
-    if (length > 6) fontSize = baseSize * 0.85;
-    else if (length > 4) fontSize = baseSize * 0.9;
+    if (textWidth > containerWidth * 0.9) {
+        // Calculate scale factor based on overflow
+        const scaleFactor = Math.min(0.9, (containerWidth * 0.9) / textWidth);
+        fontSize = baseSize * scaleFactor;
+    }
+    else if (length > 6) {
+        fontSize = baseSize * 0.85;
+    }
+    else if (length > 4) {
+        fontSize = baseSize * 0.9;
+    }
     
     element.style.fontSize = `${fontSize}px`;
 }
@@ -3318,6 +3372,16 @@ function updateSessionDisplay(session, totals, breakdown) {
                 }
                 
                 $('#food-log').html(logHtml);
+                if ($(window).width() < 992 && session.length > 0) {
+        setTimeout(() => {
+            const lastItem = $('.list-group-item').last();
+            if (lastItem.length) {
+                $('#food-log').animate({
+                    scrollTop: lastItem.offset().top - 100
+                }, 500);
+            }
+        }, 300);
+    }
 
 // Add this block to reapply collapse states
                     Object.keys(collapseStates).forEach(group => {
