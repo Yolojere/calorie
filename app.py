@@ -1162,7 +1162,8 @@ def log_food():
         return jsonify({
             'session': eaten_items,
             'totals': totals,
-            'breakdown': group_breakdown
+            'breakdown': group_breakdown,
+            'is_mobile': request.headers.get('User-Agent').lower().find('mobile') != -1
         })
 
     except Exception as e:
@@ -2048,6 +2049,84 @@ def save_workout():
         return jsonify(success=False, error=str(e)), 500
     finally:
         conn.close()       
+@app.route('/workout/delete_exercise_sets', methods=['POST'])
+@login_required
+def delete_exercise_sets():
+    session_id = request.form.get('session_id')
+    exercise_ids = json.loads(request.form.get('exercise_ids'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Verify session belongs to user
+        cursor.execute("SELECT user_id FROM workout_sessions WHERE id = %s", (session_id,))
+        session = cursor.fetchone()
+        if not session or session[0] != current_user.id:
+            return jsonify(success=False, error="Invalid session"), 403
+        
+        # Delete sets for selected exercises
+        for exercise_id in exercise_ids:
+            cursor.execute(
+                "DELETE FROM workout_sets WHERE session_id = %s AND exercise_id = %s",
+                (session_id, exercise_id)
+            )
+        
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/delete_selected_items', methods=['POST'])
+@login_required
+def delete_selected_items():
+    session_id = request.form.get('session_id')
+    exercise_ids = json.loads(request.form.get('exercise_ids', '[]'))
+    set_ids = json.loads(request.form.get('set_ids', '[]'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Verify session belongs to user
+        cursor.execute("SELECT user_id FROM workout_sessions WHERE id = %s", (session_id,))
+        session = cursor.fetchone()
+        if not session or session[0] != current_user.id:
+            return jsonify(success=False, error="Invalid session"), 403
+        
+        # Delete sets for selected exercises
+        if exercise_ids:
+            # Create a tuple for the IN clause
+            exercise_ids_tuple = tuple(exercise_ids)
+            placeholders = ','.join(['%s'] * len(exercise_ids))
+            
+            # Delete sets for these exercises
+            cursor.execute(
+                f"DELETE FROM workout_sets WHERE session_id = %s AND exercise_id IN ({placeholders})",
+                (session_id,) + tuple(exercise_ids)
+            )
+        
+        # Delete individual sets
+        if set_ids:
+            set_ids_tuple = tuple(set_ids)
+            placeholders = ','.join(['%s'] * len(set_ids))
+            
+            cursor.execute(
+                f"DELETE FROM workout_sets WHERE session_id = %s AND id IN ({placeholders})",
+                (session_id,) + tuple(set_ids)
+            )
+        
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        conn.rollback()
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        conn.close()
+        
         
 
 @app.route('/keepalive')
