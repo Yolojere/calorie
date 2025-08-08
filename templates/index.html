@@ -1808,43 +1808,82 @@
 /* real time scaling for mobile */
 @media (max-width: 767px) {
     #rt-breakdown-container .d-flex {
-        flex-wrap: nowrap !important; /* Force single row */
-        overflow-x: auto; /* Allow horizontal scrolling */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        padding-bottom: 8px; /* Space for scrollbar */
-        scrollbar-width: thin; /* Firefox */
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr); /* Equal width columns */
+        gap: 4px !important; /* Minimal gap between boxes */
+        width: 100%;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* Hide scrollbar for cleaner look */
-    #rt-breakdown-container .d-flex::-webkit-scrollbar {
-        height: 4px;
-    }
-    
-    #rt-breakdown-container .d-flex::-webkit-scrollbar-thumb {
-        background: #555;
-        border-radius: 2px;
-    }
-    
     .rtb-yay {
-        flex-shrink: 0 !important; /* Prevent shrinking */
-        min-width: 80px !important; /* Minimum width */
-        height: 65px !important;
+        width: 100% !important; /* Fill grid cell */
+        min-width: unset !important;
+        max-width: unset !important;
+        height: 60px !important;
+        padding: 3px !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        box-sizing: border-box;
     }
     
     .rtb-value {
-        font-size: 16px !important; /* Smaller base size */
-        transition: none !important; /* Disable animations */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
+        font-size: 14px !important;
+        line-height: 1.1 !important;
+        padding-top: 0 !important;
+        margin-top: -2px !important;
     }
     
     .rtb-label {
-        font-size: 8px !important;
+        font-size: 7px !important;
+        line-height: 1.1 !important;
+        margin-top: -2px !important;
+    }
+    
+    .icon-bg {
+        font-size: 20px !important;
+        opacity: 0.7 !important;
+        margin-top: -5px !important;
     }
 }
 
+/* Extra small screens (old phones) */
+@media (max-width: 360px) {
+    .rtb-yay {
+        height: 55px !important;
+    }
+    
+    .rtb-value {
+        font-size: 12px !important;
+    }
+    
+    .rtb-label {
+        font-size: 6px !important;
+    }
+    
+    .icon-bg {
+        font-size: 18px !important;
+    }
+}
+
+/* Emergency scaling for very small screens */
+@media (max-width: 320px) {
+    .rtb-yay {
+        height: 50px !important;
+    }
+    
+    .rtb-value {
+        font-size: 11px !important;
+    }
+    
+    .rtb-label {
+        font-size: 5.5px !important;
+    }
+    
+    .icon-bg {
+        font-size: 16px !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -2996,37 +3035,50 @@ function updateRealTimeBreakdown(data) {
     $('#rt-grams').text(gramsStr);
 
     // Mobile-specific adjustments
-   if ($(window).width() < 992) {
-        adjustMobileFontSize($('#rt-calories')[0], 16);
-        adjustMobileFontSize($('#rt-proteins')[0], 16);
-        adjustMobileFontSize($('#rt-carbs')[0], 16);
-        adjustMobileFontSize($('#rt-fats')[0], 16);
+if ($(window).width() < 992) {
+        const isOldPhone = window.innerWidth <= 360;
+        const baseSize = isOldPhone ? 12 : 14;
+        
+        adjustMobileFontSize($('#rt-calories')[0], baseSize);
+        adjustMobileFontSize($('#rt-proteins')[0], baseSize);
+        adjustMobileFontSize($('#rt-carbs')[0], baseSize);
+        adjustMobileFontSize($('#rt-fats')[0], baseSize);
     }
 }
 
-// Add this new function below updateRealTimeBreakdown
 function adjustMobileFontSize(element, baseSize) {
+    const container = $(element).closest('.rtb-yay');
+    const containerWidth = container.width();
     const text = element.textContent;
-    const length = text.length;
-    let fontSize = baseSize;
-    const containerWidth = $(element).closest('.rtb-yay').width();
-    const textWidth = element.scrollWidth;
     
-    // Reduce font size for longer numbers
-    if (textWidth > containerWidth * 0.9) {
-        // Calculate scale factor based on overflow
-        const scaleFactor = Math.min(0.9, (containerWidth * 0.9) / textWidth);
-        fontSize = baseSize * scaleFactor;
+    // Calculate maximum allowable font size
+    const charWidth = baseSize * 0.6; // Approximate width per character
+    const maxChars = Math.floor(containerWidth / charWidth);
+    
+    let fontSize = baseSize;
+    
+    // Reduce font size if text is too long
+    if (text.length > maxChars) {
+        const overflowRatio = text.length / maxChars;
+        fontSize = Math.max(9, baseSize / overflowRatio);
     }
-    else if (length > 6) {
-        fontSize = baseSize * 0.85;
-    }
-    else if (length > 4) {
-        fontSize = baseSize * 0.9;
+    
+    // Additional reduction for very small screens
+    if (window.innerWidth <= 320) {
+        fontSize *= 0.9;
     }
     
     element.style.fontSize = `${fontSize}px`;
+    element.style.lineHeight = `${fontSize}px`;
 }
+
+// Add this to initialize scaling on window resize
+$(window).resize(function() {
+    if (currentFood && $('#rt-breakdown-container').is(':visible')) {
+        updateRealTimeBreakdownFromForm();
+    }
+});
+
             // Toggle food group
             $(document).on('click', '.toggle-group', function() {
                 const groupHeader = $(this).closest('.group-header');
