@@ -104,38 +104,6 @@
         margin: 0 !important;
         max-width: 100% !important;
     }
-
-    
-    .mobile-tabs {
-        display: flex;
-        justify-content: space-around;
-        background-color: #000;
-        border-bottom: 1px solid #444;
-        position: sticky;
-        top: 56px;
-        z-index: 100;
-    }
-    
-    .mobile-tab {
-        flex: 1;
-        text-align: center;
-        padding: 15px 0;
-        color: #e0e0e0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: bold;
-        border-bottom: 3px solid transparent;
-    }
-    
-    .mobile-tab.active {
-        border-bottom: 3px solid #4caf50;
-        color: #4caf50;
-        background-color: rgba(76, 175, 80, 0.1);
-    }
-    
-    .mobile-tab i {
-        margin-right: 5px;
-    }
     
     .mobile-tab-content {
         height: calc(100vh - 120px);
@@ -863,6 +831,74 @@
     #workout-session-container, #workout-session-container-mobile {
         min-height: 200px; /* Ensure it has some height even when empty */
     }
+
+    /* mobile tab bar */
+    /* Mobile Tab Bar Styles */
+    .mobile-tab-bar-workout {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #000;
+        z-index: 1000;
+        padding: 10px 0;
+        border-top: 1px solid #444;
+        display: flex;
+        justify-content: center;
+        height: 70px;
+    }
+            
+    .mobile-tab-btn-workout {
+        border: none;
+        color: white;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 18px;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        position: absolute;
+    }
+
+    /* Position each button */
+    .mobile-tab-btn-workout:nth-child(1) {
+        left: calc(50% - 60px);
+    }
+
+    .mobile-tab-btn-workout:nth-child(2) {
+        left: calc(50% + 10px);
+    }
+            
+    .mobile-tab-btn-workout.active {
+        box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        z-index: 2;
+        border: 2px solid white;
+        color: black;
+        font-weight: bold;
+    }
+    
+    .mobile-tab-btn-workout i {
+        font-size: 28px;
+    }
+
+    .mobile-tab-btn-workout.active {
+        transform: translateY(-10px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    .mobile-tab-btn-workout:not(.active):hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+    
+    /* Adjust tab content height to account for bottom bar */
+    .mobile-tab-content {
+        height: calc(100vh - 56px - 70px); /* Subtract navbar and tab bar heights */
+    }
 </style>
 </head>
 <body>
@@ -1109,17 +1145,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Mobile Layout - Tabs Container -->
-        <div class="mobile-tabs-container">
-            <div class="mobile-tabs">
-                <div class="mobile-tab active" data-tab="add-set-tab">
-                    <i class="fas fa-plus-circle"></i> Add Set
-                </div>
-                <div class="mobile-tab" data-tab="workout-log-tab">
-                    <i class="fas fa-history"></i> Workout Log
-                </div>
-            </div>
             
             <div class="mobile-tab-content">
                 <!-- Add Set Tab Content -->
@@ -1292,22 +1317,35 @@
         setupEventListeners();
         initTooltips();
         setupMobileTabs();
-    });
+
+        // Set initial active tab based on which pane is visible
+    if ($('#workout-log-tab').hasClass('active')) {
+        $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').addClass('active');
+        $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').removeClass('active');
+    } else {
+        $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').addClass('active');
+        $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').removeClass('active');
+    }
+});
+    
     
     function setupMobileTabs() {
-        $('.mobile-tab').click(function() {
-            // Remove active class from all tabs
-            $('.mobile-tab').removeClass('active');
+        // Remove any existing tab bar click handlers
+        $('.mobile-tab-btn-workout').off('click');
+        
+        $('.mobile-tab-btn-workout').click(function() {
+            // Remove active class from all buttons
+            $('.mobile-tab-btn-workout').removeClass('active');
             
-            // Add active class to clicked tab
+            // Add active class to clicked button
             $(this).addClass('active');
             
             // Hide all panes
             $('.mobile-tab-pane').removeClass('active');
             
             // Show the corresponding pane
-            const tabId = $(this).data('tab');
-            $('#' + tabId).addClass('active');
+            const panelId = $(this).data('panel');
+            $('#' + panelId).addClass('active');
         });
     }
     
@@ -1861,6 +1899,13 @@
         });
     }
 </script>
+<div class="mobile-tab-bar-workout d-block d-lg-none">
+    <button class="mobile-tab-btn-workout active" data-panel="add-set-tab" style="background-color: #ff9e6d;">
+        <i class="fas fa-plus-circle"></i>
+    </button>
+    <button class="mobile-tab-btn-workout" data-panel="workout-log-tab" style="background-color: #6dc0d5;">
+        <i class="fa-solid fa-clipboard-list"></i>
+    </button>d
 </body>
 </html>
 
