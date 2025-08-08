@@ -215,10 +215,10 @@
     }
     
     .volume-display {
+        text-align: center !important;
         font-weight: bold;
         color: #ffffff;
         padding-right: 12px;
-        text-align: right;
         font-size: clamp(12px, 1.5vw, 14px); /* Auto-scaling font size */
         min-width: 60px; /* Ensure minimum width */
         white-space: nowrap; /* Prevent wrapping */
@@ -506,7 +506,7 @@
     /* Horizontal button alignment */
     .actions-cell {
         display: flex;
-        justify-content: flex-start; /* Align actions to the right */
+        justify-content: center !important;
         gap: 5px;
         min-width: 80px; /* Ensure enough space for button */
     }
@@ -682,6 +682,7 @@
         .actions-cell {
             flex-direction: row;
             flex-wrap: wrap;
+            
         }
         
         /* Set column adjustments */
@@ -745,6 +746,7 @@
         /* Remove "kg" from volume display */
         .volume-display::after {
             content: "" !important;
+            text-align: center !important;
         }
         
         /* Hide "Actions" header */
@@ -776,6 +778,9 @@
         .workout-table th:nth-child(5),
         .workout-table td:nth-child(5) {
             width: 10%;
+                         background-color: inherit;
+    color: inherit;
+    text-align: center;
         }
         @media (max-width: 768px) {
         .workout-table th:nth-child(1),
@@ -795,14 +800,16 @@
         
         .workout-table th:nth-child(4),
         .workout-table td:nth-child(4) {
-            width: 35%;
-            min-width: 70px;
+            width: 25%;
         }
         
         .workout-table th:nth-child(5),
         .workout-table td:nth-child(5) {
-            width: 0%; /* Reclaim space from hidden column */
-                display: none;
+            width: 10%; /* Reclaim space from hidden column */
+                   background-color: #222;
+        color: #e0e0e0;
+        text-align: center;
+        
         }
         
         .volume-display {
@@ -810,18 +817,25 @@
             
         }
         
-        .actions-cell {
-            min-width: 60px;
-        }
+
     
         
         /* Actions button styling */
         .delete-item {
-            width: 28px;
-            height: 28px;
-            font-size: 14px;
+        background-color: rgba(255, 0, 0, 0.15) !important;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         }
+
+        .delete-item i {
+        font-size: 14px;
+        color: #ff6b6b;
     }
+    
     
     .fa-spinner {
         color: #4CAF50;
@@ -866,7 +880,7 @@
 
     /* Position each button */
     .mobile-tab-btn-workout:nth-child(1) {
-        left: calc(50% - 60px);
+        left: calc(50% - 40px);
     }
 
     .mobile-tab-btn-workout:nth-child(2) {
@@ -1668,7 +1682,7 @@
                                         <th>Reps</th>
                                         <th>Weight</th>
                                         <th>Volume</th>
-                                        <th class="actions-header">Actions</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1905,7 +1919,7 @@
     </button>
     <button class="mobile-tab-btn-workout" data-panel="workout-log-tab" style="background-color: #6dc0d5;">
         <i class="fa-solid fa-clipboard-list"></i>
-    </button>d
+    </button>
 </body>
 </html>
 
