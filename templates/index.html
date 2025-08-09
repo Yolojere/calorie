@@ -928,14 +928,10 @@
         transform: none !important;
         margin-top: 0 !important;
     }
-    
-    .position-static {
-        position: static !important;
-    }
     #add-food-panel .card-header h6 {
         font-size: 18px !important;
-}
-#food-search {
+    }
+    #food-search {
         font-size: 16px !important;
     }
     
@@ -976,6 +972,11 @@
     .calorie-badge i {
         font-size: 14px !important;
     }
+    
+    .position-static {
+        position: static !important;
+    }
+}
         /* Mobile Responsive */
         @media (max-width: 991px) {
             /* Show nutrition panel on mobile */
@@ -985,9 +986,6 @@
             #toggle-grid-btn {
         display: none;
             }
-            
-            
-            /* Camera button positioning and sizing */
             
             #scan-ean {
                 position: absolute;
@@ -1375,119 +1373,7 @@
             }
         }
         
-        /* Barcode scanner UI */
-        #camera-preview {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            background-color: #000000 !important;
-            overflow: hidden;
-            border-radius: 8px;
-        }
-        
-        #scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .scan-guide {
-       position: absolute;
-            top: 35%;
-            left: 10%;
-            width: 90%;
-            height: 30%;
-            border: 3px solid rgba(0, 0, 0, 0.7);
-            border-radius: 8px;
-            background-color: rgba(0, 0, 0, 0.05); /* Very subtle background */
-            z-index: 20;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-    }
-        .scan-line {
-    position: absolute;
-    top: 35%;
-    left: 10%;
-    width: 80%;
-    height: 3px;
-    background: rgba(241, 76, 200, 0.7);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    animation: scan 2s infinite linear;
-    z-index: 25;
-}
-        @keyframes scan {
-    0% { top: 35%; }
-    50% { top: 65%; }
-    100% { top: 35%; }
-}
-        
-        
-        .scanning-text {
-             position: absolute;
-            z-index: 25;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8); /* Darker text for better visibility */
-            font-weight: bold;
-            font-size: 18px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-        }
 
-        .scanned-result {
-            position: absolute;
-            top: 20px;
-            z-index: 30;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #28a745;
-            font-weight: bold;
-            background: rgba(46, 46, 46, 0.8);
-            padding: 12px;
-            font-size: 14px;
-            border-radius: 4px;
-        }
-
-         
-
-         /* Modal adjustments */
-   
-
-
-        .highlight-search {
-            box-shadow: 0 0 10px #ffffff;
-            border: 2px solid #ffffff;
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Camera buttons */
-        #toggle-camera, #resume-scan {
-             background: linear-gradient(to bottom, #ffffff, #b2b0b0) !important;
-    color: rgb(255, 0, 115) !important;
-    border: 1px solid #ffffff !important;
-    border-radius: 8px;
-    padding: 8px 15px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    margin: 5px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-        }
-
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 5px #ffffff; }
-            50% { box-shadow: 0 0 20px #ffffff; }
-            100% { box-shadow: 0 0 5px #ffffff; }
-        }
         /* Nutrition Grid Styles */
     .nutrition-grid {
         display: grid;
@@ -1926,6 +1812,149 @@
     .icon-bg {
         font-size: 16px !important;
     }
+}
+
+/* camera */
+#cameraModal .modal-content {
+    background: linear-gradient(135deg, #1a1a1a, #0a0a0a) !important;
+    border: 2px solid #b61336 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(182, 19, 54, 0.5) !important;
+}
+
+#camera-preview {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+#camera-preview video,
+#camera-preview canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+#scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.scanning-text {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(182, 19, 54, 0.8);
+    font-size: 18px;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.scan-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 200px;
+    border: 3px solid rgba(182, 19, 54, 0.7);
+    border-radius: 12px;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7);
+}
+
+.scan-line {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    width: 80%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #b989f0, transparent);
+    animation: scan 2.5s infinite linear;
+    box-shadow: 0 0 10px #b989f0;
+}
+
+@keyframes scan {
+    0% { top: 50%; }
+    25% { top: 30%; }
+    50% { top: 50%; }
+    75% { top: 70%; }
+    100% { top: 50%; }
+}
+
+.scanned-result {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 24px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+}
+
+#cameraModal .btn {
+    background: linear-gradient(135deg, #b61336, #8a0d29) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 8px 20px !important;
+    font-weight: bold !important;
+    margin: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+#cameraModal .btn:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 12px rgba(182, 19, 54, 0.5) !important;
+    background: linear-gradient(135deg, #c6173d, #9a0f2f) !important;
+}
+
+#cameraModal .btn:active {
+    transform: translateY(1px) !important;
+}
+
+#cameraModal .modal-footer {
+    border-top: 1px solid #444 !important;
+}
+
+#cameraModal .modal-header {
+    border-bottom: 1px solid #444 !important;
+}
+
+#zoom-level {
+    display: inline-block;
+    min-width: 50px;
+    font-weight: bold;
+    color: #b989f0;
 }
     </style>
 </head>
@@ -3842,4 +3871,3 @@ $('#cameraModal').on('hidden.bs.modal', function () {
     
 </body>
 </html>
-
