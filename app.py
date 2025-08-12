@@ -149,6 +149,32 @@ def init_db():
         )
     ''')
 
+    
+    # Workout templates table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS workout_templates (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
+    # Workout template exercises table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS workout_template_exercises (
+        id SERIAL PRIMARY KEY,
+        template_id INTEGER NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
+        exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+        reps INTEGER NOT NULL,
+        weight REAL NOT NULL,
+        rir REAL,
+        comments TEXT
+    )
+''')
+    
+    
+
 
     # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
@@ -1666,7 +1692,7 @@ def admin_dashboard():
 @app.route('/workout')
 @login_required
 def workout():
-    return render_template('workout.html')
+    return render_template('workout.html', current_user_role=current_user.role)
 
 @app.route('/workout/get_current_week', methods=['GET'])
 @login_required
@@ -2126,8 +2152,166 @@ def delete_selected_items():
         return jsonify(success=False, error=str(e)), 500
     finally:
         conn.close()
+
+# ===== WORKOUT TEMPLATE ROUTES =====
+@app.route('/workout/save_template', methods=['POST'])
+@admin_required
+def save_workout_template():
+    try:
+        name = request.form.get('name')
+        date_str = request.form.get('date')  # Get date as string
+        user_id = current_user.id
+        
+        # Convert string to date object
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify(error="Invalid date format"), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Create template
+        cursor.execute(
+            "INSERT INTO workout_templates (name, created_by) "
+            "VALUES (%s, %s) RETURNING id",
+            (name, user_id)
+        )
+        template_id = cursor.fetchone()[0]
+        
+        # Get session exercises using date object
+        cursor.execute(
+            "SELECT exercise_id, reps, weight, rir, comments "
+            "FROM workout_sets WHERE session_id = ("
+            "SELECT id FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s"
+            ")",
+            (user_id, date_obj)  # Use date object here
+        )
+        sets = cursor.fetchall()
+        
+        # Add to template
+        for set_data in sets:
+            cursor.execute(
+                "INSERT INTO workout_template_exercises "
+                "(template_id, exercise_id, reps, weight, rir, comments) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (template_id, *set_data)
+            )
+        
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+    finally:
+        conn.close()
+
+@app.route('/workout/templates', methods=['GET'])  # Updated endpoint
+@login_required
+def get_workout_templates():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute(
+            "SELECT id, name, created_at FROM workout_templates ORDER BY name"
+        )
+        templates = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return jsonify(templates=templates)  # Return direct templates array
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
+@app.route('/workout/templates/<int:template_id>', methods=['GET'])
+@login_required
+def get_workout_template(template_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        # Get template metadata
+        cursor.execute(
+            "SELECT id, name, created_at FROM workout_templates WHERE id = %s",
+            (template_id,)
+        )
+        template = cursor.fetchone()
+        if not template:
+            conn.close()
+            return jsonify(success=False, error="Template not found"), 404
+        
+        # Get template exercises
+        cursor.execute('''
+            SELECT e.id AS exercise_id, e.name, e.muscle_group,
+                   t.reps, t.weight, t.rir, t.comments
+            FROM workout_template_exercises t
+            JOIN exercises e ON t.exercise_id = e.id
+            WHERE t.template_id = %s
+        ''', (template_id,))
+        exercises = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return jsonify(
+            success=True, 
+            template=dict(template), 
+            exercises=exercises
+        )
+    
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify(success=False, error=str(e)), 500
         
         
+@app.route('/workout/apply_template', methods=['POST'])
+@login_required
+def apply_workout_template():
+    try:
+        template_id = request.form.get('template_id')
+        date = request.form.get('date')
+        user_id = current_user.id
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get template exercises
+        cursor.execute('''
+            SELECT exercise_id, reps, weight, rir, comments
+            FROM workout_template_exercises
+            WHERE template_id = %s
+        ''', (template_id,))
+        exercises = cursor.fetchall()
+        
+        # Get or create session
+        cursor.execute(
+            "SELECT id FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, date)
+        )
+        session = cursor.fetchone()
+        
+        if not session:
+            cursor.execute(
+                "INSERT INTO workout_sessions (user_id, date) "
+                "VALUES (%s, %s) RETURNING id",
+                (user_id, date)
+            )
+            session_id = cursor.fetchone()[0]
+        else:
+            session_id = session[0]
+        
+        # Add sets to session
+        for ex in exercises:
+            cursor.execute(
+                "INSERT INTO workout_sets "
+                "(session_id, exercise_id, reps, weight, rir, comments) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (session_id, ex[0], ex[1], ex[2], ex[3], ex[4])
+            )
+        
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+    finally:
+        conn.close()
 
 @app.route('/keepalive')
 @login_required
