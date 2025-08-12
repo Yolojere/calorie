@@ -1,3 +1,7 @@
+<script>
+    // Add this at the very top of workout.html
+    const current_user_role = "{{ current_user_role }}";
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +13,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        /* === UPDATED EXERCISE HEADER STYLES === */
+        .exercise-header {
+            padding: 10px 15px;
+            background: rgba(50, 50, 50, 0.7);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: none !important; /* Remove the divider line */
+            margin-bottom: 0; /* Remove extra spacing */
+        }
+
         /* === MAIN STYLES === */
         body {
             font-family: 'Calibri', sans-serif;
@@ -167,31 +185,43 @@
         .workout-table {
             width: 100%;
             border-collapse: collapse;
+    border-spacing: 0;
             table-layout: fixed;
         }
         
         .workout-table th {
             background-color: #000;
-            padding: 10px;
-            text-align: left;
-            border-bottom: 2px solid #444;
+    padding: 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
         }
         
         .workout-table td {
-            padding: 10px;
-            border-bottom: 1px solid #444;
-            vertical-align: middle;
-            background-color: #222;
-            color: #e0e0e0;
+            padding: 8px 10px;
+    vertical-align: middle;
+    background-color: #222;
+    color: #e0e0e0
         }
         
-        .workout-table tr:last-child td {
-            border-bottom: none;
-        }
+       
+        .workout-table tr {
+    border: none !important;
+}
+
+.workout-table td,
+.workout-table th {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    padding: 8px 4px !important; /* Reduced padding for better fit */
+    
+}
         
-        .workout-table tr:hover {
-            background-color: #2a2a2a;
-        }
+        
         
         .set-row input {
             width: 80px;
@@ -217,6 +247,9 @@
         }
         
         .volume-display {
+            
+             height: 100%;
+         align-items: center;   
             text-align: center !important;
             font-weight: bold;
             color: #ffffff;
@@ -297,16 +330,22 @@
         }
         
         .set-number-cell {
-            display: flex;
-            flex-direction:row
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
         }
 
         
         .set-details {
             display: flex;
             align-items:center; /* RIR BADGE + COMMENT */
-            margin-top: -2px;
+            justify-content: center;
+    margin-top: 2px;
             font-size: 6px;
+    width: 100%;
+    margin-top: 2px;
         }
         
         .tooltip-inner {
@@ -486,7 +525,8 @@
         }
 
         .set-input {
-            width: 60px !important;
+            display: block;
+            width: 80% !important; /* Better control on mobile */
             height: 28px !important;
             padding: 2px 5px !important;
             font-size: 14px !important;
@@ -494,6 +534,7 @@
             border: 1px solid #666 !important;
             color: white !important;
             text-align: center;
+            margin: 0 auto;
         }
 
         .set-input:focus {
@@ -511,10 +552,10 @@
 
         /* Horizontal button alignment */
         .actions-cell {
-            display: flex;
-            justify-content: center !important;
-            gap: 5px;
-            min-width: 80px; /* Ensure enough space for button */
+           display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             background-color: #222 !important; /* Fixed background */
         }
 
@@ -554,22 +595,7 @@
         .toggle-icon i {
             transition: transform 0.2s ease;
         }
-        
-        .exercise-header {
-            padding: 10px 15px;
-            background: rgba(50, 50, 50, 0.7);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
 
-        .exercise-header:hover {
-            background: rgba(70, 70, 70, 0.8);
-        }
-        
         .exercise-info {
             display: flex;
             align-items: center;
@@ -624,10 +650,39 @@
             .workout-grid-container {
                 display: none;
             }
+            #workout-log-tab .group-title {
+        font-size: 13px !important;
+    }
+    #workout-log-tab .exercise-title {
+        font-size: 14px;
+    }
+    
+    #workout-log-tab .workout-table th,
+    #workout-log-tab .workout-table td {
+        font-size: 13px;
+    }
+    
+    #workout-log-tab .summary-item {
+        font-size: 11px;
+    }
+    
+    #workout-log-tab .exercise-summary-text {
+        font-size: 11px;
+    }
+    
+    #workout-log-tab .set-details {
+        font-size: 11px;
+    }
+    
+    #workout-log-tab .rir-badge {
+        font-size: 10px;
+    }
+
             .workout-group .group-items {
             padding: 15px 0; /* Top/bottom padding only */
-            border-left: none;
-            border-right: none;
+            border-left: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
         }
         .group-items {
             padding-left: 0;
@@ -636,8 +691,51 @@
             border-right: none;
         }
         .workout-group .group-header {
-            padding: 12px 10px !important; /* Reduced horizontal padding */
+            border: none !important;
+            display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px !important;
         }
+        .group-header-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0; /* Allow truncation */
+}
+
+/* Exercise header layout */
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px !important;
+}
+.exercise-info {
+    display: flex;
+    align-items: center;
+    margin-top: 0;
+    gap: 8px;
+}
+
+/* Font size optimization */
+.group-title {
+    font-size: 14px !important;
+}
+
+.summary-item {
+    font-size: 11px;
+}
+
+.exercise-summary-text {
+    font-size: 11px;
+}
+        .workout-group .group-header:hover,
+    .exercise-header:hover {
+        border: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
             .workout-container {
             padding: 0 !important;
             margin: 0 !important;
@@ -656,11 +754,14 @@
                 margin-top: 0;
             padding: 10px 15px;
             border-radius: 0;
-            }
+            
             
             .workout-table th, .workout-table td {
                 padding: 8px;
                 font-size: 14px;
+                border: none !important;
+                vertical-align: middle !important;
+                text-align: center;
             }
             
             .workout-card-header {
@@ -712,6 +813,7 @@
             }
             
             .exercise-header {
+                background: #333 !important;
                 flex-direction: column;
                 align-items: flex-start;
             }
@@ -896,6 +998,66 @@
         .mobile-tab-content {
             height: calc(100vh - 56px - 70px); /* Subtract navbar and tab bar heights */
         }
+        /* remove bottom border */
+       
+.workout-table tbody tr:nth-child(odd) {
+    background-color: #1a1a1a;
+}
+.workout-table td {
+    padding: 8px 10px; /* Reduced vertical padding */
+}
+.workout-table td, .workout-table th {
+        padding: 6px 2px !important;
+    }
+    
+    .set-input {
+        width: 90% !important;
+        padding: 4px 2px !important;
+    }
+    
+    .volume-display {
+        font-size: 12px;
+    }
+.workout-table tbody tr:last-child {
+    border-bottom: none;
+}
+        
+.workout-table tbody tr:hover {
+    background-color: #2d2d2d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.workout-table tbody tr,
+.workout-table tbody td {
+    background: none !important; /* test if background is the culprit */
+}
+
+.input-group > .btn-outline-secondary {
+    z-index: 3; /* Ensure button stays above other elements */
+    position: relative;
+    border: 1px solid #555 !important;
+}
+
+
+.workout-table tbody td {
+    height: 60px; /* Fixed height for all rows */
+}
+
+/* Fix header alignment */
+.workout-table thead th {
+    vertical-align: middle;
+    text-align: center;
+}
+.tooltip-inner {
+    max-width: 250px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow {
+    bottom: 1px;
+}
+
     </style>
 </head>
 <body>
@@ -1063,12 +1225,18 @@
                                     <option value="Core">Core</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Exercise</label>
-                                <select id="exercise-select" class="form-select">
-                                    <!-- Populated by JavaScript -->
-                                </select>
-                            </div>
+                           <div class="col-md-3">
+    <label class="form-label">Exercise</label>
+    <div class="input-group">
+        <select id="exercise-select" class="form-select">
+            <!-- Populated by JavaScript -->
+        </select>
+        <button class="btn btn-outline-secondary" type="button" 
+                data-bs-toggle="modal" data-bs-target="#addExerciseModal">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
                             <div class="col-md-2">
                                 <label class="form-label">Sets</label>
                                 <select id="sets-input" class="form-select">
@@ -1120,10 +1288,24 @@
                                     <i class="fas fa-plus me-1"></i> Add Set
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>        
+                      
             </div>
+            <div class="row mt-3">
+    <div class="col-12">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle w-100" type="button" 
+                    id="templateDropdown" data-bs-toggle="dropdown">
+                <i class="fas fa-clipboard-list me-1"></i> Load Template
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-desktop">
+                <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+                </div> <!-- End of card-body -->
+            </div> <!-- End of card -->
+        </div> <!-- End of add-set-tab -->
             
            <!-- Workout Session Container -->
             <div class="grid-log">
@@ -1167,11 +1349,17 @@
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Exercise</label>
-                                    <select id="exercise-select-mobile" class="form-select">
-                                        <!-- Populated by JavaScript -->
-                                    </select>
-                                </div>
+    <label class="form-label">Exercise</label>
+    <div class="input-group">
+        <select id="exercise-select-mobile" class="form-select">
+            <!-- Populated by JavaScript -->
+        </select>
+        <button class="btn btn-outline-secondary" type="button" 
+                data-bs-toggle="modal" data-bs-target="#addExerciseModal">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
                                 <div class="col-4">
                                     <label class="form-label">Sets</label>
                                     <select id="sets-input-mobile" class="form-select">
@@ -1224,9 +1412,23 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Load Template button for mobile -->
+                    <div class="row mt-3">
+    <div class="col-12">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle w-100" type="button" 
+                    id="templateDropdownMobile" data-bs-toggle="dropdown">
+                <i class="fas fa-clipboard-list me-1"></i> Load Template
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
+                <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+                </div> <!-- End of card-body -->
+            </div> <!-- End of card -->
+        </div> <!-- End of add-set-tab -->
                 
                 <!-- Workout Log Tab Content -->
                 <div id="workout-log-tab" class="mobile-tab-pane">
@@ -1286,20 +1488,53 @@
             </div>
         </div>
     </div>
-    
-    <!-- Admin Controls -->
+    <!-- Corrected Admin Controls -->
+<div class="position-fixed bottom-0 end-0 m-3" style="z-index: 1000;">
     {% if current_user.role == 'admin' %}
-    <div class="position-fixed bottom-0 end-0 m-3">
-        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
-            <i class="fas fa-plus-circle me-1"></i> Add Exercise
-        </button>
-    </div>
+    <button class="btn btn-warning me-2" id="save-template-btn">
+        <i class="fas fa-save me-1"></i> Save Template
+    </button>
     {% endif %}
+    </div>
+
+<!-- Template Preview Modal -->
+<div class="modal fade" id="templatePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-black">
+                <h5 class="modal-title">Template Preview: <span id="template-preview-name"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Exercise</th>
+                            <th>Muscle Group</th>
+                            <th>Reps</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="template-preview-body">
+                        <!-- Preview will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-black">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="apply-template-btn">Apply Template</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        
     // Global variables
+    
     let currentSelectedDate = new Date().toISOString().split('T')[0];
     let currentDate = new Date();
     let exercises = [];
@@ -1316,6 +1551,7 @@
         setupEventListeners();
         initTooltips();
         setupMobileTabs();
+        loadTemplates();
 
         // Set initial active tab based on which pane is visible
     if ($('#workout-log-tab').hasClass('active')) {
@@ -1359,12 +1595,50 @@
         localStorage.setItem('workoutCollapseState', JSON.stringify(collapseState));
     }
     
-    function initTooltips() {
-        $('body').tooltip({
-            selector: '[data-bs-toggle="tooltip"]',
-            trigger: 'hover'
-        });
-    }
+function initTooltips() {
+    // Initialize ALL Bootstrap tooltips globally for [data-bs-toggle="tooltip"]
+    $('[data-bs-toggle="tooltip"]').tooltip({
+        boundary: 'window',
+        container: 'body',
+        trigger: 'hover focus',  // Normal behavior for desktop
+        placement: 'top'
+    });
+
+    // Special handling for comment icons on desktop
+    $('.comment-icon').tooltip('dispose').tooltip({
+        trigger: 'hover',  // Hover only for desktop
+        boundary: 'window',
+        container: 'body',
+        placement: 'top',
+        offset: [0, 5]  // Small vertical offset to position closer to icon
+    });
+
+    // Mobile-specific tooltip tap handling
+    $('body').on('touchstart', '.comment-icon', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Hide all others first
+        $('.comment-icon').not(this).tooltip('hide');
+        $(this).tooltip('toggle');
+
+        // Show this one
+        $(this).tooltip('show');
+
+        // Auto-hide after 3s
+        setTimeout(() => {
+            $(this).tooltip('hide');
+        }, 3000);
+    });
+
+    // Hide tooltips when clicking/tapping elsewhere
+    $(document).on('touchstart click', function (e) {
+        if (!$(e.target).hasClass('comment-icon')) {
+            $('.comment-icon').tooltip('hide');
+        }
+    });
+}
+    
     
     // Load current week dates
     function loadCurrentWeek() {
@@ -1537,12 +1811,15 @@
     
     // Render exercise options for both desktop and mobile
     function renderExerciseOptions() {
-        const muscleGroup = $("#muscle-group-select").val();
-        const select = $("#exercise-select");
-        select.empty();
+    const muscleGroup = $("#muscle-group-select").val();
+    const select = $("#exercise-select");
+    const currentExercise = select.val(); // Remember current selection
+    
+    select.empty();
         
         const muscleGroupMobile = $("#muscle-group-select-mobile").val();
         const selectMobile = $("#exercise-select-mobile");
+        const currentExerciseMobile = selectMobile.val();
         selectMobile.empty();
         
         exercises
@@ -1556,7 +1833,11 @@
             .forEach(exercise => {
                 selectMobile.append(`<option value="${exercise.id}">${exercise.name}</option>`);
             });
+            if (currentExerciseMobile && selectMobile.find(`option[value="${currentExerciseMobile}"]`).length) {
+            selectMobile.val(currentExerciseMobile);
+        }
     }
+    
     
     function renderWorkoutSession(session, exercises) {
         const container = $("#workout-session-container");
@@ -1663,11 +1944,11 @@
                             <table class="workout-table">
                                 <thead>
                                     <tr>
-                                        <th>Set</th>
-                                        <th>Reps</th>
-                                        <th>Weight</th>
-                                        <th>Volume</th>
-                                        <th>Actions</th>
+                                        <th class="text-center">Set</th>
+                                        <th class="text-center">Reps</th>
+                                        <th class="text-center">Weight</th>
+                                        <th class="text-center">Volume</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1731,6 +2012,7 @@
         
         container.html(sessionHTML);
         mobileContainer.html(sessionHTML);
+        initTooltips();
         
         // Add group toggle functionality
         $(".toggle-group").click(function() {
@@ -1790,11 +2072,18 @@
         
         // Add delete handler
         $(document).on("click", ".delete-item", function() {
-            const row = $(this).closest("tr");
-            const setId = row.data("set-id");
-            deleteSet(setId);
-        });
-    }
+    if (!confirm("Are you sure you want to delete this set?")) return;
+    
+    const row = $(this).closest("tr");
+    const setId = row.data("set-id");
+    
+    // Disable button & show spinner
+    $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    // Now call delete function
+    deleteSet(setId);
+});
+}
 
     function handleSetUpdate() {
         const row = $(this).closest("tr");
@@ -1874,29 +2163,189 @@
         };
         return icons[muscleGroup] || 'dumbbell';
     }
+  
+// Save current session as template
+function saveTemplate() {
+    const templateName = prompt("Enter a name for this template:");
+    if (!templateName) return;
     
-    function setupEventListeners() {
-        // Setup muscle group change listener for both desktop and mobile
-        $("#muscle-group-select, #muscle-group-select-mobile").change(renderExerciseOptions);
+    const $btn = $("#save-template-btn");
+    const originalContent = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+    $btn.prop('disabled', true);
+    
+    const currentDate = $(".workout-date.active").data("date");
+    
+    // Send as form data
+    const formData = new FormData();
+    formData.append('name', templateName);
+    formData.append('date', currentDate);
+    
+    fetch("/workout/save_template", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        $btn.html(originalContent);
+        $btn.prop('disabled', false);
         
-        // Save set listeners for both desktop and mobile
-        $("#save-set-btn").click(() => saveSet(false));
-        $("#save-set-btn-mobile").click(() => saveSet(true));
-        
-        // Add exercise
-        $("#save-exercise-btn").click(addExercise);
-        
-        // Week navigation
-        $("#prev-week-btn").click(() => navigateWeek('prev'));
-        $("#next-week-btn").click(() => navigateWeek('next'));
-        
-        // Allow Enter key to submit set on both desktop and mobile
-        $("#comments-input, #comments-input-mobile").keypress(function(e) {
-            if (e.which === 13) { // Enter key
-                saveSet($(this).attr('id') === 'comments-input-mobile');
+        if (data.success) {
+            alert("Template saved successfully!");
+            loadTemplates();
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(error => {
+        $btn.html(originalContent);
+        $btn.prop('disabled', false);
+        alert("Error: " + error.message);
+    });
+}
+
+// Preview Template Function
+
+function previewTemplate(templateId) {
+    // Hide all tooltips before showing modal
+    $('.comment-icon').tooltip('hide');
+    
+    fetch(`/workout/templates/${templateId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $("#template-preview-name").text(data.template.name);
+            const $previewBody = $("#template-preview-body");
+            $previewBody.empty();
+            
+            data.exercises.forEach(ex => {
+                $previewBody.append(`
+                    <tr>
+                        <td>${ex.name}</td>
+                        <td>${ex.muscle_group}</td>
+                        <td>${ex.reps}</td>
+                        <td>${ex.weight} kg</td>
+                    </tr>
+                `);
+            });
+            
+            // Reinitialize tooltips after modal content is updated
+            initTooltips();
+            
+            // Store template ID on the button
+            $("#apply-template-btn").data('template-id', templateId);
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('templatePreviewModal'));
+            modal.show();
+        } else {
+            alert("Error: " + (data.error || "Template not found"));
+        }
+    })
+    .catch(error => {
+        alert("Error loading template: " + error.message);
+    });
+}
+
+// Apply Template Function
+function applyTemplate(templateId) {
+    const currentDate = $(".workout-date.active").data("date");
+    
+    $.post("/workout/apply_template", {
+        template_id: templateId,
+        date: currentDate
+    }, function(response) {
+        if (response.success) {
+            $("#templatePreviewModal").modal('hide');
+            loadWorkoutSession(currentDate);
+            
+            // Switch to workout log tab on mobile
+            if ($(window).width() <= 768) {
+                $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').click();
             }
-        });
+        } else {
+            alert("Error: " + (response.error || "Failed to apply template"));
+        }
+    });
+}
+function loadTemplates() {
+    $.get("/workout/templates", function(data) {
+        const $templateListDesktop = $("#template-list-desktop");
+        const $templateListMobile = $("#template-list-mobile");
+        $templateListDesktop.empty();
+        $templateListMobile.empty();
+        
+        if (data.templates && data.templates.length > 0) {
+            data.templates.forEach(template => {
+                const item = `
+                    <li><a class="dropdown-item template-item" href="#" 
+                           data-id="${template.id}">${template.name}</a></li>
+                `;
+                $templateListDesktop.append(item);
+                $templateListMobile.append(item);
+            });
+        } else {
+            const noItem = '<li><a class="dropdown-item" href="#">No templates found</a></li>';
+            $templateListDesktop.append(noItem);
+            $templateListMobile.append(noItem);
+        }
+    })
+    .fail(function() {
+        const errorItem = '<li><a class="dropdown-item" href="#">Error loading templates</a></li>';
+        $("#template-list-desktop").html(errorItem);
+        $("#template-list-mobile").html(errorItem);
+    });
+}
+
+
+function setupEventListeners() {
+    // Setup muscle group change listener for both desktop and mobile
+    $("#muscle-group-select, #muscle-group-select-mobile").change(renderExerciseOptions);
+    
+    // Save set listeners for both desktop and mobile
+    $("#save-set-btn").click(() => saveSet(false));
+    $("#save-set-btn-mobile").click(() => saveSet(true));
+    
+    // Add exercise
+    $("#save-exercise-btn").click(addExercise);
+    
+    // Week navigation
+    $("#prev-week-btn").click(() => navigateWeek('prev'));
+    $("#next-week-btn").click(() => navigateWeek('next'));
+    
+    // Allow Enter key to submit set on both desktop and mobile
+    $("#comments-input, #comments-input-mobile").keypress(function(e) {
+        if (e.which === 13) { // Enter key
+            saveSet($(this).attr('id') === 'comments-input-mobile');
+        }
+    });
+
+    // Apply template  
+    $("#save-template-btn").click(saveTemplate);
+    $("#apply-template-btn").click(function() {
+        const templateId = $(this).data('template-id');
+        applyTemplate(templateId);
+        
+        // Close the modal properly
+        const modal = bootstrap.Modal.getInstance(document.getElementById('templatePreviewModal'));
+        if (modal) {
+            modal.hide();
+        }
+    });
+    
+    $(document).on("click", ".template-item", function(e) {
+    e.preventDefault();
+    const templateId = $(this).data('id');
+    previewTemplate(templateId);
+});
+    
+    
+    // Admin-only events
+    if (current_user_role === 'admin') {
+        $("#save-template-btn").click(saveTemplate);
     }
+}
+
 </script>
 <div class="mobile-tab-bar-workout d-block d-md-none">
     <button class="mobile-tab-btn-workout active" data-panel="add-set-tab" style="background-color: #ff9e6d;">
@@ -1905,5 +2354,6 @@
     <button class="mobile-tab-btn-workout" data-panel="workout-log-tab" style="background-color: #6dc0d5;">
         <i class="fa-solid fa-clipboard-list"></i>
     </button>
+</div>
 </body>
 </html>
