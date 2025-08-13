@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
 import traceback
+import uuid
 
 
 # Load environment variables
@@ -1312,6 +1313,8 @@ def move_or_copy_items(remove_original=True):
                 # Create a copy and update the group
                 new_item = item.copy()
                 new_item['group'] = new_group
+                if not remove_original:  # Only for copies, not moves
+                    new_item['id'] = str(uuid.uuid4())
                 items_to_transfer.append(new_item)
         
         # If moving, remove original items by ID
@@ -2263,6 +2266,7 @@ def get_workout_template(template_id):
 @app.route('/workout/apply_template', methods=['POST'])
 @login_required
 def apply_workout_template():
+    conn = None  # Initialize connection outside try block
     try:
         template_id = request.form.get('template_id')
         date = request.form.get('date')
@@ -2309,9 +2313,13 @@ def apply_workout_template():
         conn.commit()
         return jsonify(success=True)
     except Exception as e:
-        return jsonify(error=str(e)), 500
+        if conn:
+            conn.rollback()
+        app.logger.error(f"Error applying template: {str(e)}")
+        return jsonify(success=False, error=str(e)), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()  # Ensure connection is always closed
 
 @app.route('/keepalive')
 @login_required
