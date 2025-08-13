@@ -103,6 +103,19 @@
     color: black;
     font-weight: bold;
 }
+.spinner-delete {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 #recipe-yes:hover {
     transform: scale(1.05);
@@ -3224,23 +3237,31 @@ $('#save-grams').click(function() {
 });
 
             // Delete food item
-$(document).on('click', '.delete-food-btn', function(e) {
-            e.stopPropagation();
-            const foodId = $(this).data('id');
-            const foodName = $(this).closest('.food-item').find('.food-name').text();
-            
-            if (!confirm(`Permanently delete "${foodName}" from database?`)) return;
-            
-            $.post('/delete_food', { food_id: foodId }, function(response) {
-                if (response.success) {
-                    // Remove from UI
-                    $(this).closest('.food-item').remove();
-                    alert('Food item deleted successfully');
-                } else {
-                    alert('Error: ' + (response.error || 'Failed to delete food item'));
-                }
-            }.bind(this));
-        });
+$(document).on('click', '.delete-item', function(e) {
+    e.stopPropagation();
+    const button = $(this);
+    const itemId = button.data('id');
+    const date = $('#date-selector').val();
+    
+    // Store original content
+    const originalHTML = button.html();
+    
+    // Show spinner and disable button
+    button.prop('disabled', true);
+    button.html('<div class="spinner-delete"></div>');
+    
+    $.post('/delete_item', {
+        item_id: itemId,
+        date: date
+    }, function(response) {
+        updateSessionDisplay(response.session, response.totals, response.breakdown);
+    }).fail(function() {
+        // Revert button on failure
+        button.html(originalHTML);
+        button.prop('disabled', false);
+        alert('Failed to delete item. Please try again.');
+    });
+});
 // Delete item - keep using IDs
 $(document).on('click', '.delete-item', function(e) {
                 e.stopPropagation();
