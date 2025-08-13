@@ -26,6 +26,10 @@
             border-bottom: none !important; /* Remove the divider line */
             margin-bottom: 0; /* Remove extra spacing */
         }
+        .exercise-header.expanded {
+    background: color-mix(in srgb, var(--group-color) 50%, black);
+    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1); /* Slight glow/shadow */
+}
 
         /* === MAIN STYLES === */
         body {
@@ -131,17 +135,20 @@
         .mobile-tab-pane {
             display: none;
             padding: 0;
+            height: 100%;
+        overflow: hidden;
         }
         .mobile-tab-pane .card {
-            margin: 0;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
-        }
+           height: 100%;
+        border-radius: 0;
+        border: none;
+        margin: 0;
+    }
         .mobile-tab-pane .card-body {
-            flex-grow: 1;
-            overflow: auto;
-        }
+            height: 100%;
+        padding: 0;
+        overflow: hidden;
+    }
         
         .mobile-tab-pane.active {
             display: block;
@@ -653,6 +660,12 @@
         /* === MOBILE WORKOUT LOG IMPROVEMENTS === */
         @media (max-width: 768px) {
             /* Hide desktop layout on mobile */
+            body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden; /* Prevent body scroll, push to content */
+    }
             .workout-grid-container {
                 display: none;
             }
@@ -750,10 +763,10 @@
             
             /* Show mobile tabs on mobile */
             .mobile-tabs-container {
-                display: block;
-                width: 100vw;
-            margin: 0;
-            padding: 0;
+                    flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
             
             .workout-header {
@@ -822,7 +835,14 @@
                 background: #333 !important;
                 flex-direction: column;
                 align-items: flex-start;
+                transition: all 0.3s ease;
             }
+            .exercise-header.expanded {
+    background: rgba(255, 255, 255, 0.1) !important; /* Subtle highlight when open */
+    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1); /* Slight glow/shadow */
+    border-bottom: 2px solid var(--group-color); /* Color-coded border for emphasis */
+}
+
             
             .exercise-info {
                 display: flex;
@@ -841,12 +861,16 @@
             }
             
             #workout-session-container-mobile {
-                min-height: 150px;
-                padding: 0px !important;
-            }
+                height: 100%;
+        overflow-y: auto;
+        padding: 15px !important; /* Increased padding for better touch scrolling */
+    }
             #add-set-tab .card-body {
             padding: 15px;
         }
+        workout-group, .exercise-sets {
+        min-height: auto;
+    }
             /* Volume column adjustments */
             .volume-display {
                 font-size: 14px;
@@ -1002,8 +1026,10 @@
         
         /* Adjust tab content height to account for bottom bar */
         .mobile-tab-content {
-            height: calc(100vh - 56px - 70px); /* Subtract navbar and tab bar heights */
-        }
+            flex: 1;
+        overflow-y: auto;
+        height: auto; /* Remove fixed calc, use flex instead */
+    }
         /* remove bottom border */
        
 .workout-table tbody tr:nth-child(odd) {
@@ -1690,16 +1716,19 @@ function initTooltips() {
     }
     
     // Delete a set
-    function deleteSet(setId) {
-        if (!confirm("Are you sure you want to delete this set?")) return;
-        
+    function deleteSet(setId, $button) {
         $.post("/workout/delete_set", { set_id: setId }, function(response) {
             if (response.success) {
                 const date = $(".workout-date.active").data("date");
                 loadWorkoutSession(date);
             } else {
                 alert("Error: " + response.error);
+                // Re-enable button on error
+                $button.prop('disabled', false).html('<i class="fas fa-trash"></i>');
             }
+        }).fail(function() {
+            alert("Network error. Please try again.");
+            $button.prop('disabled', false).html('<i class="fas fa-trash"></i>');
         });
     }
     
@@ -1907,10 +1936,11 @@ function initTooltips() {
             // Render exercises in this group
             groupData.exercises.forEach(exercise => {
                 const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
+                const expandedClass = exerciseCollapsed ? '' : 'expanded';
                 
                 sessionHTML += `
                     <div class="exercise" data-exercise-id="${exercise.id}">
-                        <div class="exercise-header">
+                        <div class="exercise-header ${expandedClass}">
                             <div class="exercise-title">${exercise.name}</div>
                             <div class="exercise-info">
                                 <div class="exercise-summary-text">
@@ -1994,6 +2024,17 @@ function initTooltips() {
         container.html(sessionHTML);
         mobileContainer.html(sessionHTML);
         initTooltips();
+
+        // Apply initial expanded class based on collapse state
+    $(".exercise").each(function() {
+        const exerciseId = $(this).data("exercise-id");
+        const currentDate = $(".workout-date.active").data("date");
+        const isCollapsed = collapseState.exercises[currentDate]?.[exerciseId] || false;
+        const header = $(this).find(".exercise-header");
+        if (!isCollapsed) {
+            header.addClass("expanded"); // Open by default if not collapsed
+        }
+    });
         
         // Add group toggle functionality
         $(".toggle-group").click(function() {
@@ -2028,8 +2069,20 @@ function initTooltips() {
             $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
             $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
             
+        // Toggle visibility
+            exerciseSets.toggle(!isExpanded);
+            $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
+            $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
+
+            // Toggle expanded class for visual
+            if (isExpanded) {
+                exerciseHeader.removeClass("expanded"); // Closed now
+            } else {
+                exerciseHeader.addClass("expanded"); // Open now
+            }
+
             // Update state
-            collapseState.exercises[currentDate][exerciseId] = isExpanded;
+            collapseState.exercises[currentDate][exerciseId] = isExpanded; // Note: isExpanded is before toggle, so it's the new collapsed state
             saveCollapseState();
         });
         
@@ -2052,18 +2105,20 @@ function initTooltips() {
         });
         
         // Add delete handler
+        $(document).off("click", ".delete-item"); // Remove old handlers first
         $(document).on("click", ".delete-item", function() {
-    if (!confirm("Are you sure you want to delete this set?")) return;
-    
-    const row = $(this).closest("tr");
-    const setId = row.data("set-id");
-    
-    // Disable button & show spinner
-    $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-    
-    // Now call delete function
-    deleteSet(setId);
-});
+            const $button = $(this);
+            const row = $button.closest("tr");
+            const setId = row.data("set-id");
+            
+            if (!confirm("Are you sure you want to delete this set?")) return;
+            
+            // Disable button & show spinner
+            $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            // Call delete with button reference
+            deleteSet(setId, $button);
+        });
 }
 
     function handleSetUpdate() {
