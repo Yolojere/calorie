@@ -347,14 +347,20 @@
     width: 100%;
     margin-top: 2px;
         }
+        .tooltip {
+    z-index: 1080 !important;
+}
         
         .tooltip-inner {
-            max-width: 300px;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #555;
-            border-radius: 4px;
-            padding: 8px;
+        max-width: 250px;
+            white-space: normal;
+            word-wrap: break-word;
+            text-align: left;
+            padding: 8px 12px;
+            background-color: #333 !important;
+            color: #fff !important;
+            border: 1px solid #555 !important;
+            border-radius: 6px !important;
         }
         
         .tooltip.bs-tooltip-top .tooltip-arrow::before {
@@ -1048,15 +1054,7 @@
     vertical-align: middle;
     text-align: center;
 }
-.tooltip-inner {
-    max-width: 250px;
-    padding: 8px 12px;
-    font-size: 13px;
-}
 
-.tooltip.bs-tooltip-top .tooltip-arrow {
-    bottom: 1px;
-}
 
     </style>
 </head>
@@ -1596,33 +1594,15 @@
     }
     
 function initTooltips() {
-    // Initialize ALL Bootstrap tooltips globally for [data-bs-toggle="tooltip"]
-    $('[data-bs-toggle="tooltip"]').tooltip({
-        boundary: 'window',
-        container: 'body',
-        trigger: 'hover focus',  // Normal behavior for desktop
-        placement: 'top'
-    });
 
-    // Special handling for comment icons on desktop
-    $('.comment-icon').tooltip('dispose').tooltip({
-        trigger: 'hover',  // Hover only for desktop
-        boundary: 'window',
-        container: 'body',
-        placement: 'top',
-        offset: [0, 5]  // Small vertical offset to position closer to icon
-    });
 
     // Mobile-specific tooltip tap handling
-    $('body').on('touchstart', '.comment-icon', function (e) {
+    $('body').on('touchstart', '.comment-icon', function(e) {
         e.stopPropagation();
         e.preventDefault();
 
         // Hide all others first
         $('.comment-icon').not(this).tooltip('hide');
-        $(this).tooltip('toggle');
-
-        // Show this one
         $(this).tooltip('show');
 
         // Auto-hide after 3s
@@ -1632,8 +1612,9 @@ function initTooltips() {
     });
 
     // Hide tooltips when clicking/tapping elsewhere
-    $(document).on('touchstart click', function (e) {
-        if (!$(e.target).hasClass('comment-icon')) {
+    $(document).on('touchstart click', function(e) {
+        if (!$(e.target).hasClass('comment-icon') && 
+            !$(e.target).closest('.tooltip').length) {
             $('.comment-icon').tooltip('hide');
         }
     });
