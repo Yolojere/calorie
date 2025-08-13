@@ -331,18 +331,18 @@ def migrate_json_to_db():
             ''', (
                 key,
                 food['name'],
-                food['carbs'],
-                food.get('sugars', 0),
-                food.get('fiber', 0),
-                food['proteins'],
-                food['fats'],
-                food.get('saturated', 0),
-                food.get('salt', 0),
-                food['calories'],
-                food['grams'],
-                food.get('half'),
-                food.get('entire'),
-                food.get('serving'),
+                safe_float(food['carbs']),  # Use safe_float
+                safe_float(food.get('sugars')),  # Use safe_float
+                safe_float(food.get('fiber')),  # Use safe_float
+                safe_float(food['proteins']),  # Use safe_float
+                safe_float(food['fats']),  # Use safe_float
+                safe_float(food.get('saturated')),  # Use safe_float
+                safe_float(food.get('salt')),  # Use safe_float
+                safe_float(food['calories']),  # Use safe_float
+                safe_float(food['grams'], 100),  # Use safe_float with default 100
+                safe_float(food.get('half'), None),  # Allow None for optional fields
+                safe_float(food.get('entire'), None),  # Allow None for optional fields
+                safe_float(food.get('serving'), None),  # Allow None for optional fields
                 ean
             ))
         except Exception as e:
@@ -502,12 +502,11 @@ def get_food_by_key(key):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     try:
-        # First try exact match with normalized key
         cursor.execute('SELECT * FROM foods WHERE key = %s', (normalized_key,))
         food = cursor.fetchone()
         
         if food:
-            print(f"✔️ Found food by exact match: {food['name']}")
+            print(f"✔️ Found food by exact match: {food['name']}, fiber={food['fiber']}")
             return dict(food)
         
         # Fallback to case-insensitive search if exact match fails
@@ -1127,7 +1126,6 @@ def log_food():
         meal_group = request.form.get('meal_group')
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
 
-        # Print for debugging
         print(f"Logging food: original='{food_id}', normalized='{normalized_key}'")
         
         food = get_food_by_key(normalized_key)
@@ -1152,10 +1150,10 @@ def log_food():
         carbs = food['carbs'] * factor
         proteins = food['proteins'] * factor
         fats = food['fats'] * factor
-        salt = food.get('salt', 0.0) * factor
-        sugars = food.get('sugars', 0.0) * factor
-        fiber = food.get('fiber', 0.0) * factor
-        saturated = food.get('saturated', 0.0) * factor
+        salt = safe_float(food.get('salt')) * factor  # Use safe_float
+        sugars = safe_float(food.get('sugars')) * factor  # Use safe_float
+        fiber = safe_float(food.get('fiber')) * factor  # Use safe_float
+        saturated = safe_float(food.get('saturated')) * factor  # Use safe_float
         calories = food['calories'] * factor
 
         item = {
