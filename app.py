@@ -234,19 +234,19 @@ def init_workout_db():
     
     # Workout sets table - ADD NEW COLUMNS
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS workout_sets (
-            id SERIAL PRIMARY KEY,
-            session_id INTEGER NOT NULL,
-            exercise_id INTEGER NOT NULL,
-            reps INTEGER NOT NULL,
-            weight REAL NOT NULL,
-            volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
-            rir REAL,
-            comments TEXT,
-            FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
-            FOREIGN KEY (exercise_id) REFERENCES exercises(id)
-        )
-    ''')
+    CREATE TABLE IF NOT EXISTS workout_sets (
+        id SERIAL PRIMARY KEY,
+        session_id INTEGER NOT NULL,
+        exercise_id INTEGER NOT NULL,
+        reps INTEGER NOT NULL,
+        weight REAL NOT NULL,
+        volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
+        rir REAL,
+        comments TEXT,
+        FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
+        FOREIGN KEY (exercise_id) REFERENCES exercises(id)
+    )
+''')
 
     try:
         cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS rir REAL")
@@ -1976,67 +1976,154 @@ def delete_exercise():
 def workout_history():
     user_id = current_user.id
     period = request.args.get('period', 'daily')  # daily, weekly, monthly
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    
+
     try:
         if period == 'daily':
-            # Updated to aggregate multiple muscle groups per day
+            # Get daily totals
             cursor.execute('''
-                SELECT date,
-                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
-                       COUNT(sets.id) as sets_count,
-                       SUM(sets.reps) as total_reps,
-                       SUM(sets.volume) as total_volume
-                FROM workout_sessions sessions
-                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-                WHERE user_id = %s
-                GROUP BY date
-                ORDER BY date DESC LIMIT 30
+                SELECT 
+                    s.date,
+                    COUNT(ws.id) AS total_sets,
+                    SUM(ws.reps) AS total_reps,
+                    SUM(ws.volume) AS total_volume
+                FROM workout_sessions s
+                LEFT JOIN workout_sets ws ON s.id = ws.session_id
+                LEFT JOIN exercises e ON ws.exercise_id = e.id
+                WHERE s.user_id = %s
+                GROUP BY s.date
+                ORDER BY s.date DESC
+                LIMIT 30;
             ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]
-    
-        elif period == 'weekly':
-            # Updated to show all muscle groups in week
-            cursor.execute('''
-                SELECT DATE_TRUNC('week', date)::DATE as week_start,
-                       COUNT(DISTINCT sessions.id) as sessions_count,
-                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
-                       COUNT(sets.id) as total_sets,
-                       SUM(sets.reps) as total_reps,
-                       SUM(sets.volume) as total_volume
-                FROM workout_sessions sessions
-                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-                WHERE user_id = %s
-                GROUP BY week_start
-                ORDER BY week_start DESC LIMIT 12
+            rows = cursor.fetchall()
+
+            history = []
+            for row in rows:
+                date = row['date']
+
+                # Get muscles per day
+                cursor.execute('''
+                    SELECT e.muscle_group,
+                           COUNT(ws.id) AS sets,
+                           SUM(ws.reps) AS reps,
+                           SUM(ws.volume) AS volume
+                    FROM workout_sessions s
+                    LEFT JOIN workout_sets ws ON s.id = ws.session_id
+                    LEFT JOIN exercises e ON ws.exercise_id = e.id
+                    WHERE s.user_id = %s AND s.date = %s
+                    GROUP BY e.muscle_group
+                ''', (user_id, date))
+                muscles_data = cursor.fetchall()
+                muscles = {}
+                for m in muscles_data:
+                    if m['muscle_group']:
+                        muscles[m['muscle_group']] = {
+                            'total_sets': m['sets'] or 0,
+                            'total_reps': m['reps'] or 0,
+                            'total_volume': float(m['volume'] or 0)
+                        }
+
+                history.append({
+                    'date': date,
+                    'sessions_count': len(set([date])),  # adjust if multiple sessions per day
+                    'total_sets': row['total_sets'] or 0,
+                    'total_reps': row['total_reps'] or 0,
+                    'total_volume': float(row['total_volume'] or 0),
+                    'muscles': muscles
+                })
+
+        else:
+            date_trunc = 'week' if period == 'weekly' else 'month'
+            period_limit = 12 if period == 'weekly' else 6
+
+            cursor.execute(f'''
+                SELECT 
+                    DATE_TRUNC('{date_trunc}', s.date)::DATE AS period_start,
+                    s.id AS session_id,
+                    e.muscle_group,
+                    ws.reps,
+                    ws.volume
+                FROM workout_sessions s
+                LEFT JOIN workout_sets ws ON s.id = ws.session_id
+                LEFT JOIN exercises e ON ws.exercise_id = e.id
+                WHERE s.user_id = %s
+                ORDER BY period_start DESC
             ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]
-    
-        else:  # monthly
-            # Updated to show all muscle groups in month
-            cursor.execute('''
-                SELECT DATE_TRUNC('month', date)::DATE as month_start,
-                       COUNT(DISTINCT sessions.id) as sessions_count,
-                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
-                       COUNT(sets.id) as total_sets,
-                       SUM(sets.reps) as total_reps,
-                       SUM(sets.volume) as total_volume
-                FROM workout_sessions sessions
-                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-                WHERE user_id = %s
-                GROUP BY month_start
-                ORDER BY month_start DESC LIMIT 6
-            ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]
-            
+            rows = cursor.fetchall()
+
+            period_map = {}
+            for row in rows:
+                period_start = row['period_start']
+                if period_start not in period_map:
+                    period_map[period_start] = {
+                        'sessions': set(),
+                        'muscles': {},
+                        'total_sets': 0,
+                        'total_reps': 0,
+                        'total_volume': 0.0
+                    }
+
+                # Track sessions
+                if row['session_id']:
+                    period_map[period_start]['sessions'].add(row['session_id'])
+
+                # Track muscles
+                if row['muscle_group']:
+                    muscle = row['muscle_group']
+                    if muscle not in period_map[period_start]['muscles']:
+                        period_map[period_start]['muscles'][muscle] = {
+                            'sets': 0,
+                            'reps': 0,
+                            'volume': 0.0
+                        }
+
+                    if row['reps'] is not None:
+                        period_map[period_start]['muscles'][muscle]['sets'] += 1
+                        period_map[period_start]['muscles'][muscle]['reps'] += row['reps']
+                        period_map[period_start]['muscles'][muscle]['volume'] += float(row['volume'] or 0)
+
+                        # Update totals
+                        period_map[period_start]['total_sets'] += 1
+                        period_map[period_start]['total_reps'] += row['reps']
+                        period_map[period_start]['total_volume'] += float(row['volume'] or 0)
+
+            # Convert to final history list
+            history = []
+            for period_start, data in sorted(period_map.items(), reverse=True):
+                entry = {
+                    'sessions_count': len(data['sessions']),
+                    'total_sets': data['total_sets'],
+                    'total_reps': data['total_reps'],
+                    'total_volume': data['total_volume'],
+                    'muscles': {}
+                }
+
+                for muscle, stats in data['muscles'].items():
+                    entry['muscles'][muscle] = {
+                        'total_sets': stats['sets'],
+                        'total_reps': stats['reps'],
+                        'total_volume': stats['volume']
+                    }
+
+                if period == 'weekly':
+                    entry['week_start'] = period_start
+                else:
+                    entry['month_start'] = period_start
+
+                history.append(entry)
+
+            history = history[:period_limit]
+
         return jsonify(history=history, period=period)
-    
+
     except Exception as e:
-        return jsonify(error=str(e)), 500
+        app.logger.error(f"Workout History Error: {str(e)}")
+        return jsonify(error="Could not load workout history"), 500
     finally:
         conn.close()
+
 
 @app.route('/workout/update_set', methods=['POST'])
 @login_required
@@ -2160,14 +2247,13 @@ def delete_selected_items():
 
 # ===== WORKOUT TEMPLATE ROUTES =====
 @app.route('/workout/save_template', methods=['POST'])
-@admin_required
+@admin_required  # Keep admin-only for creation
 def save_workout_template():
     try:
         name = request.form.get('name')
-        date_str = request.form.get('date')  # Get date as string
+        date_str = request.form.get('date')
         user_id = current_user.id
         
-        # Convert string to date object
         try:
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
@@ -2176,7 +2262,7 @@ def save_workout_template():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Create template
+        # Create template (admin only)
         cursor.execute(
             "INSERT INTO workout_templates (name, created_by) "
             "VALUES (%s, %s) RETURNING id",
@@ -2184,14 +2270,14 @@ def save_workout_template():
         )
         template_id = cursor.fetchone()[0]
         
-        # Get session exercises using date object
+        # Get session exercises
         cursor.execute(
             "SELECT exercise_id, reps, weight, rir, comments "
             "FROM workout_sets WHERE session_id = ("
             "SELECT id FROM workout_sessions "
             "WHERE user_id = %s AND date = %s"
             ")",
-            (user_id, date_obj)  # Use date object here
+            (user_id, date_obj)
         )
         sets = cursor.fetchall()
         
@@ -2211,18 +2297,19 @@ def save_workout_template():
     finally:
         conn.close()
 
-@app.route('/workout/templates', methods=['GET'])  # Updated endpoint
+@app.route('/workout/templates', methods=['GET'])
 @login_required
 def get_workout_templates():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
+        # Get all public templates (created by admin)
         cursor.execute(
             "SELECT id, name, created_at FROM workout_templates ORDER BY name"
         )
         templates = [dict(row) for row in cursor.fetchall()]
         conn.close()
-        return jsonify(templates=templates)  # Return direct templates array
+        return jsonify(templates=templates)
     except Exception as e:
         return jsonify(error=str(e)), 500
 
@@ -2268,7 +2355,7 @@ def get_workout_template(template_id):
 @app.route('/workout/apply_template', methods=['POST'])
 @login_required
 def apply_workout_template():
-    conn = None  # Initialize connection outside try block
+    conn = None
     try:
         template_id = request.form.get('template_id')
         date = request.form.get('date')
@@ -2276,6 +2363,14 @@ def apply_workout_template():
         
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Verify template exists (public to all users)
+        cursor.execute(
+            "SELECT id FROM workout_templates WHERE id = %s",
+            (template_id,)
+        )
+        if not cursor.fetchone():
+            return jsonify(success=False, error="Template not found"), 404
         
         # Get template exercises
         cursor.execute('''
@@ -2321,7 +2416,7 @@ def apply_workout_template():
         return jsonify(success=False, error=str(e)), 500
     finally:
         if conn:
-            conn.close()  # Ensure connection is always closed
+            conn.close()
 
 @app.route('/keepalive')
 @login_required
