@@ -128,15 +128,14 @@
         }
         
         .mobile-tab-content {
-            height: calc(100vh - 120px);
-            overflow-y: auto;
+            flex: 1;
+            overflow: hidden;
         }
         
         .mobile-tab-pane {
             display: none;
-            padding: 0;
-            height: 100%;
-        overflow: hidden;
+    height: 100%;
+    overflow-y: auto; /* Added scrolling to panes */
         }
         .mobile-tab-pane .card {
            height: 100%;
@@ -153,6 +152,10 @@
         .mobile-tab-pane.active {
             display: block;
         }
+        #workout-log-tab .card-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 150px); /* Adjust as needed */
+}
 
         /* === WORKOUT PAGE SPECIFIC STYLES === */
         .workout-container {
@@ -965,16 +968,16 @@
         /* Mobile Tab Bar Styles */
         .mobile-tab-bar-workout {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #000;
-            z-index: 1000;
-            padding: 10px 0;
-            border-top: 1px solid #444;
-            display: flex;
-            justify-content: center;
-            height: 70px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #000;
+    z-index: 1000;
+    padding: 10px 0;
+    border-top: 1px solid #444;
+    display: flex;
+    justify-content: center;
+    height: 70px;
         }
                     
         .mobile-tab-btn-workout {
