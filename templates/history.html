@@ -10,258 +10,353 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         /* === MAIN STYLES === */
-        body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
-            color: #e0e0e0;
-        }
-        
-        .bg-black, .modal-header, .modal-footer {
-            background-color: #000 !important;
-            border-color: #444;
-        }
-        
-        .card, .list-group-item, .modal-content {
-            background-color: #222;
-            color: #e0e0e0;
-            border: 1px solid #444;
-        }
-        
-        .form-control, .form-select {
-            background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #555;
-            font-size: 14px !important;
-            padding: 6px 8px !important;
-            height: 36px !important;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: #b4b4b4;
-            color: #ffffff;
-            border-color: #d1d1d1;
-        }
-        
-        .nav-link-box {
-            background-color: white !important;
-            color: black !important;
-            border-radius: 20px;
-            padding: 10px !important;
-            margin: 0 3px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 45px;
-            height: 45px;
-        }
-        
-        .nav-link-box:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .nav-link-box i {
-            font-size: 20px !important;
-            margin: 0 !important;
-        }
-        
-        .mobile-settings-btn {
-            background-color: white !important;
-            color: black !important;
-            border-radius: 50%;
-            padding: 10px !important;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-left: 10px;
-        }
-        
-        .mobile-settings-btn:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .mobile-settings-btn i {
-            font-size: 20px !important;
-            margin: 0 !important;
-        }
+body {
+    font-family: 'Calibri', sans-serif;
+    font-size: 15px;
+    background-color: #222 !important;
+    color: #e0e0e0;
+}
 
-        /* === HISTORY PAGE SPECIFIC STYLES === */
-        .history-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
+.bg-black, .modal-header, .modal-footer {
+    background-color: #000 !important;
+    border-color: #444;
+}
 
-        .card-header {
-            font-size: 20px;
-            padding: 15px 20px;
-            background-color: #000 !important;
-            border-bottom: 1px solid #444;
-        }
+.card, .list-group-item, .modal-content {
+    background-color: #222;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
 
-        /* Tabs Styling */
-        .nav-tabs {
-            border-bottom: 2px solid #ffffff;
-            border-radius: 5px;
-            padding: 0 15px;
-        }
+.form-control, .form-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 14px !important;
+    padding: 6px 8px !important;
+    height: 36px !important;
+}
 
-        .nav-tabs .nav-link {
-            font-size: 18px;
-            padding: 10px 20px;
-            color: white;
-            background-color: #222;
-            border: 1px solid #444;
-            margin-right: 5px;
-            border-radius: 5px 5px 0 0;
-            transition: all 0.3s;
-        }
+.form-control:focus, .form-select:focus {
+    background-color: #b4b4b4;
+    color: #ffffff;
+    border-color: #d1d1d1;
+}
 
-        .nav-tabs .nav-link:hover {
-            background-color: #333;
-            color: #fff;
+.nav-link-box {
+    background-color: white !important;
+    color: black !important;
+    border-radius: 20px;
+    padding: 10px !important;
+    margin: 0 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+}
+
+.nav-link-box:hover {
+    background-color: #f0f0f0 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.nav-link-box i {
+    font-size: 20px !important;
+    margin: 0 !important;
+}
+
+.mobile-settings-btn {
+    background-color: white !important;
+    color: black !important;
+    border-radius: 50%;
+    padding: 10px !important;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.mobile-settings-btn:hover {
+    background-color: #f0f0f0 !important;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.mobile-settings-btn i {
+    font-size: 20px !important;
+    margin: 0 !important;
+}
+
+/* === HISTORY PAGE SPECIFIC STYLES === */
+.history-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+.card-header {
+    font-size: 20px;
+    padding: 15px 20px;
+    background-color: #000 !important;
+    border-bottom: 1px solid #444;
+}
+
+/* Tabs Styling */
+.nav-tabs {
+    border-bottom: 2px solid #ffffff;
+    border-radius: 5px;
+    padding: 0 15px;
+}
+
+.nav-tabs .nav-link {
+    font-size: 18px;
+    padding: 10px 20px;
+    color: white;
+    background-color: #222;
+    border: 1px solid #444;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(to right, #ffffff, #b1b0b0);
+    color: #000;
+    font-weight: bold;
+    border-bottom: 2px solid #d3d3d3;
+}
+
+.workout-tab {
+    background: linear-gradient(to right, #4a4a4a, #222);
+    color: #ffd166 !important;
+}
+
+.workout-tab.active {
+    background: linear-gradient(to right, #ffd166, #ff9e6d) !important;
+    color: #000 !important;
+}
+
+.week-range {
+    font-weight: bold;
+}
+
+/* Period header row (week/month) */
+.period-row td {
+    background-color: #333 !important;
+    font-weight: bold;
+    text-align: left;
+    color: #ffd166;
+    font-size: 1.05em;
+    border-top: 2px solid #666;
+    border-bottom: 2px solid #444;
+}
+.period-row {
             cursor: pointer;
-        }
-
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(to right, #ffffff, #b1b0b0);
-            color: #000;
-            font-weight: bold;
-            border-bottom: 2px solid #d3d3d3;
-        }
-
-        .workout-tab {
-            background: linear-gradient(to right, #4a4a4a, #222);
-            color: #ffd166 !important;
-        }
-        
-        .workout-tab.active {
-            background: linear-gradient(to right, #ffd166, #ff9e6d) !important;
-            color: #000 !important;
-        }
-
-        .week-range {
-            font-weight: bold;
-        }
-
-        /* Table Styling */
-        .table {
-            color: #e0e0e0;
-            margin-bottom: 0;
-        }
-        
-        .table th {
-            background-color: #000;
-            border-bottom: 2px solid #444;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-        }
-        
-        .table td {
-            border-bottom: 1px solid #444;
-        }
-        
-        .table-dark {
-            --bs-table-bg: #222;
-            --bs-table-striped-bg: #1a1a1a;
-            --bs-table-hover-bg: #333;
-        }
-        
-        .table-striped>tbody>tr:nth-of-type(odd)>* {
-            --bs-table-accent-bg: #1a1a1a;
-            color: #e0e0e0;
-        }
-        
-        .table-hover>tbody>tr:hover>* {
-            --bs-table-accent-bg: #333;
-            color: #fff;
-        }
-        
-        .workout-volume {
-            color: #ffd166;
-            font-weight: bold;
-        }
-
-        /* Nested workout tabs */
-        .workout-subtabs .nav-link {
-            font-size: 16px;
-            padding: 8px 15px;
-        }
-        
-        .workout-subtabs .nav-link.active {
-            background: linear-gradient(to right, #ffd166, #ff9e6d);
-            color: #000;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .history-container {
-                margin: 10px auto;
-                padding: 0 10px;
-            }
-            
-            .card-header {
-                font-size: 18px;
-                padding: 12px 15px;
-            }
-            
-            .table th, .table td {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .nav-tabs .nav-link {
-                font-size: 16px;
-                padding: 8px 15px;
-            }
-        }
-        
-        /* Animation for table rows */
-        @keyframes fadeInRow {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .table tbody tr {
-            animation: fadeInRow 0.3s ease-out;
-        }
-        
-        .table th {
-            cursor: pointer;
+            background-color: #333;
             transition: background-color 0.3s;
         }
-        
-        .table th:hover {
-            background-color: #333;
+        .period-row:hover {
+            background-color: #3a3a3a !important;
         }
-        
-        .table th::after {
-            content: "↕";
-            margin-left: 5px;
-            opacity: 0.5;
-            font-size: 0.8em;
+
+/* Nested muscle rows */
+.muscle-row td {
+    padding-left: 20px;
+    font-style: italic;
+    background-color: #1a1a1a;
+}
+
+.muscle-row.collapse {
+    display: none;
+}
+
+.muscle-row.collapse.show {
+    display: table-row;
+    background-color: #2a2a2a;
+}
+
+.muscle-row:hover td {
+    background-color: #333;
+    color: #fff;
+}
+
+.table-striped > tbody > tr.muscle-row:nth-of-type(odd) > * {
+    background-color: #1f1f1f;
+}
+
+    .workout-volume {
+    color: #ffd166;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+.tab-pane {
+            padding: 20px;
+            }
+.muscle-row {
+            background-color: #2a2a2a;
+            font-weight: bold;
         }
-        
-        .table th.sorted-asc::after {
-            content: "↑";
-            opacity: 1;
+
+        .muscle-row:hover {
+            background-color: #323232 !important;
         }
-        
-        .table th.sorted-desc::after {
-            content: "↓";
-            opacity: 1;
-        }
+
+/* Daily tab animation */
+#daily-workout-history tr {
+    animation: fadeInRow 0.3s ease-out;
+}
+
+/* Nested workout tabs */
+.workout-subtabs .nav-link {
+    font-size: 16px;
+    padding: 8px 15px;
+}
+
+.workout-subtabs .nav-link.active {
+    background: linear-gradient(to right, #ffd166, #ff9e6d);
+    color: #000;
+}
+
+/* Table general styling */
+.table {
+    color: #e0e0e0;
+    margin-bottom: 0;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+    padding: 8px 12px;
+    font-size: 15px;
+}
+
+.table th {
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    position: sticky;
+    top: 0;
+    background-color: #000;
+    border-bottom: 2px solid #444;
+    z-index: 10;
+}
+
+.table th:hover {
+    background-color: #333;
+}
+
+/* Right-align numeric columns (Sets, Reps, Volume) */
+.table th:nth-child(4),
+.table th:nth-child(5),
+.table th:nth-child(6),
+.table td:nth-child(4),
+.table td:nth-child(5),
+.table td:nth-child(6) {
+    text-align: right !important;
+    font-feature-settings: "tnum";
+}
+
+/* Highlight volume numbers */
+.table td.workout-volume {
+    color: #ffd166;
+    font-weight: bold;
+}
+
+/* Header sort indicators */
+.table th::after {
+    content: "↕";
+    margin-left: 5px;
+    opacity: 0.5;
+    font-size: 0.8em;
+}
+
+.table th.sorted-asc::after {
+    content: "↑";
+    opacity: 1;
+}
+
+.table th.sorted-desc::after {
+    content: "↓";
+    opacity: 1;
+}
+
+/* Period highlight on sorting */
+.period-highlight {
+    background-color: #444 !important;
+    transition: background-color 0.5s ease;
+}
+
+@keyframes pulseArrow {
+    0%   { transform: scale(1) translateY(0); opacity: 1; }
+    50%  { transform: scale(1.2) translateY(-2px); opacity: 0.8; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.period-highlight.sorted-asc::after,
+.period-highlight.sorted-desc::after {
+    display: inline-block;
+    margin-left: 5px;
+    font-weight: bold;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    animation: pulseArrow 1s ease-in-out;
+}
+
+/* Table row fade animation */
+@keyframes fadeInRow {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table tbody tr {
+    animation: fadeInRow 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .history-container {
+        margin: 10px auto;
+        padding: 0 10px;
+    }
+
+    .card-header {
+        font-size: 18px;
+        padding: 12px 15px;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .nav-tabs .nav-link {
+        font-size: 16px;
+        padding: 8px 15px;
+    }
+}
+
+/* Expand/collapse buttons */
+#expand-all, #collapse-all {
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
     </style>
 </head>
 <body>
@@ -473,237 +568,210 @@
                         </div>
                     </div>
                     
-                    <!-- Workout History Tab -->
-                    <div class="tab-pane fade" id="workouts" role="tabpanel">
+<!-- Workout History Tab -->
+<div class="tab-pane fade" id="workouts" role="tabpanel">
                         <div class="p-3">
-                            <ul class="nav nav-tabs workout-subtabs" id="workoutHistoryTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="daily-workout-tab" data-bs-toggle="tab" data-bs-target="#daily-workout" type="button" role="tab">Daily</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="weekly-workout-tab" data-bs-toggle="tab" data-bs-target="#weekly-workout" type="button" role="tab">Weekly</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="monthly-workout-tab" data-bs-toggle="tab" data-bs-target="#monthly-workout" type="button" role="tab">Monthly</button>
-                                </li>
-                            </ul>
-                            
-                            <div class="tab-content mt-3">
-                                <div class="tab-pane fade show active" id="daily-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-dark table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Date</th>
-                                                    <th>Muscle Groups</th>
-                                                    <th>Sets</th>
-                                                    <th>Total Reps</th>
-                                                    <th>Total Volume</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="daily-workout-history">
-                                                <!-- Workout daily history will be populated here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                <div class="tab-pane fade" id="weekly-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-dark table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Week</th>
-                                                    <th>Sessions</th>
-                                                    <th>Muscle Groups</th>
-                                                    <th>Sets</th>
-                                                    <th>Total Reps</th>
-                                                    <th>Total Volume</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="weekly-workout-history">
-                                                <!-- Workout weekly history will be populated here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                <div class="tab-pane fade" id="monthly-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-dark table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Month</th>
-                                                    <th>Sessions</th>
-                                                    <th>Muscle Groups</th>
-                                                    <th>Sets</th>
-                                                    <th>Total Reps</th>
-                                                    <th>Total Volume</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="monthly-workout-history">
-                                                <!-- Workout monthly history will be populated here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            <!-- Sub-tabs for Daily / Weekly / Monthly -->
+            <ul class="nav nav-tabs workout-subtabs" id="workoutHistoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="daily-workout-tab" data-bs-toggle="tab" data-bs-target="#daily-workout" type="button" role="tab">Daily</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="weekly-workout-tab" data-bs-toggle="tab" data-bs-target="#weekly-workout" type="button" role="tab">Weekly</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="monthly-workout-tab" data-bs-toggle="tab" data-bs-target="#monthly-workout" type="button" role="tab">Monthly</button>
+                </li>
+            </ul>
+
+            <!-- Expand / Collapse buttons -->
+            <div class="my-3">
+                <button id="expand-all" class="btn btn-sm btn-outline-warning me-2">Expand All</button>
+                <button id="collapse-all" class="btn btn-sm btn-outline-warning">Collapse All</button>
             </div>
+
+            <!-- Tab content -->
+            <div class="tab-content mt-3">
+
+                 <!-- DAILY -->
+    <div class="tab-pane fade show active" id="daily-workout" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Date / Period</th>
+                        <th class="text-end">Sessions</th>
+                        <th>Muscle Group</th>
+                        <th class="text-end">Sets</th>
+                        <th class="text-end">Total Reps</th>
+                        <th class="text-end">Volume (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="daily-workout-history"></tbody>
+            </table>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Initialize tabs
-        $(document).ready(function() {
-            // Enable tab functionality
-            $('#historyTabs button').on('click', function(event) {
-                event.preventDefault();
-                $(this).tab('show');
-            });
-            
-            // Add sorting indicators to table headers
-            $('th').each(function() {
-                $(this).append('<span class="sort-indicator">↕</span>');
-            });
-            
-            // Table sorting functionality
-            $('th').on('click', function() {
-                const table = $(this).parents('table').eq(0);
-                const rows = table.find('tr:gt(0)').toArray();
-                const index = $(this).index();
-                const isAsc = $(this).hasClass('sorted-asc');
-                
-                // Clear previous sorting classes
-                $(this).siblings().removeClass('sorted-asc sorted-desc');
-                $(this).removeClass('sorted-asc sorted-desc');
-                
-                // Sort rows
-                rows.sort(comparer(index, isAsc));
-                
-                // Toggle sort direction
-                if (!isAsc) {
-                    $(this).addClass('sorted-asc');
-                } else {
-                    $(this).addClass('sorted-desc');
-                    rows.reverse();
-                }
-                
-                // Re-add sorted rows
-                for (let i = 0; i < rows.length; i++) {
-                    table.append(rows[i]);
-                }
-            });
-            
-            function comparer(index, isAsc) {
-                return function(a, b) {
-                    const valA = getCellValue(a, index);
-                    const valB = getCellValue(b, index);
-                    return $.isNumeric(valA) && $.isNumeric(valB) ? 
-                        valA - valB : valA.toString().localeCompare(valB);
-                };
-            }
-            
-            function getCellValue(row, index) {
-                return $(row).children('td').eq(index).text();
-            }
-            
-            // Load workout history when Workouts tab is activated
-            $('#workouts-tab').on('shown.bs.tab', function() {
-                loadWorkoutHistory('daily');
-                
-                // Set up workout history tabs
-                $('#workoutHistoryTabs button').click(function() {
-                    const period = $(this).data("bsTarget").replace('#', '').replace('-workout', '');
-                    loadWorkoutHistory(period);
-                });
-            });
-        });
+    <!-- WEEKLY -->
+    <div class="tab-pane fade" id="weekly-workout" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Date / Period</th>
+                        <th class="text-end">Sessions</th>
+                        <th>Muscle Group</th>
+                        <th class="text-end">Sets</th>
+                        <th class="text-end">Total Reps</th>
+                        <th class="text-end">Volume (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="weekly-workout-history"></tbody>
+            </table>
+        </div>
+    </div>
 
-        // Load workout history data
-        function loadWorkoutHistory(period) {
-            $.get("/workout/history?period=" + period, function(data) {
-                renderWorkoutHistory(data.history, period);
-            });
-        }
+    <!-- MONTHLY -->
+    <div class="tab-pane fade" id="monthly-workout" role="tabpanel">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Date / Period</th>
+                        <th class="text-end">Sessions</th>
+                        <th>Muscle Group</th>
+                        <th class="text-end">Sets</th>
+                        <th class="text-end">Total Reps</th>
+                        <th class="text-end">Volume (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="monthly-workout-history"></tbody>
+            </table>
+        </div>
+    </div>
 
-        // Render workout history in tables
-        function renderWorkoutHistory(history, period) {
-    const containerId = period + "-workout-history";
-    const container = $("#" + containerId);
-    container.empty();
-    
-    if (history.length === 0) {
-        container.append(`<tr><td colspan="6" class="text-center">No data available</td></tr>`);
-        return;
-    }
-    
-    history.forEach(item => {
-        let row;
-        
-        if (period === 'daily') {
-            const date = new Date(item.date);
-            const formattedDate = date.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric'
-            });
-            
-            row = `
-                <tr>
-                    <td>${formattedDate}</td>
-                    <td>${item.muscle_groups}</td>
-                    <td>${item.sets_count}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        } 
-        else if (period === 'weekly') {
-            const weekStart = new Date(item.week_start);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            
-            const formattedWeek = `
-                ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
-                ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            `;
-            
-            row = `
-                <tr>
-                    <td>${formattedWeek}</td>
-                    <td>${item.sessions_count}</td>
-                    <td>${item.muscle_groups}</td>
-                    <td>${item.total_sets}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        } 
-        else { // monthly
-            const monthStart = new Date(item.month_start);
-            const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            
-            row = `
-                <tr>
-                    <td>${monthName}</td>
-                    <td>${item.sessions_count}</td>
-                    <td>${item.muscle_groups}</td>
-                    <td>${item.total_sets}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        }
-        
-        container.append(row);
+</div>
+        </div>
+    </div>
+
+<!-- JS dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+
+    $('#workoutHistoryTabs button').click(function() {
+        const period = $(this).attr('id').split('-')[0]; // daily, weekly, monthly
+        loadWorkoutHistory(period);
+    });
+
+    $('#expand-all').click(() => $('.muscle-row').removeClass('d-none'));
+    $('#collapse-all').click(() => $('.muscle-row').addClass('d-none'));
+
+    $(document).on('click', '.period-row', function() {
+        $(this).nextUntil('.period-row').toggleClass('d-none');
+    });
+
+    // Load daily by default if workouts tab is active
+    if(window.location.hash === '#workouts') loadWorkoutHistory('daily');
+});
+
+// AJAX loader
+function loadWorkoutHistory(period) {
+    $.get("/workout/history?period=" + period, function(data) {
+        renderWorkoutHistory(data.history, period);
+    }).fail(function(jqXHR) {
+        const containerId = period + "-workout-history";
+        $("#" + containerId).html(`
+            <tr>
+                <td colspan="6" class="text-center py-4 text-warning">
+                    Failed to load workout data. Please try again.
+                </td>
+            </tr>
+        `);
     });
 }
-    </script>
+
+// Renderer
+function renderWorkoutHistory(history, period) {
+    const container = $("#" + period + "-workout-history");
+    container.empty();
+
+    if (!history || history.length === 0) {
+        container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
+        return;
+    }
+
+    history.forEach(item => {
+        let periodLabel = '';
+        let periodRow = '';
+        let muscleRows = '';
+
+        if (period === 'daily') {
+            periodLabel = new Date(item.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+
+            periodRow = `
+            <tr class="period-row align-middle" style="cursor:pointer;">
+                <td><strong>${periodLabel}</strong></td>
+                <td class="text-end">${item.sessions_count || 0}</td>
+                <td>&nbsp;</td>
+                <td class="text-end">${item.total_sets || 0}</td>
+                <td class="text-end">${item.total_reps || 0}</td>
+                <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+            </tr>`;
+
+            for (const [muscle, stats] of Object.entries(item.muscles || {})) {
+                muscleRows += `
+                <tr class="muscle-row d-none">
+                    <td></td>
+                    <td></td>
+                    <td>${muscle}</td>
+                    <td class="text-end">${stats.total_sets || 0}</td>
+                    <td class="text-end">${stats.total_reps || 0}</td>
+                    <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
+                </tr>`;
+            }
+        } else {
+            const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
+
+            if (period === 'weekly') {
+                const weekEnd = new Date(startDate);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                periodLabel = `${startDate.toLocaleDateString('en-US', { month:'short', day:'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month:'short', day:'numeric' })}`;
+            } else {
+                periodLabel = startDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+            }
+
+            periodRow = `
+            <tr class="period-row align-middle" style="cursor:pointer;">
+                <td><strong>${periodLabel}</strong></td>
+                <td class="text-end">${item.sessions_count || 0}</td>
+                <td>&nbsp;</td>
+                <td class="text-end">${item.total_sets || 0}</td>
+                <td class="text-end">${item.total_reps || 0}</td>
+                <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+            </tr>`;
+
+            for (const [muscle, stats] of Object.entries(item.muscles || {})) {
+                muscleRows += `
+                <tr class="muscle-row d-none">
+                    <td></td>
+                    <td></td>
+                    <td>${muscle}</td>
+                    <td class="text-end">${stats.total_sets || 0}</td>
+                    <td class="text-end">${stats.total_reps || 0}</td>
+                    <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
+                </tr>`;
+            }
+        }
+
+        container.append(periodRow + muscleRows);
+    });
+}
+</script>
+
+
     <script>
     // Initialize workout history when Workouts tab is activated
     $('#workouts-tab').on('shown.bs.tab', function() {
@@ -715,79 +783,6 @@
             loadWorkoutHistory(period);
         });
     });
-
-    // Function to load workout history
-    function renderWorkoutHistory(history, period) {
-    const containerId = period + "-workout-history";
-    const container = $("#" + containerId);
-    container.empty();
-    
-    if (history.length === 0) {
-        container.append(`<tr><td colspan="6" class="text-center">No data available</td></tr>`);
-        return;
-    }
-    
-    history.forEach(item => {
-        let row;
-        
-        if (period === 'daily') {
-            const date = new Date(item.date);
-            const formattedDate = date.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric'
-            });
-            
-            row = `
-                <tr>
-                    <td>${formattedDate}</td>
-                    <td>${item.muscle_group}</td>
-                    <td>${item.sets_count}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        } 
-        else if (period === 'weekly') {
-            const weekStart = new Date(item.week_start);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            
-            const formattedWeek = `
-                ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
-                ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            `;
-            
-            row = `
-                <tr>
-                    <td>${formattedWeek}</td>
-                    <td>${item.sessions_count}</td>
-                    <td>${item.muscle_groups}</td>
-                    <td>${item.total_sets}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        } 
-        else { // monthly
-            const monthStart = new Date(item.month_start);
-            const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            
-            row = `
-                <tr>
-                    <td>${monthName}</td>
-                    <td>${item.sessions_count}</td>
-                    <td>${item.muscle_groups}</td>
-                    <td>${item.total_sets}</td>
-                    <td>${item.total_reps}</td>
-                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                </tr>
-            `;
-        }
-        
-        container.append(row);
-    });
-}
 </script>
 </body>
 </html>
