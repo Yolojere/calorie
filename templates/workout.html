@@ -319,12 +319,13 @@
         .rir-badge {
             background-color: #8a2be2;
             color: white;
-            padding: 1px 4px;
+            padding: 2px 6px;
             border-radius: 2px;
             font-size: 12px;
             font-weight: bold;
             margin-right: 5px;
             display: inline-block;
+            white-space: nowrap;
         }
         
         .comment-icon {
@@ -356,6 +357,7 @@
             font-size: 6px;
     width: 100%;
     margin-top: 2px;
+    font-size: 12px;
         }
         .tooltip {
     z-index: 1080 !important;
@@ -864,6 +866,7 @@
             }
             
             #workout-session-container-mobile {
+                padding-bottom: 80px;
                 height: 100%;
         overflow-y: auto;
         padding: 15px !important; /* Increased padding for better touch scrolling */
@@ -983,18 +986,19 @@
         .mobile-tab-btn-workout {
             border: none;
             color: white;
-            padding: 0;
+            padding: 12px;
             border-radius: 50%;
-            font-size: 18px;
-            width: 50px;
-            height: 50px;
+            font-size: 20px;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             position: absolute;
         }
+       
 
         /* Position each button */
         .mobile-tab-btn-workout:nth-child(1) {
@@ -1293,7 +1297,7 @@
                                 <label class="form-label">RiR (Reps in Reserve)</label>
                                 <select id="rir-input" class="form-select">
                                     <option value="">None</option>
-                                    <option value="0">0 (Failure)</option>
+                                    <option value="failure">Failure</option>
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
@@ -1416,7 +1420,7 @@
                                     <label class="form-label">RiR (Reps in Reserve)</label>
                                     <select id="rir-input-mobile" class="form-select">
                                         <option value="">None</option>
-                                        <option value="0">0 (Failure)</option>
+                                        <option value="failure">Failure</option>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
@@ -1687,9 +1691,11 @@ function initTooltips() {
         const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
         const muscleGroup = isMobile ? $("#muscle-group-select-mobile").val() : $("#muscle-group-select").val();
         const setsCount = isMobile ? $("#sets-input-mobile").val() : $("#sets-input").val();
-        const rir = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
+        const rirRaw = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
         const comments = isMobile ? $("#comments-input-mobile").val() : $("#comments-input").val();
         const date = $(".workout-date.active").data("date");
+
+        const rir = rirRaw === "Failure" ? "Failure" : (rirRaw === "" ? null : Number(rirRaw));
         
         $.post("/workout/save_set", {
             date: date,
@@ -1969,20 +1975,25 @@ function initTooltips() {
                 `;
                 
                 // Render sets
-                exercise.sets.forEach((set, index) => {
-                    // Prepare RiR badge if exists
-                    const rirBadge = set.rir !== null ? 
-                        `<span class="rir-badge">${set.rir} RiR</span>` : '';
-                    
-                    // Prepare comment icon if exists
-                    const commentIcon = set.comments ? 
-                        `<i class="fas fa-comment comment-icon" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="top" 
-                            title="${set.comments.replace(/"/g, '&quot;')}"></i>` : '';
-                    
-                    sessionHTML += `
-                       <tr class="set-row" data-set-id="${set.id}">
+exercise.sets.forEach((set, index) => {
+    // Prepare RiR badge if exists
+    let rirBadge = '';
+if (set.rir !== null && set.rir !== undefined) {
+    rirBadge = `<span class="rir-badge">${
+        set.rir === "Failure" ? "Failure" : `${set.rir} RiR`
+    }</span>`;
+}
+
+    // Prepare comment icon if exists
+    const commentIcon = set.comments ? 
+        `<i class="fas fa-comment comment-icon" 
+            data-bs-toggle="tooltip" 
+            data-bs-placement="top"
+            data-bs-container="body" 
+            title="${set.comments.replace(/"/g, '&quot;')}"></i>` : '';
+
+    sessionHTML += `
+       <tr class="set-row" data-set-id="${set.id}">
             <td class="set-number-cell">
                 <div class="d-flex align-items-center">
                     <div class="me-2">${index + 1}</div>
@@ -2005,10 +2016,10 @@ function initTooltips() {
                 <button class="btn delete-item">
                     <i class="fas fa-trash"></i>
                 </button>
-        </td>
-    </tr>
-`;
-                });
+            </td>
+        </tr>
+    `;
+});
                 
                 sessionHTML += `
                                 </tbody>
@@ -2171,20 +2182,20 @@ function initTooltips() {
 
     // Helper functions
     function resetSetForm(isMobile = false) {
-        if (isMobile) {
-            $("#sets-input-mobile").val("1");
-            $("#reps-input-mobile").val("");
-            $("#weight-input-mobile").val("");
-            $("#rir-input-mobile").val("");
-            $("#comments-input-mobile").val("");
-        } else {
-            $("#sets-input").val("1");
-            $("#reps-input").val("");
-            $("#weight-input").val("");
-            $("#rir-input").val("");
-            $("#comments-input").val("");
-        }
+    if (isMobile) {
+        $("#sets-input-mobile").val("1");
+        $("#reps-input-mobile").val("");
+        $("#weight-input-mobile").val("");
+        $("#rir-input-mobile").val(""); // Reset to "None"
+        $("#comments-input-mobile").val("");
+    } else {
+        $("#sets-input").val("1");
+        $("#reps-input").val("");
+        $("#weight-input").val("");
+        $("#rir-input").val(""); // Reset to "None"
+        $("#comments-input").val("");
     }
+}
     
     function resetExerciseForm() {
         $("#new-exercise-name").val("");
