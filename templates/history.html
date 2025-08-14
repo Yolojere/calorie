@@ -328,6 +328,11 @@
                             <i class="fa-solid fa-house-chimney-window"></i>
                         </a>
                     </li>
+                        <li class="nav-item">
+                    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+                     data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+                    <i class="fa-solid fa-dumbbell"></i>
+                   </a>
                     <li class="nav-item">
                         <a class="nav-link add-link nav-link-box" href="/custom_food"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
@@ -490,7 +495,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>Date</th>
-                                                    <th>Muscle Group</th>
+                                                    <th>Muscle Groups</th>
                                                     <th>Sets</th>
                                                     <th>Total Reps</th>
                                                     <th>Total Volume</th>
@@ -628,71 +633,161 @@
 
         // Render workout history in tables
         function renderWorkoutHistory(history, period) {
-            const containerId = period + "-workout-history";
-            const container = $("#" + containerId);
-            container.empty();
-            
-            if (history.length === 0) {
-                container.append(`<tr><td colspan="4" class="text-center">No data available</td></tr>`);
-                return;
-            }
-            
-            history.forEach(item => {
-                let row;
-                
-                if (period === 'daily') {
-                    const date = new Date(item.date);
-                    const formattedDate = date.toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                    });
-                    
-                    row = `
-                        <tr>
-                            <td>${formattedDate}</td>
-                            <td>${item.muscle_group}</td>
-                            <td>${item.sets_count}</td>
-                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                        </tr>
-                    `;
-                } 
-                else if (period === 'weekly') {
-                    const weekStart = new Date(item.week_start);
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekEnd.getDate() + 6);
-                    
-                    const formattedWeek = `
-                        ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
-                        ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    `;
-                    
-                    row = `
-                        <tr>
-                            <td>${formattedWeek}</td>
-                            <td>${item.sessions_count}</td>
-                            <td>${item.muscle_groups}</td>
-                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                        </tr>
-                    `;
-                } 
-                else { // monthly
-                    const monthStart = new Date(item.month_start);
-                    const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                    
-                    row = `
-                        <tr>
-                            <td>${monthName}</td>
-                            <td>${item.sessions_count}</td>
-                            <td>${item.muscle_groups}</td>
-                            <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
-                        </tr>
-                    `;
-                }
-                
-                container.append(row);
+    const containerId = period + "-workout-history";
+    const container = $("#" + containerId);
+    container.empty();
+    
+    if (history.length === 0) {
+        container.append(`<tr><td colspan="6" class="text-center">No data available</td></tr>`);
+        return;
+    }
+    
+    history.forEach(item => {
+        let row;
+        
+        if (period === 'daily') {
+            const date = new Date(item.date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
             });
+            
+            row = `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td>${item.muscle_groups}</td>
+                    <td>${item.sets_count}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
+        } 
+        else if (period === 'weekly') {
+            const weekStart = new Date(item.week_start);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            const formattedWeek = `
+                ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            `;
+            
+            row = `
+                <tr>
+                    <td>${formattedWeek}</td>
+                    <td>${item.sessions_count}</td>
+                    <td>${item.muscle_groups}</td>
+                    <td>${item.total_sets}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
+        } 
+        else { // monthly
+            const monthStart = new Date(item.month_start);
+            const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            row = `
+                <tr>
+                    <td>${monthName}</td>
+                    <td>${item.sessions_count}</td>
+                    <td>${item.muscle_groups}</td>
+                    <td>${item.total_sets}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
         }
+        
+        container.append(row);
+    });
+}
     </script>
+    <script>
+    // Initialize workout history when Workouts tab is activated
+    $('#workouts-tab').on('shown.bs.tab', function() {
+        loadWorkoutHistory('daily');
+        
+        // Set up workout history tabs
+        $('#workoutHistoryTabs button').click(function() {
+            const period = $(this).data("bsTarget").replace('#', '').replace('-workout', '');
+            loadWorkoutHistory(period);
+        });
+    });
+
+    // Function to load workout history
+    function renderWorkoutHistory(history, period) {
+    const containerId = period + "-workout-history";
+    const container = $("#" + containerId);
+    container.empty();
+    
+    if (history.length === 0) {
+        container.append(`<tr><td colspan="6" class="text-center">No data available</td></tr>`);
+        return;
+    }
+    
+    history.forEach(item => {
+        let row;
+        
+        if (period === 'daily') {
+            const date = new Date(item.date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            row = `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td>${item.muscle_group}</td>
+                    <td>${item.sets_count}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
+        } 
+        else if (period === 'weekly') {
+            const weekStart = new Date(item.week_start);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            const formattedWeek = `
+                ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            `;
+            
+            row = `
+                <tr>
+                    <td>${formattedWeek}</td>
+                    <td>${item.sessions_count}</td>
+                    <td>${item.muscle_groups}</td>
+                    <td>${item.total_sets}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
+        } 
+        else { // monthly
+            const monthStart = new Date(item.month_start);
+            const monthName = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            row = `
+                <tr>
+                    <td>${monthName}</td>
+                    <td>${item.sessions_count}</td>
+                    <td>${item.muscle_groups}</td>
+                    <td>${item.total_sets}</td>
+                    <td>${item.total_reps}</td>
+                    <td class="workout-volume">${parseFloat(item.total_volume).toFixed(1)} kg</td>
+                </tr>
+            `;
+        }
+        
+        container.append(row);
+    });
+}
+</script>
 </body>
 </html>
