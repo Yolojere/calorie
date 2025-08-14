@@ -1975,57 +1975,61 @@ def delete_exercise():
 @login_required
 def workout_history():
     user_id = current_user.id
-    period = request.args.get('period', 'weekly')  # daily, weekly, monthly
+    period = request.args.get('period', 'daily')  # daily, weekly, monthly
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
         if period == 'daily':
+            # Updated to aggregate multiple muscle groups per day
             cursor.execute('''
-            SELECT date, muscle_group, 
-                   COUNT(sets.id) as sets_count,
-                   SUM(sets.reps) as total_reps,
-                   SUM(sets.volume) as total_volume
-            FROM workout_sessions sessions
-            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-            WHERE user_id = %s
-            GROUP BY sessions.id
-            ORDER BY date DESC LIMIT 30
-        ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
+                SELECT date,
+                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
+                       COUNT(sets.id) as sets_count,
+                       SUM(sets.reps) as total_reps,
+                       SUM(sets.volume) as total_volume
+                FROM workout_sessions sessions
+                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+                WHERE user_id = %s
+                GROUP BY date
+                ORDER BY date DESC LIMIT 30
+            ''', (user_id,))
+            history = [dict(row) for row in cursor.fetchall()]
     
         elif period == 'weekly':
+            # Updated to show all muscle groups in week
             cursor.execute('''
-            SELECT DATE_TRUNC('week', date)::DATE as week_start,
-                   COUNT(DISTINCT sessions.id) as sessions_count,
-                   STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
-                   COUNT(sets.id) as total_sets,
-                   SUM(sets.reps) as total_reps,
-                   SUM(sets.volume) as total_volume
-            FROM workout_sessions sessions
-            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-            WHERE user_id = %s
-            GROUP BY week_start
-            ORDER BY week_start DESC LIMIT 12
-        ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
+                SELECT DATE_TRUNC('week', date)::DATE as week_start,
+                       COUNT(DISTINCT sessions.id) as sessions_count,
+                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
+                       COUNT(sets.id) as total_sets,
+                       SUM(sets.reps) as total_reps,
+                       SUM(sets.volume) as total_volume
+                FROM workout_sessions sessions
+                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+                WHERE user_id = %s
+                GROUP BY week_start
+                ORDER BY week_start DESC LIMIT 12
+            ''', (user_id,))
+            history = [dict(row) for row in cursor.fetchall()]
     
         else:  # monthly
+            # Updated to show all muscle groups in month
             cursor.execute('''
-            SELECT DATE_TRUNC('month', date)::DATE as month_start,
-                   COUNT(DISTINCT sessions.id) as sessions_count,
-                   STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
-                   COUNT(sets.id) as total_sets,
-                   SUM(sets.reps) as total_reps,
-                   SUM(sets.volume) as total_volume
-            FROM workout_sessions sessions
-            LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
-            WHERE user_id = %s
-            GROUP BY month_start
-            ORDER BY month_start DESC LIMIT 6
-        ''', (user_id,))
-            history = [dict(row) for row in cursor.fetchall()]  # ADD THIS LINE
+                SELECT DATE_TRUNC('month', date)::DATE as month_start,
+                       COUNT(DISTINCT sessions.id) as sessions_count,
+                       STRING_AGG(DISTINCT muscle_group, ', ') as muscle_groups,
+                       COUNT(sets.id) as total_sets,
+                       SUM(sets.reps) as total_reps,
+                       SUM(sets.volume) as total_volume
+                FROM workout_sessions sessions
+                LEFT JOIN workout_sets sets ON sessions.id = sets.session_id
+                WHERE user_id = %s
+                GROUP BY month_start
+                ORDER BY month_start DESC LIMIT 6
+            ''', (user_id,))
+            history = [dict(row) for row in cursor.fetchall()]
             
         return jsonify(history=history, period=period)
     
