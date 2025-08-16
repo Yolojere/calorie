@@ -295,6 +295,38 @@ body {
     opacity: 1;
 }
 
+
+/* Position muscle group data under the header */
+.muscle-row td:nth-child(3) {
+    padding-left: 20px !important;
+    text-align: center !important;
+    font-style: italic;
+}
+
+/* Ensure numeric columns remain right-aligned */
+.muscle-row td:nth-child(4),
+.muscle-row td:nth-child(5),
+.muscle-row td:nth-child(6) {
+    text-align: right !important;
+}
+
+/* Add visual indicator for expandable rows */
+.period-row td:first-child::after {
+    content: " ▼";
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-left: 5px;
+}
+
+.period-row.collapsed td:first-child::after {
+    content: " ▲";
+}
+
+/* Adjust spacing for period rows */
+.period-row td {
+    padding: 12px 15px !important;
+}
+
 /* Period highlight on sorting */
 .period-highlight {
     background-color: #444 !important;
@@ -357,6 +389,29 @@ body {
     border-radius: 5px;
     font-weight: bold;
 }
+/* Exercise tab specific styles */
+.exercise-tab {
+    background: linear-gradient(to right, #4a4a4a, #222);
+    color: #06d6a0 !important;
+}
+
+.exercise-tab.active {
+    background: linear-gradient(to right, #06d6a0, #118ab2) !important;
+    color: #000 !important;
+}
+
+.card-summary {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.card-summary:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.text-muted {
+  color: white !important;
+}
     </style>
 </head>
 <body>
@@ -391,10 +446,17 @@ body {
                         </a>
                     </li>
                     <li>
+        <a class="dropdown-item" 
+           href="{{ url_for('workout') }}"
+           style="color: #e0e0e0; padding: 8px 15px;">
+            <i class="fas fa-dumbbell me-2"></i>Workouts
+        </a>
+    </li>
+    <li>
                         <a class="dropdown-item" 
-                           href="{{ url_for('workout') }}"
+                           href="/activity"
                            style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-dumbbell me-2"></i>Workouts
+                            <i class="fas fa-fire me-2"></i>Activity
                         </a>
                     </li>
                     <li>
@@ -411,9 +473,11 @@ body {
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
                     </li>
+                    
                 </ul>
             </div>
             
+            <!-- Desktop Navigation -->
             <!-- Desktop Navigation -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
@@ -422,12 +486,13 @@ body {
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
                             <i class="fa-solid fa-house-chimney-window"></i>
                         </a>
-                    </li>
                         <li class="nav-item">
-                    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-                     data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
-                    <i class="fa-solid fa-dumbbell"></i>
-                   </a>
+    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+        <i class="fa-solid fa-dumbbell"></i>
+    </a>
+</li>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link add-link nav-link-box" href="/custom_food"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
@@ -435,9 +500,15 @@ body {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link history-link nav-link-box active" href="/history"
+                        <a class="nav-link history-link nav-link-box" href="/history"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
                             <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="/activity"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
+                            <i class="fas fa-fire"></i>
                         </a>
                     </li>
                     
@@ -456,6 +527,7 @@ body {
                         <ul class="dropdown-menu dropdown-menu-end" 
                             aria-labelledby="navbarDropdownDesktop"
                             style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                            
                             <li>
                                 <a class="dropdown-item" 
                                    href="{{ url_for('profile') }}"
@@ -494,7 +566,11 @@ body {
                     <li class="nav-item" role="presentation">
                         <button class="nav-link workout-tab" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">Workouts</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+    <button class="nav-link exercise-tab" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab">Exercises</button>
+</li>
                 </ul>
+                
                 
                 <div class="tab-content">
                     <!-- Daily Nutrition Tab -->
@@ -653,16 +729,386 @@ body {
 </div>
         </div>
     </div>
+    <!-- New Exercises Tab Content -->
+<div class="tab-pane fade" id="exercises" role="tabpanel">
+    <div class="p-3">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark text-light border-secondary">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="exercise-search" class="form-control bg-dark text-light border-secondary" placeholder="Search exercises...">
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-warning active" data-sort="name">Name</button>
+                    <button class="btn btn-sm btn-outline-warning" data-sort="pb">Personal Best</button>
+                    <button class="btn btn-sm btn-outline-warning" data-sort="recent">Most Recent</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Exercise</th>
+                        <th class="text-end">Personal Best</th>
+                        <th class="text-end">Last Performed</th>
+                        <th class="text-end">Total Volume</th>
+                        <th class="text-end">Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="exercises-list">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Exercise Detail View (initially hidden) -->
+        <div id="exercise-detail" class="mt-4" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 id="exercise-name" class="mb-0"></h4>
+                <button id="back-to-list" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-arrow-left me-1"></i> Back to List
+                </button>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-dark text-center py-3">
+                        <div class="card-body">
+                            <h5 class="text-warning mb-1" id="pb-value">0 kg</h5>
+                            <small class="text-muted">PERSONAL BEST</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-dark text-center py-3">
+                        <div class="card-body">
+                            <h5 class="text-info mb-1" id="volume-trend">0%</h5>
+                            <small class="text-muted">VOLUME TREND</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-dark text-center py-3">
+                        <div class="card-body">
+                            <h5 class="text-success mb-1" id="last-date">Never</h5>
+                            <small class="text-muted">LAST PERFORMED</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-dark text-center py-3">
+                        <div class="card-body">
+                            <h5 class="text-primary mb-1" id="total-volume">0 kg</h5>
+                            <small class="text-muted">TOTAL VOLUME</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container mb-4" style="position: relative; height: 250px;">
+                <canvas id="exercise-chart"></canvas>
+            </div>
+            
+            <h5 class="mb-3">Session History</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th class="text-end">Sets</th>
+                            <th class="text-end">Best Set</th>
+                            <th class="text-end">Volume</th>
+                            <th class="text-end">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exercise-sessions">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- JS dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function() {
+    let exerciseChart = null;
+    let allExercises = []; // Store exercises for sorting
 
+    // Initialize exercises tab
+    $('#exercises-tab').on('shown.bs.tab', function() {
+        loadExercises();
+    });
+
+    // Back to list button
+    $('#back-to-list').click(function() {
+        $('#exercise-detail').hide();
+        $('#exercises-list').closest('.table-responsive').show();
+    });
+
+    // Search functionality
+    $('#exercise-search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.exercise-row').each(function() {
+            const exerciseName = $(this).data('name').toLowerCase();
+            $(this).toggle(exerciseName.includes(searchTerm));
+        });
+    });
+
+    // Sorting functionality
+    $('[data-sort]').click(function() {
+        $('[data-sort]').removeClass('active');
+        $(this).addClass('active');
+        sortExercises($(this).data('sort'));
+    });
+
+    // Sort exercises based on criteria
+    function sortExercises(criteria) {
+        const sorted = [...allExercises];
+        
+        if (criteria === 'name') {
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (criteria === 'pb') {
+            sorted.sort((a, b) => b.personal_best - a.personal_best);
+        } else if (criteria === 'recent') {
+            sorted.sort((a, b) => {
+                const dateA = a.last_performed ? new Date(a.last_performed) : new Date(0);
+                const dateB = b.last_performed ? new Date(b.last_performed) : new Date(0);
+                return dateB - dateA;
+            });
+        }
+        
+        renderExercisesList(sorted);
+    }
+
+    // Load exercises list
+    function loadExercises() {
+        $.get("/workout/exercises", function(data) {
+            allExercises = data.exercises || [];
+            renderExercisesList(allExercises);
+        }).fail(function() {
+            $("#exercises-list").html(`
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-warning">
+                        Failed to load exercises. Please try again.
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    // Render exercises list
+    function renderExercisesList(exercises) {
+        const container = $("#exercises-list");
+        container.empty();
+
+        if (!exercises || exercises.length === 0) {
+            container.append(`<tr><td colspan="5" class="text-center py-4">No exercises found</td></tr>`);
+            return;
+        }
+
+        exercises.forEach(ex => {
+            const trendClass = ex.volume_trend > 0 ? 'text-success' : 
+                              ex.volume_trend < 0 ? 'text-danger' : 'text-muted';
+            const trendIcon = ex.volume_trend > 0 ? 'fa-arrow-up' : 
+                             ex.volume_trend < 0 ? 'fa-arrow-down' : 'fa-minus';
+            
+            const row = `
+            <tr class="exercise-row" data-id="${ex.id}" data-name="${ex.name}">
+                <td>
+                    <strong>${ex.name}</strong><br>
+                    <small class="text-muted">${ex.muscle_group || 'N/A'}</small>
+                </td>
+                <td class="text-end align-middle">
+                    <span class="badge bg-warning text-dark">${(ex.personal_best || 0).toFixed(1)} kg</span>
+                </td>
+                <td class="text-end align-middle">${ex.last_performed || 'Never'}</td>
+                <td class="text-end align-middle">${(ex.total_volume || 0).toFixed(1)} kg</td>
+                <td class="text-end align-middle">
+                    <span class="${trendClass}">
+                        <i class="fas ${trendIcon} me-1"></i>
+                        ${Math.abs(ex.volume_trend || 0).toFixed(1)}%
+                    </span>
+                </td>
+            </tr>`;
+            container.append(row);
+        });
+
+        // Add click handlers
+        $('.exercise-row').click(function() {
+            const exerciseId = $(this).data('id');
+            loadExerciseDetail(exerciseId);
+        });
+    }
+
+    // Load exercise detail
+    function loadExerciseDetail(exerciseId) {
+        $.get(`/workout/exercise/${exerciseId}`, function(data) {
+            renderExerciseDetail(data);
+        }).fail(function() {
+            alert("Failed to load exercise details. Please try again.");
+        });
+    }
+
+    // Render exercise detail
+    function renderExerciseDetail(data) {
+        // Update header info
+        $('#exercise-name').text(data.name || 'Unknown Exercise');
+        $('#pb-value').text(`${(data.personal_best || 0).toFixed(1)} kg`);
+        $('#volume-trend').text(`${(data.volume_trend || 0) > 0 ? '+' : ''}${(data.volume_trend || 0).toFixed(1)}%`);
+        $('#last-date').text(data.last_performed || 'Never');
+        $('#total-volume').text(`${(data.total_volume || 0).toFixed(1)} kg`);
+        
+        // Render chart if we have history
+        if (data.history && data.history.length > 0) {
+            renderExerciseChart(data.history);
+        } else {
+            // Clear chart if no data
+            if (exerciseChart) {
+                exerciseChart.destroy();
+                exerciseChart = null;
+            }
+            $('#exercise-chart').replaceWith('<canvas id="exercise-chart"></canvas>');
+        }
+        
+        // Render sessions table
+        const container = $("#exercise-sessions");
+        container.empty();
+        
+        if (data.history && data.history.length > 0) {
+            data.history.forEach(session => {
+                const progress = session.progress || 0;
+                const progressClass = progress > 0 ? 'text-success' : 
+                                    progress < 0 ? 'text-danger' : 'text-muted';
+                const progressIcon = progress > 0 ? 'fa-arrow-up' : 
+                                   progress < 0 ? 'fa-arrow-down' : 'fa-minus';
+                
+                const row = `
+                <tr>
+                    <td>${session.date || ''}</td>
+                    <td class="text-end">${session.sets || 0}</td>
+                    <td class="text-end">${session.best_set || '-'}</td>
+                    <td class="text-end">${(session.volume || 0).toFixed(1)} kg</td>
+                    <td class="text-end ${progressClass}">
+                        <i class="fas ${progressIcon} me-1"></i>
+                        ${Math.abs(progress).toFixed(1)}%
+                    </td>
+                </tr>`;
+                container.append(row);
+            });
+        } else {
+            container.append(`
+                <tr>
+                    <td colspan="5" class="text-center py-4">No session history available</td>
+                </tr>
+            `);
+        }
+        
+        // Show detail view
+        $('#exercises-list').closest('.table-responsive').hide();
+        $('#exercise-detail').show();
+    }
+
+    // Render exercise chart
+    function renderExerciseChart(history) {
+        const ctx = document.getElementById('exercise-chart').getContext('2d');
+        
+        // Destroy previous chart if exists
+        if (exerciseChart) {
+            exerciseChart.destroy();
+        }
+        
+        // Prepare data
+        const dates = history.map(h => h.date);
+        const volumes = history.map(h => h.volume || 0);
+        const bests = history.map(h => h.best_weight || 0);
+        
+        exerciseChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Volume (kg)',
+                        data: volumes,
+                        borderColor: '#ffd166',
+                        backgroundColor: 'rgba(255, 209, 102, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Personal Best (kg)',
+                        data: bests,
+                        borderColor: '#ef476f',
+                        backgroundColor: 'rgba(239, 71, 111, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Volume (kg)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Weight (kg)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Workout history functionality
     $('#workoutHistoryTabs button').click(function() {
-        const period = $(this).attr('id').split('-')[0]; // daily, weekly, monthly
+        const period = $(this).attr('id').split('-')[0];
         loadWorkoutHistory(period);
     });
 
@@ -670,18 +1116,22 @@ $(document).ready(function() {
     $('#collapse-all').click(() => $('.muscle-row').addClass('d-none'));
 
     $(document).on('click', '.period-row', function() {
+        const wasCollapsed = $(this).hasClass('collapsed');
+        $(this).toggleClass('collapsed', !wasCollapsed);
         $(this).nextUntil('.period-row').toggleClass('d-none');
     });
 
-    // Load daily by default if workouts tab is active
-    if(window.location.hash === '#workouts') loadWorkoutHistory('daily');
+    // Initialize workout history if needed
+    if(window.location.hash === '#workouts') {
+        loadWorkoutHistory('daily');
+    }
 });
 
-// AJAX loader
+// Workout history functions
 function loadWorkoutHistory(period) {
     $.get("/workout/history?period=" + period, function(data) {
         renderWorkoutHistory(data.history, period);
-    }).fail(function(jqXHR) {
+    }).fail(function() {
         const containerId = period + "-workout-history";
         $("#" + containerId).html(`
             <tr>
@@ -693,7 +1143,6 @@ function loadWorkoutHistory(period) {
     });
 }
 
-// Renderer
 function renderWorkoutHistory(history, period) {
     const container = $("#" + period + "-workout-history");
     container.empty();
@@ -709,10 +1158,14 @@ function renderWorkoutHistory(history, period) {
         let muscleRows = '';
 
         if (period === 'daily') {
-            periodLabel = new Date(item.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+            periodLabel = new Date(item.date).toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
 
             periodRow = `
-            <tr class="period-row align-middle" style="cursor:pointer;">
+            <tr class="period-row collapsed align-middle" style="cursor:pointer;">
                 <td><strong>${periodLabel}</strong></td>
                 <td class="text-end">${item.sessions_count || 0}</td>
                 <td>&nbsp;</td>
@@ -733,14 +1186,24 @@ function renderWorkoutHistory(history, period) {
                 </tr>`;
             }
         } else {
-            const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
+            const startDate = period === 'weekly' ? 
+                new Date(item.week_start) : new Date(item.month_start);
 
             if (period === 'weekly') {
                 const weekEnd = new Date(startDate);
                 weekEnd.setDate(weekEnd.getDate() + 6);
-                periodLabel = `${startDate.toLocaleDateString('en-US', { month:'short', day:'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month:'short', day:'numeric' })}`;
+                periodLabel = `${startDate.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                })} - ${weekEnd.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                })}`;
             } else {
-                periodLabel = startDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+                periodLabel = startDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
             }
 
             periodRow = `
@@ -769,20 +1232,11 @@ function renderWorkoutHistory(history, period) {
         container.append(periodRow + muscleRows);
     });
 }
-</script>
 
-
-    <script>
-    // Initialize workout history when Workouts tab is activated
-    $('#workouts-tab').on('shown.bs.tab', function() {
-        loadWorkoutHistory('daily');
-        
-        // Set up workout history tabs
-        $('#workoutHistoryTabs button').click(function() {
-            const period = $(this).data("bsTarget").replace('#', '').replace('-workout', '');
-            loadWorkoutHistory(period);
-        });
-    });
+// Initialize workout history when Workouts tab is activated
+$('#workouts-tab').on('shown.bs.tab', function() {
+    loadWorkoutHistory('daily');
+});
 </script>
 </body>
 </html>
