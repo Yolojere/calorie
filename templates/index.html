@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
         /* Base Styles */
         body {
@@ -1824,147 +1824,17 @@
     }
 }
 
-/* camera */
-#cameraModal .modal-content {
-    background: linear-gradient(135deg, #1a1a1a, #0a0a0a) !important;
-    border: 2px solid #b61336 !important;
-    border-radius: 12px !important;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(182, 19, 54, 0.5) !important;
-}
-
 #camera-preview {
-    position: relative;
     width: 100%;
-    height: 400px;
-    background: #2a2a2a;
-    border-radius: 8px;
+    max-height: 60vh;
     overflow: hidden;
-    margin-bottom: 15px;
+    position: relative;
 }
 
-#camera-preview video,
-#camera-preview canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
+#camera-preview video {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-#scanner-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    pointer-events: none;
-}
-
-.scanning-text {
-    position: absolute;
-    top: 20px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    color: #ffffff;
-    font-weight: bold;
-    text-shadow: 0 0 8px rgba(182, 19, 54, 0.8);
-    font-size: 18px;
-    letter-spacing: 1px;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; }
-    100% { opacity: 0.7; }
-}
-
-.scan-guide {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    height: 200px;
-    border: 3px solid rgba(182, 19, 54, 0.7);
-    border-radius: 12px;
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7);
-}
-
-.scan-line {
-    position: absolute;
-    top: 50%;
-    left: 10%;
-    width: 80%;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, #b989f0, transparent);
-    animation: scan 2.5s infinite linear;
-    box-shadow: 0 0 10px #b989f0;
-}
-
-@keyframes scan {
-    0% { top: 50%; }
-    25% { top: 30%; }
-    50% { top: 50%; }
-    75% { top: 70%; }
-    100% { top: 50%; }
-}
-
-.scanned-result {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    color: #ffffff;
-    font-weight: bold;
-    font-size: 24px;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 8px;
-}
-
-#cameraModal .btn {
-    background: linear-gradient(135deg, #b61336, #8a0d29) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 30px !important;
-    padding: 8px 20px !important;
-    font-weight: bold !important;
-    margin: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-    transition: all 0.3s ease !important;
-}
-
-#cameraModal .btn:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 6px 12px rgba(182, 19, 54, 0.5) !important;
-    background: linear-gradient(135deg, #c6173d, #9a0f2f) !important;
-}
-
-#cameraModal .btn:active {
-    transform: translateY(1px) !important;
-}
-
-#cameraModal .modal-footer {
-    border-top: 1px solid #444 !important;
-}
-
-#cameraModal .modal-header {
-    border-bottom: 1px solid #444 !important;
-}
-
-#zoom-level {
-    display: inline-block;
-    min-width: 50px;
-    font-weight: bold;
-    color: #b989f0;
+    height: auto;
+    transform-origin: center center;
 }
     </style>
 </head>
@@ -2596,6 +2466,7 @@
     
     <script>
         $(document).ready(function() {
+            let codeReader = null;
             let currentFood = null;
             let selectedItems = [];
             let currentSession = [];
@@ -3189,9 +3060,13 @@ $(window).resize(function() {
             // Edit grams input keypress handler
 $(document).on('click', '.edit-grams', function() {
     const itemId = $(this).data('id');
+    const foodKey = $(this).data('key'); // Get the key
     const grams = $(this).text().replace('g', '');
+    
     $('#edit-grams-id').val(itemId);
     $('#edit-grams-input').val(grams);
+    $('#edit-grams-key').val(foodKey); // Store key in hidden field
+    
     editGramsModal.show();
 });
             
@@ -3208,6 +3083,7 @@ $(document).on('click', '.edit-grams', function() {
             // Save grams
 $('#save-grams').click(function() {
     const itemId = $('#edit-grams-id').val();
+    const foodKey = $('#edit-grams-key').val();
     const newGrams = $('#edit-grams-input').val();
     const date = $('#date-selector').val();  // Get current date
 
@@ -3224,6 +3100,7 @@ $('#save-grams').click(function() {
         // Update grams
         $.post('/update_grams', {
             item_id: itemId,
+            food_key: foodKey,
             new_grams: newGrams,
             date: date   // Add date parameter
         }, function(response) {
@@ -3231,6 +3108,41 @@ $('#save-grams').click(function() {
             editGramsModal.hide();
         });
     }
+});
+
+            // delete admin food item
+    $(document).on('click', '.delete-food-btn', function(e) {
+    e.stopPropagation();
+    const foodId = $(this).data('id');
+    
+    if (!confirm('Are you sure you want to permanently delete this food from the database?')) {
+        return;
+    }
+    // Show processing indicator
+    const button = $(this);
+    const originalHTML = button.html();
+    button.html('<div class="spinner-delete"></div>');
+    
+    // Send delete request
+    $.post('/delete_food', { 
+        food_id: foodId 
+    }, function(response) {
+        if (response.success) {
+            // Remove the food item from search results
+            $(`a.food-item[data-id="${foodId}"]`).remove();
+            
+            // If we're viewing the food details, reset the form
+            if (currentFood && currentFood.id === foodId) {
+                resetFoodForm();
+            }
+        } else {
+            alert('Error: ' + (response.error || 'Failed to delete food'));
+        }
+    }).fail(function() {
+        alert('Failed to delete food. Please try again.');
+    }).always(function() {
+        button.html(originalHTML);
+    });
 });
 
             // Delete food item
@@ -3471,9 +3383,10 @@ function updateSessionDisplay(session, totals, breakdown) {
                                             </div>
                                         </div>
                                         <span class="edit-grams badge edit-grams-btn mx-1" 
-                                            data-id="${item.id}">
+                                            data-id="${item.id}" 
+                                            data-key="${item.key}">
                                             ${item.grams.toFixed(1)}g
-                                        </span>
+                                                </span>
                                     </div>
                                     <div class="nutrition-and-actions">
                                         <div class="nutrition-values-container d-flex">
@@ -3627,13 +3540,17 @@ function updateCameraStatus(status, message) {
     }
 }
 
-// Camera scanning with QuaggaJS
+// Camera button click handler
 $('#scan-ean').click(function() {
     cameraModal.show();
-    setTimeout(startCamera, 500);
+    
+    // Start camera when modal is shown
+    $('#cameraModal').on('shown.bs.modal', function() {
+        startCamera();
+    });
 });
 
-// Toggle camera
+// Toggle camera button handler
 $('#toggle-camera').click(function() {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
     localStorage.setItem('cameraPreference', currentCamera);
@@ -3641,210 +3558,134 @@ $('#toggle-camera').click(function() {
     setTimeout(startCamera, 300);
 });
 
-// Resume scanning
+// Resume scanning button handler
 $('#resume-scan').click(function() {
     lastScannedCode = null;
     $('#scanned-result').text('');
-    startQuagga();
+    startCamera();
 });
 
-// Start camera function
+// Enhanced camera handling
 function startCamera() {
     scanningActive = true;
-    startQuagga();
-}
-
-// Initialize QuaggaJS for barcode scanning - UPDATED
-function startQuagga() {
-    updateCameraStatus('active', 'Initializing camera...');
+    $('#scanned-result').text('Initializing camera...').css('color', 'white');
     
-    const constraints = {
-        facingMode: currentCamera,
-        focusMode: 'continuous',
-         width: { min: 320, ideal: 640, max: 1280 },
-        height: { min: 240, ideal: 480, max: 720 },
-        aspectRatio: 4/3 // Wider aspect ratio
-    };
-    
-    Quagga.init({
-    inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: document.querySelector('#camera-preview'),
-        constraints: {
-            facingMode: currentCamera,
-            focusMode: 'continuous',
-            width: { min: 320, ideal: 640, max: 1280 }, // Lower resolution
-            height: { min: 240, ideal: 480, max: 720 },
-            aspectRatio: 4/3 // Wider aspect ratio
-        }
-    },
-    decoder: {
-        readers: ['ean_reader'], // Focus only on EAN
-        debug: {
-            drawBoundingBox: true, // Enable for debugging
-            showFrequency: false,
-            drawScanline: false,
-            showPattern: false
-        }
-    },
-    locator: {
-        halfSample: true,
-        patchSize: "medium", // Better for smaller barcodes
-        debug: {
-            showCanvas: true,
-            showPatches: true,
-            showFoundPatches: true,
-            showSkeleton: true
-        }
-    },
-    numOfWorkers: 0, // Disable workers for mobile compatibility
-    frequency: 10, // Slower processing but more accurate
-    locate: true, // Enable locate feature
-}, function(err) {
-        if (err) {
-    console.error("Camera error:", err);
-    cameraInitializationAttempts++;
-    
-    if (cameraInitializationAttempts <= 3) {
-        currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-        updateCameraStatus('warning', 'Trying alternative camera...');
-        setTimeout(startQuagga, 1000);
-    } else {
-        updateCameraStatus('error', 'Camera initialization failed: ' + err.message);
-        $('#resume-scan').prop('disabled', true);
+    // Initialize ZXing if not already done
+    if (!codeReader) {
+        codeReader = new ZXing.BrowserMultiFormatReader();
     }
-    return;
-}
-        
-        cameraInitializationAttempts = 0;
-        updateCameraStatus('active', 'Hold steady and center barcode in the frame');
-        Quagga.start();
 
-        Quagga.onProcessed(() => {
-    setTimeout(() => {
-        const stream = Quagga.getStream();
-        if (stream) {
-            const track = stream.getVideoTracks()[0];
-            if (track && track.getCapabilities().focusMode === 'continuous') {
-                track.applyConstraints({
-                    advanced: [{focusMode: 'continuous'}]
-                });
+    // List available cameras
+    codeReader.listVideoInputDevices()
+        .then(videoInputDevices => {
+            if (videoInputDevices.length === 0) {
+                $('#scanned-result').html('No cameras found.<br>Please check your device has a camera and permissions are granted.').css('color', 'red');
+                return;
             }
-        }
-    }, 500);
-});
-    });
+            
+            let cameraId;
+            let cameraFound = false;
+            
+            // Try to find preferred camera
+            if (currentCamera === 'environment') {
+                const backCam = videoInputDevices.find(device => 
+                    /back|rear|environment|1/i.test(device.label)
+                );
+                if (backCam) {
+                    cameraId = backCam.deviceId;
+                    cameraFound = true;
+                }
+            } else {
+                const frontCam = videoInputDevices.find(device => 
+                    /front|user|0/i.test(device.label)
+                );
+                if (frontCam) {
+                    cameraId = frontCam.deviceId;
+                    cameraFound = true;
+                }
+            }
+            
+            // Fallback to first camera if preferred not found
+            if (!cameraFound) {
+                cameraId = videoInputDevices[0].deviceId;
+            }
 
-    Quagga.onDetected(function(result) {
-    if (result && result.codeResult && result.codeResult.code) {
-        const code = result.codeResult.code;
-        if (lastScannedCode === code) return;
-        
-        lastScannedCode = code;
-        $('#scanned-result').html('Scanned: ' + code + '<br>Processing...')
-            .css({
-                'color': '#00ff00',
-                'font-size': '24px',
-                'animation': 'pulse 0.5s 3'
+            // Start decoding
+            codeReader.decodeFromVideoDevice(cameraId, 'camera-preview', (result, err) => {
+                if (result) {
+                    const code = result.text;
+                    if (lastScannedCode === code) return;
+                    
+                    lastScannedCode = code;
+                    $('#scanned-result').html(`<strong>Scanned:</strong> ${code}<br>Processing...`)
+                        .css('color', '#00ff00');
+                    
+                    handleScannedCode(code);
+                } 
+                
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error('ZXing error:', err);
+                    $('#scanned-result').text(`Error: ${err.message}`).css('color', 'red');
+                }
             });
-        
-        Quagga.stop();
-        handleScannedCode(code);
-    }
-});
-    
-    // Draw center guide line for better UX
-    Quagga.onProcessed(function(result) {
-        const drawingCtx = Quagga.canvas.ctx.overlay;
-        const drawingCanvas = Quagga.canvas.dom.overlay;
-        
-        if (!result) return;
-        
-        // Clear canvas
-        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-        
-        // Draw center guide line
-        drawingCtx.beginPath();
-        drawingCtx.moveTo(drawingCanvas.width/2, 0);
-        drawingCtx.lineTo(drawingCanvas.width/2, drawingCanvas.height);
-        drawingCtx.strokeStyle = '#b61336';
-        drawingCtx.lineWidth = 2;
-        drawingCtx.stroke();
-        
-        // Draw scan area guide
-        const guideWidth = drawingCanvas.width * 0.8;
-        const guideHeight = drawingCanvas.height * 0.3;
-        const guideX = (drawingCanvas.width - guideWidth) / 2;
-        const guideY = (drawingCanvas.height - guideHeight) / 2;
-        
-        drawingCtx.beginPath();
-        drawingCtx.rect(guideX, guideY, guideWidth, guideHeight);
-        drawingCtx.strokeStyle = 'rgba(140, 0, 255, 0.5)';
-        drawingCtx.lineWidth = 2;
-        drawingCtx.stroke();
-    });
+            
+            $('#scanned-result').text('Position barcode in the scan area').css('color', 'white');
+        })
+        .catch(err => {
+            console.error('Camera enumeration error:', err);
+            let errorMessage = 'Camera initialization failed';
+            
+            if (err.name === 'NotAllowedError') {
+                errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+            } else if (err.name === 'NotFoundError') {
+                errorMessage = 'No cameras found. Please check your device has a camera.';
+            } else if (err.name === 'NotReadableError') {
+                errorMessage = 'Camera is already in use by another application.';
+            }
+            
+            $('#scanned-result').html(errorMessage).css('color', 'red');
+        });
 }
 
-// Handle scanned barcodes - UPDATED
+function stopCamera() {
+    scanningActive = false;
+    if (codeReader) {
+        try {
+            codeReader.reset();
+            codeReader = null;
+        } catch (e) {
+            console.warn('Error stopping camera:', e);
+        }
+    }
+}
+
 function handleScannedCode(code) {
-    // Validate barcode format
-    if (!isValidBarcode(code)) {
-        $('#scanned-result').text('Invalid barcode: ' + code).css('color', '#ff4444');
-        setTimeout(function() {
-            startQuagga();
-        }, 2000);
+    // Validate EAN code
+    if (!/^\d{8,13}$/.test(code)) {
+        $('#scanned-result').html(`<strong>Invalid barcode:</strong> ${code}<br>Only EAN-8/EAN-13 supported`)
+            .css('color', 'orange');
         return;
     }
-    
-    // Close modal immediately and process
+
+    // Close modal and process
     cameraModal.hide();
     stopCamera();
     
-    // DIRECTLY SET SEARCH FIELD VALUE
+    // Set search field value
     $('#food-search').val(code);
     
     // Highlight the search field
     $('#food-search').addClass('highlight-search');
-    setTimeout(function() {
-        $('#food-search').removeClass('highlight-search');
-    }, 3000);
+    setTimeout(() => $('#food-search').removeClass('highlight-search'), 3000);
     
-    // FOCUS AND TRIGGER SEARCH IMMEDIATELY
-    setTimeout(function() {
+    // Trigger search
+    setTimeout(() => {
         $('#food-search').focus();
         const query = $('#food-search').val().trim();
         if (query.length > 0) {
             performFoodSearch(query);
         }
     }, 100);
-}
-
-// Validate barcode format
-function isValidBarcode(code) {
-    // Common barcode patterns
-    const patterns = [
-        /^\d{8}$/,       // EAN-8
-        /^\d{12,13}$/,   // EAN-13/UPC
-        /^[0-9A-Za-z]{6,20}$/, // Code 128, Code 39
-        /^[0-9]{14,18}$/ // GTIN
-    ];
-    
-    return patterns.some(pattern => pattern.test(code));
-}
-
-// Add this to ensure camera is properly stopped
-function stopCamera() {
-    if (Quagga) {
-        try {
-            Quagga.stop();
-            updateCameraStatus('inactive', 'Camera stopped');
-        } catch (e) {
-            console.log("Error stopping camera:", e);
-            updateCameraStatus('error', 'Error stopping camera');
-        }
-    }
-    scanningActive = false;
 }
 
 // Camera modal closed handler
