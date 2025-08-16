@@ -841,6 +841,10 @@ def index():
 @login_required
 def custom_food():
     return render_template('custom_food.html')
+@app.route('/activity')
+@login_required
+def activity():
+    return render_template('activity.html')
 
 # Authentication routes
 @app.route('/register', methods=['GET', 'POST'])
@@ -1159,6 +1163,7 @@ def log_food():
         item = {
             "id": str(uuid.uuid4()),
             "name": food['name'],
+            "key": food['key'],
             "grams": grams,
             "units": units,
             "unit_type": unit_type,
@@ -1387,9 +1392,11 @@ def update_grams():
         print(f"Food name from session: {item_found['name']}")
         
         # Use the name to lookup food details
-        food = get_food_by_key(item_found['name'])
+        food_key = item_found['key']  # Get the stored key
+        food = get_food_by_key(food_key)  # Use key instead of name
+        
         if not food:
-            print(f"Food not found in database for key: '{item_found['name']}'")
+            print(f"Food not found in database for key: '{food_key}'")
             return jsonify({'error': 'Food not found'}), 404
         
         # Convert units to grams
@@ -1836,8 +1843,15 @@ def save_workout_set():
     weight = request.form.get('weight')
     muscle_group = request.form.get('muscle_group')
     rir = request.form.get('rir')
-    if rir and rir.strip():
-        rir = float(rir)
+    
+    # Handle "Failure" case properly
+    if rir == "Failure":
+        rir = -1
+    elif rir and rir.strip():
+        try:
+            rir = float(rir)  # Convert numbers to float
+        except ValueError:
+            rir = None
     else:
         rir = None
     comments = request.form.get('comments')
@@ -2417,6 +2431,232 @@ def apply_workout_template():
     finally:
         if conn:
             conn.close()
+
+@app.route('/workout/copy_session', methods=['POST'])
+@login_required
+def copy_workout_session():
+    conn = None
+    try:
+        source_date = request.form.get('source_date')
+        target_date = request.form.get('target_date')
+        user_id = current_user.id
+        
+        if not source_date or not target_date:
+            return jsonify(success=False, error="Missing date parameters"), 400
+            
+        if source_date == target_date:
+            return jsonify(success=False, error="Cannot copy to same date"), 400
+            
+        # Get database connection
+        conn = get_db_connection()
+        if not conn:
+            return jsonify(success=False, error="Database connection failed"), 500
+            
+        cursor = conn.cursor()
+        
+        # Get source session
+        cursor.execute(
+            "SELECT id FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, source_date)
+        )
+        source_session = cursor.fetchone()
+        
+        if not source_session:
+            return jsonify(success=False, error="No workout found for source date"), 404
+            
+        source_session_id = source_session[0]
+        
+        # Get target session (create if doesn't exist)
+        cursor.execute(
+            "SELECT id FROM workout_sessions "
+            "WHERE user_id = %s AND date = %s",
+            (user_id, target_date)
+        )
+        target_session = cursor.fetchone()
+        
+        if target_session:
+            target_session_id = target_session[0]
+        else:
+            # Get muscle group from source session
+            cursor.execute(
+                "SELECT muscle_group FROM workout_sessions "
+                "WHERE id = %s",
+                (source_session_id,)
+            )
+            muscle_group = cursor.fetchone()[0] or 'General'
+            
+            cursor.execute(
+                "INSERT INTO workout_sessions (user_id, date, muscle_group) "
+                "VALUES (%s, %s, %s) RETURNING id",
+                (user_id, target_date, muscle_group)
+            )
+            target_session_id = cursor.fetchone()[0]
+        
+        # Copy sets
+        cursor.execute(
+            "INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments) "
+            "SELECT %s, exercise_id, reps, weight, rir, comments "
+            "FROM workout_sets "
+            "WHERE session_id = %s",
+            (target_session_id, source_session_id)
+        )
+        
+        conn.commit()
+        return jsonify(success=True)
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        app.logger.error(f"Error copying workout session: {str(e)}")
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        if conn:
+            conn.close()
+
+# Get all exercises endpoint
+@app.route('/workout/exercises')
+@login_required
+def get_exercises_list():  # Changed function name
+    user_id = current_user.id
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Simplified query to avoid complex subqueries
+        cursor.execute('''
+            SELECT 
+                e.id,
+                e.name,
+                e.muscle_group,
+                MAX(ws.weight) AS personal_best,
+                MAX(s.date) AS last_performed,
+                SUM(ws.volume) AS total_volume
+            FROM workout_sets ws
+            JOIN workout_sessions s ON ws.session_id = s.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE s.user_id = %s
+            GROUP BY e.id
+            ORDER BY e.name
+        ''', (user_id,))
+        
+        exercises = []
+        for row in cursor.fetchall():
+            exercises.append({
+                'id': row['id'],
+                'name': row['name'],
+                'muscle_group': row['muscle_group'],
+                'personal_best': float(row['personal_best'] or 0),
+                'last_performed': row['last_performed'].strftime('%Y-%m-%d') if row['last_performed'] else None,
+                'total_volume': float(row['total_volume'] or 0),
+                # Volume trend will be calculated client-side
+                'volume_trend': 0  
+            })
+        
+        return jsonify(exercises=exercises)
+        
+    except Exception as e:
+        app.logger.error(f"Exercises Error: {str(e)}")
+        return jsonify(error="Could not load exercises"), 500
+    finally:
+        conn.close()
+
+# Get exercise details endpoint
+@app.route('/workout/exercise/<int:exercise_id>')
+@login_required
+def get_exercise_history(exercise_id):  # Different function name
+    user_id = current_user.id
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Get exercise name
+        cursor.execute('SELECT name FROM exercises WHERE id = %s', (exercise_id,))
+        exercise = cursor.fetchone()
+        if not exercise:
+            return jsonify(error="Exercise not found"), 404
+        
+        # Get exercise history
+        cursor.execute('''
+            SELECT 
+                s.date,
+                COUNT(ws.id) AS sets,
+                MAX(ws.weight) AS best_weight,
+                MAX(ws.weight || ' kg × ' || ws.reps) AS best_set,
+                SUM(ws.volume) AS volume
+            FROM workout_sets ws
+            JOIN workout_sessions s ON ws.session_id = s.id
+            WHERE s.user_id = %s AND ws.exercise_id = %s
+            GROUP BY s.date
+            ORDER BY s.date DESC
+        ''', (user_id, exercise_id))
+        
+        history = []
+        previous_volume = None
+        rows = cursor.fetchall()
+        
+        for row in rows:
+            volume = float(row['volume'] or 0)
+            progress = 0
+            
+            # Calculate progress compared to previous session
+            if previous_volume is not None and previous_volume > 0:
+                progress = ((volume - previous_volume) / previous_volume) * 100
+            
+            history.append({
+                'date': row['date'].strftime('%Y-%m-%d'),
+                'sets': row['sets'],
+                'best_weight': float(row['best_weight'] or 0),
+                'best_set': row['best_set'] or '-',
+                'volume': volume,
+                'progress': progress
+            })
+            
+            previous_volume = volume
+        
+        # Get personal best
+        cursor.execute('''
+            SELECT MAX(ws.weight) AS personal_best
+            FROM workout_sets ws
+            JOIN workout_sessions s ON ws.session_id = s.id
+            WHERE s.user_id = %s AND ws.exercise_id = %s
+        ''', (user_id, exercise_id))
+        personal_best = float(cursor.fetchone()['personal_best'] or 0)
+        
+        # Get total volume
+        cursor.execute('''
+            SELECT SUM(ws.volume) AS total_volume
+            FROM workout_sets ws
+            JOIN workout_sessions s ON ws.session_id = s.id
+            WHERE s.user_id = %s AND ws.exercise_id = %s
+        ''', (user_id, exercise_id))
+        total_volume = float(cursor.fetchone()['total_volume'] or 0)
+        
+        # Get volume trend (simplified)
+        volume_trend = 0
+        if len(history) > 1:
+            current = history[0]['volume']
+            previous = history[1]['volume']
+            if previous > 0:
+                volume_trend = ((current - previous) / previous) * 100
+        
+        return jsonify({
+            'name': exercise['name'],
+            'personal_best': personal_best,
+            'total_volume': total_volume,
+            'volume_trend': volume_trend,
+            'last_performed': history[0]['date'] if history else None,
+            'history': history
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Exercise History Error: {str(e)}")
+        return jsonify(error="Could not load exercise history"), 500
+    finally:
+        conn.close()
+
 
 @app.route('/keepalive')
 @login_required
