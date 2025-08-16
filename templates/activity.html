@@ -43,6 +43,19 @@
             height: 36px !important;
         }
         
+        /* Placeholder styling */
+        .form-control::placeholder,
+        .form-select::placeholder {
+            color: #b989f0; /* Purple placeholder */
+            opacity: 0.8;
+        }
+        
+        .form-control:focus::placeholder,
+        .form-select:focus::placeholder {
+            color: #000; /* Black when focused */
+            opacity: 1;
+        }
+        
         .form-control:focus, .form-select:focus {
             background-color: #b4b4b4;
             color: #ffffff;
@@ -210,6 +223,7 @@
             position: relative;
             overflow: visible;
             box-shadow: 0 2px 5px rgba(255, 107, 107, 0.3);
+            transition: width 0.5s ease;
         }
         
         .progress-bar::after {
@@ -224,6 +238,7 @@
             font-size: 0.8rem;
             font-weight: 500;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
         
         .activity-card {
@@ -250,6 +265,7 @@
             font-weight: 600;
             color: #b989f0;
             margin-top: 10px;
+            min-height: 30px;
         }
         
         .negative-value {
@@ -301,6 +317,8 @@
             border-radius: 10px;
             transition: all 0.3s ease;
             font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-primary:hover {
@@ -316,16 +334,6 @@
             padding: 0 15px;
             flex: 1;
             width: 100%;
-        }
-        
-        /* Footer */
-        .footer {
-            background-color: #000;
-            color: #777;
-            padding: 1rem 0;
-            text-align: center;
-            border-top: 1px solid #444;
-            margin-top: auto;
         }
         
         /* Animation */
@@ -360,6 +368,86 @@
             opacity: 0.8;
         }
         
+        /* Loading animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loading-text {
+            color: #fff;
+            font-size: 2rem;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .analyzing-text {
+            color: #b989f0;
+            font-size: 1.5rem;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        .spinner {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+        
+        .spinner .dot {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: spinner 2s infinite ease-in-out;
+        }
+        
+        .spinner .dot:after {
+            content: '';
+            display: block;
+            width: 25%;
+            height: 25%;
+            background-color: #8a2be2;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 45%;
+        }
+        
+        .spinner .dot:nth-child(1) { animation-delay: -1.1s; }
+        .spinner .dot:nth-child(2) { animation-delay: -1.0s; }
+        .spinner .dot:nth-child(3) { animation-delay: -0.9s; }
+        .spinner .dot:nth-child(4) { animation-delay: -0.8s; }
+        .spinner .dot:nth-child(5) { animation-delay: -0.7s; }
+        .spinner .dot:nth-child(6) { animation-delay: -0.6s; }
+        .spinner .dot:nth-child(7) { animation-delay: -0.5s; }
+        .spinner .dot:nth-child(8) { animation-delay: -0.4s; }
+        .spinner .dot:nth-child(9) { animation-delay: -0.3s; }
+        .spinner .dot:nth-child(10) { animation-delay: -0.2s; }
+        .spinner .dot:nth-child(11) { animation-delay: -0.1s; }
+        .spinner .dot:nth-child(12) { animation-delay: 0s; }
+        
+        @keyframes spinner {
+            0%, 40%, 100% { transform: scale(0.4); }
+            20% { transform: scale(1); }
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container-page {
@@ -383,7 +471,27 @@
     </style>
 </head>
 <body>
-    <!-- Navbar with Activity Tracker Link -->
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="analyzing-text">Analyzing...</div>
+        <div class="loading-text">Calculating your energy expenditure</div>
+    </div>
+
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
@@ -415,29 +523,28 @@
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="#"
+                           href="/workout"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-dumbbell me-2"></i>Workouts
                         </a>
                     </li>
-                    <!-- Activity Tracker Link -->
                     <li>
                         <a class="dropdown-item" 
-                           href="activity.html"
+                           href="/activity"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-fire me-2"></i>Activity
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="#"
+                           href="/profile"
                            style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
                             <i class="fas fa-user-circle me-2"></i>Profile
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="#"
+                           href="/logout"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
@@ -455,30 +562,30 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-box" href="#"
+                        <a class="nav-link workout-link nav-link-box" href="/workout"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
                             <i class="fa-solid fa-dumbbell"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-box" href="/custom_food"
+                        <a class="nav-link add-link nav-link-box" href="/custom_food"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
                             <i class="fa-solid fa-file-circle-plus"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-box" href="/history"
+                        <a class="nav-link history-link nav-link-box" href="/history"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
                             <i class="fa-solid fa-chart-pie"></i>
                         </a>
                     </li>
-                    <!-- Activity Tracker Link -->
                     <li class="nav-item">
-                        <a class="nav-link nav-link-box" href="activity.html"
+                        <a class="nav-link nav-link-box active" href="/activity"
                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
                             <i class="fas fa-fire"></i>
                         </a>
                     </li>
+                    
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle nav-link-box" 
                            href="#" 
@@ -495,14 +602,14 @@
                             style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
                             <li>
                                 <a class="dropdown-item" 
-                                   href="#"
+                                   href="/profile"
                                    style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
                                     <i class="fas fa-user-circle me-2"></i>Profile
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" 
-                                   href="#"
+                                   href="/logout"
                                    style="color: #e0e0e0; padding: 8px 15px;">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a>
@@ -541,15 +648,15 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-birthday-cake me-2"></i>Age (years)</label>
-                        <input type="number" class="form-control" id="age" min="1" max="120" value="32">
+                        <input type="number" class="form-control" id="age" min="1" max="120" value="30" placeholder="Enter age">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
-                        <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" value="75.5">
+                        <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" value="70" placeholder="Enter weight">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-ruler me-2"></i>Height (cm)</label>
-                        <input type="number" class="form-control" id="height" min="50" max="250" value="178">
+                        <input type="number" class="form-control" id="height" min="50" max="250" value="175" placeholder="Enter height">
                     </div>
                 </div>
             </div>
@@ -570,12 +677,12 @@
                             </div>
                             <h5 class="activity-title">Sleep</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="7" placeholder="Hours">
+                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="8" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="30" placeholder="Minutes">
+                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="0" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
-                            <div class="value-display negative-value" id="sleep-value">-210 kcal</div>
+                            <div class="value-display negative-value" id="sleep-value">-192 kcal</div>
                         </div>
                     </div>
                     
@@ -606,10 +713,10 @@
                             <div class="input-group">
                                 <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="0" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="45" placeholder="Minutes">
+                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="30" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
-                            <div class="value-display positive-value" id="moderate-value">+297 kcal</div>
+                            <div class="value-display positive-value" id="moderate-value">+198 kcal</div>
                         </div>
                     </div>
                     
@@ -621,12 +728,12 @@
                             </div>
                             <h5 class="activity-title">Light Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="0" placeholder="Hours">
+                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="1" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="30" placeholder="Minutes">
+                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="0" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
-                            <div class="value-display positive-value" id="light-value">+102 kcal</div>
+                            <div class="value-display positive-value" id="light-value">+204 kcal</div>
                         </div>
                     </div>
                     
@@ -640,10 +747,10 @@
                             <div class="input-group">
                                 <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="2" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="15" placeholder="Minutes">
+                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="0" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
-                            <div class="value-display positive-value" id="walking-value">+135 kcal</div>
+                            <div class="value-display positive-value" id="walking-value">+120 kcal</div>
                         </div>
                     </div>
                     
@@ -655,7 +762,7 @@
                             </div>
                             <h5 class="activity-title">Steps (Future)</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" disabled value="0" placeholder="Steps">
+                                <input type="number" class="form-control" disabled value="" placeholder="Steps">
                                 <span class="input-group-text">steps</span>
                             </div>
                             <div class="value-display">Coming soon</div>
@@ -681,14 +788,14 @@
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
                             <h5><i class="fas fa-heartbeat me-2"></i>Basal Metabolic Rate (BMR)</h5>
-                            <div class="result-value" id="bmr-result">1,684 kcal</div>
+                            <div class="result-value" id="bmr-result">1,709 kcal</div>
                             <p>Calories burned at complete rest</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
                             <h5><i class="fas fa-burn me-2"></i>Total Daily Energy Expenditure (TDEE)</h5>
-                            <div class="result-value" id="tdee-result">2,728 kcal</div>
+                            <div class="result-value" id="tdee-result">2,759 kcal</div>
                             <p>Total calories burned per day</p>
                         </div>
                     </div>
@@ -699,10 +806,10 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <span><i class="fas fa-bed me-2"></i>Sleep</span>
-                            <span class="negative-value" id="sleep-result">-210 kcal</span>
+                            <span class="negative-value" id="sleep-result">-192 kcal</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" id="progress-sleep" role="progressbar" style="width: 14%" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                     
@@ -712,37 +819,37 @@
                             <span class="positive-value" id="intense-result">+720 kcal</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" id="progress-intense" role="progressbar" style="width: 52%" aria-valuenow="52" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <span><i class="fas fa-biking me-2"></i>Moderate Exercise</span>
-                            <span class="positive-value" id="moderate-result">+297 kcal</span>
+                            <span class="positive-value" id="moderate-result">+198 kcal</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" id="progress-moderate" role="progressbar" style="width: 14%" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <span><i class="fas fa-walking me-2"></i>Light Exercise</span>
-                            <span class="positive-value" id="light-result">+102 kcal</span>
+                            <span class="positive-value" id="light-result">+204 kcal</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" id="progress-light" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <span><i class="fas fa-shoe-prints me-2"></i>Standing/Walking</span>
-                            <span class="positive-value" id="walking-result">+135 kcal</span>
+                            <span class="positive-value" id="walking-result">+120 kcal</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 5%" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" id="progress-walking" role="progressbar" style="width: 9%" aria-valuenow="9" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                 </div>
@@ -750,20 +857,13 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer mt-auto">
-        <div class="container">
-            <p class="mb-0">© 2023 Nutrition Tracker. All rights reserved.</p>
-            <p class="mb-0 small mt-1">Your health data is always secure with us</p>
-        </div>
-    </footer>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const calculateBtn = document.getElementById('calculate-btn');
             const genderButtons = document.querySelectorAll('.gender-btn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
             let currentGender = 'male';
             
             // Gender selection
@@ -772,23 +872,46 @@
                     genderButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                     currentGender = this.dataset.gender;
-                    calculateTDEE();
                 });
             });
             
-            // Add event listeners to all inputs
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('input', calculateTDEE);
-            });
-            
-            // Initialize calculation
+            // Pre-calculate on page load
             calculateTDEE();
+            
+            // Calculate TDEE on button click
+            calculateBtn.addEventListener('click', function() {
+                // Validate required fields
+                const age = parseInt(document.getElementById('age').value) || 0;
+                const weight = parseFloat(document.getElementById('weight').value) || 0;
+                const height = parseInt(document.getElementById('height').value) || 0;
+                
+                if (!age || !weight || !height) {
+                    alert('Please fill in all personal information fields');
+                    return;
+                }
+                
+                // Show loading overlay
+                loadingOverlay.classList.add('active');
+                
+                // Simulate calculation time (1 second instead of 2.5)
+                setTimeout(() => {
+                    try {
+                        calculateTDEE();
+                    } catch (error) {
+                        console.error('Calculation error:', error);
+                        alert('Error in calculation: ' + error.message);
+                    } finally {
+                        // Always hide loading overlay
+                        loadingOverlay.classList.remove('active');
+                    }
+                }, 1000);
+            });
             
             function calculateTDEE() {
                 // Get personal information
                 const age = parseInt(document.getElementById('age').value) || 30;
                 const weight = parseFloat(document.getElementById('weight').value) || 70;
+                const height = parseInt(document.getElementById('height').value) || 175;
                 
                 // Get activity durations in minutes
                 const sleepMinutes = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 + 
@@ -807,7 +930,7 @@
                                      (parseInt(document.getElementById('walking-minutes').value) || 0);
                 
                 // Calculate BMR and TDEE
-                const results = calculateEnergyExpenditure(currentGender, age, weight, sleepMinutes, intenseMinutes, moderateMinutes, lightMinutes, walkingMinutes);
+                const results = calculateEnergyExpenditure(currentGender, age, weight, height, sleepMinutes, intenseMinutes, moderateMinutes, lightMinutes, walkingMinutes);
                 
                 // Update UI with results
                 document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
@@ -831,7 +954,8 @@
                 updateActivityBreakdown(results.activityBreakdown);
             }
             
-            function calculateEnergyExpenditure(gender, age, weight, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
+            // Original formula with sleep adjustment (2 calories per 5 minutes)
+            function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
                 // Base values
                 let baseBMR, baseTDEE;
                 if (gender === 'male') {
@@ -863,18 +987,21 @@
                     ageAdjustment = (gender === 'male') ? -150 : -140;
                 }
                 
+                // Height adjustment
+                const heightAdjustment = height > 170 ? (height - 170) * 2 : 0;
+                
                 // Calculate BMR
-                let bmr = baseBMR + weightBMRAdjustment + ageAdjustment;
+                let bmr = baseBMR + weightBMRAdjustment + ageAdjustment + heightAdjustment;
                 
                 // Calculate TDEE base
-                let tdee = baseTDEE + weightTDEEAdjustment + ageAdjustment;
+                let tdee = baseTDEE + weightTDEEAdjustment + ageAdjustment + heightAdjustment;
                 
                 // Activity adjustments
                 const activityBreakdown = {};
                 
-                // Sleep adjustment (same for both genders - reduces TDEE)
+                // Sleep adjustment (2 calories per 5 minutes)
                 const sleepBlocks = sleepMin / 5;
-                activityBreakdown.sleep = -Math.round(sleepBlocks * 2);
+                activityBreakdown.sleep = -Math.round(sleepBlocks * 2.8);
                 tdee += activityBreakdown.sleep;
                 
                 // Intense exercise
@@ -916,40 +1043,39 @@
                 };
             }
             
+            // Fixed progress bar updating
             function updateActivityBreakdown(breakdown) {
-                // Calculate total impact (absolute values)
-                const totalImpact = Math.abs(breakdown.sleep) + breakdown.intense + breakdown.moderate + breakdown.light + breakdown.walking;
+                // Get all activity values
+                const values = [
+                    Math.abs(breakdown.sleep), 
+                    breakdown.intense, 
+                    breakdown.moderate, 
+                    breakdown.light, 
+                    breakdown.walking
+                ];
                 
-                // Sleep
-                const sleepElement = document.querySelector('.progress-bar[aria-valuenow="15"]');
-                const sleepValue = Math.abs(breakdown.sleep);
-                const sleepPercent = Math.round((sleepValue / totalImpact) * 100);
-                sleepElement.style.width = sleepPercent + '%';
-                sleepElement.setAttribute('aria-valuenow', sleepPercent);
+                // Calculate total for percentage calculations
+                const total = values.reduce((sum, val) => sum + val, 0);
                 
-                // Intense Exercise
-                const intenseElement = document.querySelector('.progress-bar[aria-valuenow="45"]');
-                const intensePercent = Math.round((breakdown.intense / totalImpact) * 100);
-                intenseElement.style.width = intensePercent + '%';
-                intenseElement.setAttribute('aria-valuenow', intensePercent);
+                // Update progress bars
+                const progressIds = [
+                    'progress-sleep',
+                    'progress-intense',
+                    'progress-moderate',
+                    'progress-light',
+                    'progress-walking'
+                ];
                 
-                // Moderate Exercise
-                const moderateElement = document.querySelector('.progress-bar[aria-valuenow="25"]');
-                const moderatePercent = Math.round((breakdown.moderate / totalImpact) * 100);
-                moderateElement.style.width = moderatePercent + '%';
-                moderateElement.setAttribute('aria-valuenow', moderatePercent);
-                
-                // Light Exercise
-                const lightElement = document.querySelector('.progress-bar[aria-valuenow="10"]');
-                const lightPercent = Math.round((breakdown.light / totalImpact) * 100);
-                lightElement.style.width = lightPercent + '%';
-                lightElement.setAttribute('aria-valuenow', lightPercent);
-                
-                // Walking
-                const walkingElement = document.querySelector('.progress-bar[aria-valuenow="5"]');
-                const walkingPercent = Math.round((breakdown.walking / totalImpact) * 100);
-                walkingElement.style.width = walkingPercent + '%';
-                walkingElement.setAttribute('aria-valuenow', walkingPercent);
+                // Calculate and set percentages
+                values.forEach((value, index) => {
+                    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                    const progressBar = document.getElementById(progressIds[index]);
+                    
+                    if (progressBar) {
+                        progressBar.style.width = percent + '%';
+                        progressBar.setAttribute('aria-valuenow', percent);
+                    }
+                });
             }
         });
     </script>
