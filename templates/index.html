@@ -1838,57 +1838,78 @@
 }
 #scanner-overlay {
     pointer-events: none; /* Allow clicks through overlay */
+    z-index: 10;
+
+}
+.buttons-container {
+    position: relative;
+    z-index: 1000; /* Higher than video */
+}
+#camera-video {
+    z-index: 5;
+    position: relative;
 }
 
 .scan-guide {
     position: absolute;
-    top: 25%;
+    top: 30%;
     left: 15%;
     width: 70%;
     height: 20%;
-    border: 2px dashed rgba(255, 255, 255, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.8);
     border-radius: 8px;
-    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
 }
 
 .scan-line {
     position: absolute;
-    top: 25%;
+    top: 30%;
     width: 70%;
     left: 15%;
-    height: 2px;
-    background: red;
+    height: 3px;
+    background: #ff0000;
     animation: scan 2s infinite linear;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
 }
 
 @keyframes scan {
-    0% { top: 25%; }
-    50% { top: 45%; }
-    100% { top: 25%; }
+    0% { top: 30%; }
+    50% { top: 50%; }
+    100% { top: 30%; }
 }
 
 .scanning-text {
     position: absolute;
-    top: 15%;
+    top: 20%;
     left: 0;
     width: 100%;
     text-align: center;
     color: white;
     font-weight: bold;
+    font-size: 16px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
 .scanned-result {
     position: absolute;
-    bottom: 20%;
+    bottom: 25%;
     left: 0;
     width: 100%;
     text-align: center;
     color: white;
     font-weight: bold;
+    font-size: 18px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    font-size: 1.2rem;
-    z-index: 10;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    z-index: 100;
+}
+/* Make buttons more visible */
+#toggle-camera, #resume-scan {
+    background: rgba(0, 0, 0, 0.7) !important;
+    border: 1px solid white !important;
+    padding: 8px 15px !important;
+    font-size: 14px !important;
 }
     </style>
 </head>
@@ -2493,44 +2514,47 @@
     </div>
     
     <!-- Camera Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-        <!-- Zoom indicator -->
-    <div class="position-absolute top-0 start-0 m-2 p-2 bg-dark text-white rounded">
-        Zoom: <span id="zoom-level">100%</span>
-    </div>
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark">
-                <div class="modal-header bg-black">
-                    <h5 class="modal-title">Scan EAN Barcode</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body d-flex flex-column align-items-center justify-content-center">
-                    <div id="camera-status" class="text-center mb-2" style="color: white; z-index: 100;"></div>
-                    <div id="camera-preview" class="position-relative">
-                        <video id="camera-video" style="width:100%; height:auto;"></video>
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Added modal-dialog -->
+        <div class="modal-content bg-dark"> <!-- Added modal-content -->
+            <div class="modal-header bg-black">
+                <h5 class="modal-title">Scan Barcode</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center justify-content-center">
+                <!-- Camera status indicator -->
+                <div id="camera-status" class="text-center mb-2" 
+                     style="color: white; z-index: 1000; position: relative;"></div>
+                
+                <!-- Camera preview container -->
+                <div id="camera-preview" class="position-relative" style="width: 100%;">
+                    <video id="camera-video" style="width:100%; height:auto;"></video>
+                    <!-- Scanner overlay -->
                     <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
                         <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
-            <div class="scan-guide"></div>
-            <div class="scan-line"></div>
-            <div id="scanned-result" class="scanned-result"></div>
-        </div>
-    </div>
-                    <!-- Move buttons outside camera preview with higher -->
-                        <div class="mt-3 text-center d-flex flex-wrap justify-content-center" style="z-index: 100; position: relative;">
-                            <button id="toggle-camera" class="btn btn-sm me-2">
-                                <i class="fas fa-sync-alt"></i> Switch Camera
-                            </button>
-                            <button id="resume-scan" class="btn btn-sm">
-                                <i class="fas fa-redo"></i> Resume Scan
-                            </button>
-                        </div>
+                        <div class="scan-guide"></div>
+                        <div class="scan-line"></div>
+                        <div id="scanned-result" class="scanned-result"></div>
                     </div>
-                <div class="modal-footer bg-black">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
+                
+                <!-- Buttons container -->
+                <div class="mt-3 text-center d-flex flex-wrap justify-content-center" 
+                     style="z-index: 1000; position: relative; width: 100%;">
+                    <button id="toggle-camera" class="btn btn-sm me-2" style="background: #333; color: white;">
+                        <i class="fas fa-sync-alt"></i> Switch Camera
+                    </button>
+                    <button id="resume-scan" class="btn btn-sm" style="background: #333; color: white;">
+                        <i class="fas fa-redo"></i> Resume Scan
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer bg-black">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -3611,6 +3635,16 @@ function updateCameraStatus(status, message) {
     }
 }
 
+$('#cameraModal').on('show.bs.modal', function() {
+    // Recreate overlay elements
+    $('#scanner-overlay').html(`
+        <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
+        <div class="scan-guide"></div>
+        <div class="scan-line"></div>
+        <div id="scanned-result" class="scanned-result"></div>
+    `);
+});
+
 // Camera button click handler
 $('#scan-ean').click(function() {
     cameraModal.show();
@@ -3625,6 +3659,11 @@ $('#scan-ean').click(function() {
 $('#toggle-camera').click(function() {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
     localStorage.setItem('cameraPreference', currentCamera);
+    
+    // Update status
+    const cameraType = currentCamera === 'environment' ? 'back' : 'front';
+    $('#camera-status').text(`Switching to ${cameraType} camera...`);
+    
     stopCamera();
     setTimeout(startCamera, 300);
 });
@@ -3733,14 +3772,21 @@ function stopCamera() {
     if (codeReader) {
         try {
             codeReader.reset();
-            $('#camera-video').remove(); // Remove video element
-            // Recreate video element
-            $('#camera-preview').html('<video id="camera-video" style="width:100%; height:auto;"></video>');
+            // Stop video tracks without removing elements
+            const videoElement = document.getElementById('camera-video');
+            if (videoElement && videoElement.srcObject) {
+                const tracks = videoElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
             codeReader = null;
         } catch (e) {
             console.warn('Error stopping camera:', e);
         }
     }
+    
+    // Clear scanned result but preserve overlay
+    $('#scanned-result').text('');
 }
 
 function handleScannedCode(code) {
@@ -3800,7 +3846,36 @@ $('#cameraModal').on('hidden.bs.modal', function () {
                     $('#search-results').html(resultsHtml);
                 });
             }
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    if (!window.ZXing) {
+        console.error('ZXing library not loaded!');
+        return;
+    }
+    
+    // Initialize code reader
+    window.codeReader = new ZXing.BrowserMultiFormatReader();
+    console.log('ZXing initialized');
+    
+    // Set up camera modal events
+    $('#cameraModal').on('shown.bs.modal', function() {
+        startCamera();
+    });
+    
+    $('#cameraModal').on('hidden.bs.modal', function() {
+        stopCamera();
+    });
+    
+    // Start camera function
+    function startCamera() {
+        // Implementation from previous camera code
+    }
+    
+    // Stop camera function
+    function stopCamera() {
+        // Implementation from previous camera code
+    }
+});
+ });
         </script>
         <script>
         // Initialize Font Awesome
@@ -3809,6 +3884,7 @@ $('#cameraModal').on('hidden.bs.modal', function () {
                 FontAwesome.dom.watch();
             }
         });
+        
 
     </script>
     
