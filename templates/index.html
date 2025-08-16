@@ -2451,7 +2451,8 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body d-flex flex-column align-items-center justify-content-center">
-                    <div id="camera-preview"></div>
+                    <div id="camera-preview" style="visibility: hidden;">
+                        <video id="camera-video" style="width:100%; height:auto;"></video></div>
                     <div id="scanner-overlay">
                         <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
                         <div class="scan-guide"></div>
@@ -3559,7 +3560,7 @@ $('#scan-ean').click(function() {
     
     // Start camera when modal is shown
     $('#cameraModal').on('shown.bs.modal', function() {
-        startCamera();
+        setTimeout(startCamera, 300);
     });
 });
 
@@ -3583,12 +3584,16 @@ function startCamera() {
     scanningActive = true;
     $('#scanned-result').text('Initializing camera...').css('color', 'white');
     
+    // Show the preview container
+    $('#camera-preview').css('visibility', 'visible');
+
     // Initialize ZXing if not already done
     if (!codeReader) {
         codeReader = new ZXing.BrowserMultiFormatReader();
     }
 
     // List available cameras
+    $('#scanned-result').text('Listing cameras...');
     codeReader.listVideoInputDevices()
         .then(videoInputDevices => {
             if (videoInputDevices.length === 0) {
@@ -3624,7 +3629,8 @@ function startCamera() {
             }
 
             // Start decoding
-            codeReader.decodeFromVideoDevice(cameraId, 'camera-preview', (result, err) => {
+            $('#scanned-result').text('Starting video stream...');
+            codeReader.decodeFromVideoDevice(cameraId, 'camera-video', (result, err) => {
                 if (result) {
                     const code = result.text;
                     if (lastScannedCode === code) return;
@@ -3670,6 +3676,9 @@ function stopCamera() {
             console.warn('Error stopping camera:', e);
         }
     }
+    
+    // Hide the preview container
+    $('#camera-preview').css('visibility', 'hidden');
 }
 
 function handleScannedCode(code) {
