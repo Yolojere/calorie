@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Tracker - Nutrition Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* === MAIN STYLES === */
+        body {
+            font-family: 'Calibri', sans-serif;
+            font-size: 15px;
+            background-color: #222 !important;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(106, 13, 173, 0.1) 0%, transparent 20%);
+        }
+        
+        .bg-black, .modal-header, .modal-footer {
+            background-color: #000 !important;
+            border-color: #444;
+        }
+        
+        .card, .list-group-item, .modal-content {
+            background-color: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        .form-control, .form-select {
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            font-size: 14px !important;
+            padding: 6px 8px !important;
+            height: 36px !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #b4b4b4;
+            color: #ffffff;
+            border-color: #d1d1d1;
+        }
+        
+        .nav-link-box {
+            background-color: white !important;
+            color: black !important;
+            border-radius: 20px;
+            padding: 10px !important;
+            margin: 0 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+        }
+        
+        .nav-link-box:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link-box i {
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+        
+        .mobile-settings-btn {
+            background-color: white !important;
+            color: black !important;
+            border-radius: 50%;
+            padding: 10px !important;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        .mobile-settings-btn:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .mobile-settings-btn i {
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+
+        /* === ACTIVITY TRACKER SPECIFIC STYLES === */
+        .activity-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex: 1;
+            width: 100%;
+        }
+        
+        .glass-card {
+            background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            background: rgba(20, 20, 30, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #e0e0e0;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+        
+        .result-card {
+            background: rgba(20, 20, 35, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(100, 100, 200, 0.2);
+        }
+        
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .activity-icon {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #b989f0;
+            background: rgba(185, 137, 240, 0.1);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+        }
+        
+        .tdee-explanation {
+            background: rgba(25, 25, 40, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(100, 100, 200, 0.2);
+        }
+        
+        .tdee-explanation h5 {
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .progress {
+            height: 12px;
+            background: rgba(40, 40, 60, 0.7);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: visible;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            border-radius: 10px;
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 2px 5px rgba(255, 107, 107, 0.3);
+        }
+        
+        .progress-bar::after {
+            content: attr(aria-valuenow) '%';
+            position: absolute;
+            right: -30px;
+            top: -25px;
+            background: rgba(30, 30, 45, 0.9);
+            color: #e0e0e0;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .activity-card {
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(35, 35, 55, 0.5);
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-5px);
+            background: rgba(40, 40, 65, 0.6);
+        }
+        
+        .activity-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .value-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #b989f0;
+            margin-top: 10px;
+        }
+        
+        .negative-value {
+            color: #ff6b6b;
+        }
+        
+        .positive-value {
+            color: #6dc0d5;
+        }
+        
+        .gender-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .gender-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(40, 40, 60, 0.7);
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            color: #e0e0e0;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .gender-btn.active {
+            background: rgba(106, 13, 173, 0.3);
+            border-color: #b989f0;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        .gender-btn i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: block;
+            color: #b989f0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 100%);
+            border: none;
+            padding: 12px 25px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #8a2be2 0%, #6a0dad 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
+        }
+        
+        /* === LAYOUT SPECIFIC STYLES === */
+        .container-page {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex: 1;
+            width: 100%;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #000;
+            color: #777;
+            padding: 1rem 0;
+            text-align: center;
+            border-top: 1px solid #444;
+            margin-top: auto;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animated {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0 20px;
+        }
+        
+        .header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #b989f0, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.8;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container-page {
+                margin: 1rem auto;
+                padding: 0 10px;
+            }
+            
+            .result-value {
+                font-size: 2rem;
+            }
+            
+            .gender-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar with Activity Tracker Link -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
+                - Track, eat, repeat -
+            </a>
+            
+            <!-- Mobile Settings Dropdown -->
+            <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
+                <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-wrench-adjustable"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" 
+                    aria-labelledby="navbarDropdownMobile"
+                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/custom_food"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/history"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-chart-pie me-2"></i>History
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="#"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-dumbbell me-2"></i>Workouts
+                        </a>
+                    </li>
+                    <!-- Activity Tracker Link -->
+                    <li>
+                        <a class="dropdown-item" 
+                           href="activity.html"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-fire me-2"></i>Activity
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="#"
+                           style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                            <i class="fas fa-user-circle me-2"></i>Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="#"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link nav-link-box" href="/" 
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                            <i class="fa-solid fa-house-chimney-window"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="#"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="/custom_food"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="/history"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                    </li>
+                    <!-- Activity Tracker Link -->
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="activity.html"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
+                            <i class="fas fa-fire"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle nav-link-box" 
+                           href="#" 
+                           id="navbarDropdownDesktop" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
+                           style="position: relative;">
+                            <i class="bi bi-wrench-adjustable"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" 
+                            aria-labelledby="navbarDropdownDesktop"
+                            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="#"
+                                   style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                    <i class="fas fa-user-circle me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="#"
+                                   style="color: #e0e0e0; padding: 8px 15px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Activity Tracker Content -->
+    <div class="activity-container">
+        <div class="header">
+            <h1><i class="fas fa-fire me-2"></i>Activity & TDEE Calculator</h1>
+            <p>Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE)</p>
+        </div>
+        
+        <!-- Personal Information Card -->
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-user-circle me-2"></i>Personal Information
+            </div>
+            <div class="card-body">
+                <div class="gender-selector">
+                    <div class="gender-btn active" data-gender="male">
+                        <i class="fas fa-mars"></i>
+                        <div>Male</div>
+                    </div>
+                    <div class="gender-btn" data-gender="female">
+                        <i class="fas fa-venus"></i>
+                        <div>Female</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-birthday-cake me-2"></i>Age (years)</label>
+                        <input type="number" class="form-control" id="age" min="1" max="120" value="32">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
+                        <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" value="75.5">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-ruler me-2"></i>Height (cm)</label>
+                        <input type="number" class="form-control" id="height" min="50" max="250" value="178">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity Tracking Card -->
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-running me-2"></i>Daily Activity Tracking
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Sleep -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                            <h5 class="activity-title">Sleep</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="7" placeholder="Hours">
+                                <span class="input-group-text">hr</span>
+                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="30" placeholder="Minutes">
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <div class="value-display negative-value" id="sleep-value">-210 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Intense Exercise -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h5 class="activity-title">Intense Exercise</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="1" placeholder="Hours">
+                                <span class="input-group-text">hr</span>
+                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="0" placeholder="Minutes">
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <div class="value-display positive-value" id="intense-value">+720 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Moderate Exercise -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-biking"></i>
+                            </div>
+                            <h5 class="activity-title">Moderate Exercise</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="0" placeholder="Hours">
+                                <span class="input-group-text">hr</span>
+                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="45" placeholder="Minutes">
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <div class="value-display positive-value" id="moderate-value">+297 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Light Exercise -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-walking"></i>
+                            </div>
+                            <h5 class="activity-title">Light Exercise</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="0" placeholder="Hours">
+                                <span class="input-group-text">hr</span>
+                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="30" placeholder="Minutes">
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <div class="value-display positive-value" id="light-value">+102 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Standing/Walking -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-shoe-prints"></i>
+                            </div>
+                            <h5 class="activity-title">Standing/Walking</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="2" placeholder="Hours">
+                                <span class="input-group-text">hr</span>
+                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="15" placeholder="Minutes">
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <div class="value-display positive-value" id="walking-value">+135 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Steps -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="activity-card">
+                            <div class="activity-icon">
+                                <i class="fas fa-footsteps"></i>
+                            </div>
+                            <h5 class="activity-title">Steps (Future)</h5>
+                            <div class="input-group">
+                                <input type="number" class="form-control" disabled value="0" placeholder="Steps">
+                                <span class="input-group-text">steps</span>
+                            </div>
+                            <div class="value-display">Coming soon</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid mt-2">
+                    <button class="btn btn-primary btn-lg" id="calculate-btn">
+                        <i class="fas fa-calculator me-2"></i>Calculate TDEE
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>Energy Expenditure Results
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="result-card">
+                            <h5><i class="fas fa-heartbeat me-2"></i>Basal Metabolic Rate (BMR)</h5>
+                            <div class="result-value" id="bmr-result">1,684 kcal</div>
+                            <p>Calories burned at complete rest</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="result-card">
+                            <h5><i class="fas fa-burn me-2"></i>Total Daily Energy Expenditure (TDEE)</h5>
+                            <div class="result-value" id="tdee-result">2,728 kcal</div>
+                            <p>Total calories burned per day</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tdee-explanation">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Activity Breakdown</h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-bed me-2"></i>Sleep</span>
+                            <span class="negative-value" id="sleep-result">-210 kcal</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-fire me-2"></i>Intense Exercise</span>
+                            <span class="positive-value" id="intense-result">+720 kcal</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-biking me-2"></i>Moderate Exercise</span>
+                            <span class="positive-value" id="moderate-result">+297 kcal</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-walking me-2"></i>Light Exercise</span>
+                            <span class="positive-value" id="light-result">+102 kcal</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-shoe-prints me-2"></i>Standing/Walking</span>
+                            <span class="positive-value" id="walking-result">+135 kcal</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 5%" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto">
+        <div class="container">
+            <p class="mb-0">© 2023 Nutrition Tracker. All rights reserved.</p>
+            <p class="mb-0 small mt-1">Your health data is always secure with us</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculateBtn = document.getElementById('calculate-btn');
+            const genderButtons = document.querySelectorAll('.gender-btn');
+            let currentGender = 'male';
+            
+            // Gender selection
+            genderButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    genderButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentGender = this.dataset.gender;
+                    calculateTDEE();
+                });
+            });
+            
+            // Add event listeners to all inputs
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', calculateTDEE);
+            });
+            
+            // Initialize calculation
+            calculateTDEE();
+            
+            function calculateTDEE() {
+                // Get personal information
+                const age = parseInt(document.getElementById('age').value) || 30;
+                const weight = parseFloat(document.getElementById('weight').value) || 70;
+                
+                // Get activity durations in minutes
+                const sleepMinutes = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 + 
+                                    (parseInt(document.getElementById('sleep-minutes').value) || 0);
+                
+                const intenseMinutes = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 + 
+                                     (parseInt(document.getElementById('intense-minutes').value) || 0);
+                
+                const moderateMinutes = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 + 
+                                      (parseInt(document.getElementById('moderate-minutes').value) || 0);
+                
+                const lightMinutes = (parseInt(document.getElementById('light-hours').value) || 0) * 60 + 
+                                   (parseInt(document.getElementById('light-minutes').value) || 0);
+                
+                const walkingMinutes = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 + 
+                                     (parseInt(document.getElementById('walking-minutes').value) || 0);
+                
+                // Calculate BMR and TDEE
+                const results = calculateEnergyExpenditure(currentGender, age, weight, sleepMinutes, intenseMinutes, moderateMinutes, lightMinutes, walkingMinutes);
+                
+                // Update UI with results
+                document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
+                document.getElementById('tdee-result').textContent = results.tdee.toLocaleString() + ' kcal';
+                
+                // Update activity values
+                document.getElementById('sleep-value').textContent = results.activityBreakdown.sleep + ' kcal';
+                document.getElementById('intense-value').textContent = '+' + results.activityBreakdown.intense + ' kcal';
+                document.getElementById('moderate-value').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
+                document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
+                document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
+                
+                // Update results section
+                document.getElementById('sleep-result').textContent = results.activityBreakdown.sleep + ' kcal';
+                document.getElementById('intense-result').textContent = '+' + results.activityBreakdown.intense + ' kcal';
+                document.getElementById('moderate-result').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
+                document.getElementById('light-result').textContent = '+' + results.activityBreakdown.light + ' kcal';
+                document.getElementById('walking-result').textContent = '+' + results.activityBreakdown.walking + ' kcal';
+                
+                // Update activity breakdown
+                updateActivityBreakdown(results.activityBreakdown);
+            }
+            
+            function calculateEnergyExpenditure(gender, age, weight, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
+                // Base values
+                let baseBMR, baseTDEE;
+                if (gender === 'male') {
+                    baseBMR = 1139;
+                    baseTDEE = 1511;
+                } else {
+                    baseBMR = 939;
+                    baseTDEE = 1311;
+                }
+                
+                // Weight adjustment (per 0.5kg above 30kg)
+                const weightDiff = weight - 30;
+                const weightUnits = weightDiff / 0.5;
+                
+                let weightBMRAdjustment, weightTDEEAdjustment;
+                if (gender === 'male') {
+                    weightBMRAdjustment = weightUnits * 7;
+                    weightTDEEAdjustment = weightUnits * 12;
+                } else {
+                    weightBMRAdjustment = weightUnits * 6;
+                    weightTDEEAdjustment = weightUnits * 11;
+                }
+                
+                // Age adjustment
+                let ageAdjustment = 0;
+                if (age >= 30 && age < 60) {
+                    ageAdjustment = (gender === 'male') ? 70 : 65;
+                } else if (age >= 60) {
+                    ageAdjustment = (gender === 'male') ? -150 : -140;
+                }
+                
+                // Calculate BMR
+                let bmr = baseBMR + weightBMRAdjustment + ageAdjustment;
+                
+                // Calculate TDEE base
+                let tdee = baseTDEE + weightTDEEAdjustment + ageAdjustment;
+                
+                // Activity adjustments
+                const activityBreakdown = {};
+                
+                // Sleep adjustment (same for both genders - reduces TDEE)
+                const sleepBlocks = sleepMin / 5;
+                activityBreakdown.sleep = -Math.round(sleepBlocks * 2);
+                tdee += activityBreakdown.sleep;
+                
+                // Intense exercise
+                const intenseBlocks = intenseMin / 5;
+                activityBreakdown.intense = (gender === 'male') ? 
+                    Math.round(intenseBlocks * 60) : 
+                    Math.round(intenseBlocks * 56);
+                tdee += activityBreakdown.intense;
+                
+                // Moderate exercise
+                const moderateBlocks = moderateMin / 5;
+                activityBreakdown.moderate = (gender === 'male') ? 
+                    Math.round(moderateBlocks * 33) : 
+                    Math.round(moderateBlocks * 31);
+                tdee += activityBreakdown.moderate;
+                
+                // Light exercise
+                const lightBlocks = lightMin / 5;
+                activityBreakdown.light = (gender === 'male') ? 
+                    Math.round(lightBlocks * 17) : 
+                    Math.round(lightBlocks * 15);
+                tdee += activityBreakdown.light;
+                
+                // Walking
+                const walkingBlocks = walkingMin / 5;
+                activityBreakdown.walking = (gender === 'male') ? 
+                    Math.round(walkingBlocks * 5) : 
+                    Math.round(walkingBlocks * 4);
+                tdee += activityBreakdown.walking;
+                
+                // Round final values
+                bmr = Math.round(bmr);
+                tdee = Math.round(tdee);
+                
+                return {
+                    bmr,
+                    tdee,
+                    activityBreakdown
+                };
+            }
+            
+            function updateActivityBreakdown(breakdown) {
+                // Calculate total impact (absolute values)
+                const totalImpact = Math.abs(breakdown.sleep) + breakdown.intense + breakdown.moderate + breakdown.light + breakdown.walking;
+                
+                // Sleep
+                const sleepElement = document.querySelector('.progress-bar[aria-valuenow="15"]');
+                const sleepValue = Math.abs(breakdown.sleep);
+                const sleepPercent = Math.round((sleepValue / totalImpact) * 100);
+                sleepElement.style.width = sleepPercent + '%';
+                sleepElement.setAttribute('aria-valuenow', sleepPercent);
+                
+                // Intense Exercise
+                const intenseElement = document.querySelector('.progress-bar[aria-valuenow="45"]');
+                const intensePercent = Math.round((breakdown.intense / totalImpact) * 100);
+                intenseElement.style.width = intensePercent + '%';
+                intenseElement.setAttribute('aria-valuenow', intensePercent);
+                
+                // Moderate Exercise
+                const moderateElement = document.querySelector('.progress-bar[aria-valuenow="25"]');
+                const moderatePercent = Math.round((breakdown.moderate / totalImpact) * 100);
+                moderateElement.style.width = moderatePercent + '%';
+                moderateElement.setAttribute('aria-valuenow', moderatePercent);
+                
+                // Light Exercise
+                const lightElement = document.querySelector('.progress-bar[aria-valuenow="10"]');
+                const lightPercent = Math.round((breakdown.light / totalImpact) * 100);
+                lightElement.style.width = lightPercent + '%';
+                lightElement.setAttribute('aria-valuenow', lightPercent);
+                
+                // Walking
+                const walkingElement = document.querySelector('.progress-bar[aria-valuenow="5"]');
+                const walkingPercent = Math.round((breakdown.walking / totalImpact) * 100);
+                walkingElement.style.width = walkingPercent + '%';
+                walkingElement.setAttribute('aria-valuenow', walkingPercent);
+            }
+        });
+    </script>
+</body>
+</html>
