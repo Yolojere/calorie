@@ -1840,9 +1840,55 @@
     pointer-events: none; /* Allow clicks through overlay */
 }
 
+.scan-guide {
+    position: absolute;
+    top: 25%;
+    left: 15%;
+    width: 70%;
+    height: 20%;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6);
+}
+
+.scan-line {
+    position: absolute;
+    top: 25%;
+    width: 70%;
+    left: 15%;
+    height: 2px;
+    background: red;
+    animation: scan 2s infinite linear;
+}
+
+@keyframes scan {
+    0% { top: 25%; }
+    50% { top: 45%; }
+    100% { top: 25%; }
+}
+
+.scanning-text {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
 .scanned-result {
-    z-index: 10; /* Keep above overlay */
-    position: relative;
+    position: absolute;
+    bottom: 20%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    font-size: 1.2rem;
+    z-index: 10;
 }
     </style>
 </head>
@@ -3593,9 +3639,12 @@ $('#resume-scan').click(function() {
 // Enhanced camera handling
 function startCamera() {
     scanningActive = true;
-    $('#camera-status').text('Initializing camera...');
+    $('#scanned-result').text('Initializing camera...').css('color', 'white');
     
-    // Initialize ZXing if not already done
+    // Show the preview container
+    $('#camera-preview').css('visibility', 'visible');
+
+    // Initialize ZXing
     if (!codeReader) {
         codeReader = new ZXing.BrowserMultiFormatReader();
     }
@@ -3607,19 +3656,20 @@ function startCamera() {
     codeReader.listVideoInputDevices()
         .then(videoInputDevices => {
             if (videoInputDevices.length === 0) {
-                $('#camera-status').html('No cameras found');
+                $('#scanned-result').html('No cameras found');
                 return;
             }
             
             let cameraId;
+            let cameraLabel = '';
             let backCamera = null;
             let frontCamera = null;
             
-            // Find back and front cameras
+            // Classify cameras
             videoInputDevices.forEach(device => {
-                if (/back|rear|environment|1|primary/i.test(device.label)) {
+                if (/back|rear|environment|1|primary|main|wide/i.test(device.label.toLowerCase())) {
                     backCamera = device;
-                } else if (/front|user|0|selfie/i.test(device.label)) {
+                } else if (/front|user|0|selfie|face/i.test(device.label.toLowerCase())) {
                     frontCamera = device;
                 }
             });
@@ -3627,14 +3677,14 @@ function startCamera() {
             // Select camera based on preference
             if (currentCamera === 'environment' && backCamera) {
                 cameraId = backCamera.deviceId;
-                $('#camera-status').text('Using back camera');
+                cameraLabel = 'back';
             } else if (currentCamera === 'user' && frontCamera) {
                 cameraId = frontCamera.deviceId;
-                $('#camera-status').text('Using front camera');
+                cameraLabel = 'front';
             } else {
                 // Fallback to first available camera
                 cameraId = videoInputDevices[0].deviceId;
-                $('#camera-status').text('Using default camera');
+                cameraLabel = videoInputDevices[0].label;
             }
 
             // Start decoding
@@ -3644,7 +3694,7 @@ function startCamera() {
                     if (lastScannedCode === code) return;
                     
                     lastScannedCode = code;
-                    $('#scanned-result').html(`<strong>Scanned:</strong> ${code}<br>Processing...`)
+                    $('#scanned-result').html(`<strong>SCANNED:</strong> ${code}<br>Processing...`)
                         .css('color', '#00ff00');
                     
                     handleScannedCode(code);
@@ -3655,10 +3705,12 @@ function startCamera() {
                     $('#scanned-result').text(`Error: ${err.message}`).css('color', 'red');
                 }
             });
+            
+            $('#camera-status').text(`Using ${cameraLabel} camera`);
         })
         .catch(err => {
             console.error('Camera error:', err);
-            $('#camera-status').html('Camera error: ' + err.message);
+            $('#scanned-result').text(`Camera error: ${err.message}`).css('color', 'red');
         });
 }
 
