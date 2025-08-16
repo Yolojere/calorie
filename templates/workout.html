@@ -317,6 +317,7 @@
             --group-color: #ff9e6d;
         }
         .rir-badge {
+            display: inline-block !important;
             background-color: #8a2be2;
             color: white;
             padding: 2px 6px;
@@ -350,7 +351,9 @@
 
         
         .set-details {
-            display: flex;
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
             align-items:center; /* RIR BADGE + COMMENT */
             justify-content: center;
     margin-top: 2px;
@@ -701,6 +704,27 @@
     #workout-log-tab .rir-badge {
         font-size: 10px;
     }
+    .mobile-date-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+    }
+    
+    #mobileDateDropdown {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+    
+    #copy-workout-mobile-btn {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+    
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+    }
 
             .workout-group .group-items {
             padding: 15px 0; /* Top/bottom padding only */
@@ -766,7 +790,7 @@
             max-width: 100% !important;
         }
             
-            /* Show mobile tabs on mobile */
+            /* Show mobile tabs on mobile, unclosed code, dont add anything here*/
             .mobile-tabs-container {
                     flex: 1;
                 display: flex;
@@ -1089,6 +1113,8 @@
 }
 
 
+
+
     </style>
 </head>
 <body>
@@ -1110,25 +1136,32 @@
                     style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
                     <li>
                         <a class="dropdown-item" 
-                           href="{{ url_for('index') }}"
+                           href="/custom_food"
                            style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-chart-pie me-2"></i>Nutrition
+                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="{{ url_for('history') }}"
+                           href="/history"
                            style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-history me-2"></i>History
+                            <i class="fas fa-chart-pie me-2"></i>History
                         </a>
                     </li>
                     <li>
-            <a class="dropdown-item" 
-               href="{{ url_for('workout') }}"
-               style="color: #e0e0e0; padding: 8px 15px;">
-                <i class="fas fa-dumbbell me-2"></i>Workouts
-            </a>
-        </li>
+        <a class="dropdown-item" 
+           href="{{ url_for('workout') }}"
+           style="color: #e0e0e0; padding: 8px 15px;">
+            <i class="fas fa-dumbbell me-2"></i>Workouts
+        </a>
+    </li>
+    <li>
+                        <a class="dropdown-item" 
+                           href="/activity"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-fire me-2"></i>Activity
+                        </a>
+                    </li>
                     <li>
                         <a class="dropdown-item" 
                            href="{{ url_for('profile') }}"
@@ -1143,74 +1176,82 @@
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
                     </li>
+                    
                 </ul>
             </div>
             
             <!-- Desktop Navigation -->
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                <!-- Desktop Navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link nav-link-box" href="/" 
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                            <i class="fa-solid fa-house-chimney-window"></i>
+                        </a>
                         <li class="nav-item">
-                            <a class="nav-link home-link nav-link-box" href="/" 
-                               data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
-                                <i class="fa-solid fa-house-chimney-window"></i>
-                            </a>
-                            <li class="nav-item">
-        <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
-            <i class="fa-solid fa-dumbbell"></i>
-        </a>
-    </li>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link add-link nav-link-box" href="/custom_food"
-                               data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
-                                <i class="fa-solid fa-file-circle-plus"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link history-link nav-link-box" href="/history"
-                               data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
-                                <i class="fa-solid fa-chart-pie"></i>
-                            </a>
-                        </li>
-                        
-                        {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle nav-link-box" 
-                               href="#" 
-                               id="navbarDropdownDesktop" 
-                               role="button" 
-                               data-bs-toggle="dropdown" 
-                               aria-expanded="false"
-                               data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
-                               style="position: relative;">
-                                <i class="bi bi-wrench-adjustable"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" 
-                                aria-labelledby="navbarDropdownDesktop"
-                                style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+        <i class="fa-solid fa-dumbbell"></i>
+    </a>
+</li>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link add-link nav-link-box" href="/custom_food"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link history-link nav-link-box" href="/history"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="/activity"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
+                            <i class="fas fa-fire"></i>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle nav-link-box" 
+                           href="#" 
+                           id="navbarDropdownDesktop" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
+                           style="position: relative;">
+                            <i class="bi bi-wrench-adjustable"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" 
+                            aria-labelledby="navbarDropdownDesktop"
+                            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
                             
-                                <li>
-                                    <a class="dropdown-item" 
-                                       href="{{ url_for('profile') }}"
-                                       style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i>Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" 
-                                       href="{{ url_for('logout') }}"
-                                       style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="{{ url_for('profile') }}"
+                                   style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                    <i class="fas fa-user-circle me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="{{ url_for('logout') }}"
+                                   style="color: #e0e0e0; padding: 8px 15px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
-        </nav>
+        </div>
+    </nav>
 
     <div class="workout-container">
         <!-- Workout Tracker Header -->
@@ -1297,7 +1338,7 @@
                                 <label class="form-label">RiR (Reps in Reserve)</label>
                                 <select id="rir-input" class="form-select">
                                     <option value="">None</option>
-                                    <option value="failure">Failure</option>
+                                    <option value="Failure">Failure (0 RiR)</option>
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
@@ -1420,7 +1461,7 @@
                                     <label class="form-label">RiR (Reps in Reserve)</label>
                                     <select id="rir-input-mobile" class="form-select">
                                         <option value="">None</option>
-                                        <option value="failure">Failure</option>
+                                        <option value="Failure">Failure (0 RiR)</option>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
@@ -1464,8 +1505,25 @@
                 <!-- Workout Log Tab Content -->
                 <div id="workout-log-tab" class="mobile-tab-pane">
                     <div class="card h-100">
-                        <div class="card-header">
-                            <h5>Workout Log</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+        <h5 class="m-0 me-2">Workout Log</h5>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                    type="button" 
+                    id="mobileDateDropdown" 
+                    data-bs-toggle="dropdown">
+                <span id="mobile-date-display">Today</span>
+            </button>
+            <ul class="dropdown-menu" id="mobile-date-dropdown-menu">
+                <!-- Dates will be populated here -->
+            </ul>
+        </div>
+    </div>
+    <button class="btn btn-sm btn-info" id="copy-workout-mobile-btn">
+        <i class="fas fa-copy me-1 d-none d-sm-inline"></i> Copy
+    </button>
+</div>
                         </div>
                         <div class="card-body p-0">
                             <div id="workout-session-container-mobile" class="p-3">
@@ -1558,6 +1616,33 @@
         </div>
     </div>
 </div>
+<!-- Add this modal after the existing modals -->
+<div class="modal fade" id="copyWorkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-black">
+                <h5 class="modal-title">Copy Workout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Copy current workout to:</p>
+                <div class="d-flex flex-wrap" id="date-selection-container">
+                    <!-- Dates will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer bg-black">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this button to the bottom left corner -->
+<div class="position-fixed bottom-0 start-0 m-3" style="z-index: 1000;">
+    <button class="btn btn-info me-2" id="copy-workout-btn">
+        <i class="fas fa-copy me-1"></i> Copy Workout
+    </button>
+</div>
 
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1583,6 +1668,11 @@
         initTooltips();
         setupMobileTabs();
         loadTemplates();
+            setupMobileDateDropdown();
+    
+    // Set initial date display
+    const today = new Date().toISOString().split('T')[0];
+    $("#mobile-date-display").text("Today");
 
         // Set initial active tab based on which pane is visible
     if ($('#workout-log-tab').hasClass('active')) {
@@ -1694,8 +1784,8 @@ function initTooltips() {
         const rirRaw = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
         const comments = isMobile ? $("#comments-input-mobile").val() : $("#comments-input").val();
         const date = $(".workout-date.active").data("date");
-
-        const rir = rirRaw === "Failure" ? "Failure" : (rirRaw === "" ? null : Number(rirRaw));
+        const rir = rirRaw === "Failure" ? -1 : 
+           (rirRaw === "" ? null : Number(rirRaw));
         
         $.post("/workout/save_set", {
             date: date,
@@ -1977,49 +2067,51 @@ function initTooltips() {
                 // Render sets
 exercise.sets.forEach((set, index) => {
     // Prepare RiR badge if exists
-    let rirBadge = '';
-if (set.rir !== null && set.rir !== undefined) {
-    rirBadge = `<span class="rir-badge">${
-        set.rir === "Failure" ? "Failure" : `${set.rir} RiR`
-    }</span>`;
-}
+    let rirDisplay = '';
+        if (set.rir !== null && set.rir !== undefined && set.rir !== "") {
+            if (set.rir === -1 || set.rir === "Failure" || set.rir === 0) {
+                rirDisplay = `<span class="rir-badge">Failure</span>`;
+            } else {
+                rirDisplay = `<span class="rir-badge">${set.rir} RiR</span>`;
+            }
+        }
 
-    // Prepare comment icon if exists
-    const commentIcon = set.comments ? 
-        `<i class="fas fa-comment comment-icon" 
-            data-bs-toggle="tooltip" 
-            data-bs-placement="top"
-            data-bs-container="body" 
-            title="${set.comments.replace(/"/g, '&quot;')}"></i>` : '';
+        // Prepare comment icon if exists
+        const commentIcon = set.comments ? 
+            `<i class="fas fa-comment comment-icon" 
+                data-bs-toggle="tooltip" 
+                data-bs-placement="top"
+                data-bs-container="body" 
+                title="${set.comments.replace(/"/g, '&quot;')}"></i>` : '';
 
-    sessionHTML += `
-       <tr class="set-row" data-set-id="${set.id}">
-            <td class="set-number-cell">
-                <div class="d-flex align-items-center">
-                    <div class="me-2">${index + 1}</div>
-                    <div class="set-details">
-                        ${rirBadge}
-                        ${commentIcon}
+        sessionHTML += `
+           <tr class="set-row" data-set-id="${set.id}">
+                <td class="set-number-cell">
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">${index + 1}</div>
+                        <div class="set-details">
+                            ${rirDisplay}
+                            ${commentIcon}
+                        </div>
                     </div>
-                </div>
-            </td>
-            <td>
-                <input type="number" class="form-control set-reps set-input" 
-                       value="${set.reps}" data-original="${set.reps}">
-            </td>
-            <td>
-                <input type="number" class="form-control set-weight set-input" 
-                       value="${set.weight}" data-original="${set.weight}" step="0.5">
-            </td>
-            <td class="volume-display">${set.volume.toFixed(1)}</td>
-            <td class="actions-cell">
-                <button class="btn delete-item">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `;
-});
+                </td>
+                <td>
+                    <input type="number" class="form-control set-reps set-input" 
+                           value="${set.reps}" data-original="${set.reps}">
+                </td>
+                <td>
+                    <input type="number" class="form-control set-weight set-input" 
+                           value="${set.weight}" data-original="${set.weight}" step="0.5">
+                </td>
+                <td class="volume-display">${set.volume.toFixed(1)}</td>
+                <td class="actions-cell">
+                    <button class="btn delete-item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
                 
                 sessionHTML += `
                                 </tbody>
@@ -2186,7 +2278,7 @@ if (set.rir !== null && set.rir !== undefined) {
         $("#sets-input-mobile").val("1");
         $("#reps-input-mobile").val("");
         $("#weight-input-mobile").val("");
-        $("#rir-input-mobile").val(""); // Reset to "None"
+        $("#rir-input-mobile").val(""); // Reset to default
         $("#comments-input-mobile").val("");
     } else {
         $("#sets-input").val("1");
@@ -2388,6 +2480,90 @@ function setupEventListeners() {
     const templateId = $(this).data('id');
     previewTemplate(templateId);
 });
+
+// Show copy modal
+$("#copy-workout-btn").click(function() {
+    populateDateOptions();
+    $("#copyWorkoutModal").modal("show");
+});
+
+// Copy workout buttons
+    $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
+        populateDateOptions();
+        $("#copyWorkoutModal").modal("show");
+    });
+    // Add event delegation for dynamically generated date options
+    $(document).on("click", ".date-option", function() {
+        const targetDate = $(this).data("date");
+        copyWorkoutToDate(targetDate);
+    });
+
+// Populate date options in modal
+function populateDateOptions() {
+    const container = $("#date-selection-container");
+    container.empty();
+    
+    const today = new Date();
+    const currentDate = new Date(currentSelectedDate);
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        const isCurrent = dateString === currentDate.toISOString().split('T')[0];
+        
+        container.append(`
+            <div class="date-option btn btn-outline-primary m-1 ${isCurrent ? 'disabled' : ''}"
+                 data-date="${dateString}"
+                 ${isCurrent ? 'disabled' : ''}>
+                ${formattedDate}
+            </div>
+        `);
+    }
+}
+
+// Copy workout to target date
+function copyWorkoutToDate(targetDate) {
+    const sourceDate = currentSelectedDate;
+    
+    if (sourceDate === targetDate) {
+        alert("Cannot copy to the same date!");
+        return;
+    }
+    
+    // Show loading state
+    const $btn = $("#copy-workout-btn, #copy-workout-mobile-btn");
+    const originalContent = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Copying...');
+    $btn.prop('disabled', true);
+    
+    $.post("/workout/copy_session", {
+        source_date: sourceDate,
+        target_date: targetDate
+    }, function(response) {
+        $btn.html(originalContent);
+        $btn.prop('disabled', false);
+        
+        if (response.success) {
+            alert("Workout copied successfully!");
+            $("#copyWorkoutModal").modal("hide");
+        } else {
+            alert("Error: " + response.error);
+        }
+    }).fail(function() {
+        $btn.html(originalContent);
+        $btn.prop('disabled', false);
+        alert("Network error. Please try again.");
+    });
+}
+
+
     
     
     // Admin-only events
@@ -2395,6 +2571,89 @@ function setupEventListeners() {
         $("#save-template-btn").click(saveTemplate);
     }
 }
+// Function to generate date list for mobile dropdown
+function generateMobileDateList() {
+    const today = new Date();
+    const dates = [];
+    
+    // 3 days in the past
+    for (let i = 3; i > 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    // Today
+    dates.push(today.toISOString().split('T')[0]);
+    
+    // 3 days in the future
+    for (let i = 1; i <= 3; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    return dates;
+}
+
+// Function to populate mobile date dropdown
+function setupMobileDateDropdown() {
+    const dates = generateMobileDateList();
+    const menu = $("#mobile-date-dropdown-menu");
+    menu.empty();
+    
+    dates.forEach(date => {
+        const dateObj = new Date(date);
+        const isSelected = date === currentSelectedDate;
+        const formattedDate = formatMobileDate(dateObj);
+        
+        menu.append(`
+            <li>
+                <a class="dropdown-item ${isSelected ? 'active' : ''}" 
+                   href="#" 
+                   data-date="${date}">
+                    ${formattedDate}
+                </a>
+            </li>
+        `);
+    });
+    
+    // Add click handler
+    $(".dropdown-item[data-date]").click(function(e) {
+        e.preventDefault();
+        const selectedDate = $(this).data("date");
+        currentSelectedDate = selectedDate;
+        loadWorkoutSession(selectedDate);
+        
+        // Update display text
+        const formattedDate = formatMobileDate(new Date(selectedDate));
+        $("#mobile-date-display").text(formattedDate);
+        
+        // Update active state
+        $("#mobile-date-dropdown-menu .dropdown-item").removeClass("active");
+        $(this).addClass("active");
+    });
+}
+
+// Helper function to format date for mobile display
+function formatMobileDate(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+    
+    return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
 
 </script>
 <div class="mobile-tab-bar-workout d-block d-md-none">
