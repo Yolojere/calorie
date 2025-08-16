@@ -1836,6 +1836,14 @@
     height: auto;
     transform-origin: center center;
 }
+#scanner-overlay {
+    pointer-events: none; /* Allow clicks through overlay */
+}
+
+.scanned-result {
+    z-index: 10; /* Keep above overlay */
+    position: relative;
+}
     </style>
 </head>
 <body>
@@ -2451,23 +2459,26 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body d-flex flex-column align-items-center justify-content-center">
-                    <div id="camera-preview" style="visibility: hidden;">
-                        <video id="camera-video" style="width:100%; height:auto;"></video></div>
-                    <div id="scanner-overlay">
+                    <div id="camera-status" class="text-center mb-2" style="color: white; z-index: 100;"></div>
+                    <div id="camera-preview" class="position-relative">
+                        <video id="camera-video" style="width:100%; height:auto;"></video>
+                    <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
                         <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
-                        <div class="scan-guide"></div>
-                        <div class="scan-line"></div>
-                        <div id="scanned-result" class="scanned-result"></div>
+            <div class="scan-guide"></div>
+            <div class="scan-line"></div>
+            <div id="scanned-result" class="scanned-result"></div>
+        </div>
+    </div>
+                    <!-- Move buttons outside camera preview with higher -->
+                        <div class="mt-3 text-center d-flex flex-wrap justify-content-center" style="z-index: 100; position: relative;">
+                            <button id="toggle-camera" class="btn btn-sm me-2">
+                                <i class="fas fa-sync-alt"></i> Switch Camera
+                            </button>
+                            <button id="resume-scan" class="btn btn-sm">
+                                <i class="fas fa-redo"></i> Resume Scan
+                            </button>
+                        </div>
                     </div>
-                    <div class="mt-3 text-center d-flex flex-wrap justify-content-center">
-                        <button id="toggle-camera" class="btn btn-sm me-2">
-                            <i class="fas fa-sync-alt"></i> Switch Camera
-                        </button>
-                        <button id="resume-scan" class="btn btn-sm">
-                            <i class="fas fa-redo"></i> Resume Scan
-                        </button>
-                    </div>
-                </div>
                 <div class="modal-footer bg-black">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -3582,54 +3593,51 @@ $('#resume-scan').click(function() {
 // Enhanced camera handling
 function startCamera() {
     scanningActive = true;
-    $('#scanned-result').text('Initializing camera...').css('color', 'white');
+    $('#camera-status').text('Initializing camera...');
     
-    // Show the preview container
-    $('#camera-preview').css('visibility', 'visible');
-
     // Initialize ZXing if not already done
     if (!codeReader) {
         codeReader = new ZXing.BrowserMultiFormatReader();
     }
 
+    // Force back camera by default
+    currentCamera = 'environment';
+    
     // List available cameras
-    $('#scanned-result').text('Listing cameras...');
     codeReader.listVideoInputDevices()
         .then(videoInputDevices => {
             if (videoInputDevices.length === 0) {
-                $('#scanned-result').html('No cameras found.<br>Please check your device has a camera and permissions are granted.').css('color', 'red');
+                $('#camera-status').html('No cameras found');
                 return;
             }
             
             let cameraId;
-            let cameraFound = false;
+            let backCamera = null;
+            let frontCamera = null;
             
-            // Try to find preferred camera
-            if (currentCamera === 'environment') {
-                const backCam = videoInputDevices.find(device => 
-                    /back|rear|environment|1/i.test(device.label)
-                );
-                if (backCam) {
-                    cameraId = backCam.deviceId;
-                    cameraFound = true;
+            // Find back and front cameras
+            videoInputDevices.forEach(device => {
+                if (/back|rear|environment|1|primary/i.test(device.label)) {
+                    backCamera = device;
+                } else if (/front|user|0|selfie/i.test(device.label)) {
+                    frontCamera = device;
                 }
+            });
+            
+            // Select camera based on preference
+            if (currentCamera === 'environment' && backCamera) {
+                cameraId = backCamera.deviceId;
+                $('#camera-status').text('Using back camera');
+            } else if (currentCamera === 'user' && frontCamera) {
+                cameraId = frontCamera.deviceId;
+                $('#camera-status').text('Using front camera');
             } else {
-                const frontCam = videoInputDevices.find(device => 
-                    /front|user|0/i.test(device.label)
-                );
-                if (frontCam) {
-                    cameraId = frontCam.deviceId;
-                    cameraFound = true;
-                }
-            }
-            
-            // Fallback to first camera if preferred not found
-            if (!cameraFound) {
+                // Fallback to first available camera
                 cameraId = videoInputDevices[0].deviceId;
+                $('#camera-status').text('Using default camera');
             }
 
             // Start decoding
-            $('#scanned-result').text('Starting video stream...');
             codeReader.decodeFromVideoDevice(cameraId, 'camera-video', (result, err) => {
                 if (result) {
                     const code = result.text;
@@ -3647,38 +3655,40 @@ function startCamera() {
                     $('#scanned-result').text(`Error: ${err.message}`).css('color', 'red');
                 }
             });
-            
-            $('#scanned-result').text('Position barcode in the scan area').css('color', 'white');
         })
         .catch(err => {
-            console.error('Camera enumeration error:', err);
-            let errorMessage = 'Camera initialization failed';
-            
-            if (err.name === 'NotAllowedError') {
-                errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
-            } else if (err.name === 'NotFoundError') {
-                errorMessage = 'No cameras found. Please check your device has a camera.';
-            } else if (err.name === 'NotReadableError') {
-                errorMessage = 'Camera is already in use by another application.';
-            }
-            
-            $('#scanned-result').html(errorMessage).css('color', 'red');
+            console.error('Camera error:', err);
+            $('#camera-status').html('Camera error: ' + err.message);
         });
 }
 
+// Update toggle camera function
+$('#toggle-camera').click(function() {
+    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    localStorage.setItem('cameraPreference', currentCamera);
+    stopCamera();
+    
+    // Update status
+    const cameraType = currentCamera === 'environment' ? 'back' : 'front';
+    $('#camera-status').text(`Switching to ${cameraType} camera...`);
+    
+    setTimeout(startCamera, 500);
+});
+
+// Update stopCamera function
 function stopCamera() {
     scanningActive = false;
     if (codeReader) {
         try {
             codeReader.reset();
+            $('#camera-video').remove(); // Remove video element
+            // Recreate video element
+            $('#camera-preview').html('<video id="camera-video" style="width:100%; height:auto;"></video>');
             codeReader = null;
         } catch (e) {
             console.warn('Error stopping camera:', e);
         }
     }
-    
-    // Hide the preview container
-    $('#camera-preview').css('visibility', 'hidden');
 }
 
 function handleScannedCode(code) {
