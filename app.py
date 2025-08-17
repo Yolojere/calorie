@@ -105,10 +105,37 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             role TEXT NOT NULL DEFAULT 'user',
             reset_token TEXT,
-            reset_token_expiration TIMESTAMP
+            reset_token_expiration TIMESTAMP,
+            tdee REAL,  -- TDEE storage
+            weight REAL       
         )
     ''')
+
+    # Add columns if they don't exist
+    cursor.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name='users' AND column_name='tdee'
+            ) THEN
+                ALTER TABLE users ADD COLUMN tdee REAL;
+            END IF;
+            
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name='users' AND column_name='weight'
+            ) THEN
+                ALTER TABLE users ADD COLUMN weight REAL;
+            END IF;
+        END
+        $$;
+    """)   
+
     
+
     # 2. Create foods table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS foods (
@@ -451,11 +478,13 @@ class ResetPasswordForm(FlaskForm):
 
 # User model
 class User(UserMixin):
-    def __init__(self, id, username, email, role):
+    def __init__(self, id, username, email, role, tdee=None, weight=None):
         self.id = id
         self.username = username
         self.email = email
         self.role = role
+        self.tdee = tdee
+        self.weight = weight
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
@@ -813,11 +842,24 @@ def normalize_food_keys():
 @login_required
 def index():
     user_id = current_user.id
+
+    # Fetch latest weight & TDEE from DB
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT weight, tdee FROM users WHERE id = %s", (user_id,))
+    user_metrics = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    current_weight = user_metrics[0] if user_metrics and user_metrics[0] else 0
+    current_tdee = user_metrics[1] if user_metrics and user_metrics[1] else 0
+
+    # Get session data
     eaten_items, current_date = get_current_session(user_id)
     totals = calculate_totals(eaten_items)
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
-    
+
     # Generate dates for selector - 3 days past, today, 3 days future
     dates = []
     today = datetime.now()
@@ -825,17 +867,22 @@ def index():
         date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
         formatted_date = format_date(date_str)
         dates.append((date_str, formatted_date))
-    
+
     current_date_formatted = format_date(current_date)
-    
-    return render_template('index.html', 
-                           eaten_items=eaten_items,
-                           totals=totals,
-                           current_date=current_date,
-                           current_date_formatted=current_date_formatted,
-                           dates=dates,
-                           food_usage=food_usage,
-                           group_breakdown=group_breakdown)
+
+    return render_template(
+        'index.html',
+        eaten_items=eaten_items,
+        totals=totals,
+        current_date=current_date,
+        current_date_formatted=current_date_formatted,
+        dates=dates,
+        food_usage=food_usage,
+        group_breakdown=group_breakdown,
+        current_tdee=current_tdee,        # latest TDEE
+        current_weight=current_weight     # latest weight
+    )
+
 
 @app.route('/custom_food')
 @login_required
@@ -914,6 +961,15 @@ def logout():
 @login_required
 def profile():
     form = UpdateProfileForm()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    # Get current weight and TDEE
+    cursor.execute('SELECT weight, tdee FROM users WHERE id = %s', (current_user.id,))
+    user_data = cursor.fetchone()
+    current_weight = user_data['weight'] if user_data else None
+    current_tdee = user_data['tdee'] if user_data else None
+
     if form.validate_on_submit():
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -932,7 +988,11 @@ def profile():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    return render_template('profile.html', title='Profile', form=form)
+    return render_template('profile.html', 
+                           title='Profile', 
+                           form=form,
+                           current_weight=current_weight,
+                           current_tdee=current_tdee)
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
@@ -2656,16 +2716,36 @@ def get_exercise_history(exercise_id):  # Different function name
         return jsonify(error="Could not load exercise history"), 500
     finally:
         conn.close()
+              
+@app.route('/save_metrics', methods=['POST'])
+@login_required
+def save_metrics():
+    try:
+        tdee = float(request.form.get('tdee', 0))
+        weight = float(request.form.get('weight', 0))
 
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET tdee = %s, weight = %s WHERE id = %s",
+            (tdee, weight, current_user.id)
+        )
+        conn.commit()
+        return jsonify(success=True, message="Metrics saved successfully!")
+    except Exception as e:
+        print(f"Error saving metrics: {e}")
+        return jsonify(success=False, error=str(e)), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/keepalive')
 @login_required
 def keepalive():
     """Keep session alive by updating the session modified timestamp"""
     session.modified = True
-    return jsonify(status="alive")                
-        
-
+    return jsonify(status="alive")          
+    
 if __name__ == '__main__':
         init_db()
         init_workout_db()
