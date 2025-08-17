@@ -58,7 +58,7 @@
         
         .form-control:focus, .form-select:focus {
             background-color: #b4b4b4;
-            color: #ffffff;
+            color: #000 !important;
             border-color: #d1d1d1;
         }
         
@@ -442,6 +442,13 @@
         .spinner .dot:nth-child(10) { animation-delay: -0.2s; }
         .spinner .dot:nth-child(11) { animation-delay: -0.1s; }
         .spinner .dot:nth-child(12) { animation-delay: 0s; }
+
+        #save-tdee-btn {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
         
         @keyframes spinner {
             0%, 40%, 100% { transform: scale(0.4); }
@@ -648,15 +655,16 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-birthday-cake me-2"></i>Age (years)</label>
-                        <input type="number" class="form-control" id="age" min="1" max="120" value="30" placeholder="Enter age">
+                        <input type="number" class="form-control" id="age" min="1" max="120" value="" placeholder="Enter age">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
-                        <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" value="70" placeholder="Enter weight">
-                    </div>
+    <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
+    <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" 
+           value="{{ current_weight or 0 }}" placeholder="Enter weight">
+</div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-ruler me-2"></i>Height (cm)</label>
-                        <input type="number" class="form-control" id="height" min="50" max="250" value="175" placeholder="Enter height">
+                        <input type="number" class="form-control" id="height" min="50" max="250" value="" placeholder="Enter height">
                     </div>
                 </div>
             </div>
@@ -679,7 +687,7 @@
                             <div class="input-group">
                                 <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="8" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="0" placeholder="Minutes">
+                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
                             <div class="value-display negative-value" id="sleep-value">-192 kcal</div>
@@ -694,9 +702,9 @@
                             </div>
                             <h5 class="activity-title">Intense Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="1" placeholder="Hours">
+                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="0" placeholder="Minutes">
+                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
                             <div class="value-display positive-value" id="intense-value">+720 kcal</div>
@@ -711,9 +719,9 @@
                             </div>
                             <h5 class="activity-title">Moderate Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="0" placeholder="Hours">
+                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="30" placeholder="Minutes">
+                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
                             <div class="value-display positive-value" id="moderate-value">+198 kcal</div>
@@ -728,9 +736,9 @@
                             </div>
                             <h5 class="activity-title">Light Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="1" placeholder="Hours">
+                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="0" placeholder="Minutes">
+                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
                             <div class="value-display positive-value" id="light-value">+204 kcal</div>
@@ -745,9 +753,9 @@
                             </div>
                             <h5 class="activity-title">Standing/Walking</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="2" placeholder="Hours">
+                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="" placeholder="Hours">
                                 <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="0" placeholder="Minutes">
+                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
                             <div class="value-display positive-value" id="walking-value">+120 kcal</div>
@@ -779,10 +787,15 @@
         </div>
         
         <!-- Results Section -->
-        <div class="glass-card">
-            <div class="card-header">
-                <i class="fas fa-chart-line me-2"></i>Energy Expenditure Results
-            </div>
+<div class="glass-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-chart-line me-2"></i>Energy Expenditure Results
+        </div>
+        <button class="btn btn-sm btn-primary" id="save-tdee-btn" style="display: none;">
+            <i class="fas fa-save me-1"></i>Save TDEE
+        </button>
+    </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-4">
@@ -795,7 +808,7 @@
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
                             <h5><i class="fas fa-burn me-2"></i>Total Daily Energy Expenditure (TDEE)</h5>
-                            <div class="result-value" id="tdee-result">2,759 kcal</div>
+                            <div class="result-value" id="tdee-result">{{ tdee or 0 }} kcal</div>
                             <p>Total calories burned per day</p>
                         </div>
                     </div>
@@ -860,224 +873,252 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const calculateBtn = document.getElementById('calculate-btn');
-            const genderButtons = document.querySelectorAll('.gender-btn');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            let currentGender = 'male';
-            
-            // Gender selection
-            genderButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    genderButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    currentGender = this.dataset.gender;
-                });
-            });
-            
-            // Pre-calculate on page load
-            calculateTDEE();
-            
-            // Calculate TDEE on button click
-            calculateBtn.addEventListener('click', function() {
-                // Validate required fields
-                const age = parseInt(document.getElementById('age').value) || 0;
-                const weight = parseFloat(document.getElementById('weight').value) || 0;
-                const height = parseInt(document.getElementById('height').value) || 0;
-                
-                if (!age || !weight || !height) {
-                    alert('Please fill in all personal information fields');
-                    return;
-                }
-                
-                // Show loading overlay
-                loadingOverlay.classList.add('active');
-                
-                // Simulate calculation time (1 second instead of 2.5)
-                setTimeout(() => {
-                    try {
-                        calculateTDEE();
-                    } catch (error) {
-                        console.error('Calculation error:', error);
-                        alert('Error in calculation: ' + error.message);
-                    } finally {
-                        // Always hide loading overlay
-                        loadingOverlay.classList.remove('active');
-                    }
-                }, 1000);
-            });
-            
-            function calculateTDEE() {
-                // Get personal information
-                const age = parseInt(document.getElementById('age').value) || 30;
-                const weight = parseFloat(document.getElementById('weight').value) || 70;
-                const height = parseInt(document.getElementById('height').value) || 175;
-                
-                // Get activity durations in minutes
-                const sleepMinutes = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 + 
-                                    (parseInt(document.getElementById('sleep-minutes').value) || 0);
-                
-                const intenseMinutes = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 + 
-                                     (parseInt(document.getElementById('intense-minutes').value) || 0);
-                
-                const moderateMinutes = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 + 
-                                      (parseInt(document.getElementById('moderate-minutes').value) || 0);
-                
-                const lightMinutes = (parseInt(document.getElementById('light-hours').value) || 0) * 60 + 
-                                   (parseInt(document.getElementById('light-minutes').value) || 0);
-                
-                const walkingMinutes = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 + 
-                                     (parseInt(document.getElementById('walking-minutes').value) || 0);
-                
-                // Calculate BMR and TDEE
-                const results = calculateEnergyExpenditure(currentGender, age, weight, height, sleepMinutes, intenseMinutes, moderateMinutes, lightMinutes, walkingMinutes);
-                
-                // Update UI with results
-                document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
-                document.getElementById('tdee-result').textContent = results.tdee.toLocaleString() + ' kcal';
-                
-                // Update activity values
-                document.getElementById('sleep-value').textContent = results.activityBreakdown.sleep + ' kcal';
-                document.getElementById('intense-value').textContent = '+' + results.activityBreakdown.intense + ' kcal';
-                document.getElementById('moderate-value').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
-                document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
-                document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
-                
-                // Update results section
-                document.getElementById('sleep-result').textContent = results.activityBreakdown.sleep + ' kcal';
-                document.getElementById('intense-result').textContent = '+' + results.activityBreakdown.intense + ' kcal';
-                document.getElementById('moderate-result').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
-                document.getElementById('light-result').textContent = '+' + results.activityBreakdown.light + ' kcal';
-                document.getElementById('walking-result').textContent = '+' + results.activityBreakdown.walking + ' kcal';
-                
-                // Update activity breakdown
-                updateActivityBreakdown(results.activityBreakdown);
-            }
-            
-            // Original formula with sleep adjustment (2 calories per 5 minutes)
-            function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
-                // Base values
-                let baseBMR, baseTDEE;
-                if (gender === 'male') {
-                    baseBMR = 1139;
-                    baseTDEE = 1511;
-                } else {
-                    baseBMR = 939;
-                    baseTDEE = 1311;
-                }
-                
-                // Weight adjustment (per 0.5kg above 30kg)
-                const weightDiff = weight - 30;
-                const weightUnits = weightDiff / 0.5;
-                
-                let weightBMRAdjustment, weightTDEEAdjustment;
-                if (gender === 'male') {
-                    weightBMRAdjustment = weightUnits * 7;
-                    weightTDEEAdjustment = weightUnits * 12;
-                } else {
-                    weightBMRAdjustment = weightUnits * 6;
-                    weightTDEEAdjustment = weightUnits * 11;
-                }
-                
-                // Age adjustment
-                let ageAdjustment = 0;
-                if (age >= 30 && age < 60) {
-                    ageAdjustment = (gender === 'male') ? 70 : 65;
-                } else if (age >= 60) {
-                    ageAdjustment = (gender === 'male') ? -150 : -140;
-                }
-                
-                // Height adjustment
-                const heightAdjustment = height > 170 ? (height - 170) * 2 : 0;
-                
-                // Calculate BMR
-                let bmr = baseBMR + weightBMRAdjustment + ageAdjustment + heightAdjustment;
-                
-                // Calculate TDEE base
-                let tdee = baseTDEE + weightTDEEAdjustment + ageAdjustment + heightAdjustment;
-                
-                // Activity adjustments
-                const activityBreakdown = {};
-                
-                // Sleep adjustment (2 calories per 5 minutes)
-                const sleepBlocks = sleepMin / 5;
-                activityBreakdown.sleep = -Math.round(sleepBlocks * 2.8);
-                tdee += activityBreakdown.sleep;
-                
-                // Intense exercise
-                const intenseBlocks = intenseMin / 5;
-                activityBreakdown.intense = (gender === 'male') ? 
-                    Math.round(intenseBlocks * 60) : 
-                    Math.round(intenseBlocks * 56);
-                tdee += activityBreakdown.intense;
-                
-                // Moderate exercise
-                const moderateBlocks = moderateMin / 5;
-                activityBreakdown.moderate = (gender === 'male') ? 
-                    Math.round(moderateBlocks * 33) : 
-                    Math.round(moderateBlocks * 31);
-                tdee += activityBreakdown.moderate;
-                
-                // Light exercise
-                const lightBlocks = lightMin / 5;
-                activityBreakdown.light = (gender === 'male') ? 
-                    Math.round(lightBlocks * 17) : 
-                    Math.round(lightBlocks * 15);
-                tdee += activityBreakdown.light;
-                
-                // Walking
-                const walkingBlocks = walkingMin / 5;
-                activityBreakdown.walking = (gender === 'male') ? 
-                    Math.round(walkingBlocks * 5) : 
-                    Math.round(walkingBlocks * 4);
-                tdee += activityBreakdown.walking;
-                
-                // Round final values
-                bmr = Math.round(bmr);
-                tdee = Math.round(tdee);
-                
-                return {
-                    bmr,
-                    tdee,
-                    activityBreakdown
-                };
-            }
-            
-            // Fixed progress bar updating
-            function updateActivityBreakdown(breakdown) {
-                // Get all activity values
-                const values = [
-                    Math.abs(breakdown.sleep), 
-                    breakdown.intense, 
-                    breakdown.moderate, 
-                    breakdown.light, 
-                    breakdown.walking
-                ];
-                
-                // Calculate total for percentage calculations
-                const total = values.reduce((sum, val) => sum + val, 0);
-                
-                // Update progress bars
-                const progressIds = [
-                    'progress-sleep',
-                    'progress-intense',
-                    'progress-moderate',
-                    'progress-light',
-                    'progress-walking'
-                ];
-                
-                // Calculate and set percentages
-                values.forEach((value, index) => {
-                    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                    const progressBar = document.getElementById(progressIds[index]);
-                    
-                    if (progressBar) {
-                        progressBar.style.width = percent + '%';
-                        progressBar.setAttribute('aria-valuenow', percent);
-                    }
-                });
+document.addEventListener('DOMContentLoaded', function() {
+    const calculateBtn = document.getElementById('calculate-btn');
+    const saveTdeeBtn = document.getElementById('save-tdee-btn');
+    const weightInput = document.getElementById('weight');
+    const tdeeInput = document.getElementById('tdee-result');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const genderButtons = document.querySelectorAll('.gender-btn');
+    let currentGender = 'male';
+
+    // Pre-select gender button if needed
+    genderButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            genderButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentGender = this.dataset.gender;
+        });
+    });
+
+    // Input focus highlight
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', function() {
+            const group = this.parentElement.querySelector('.input-group-text');
+            if(group) {
+                group.style.borderColor = '#f08e0e';
+                group.style.backgroundColor = '#444';
             }
         });
-    </script>
+        input.addEventListener('blur', function() {
+            const group = this.parentElement.querySelector('.input-group-text');
+            if(group) {
+                group.style.borderColor = '#555';
+                group.style.backgroundColor = '#333';
+            }
+        });
+    });
+
+    // TDEE Calculation button
+    if(calculateBtn) {
+        calculateBtn.addEventListener('click', function() {
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const weight = parseFloat(weightInput.value) || 0;
+            const height = parseInt(document.getElementById('height').value) || 0;
+
+            if(!age || !weight || !height) {
+                alert('Please fill in all personal information fields');
+                return;
+            }
+
+            loadingOverlay.classList.add('active');
+            setTimeout(() => {
+                try {
+                    calculateTDEE();
+                } catch(e) {
+                    console.error('Calculation error:', e);
+                    alert('Error in calculation: ' + e.message);
+                } finally {
+                    loadingOverlay.classList.remove('active');
+                }
+            }, 1000);
+        });
+    }
+
+    // Save TDEE & Weight button
+    if(saveTdeeBtn) {
+        saveTdeeBtn.addEventListener('click', function() {
+            const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
+            const weightValue = parseFloat(weightInput.value) || 0;
+
+            loadingOverlay.classList.add('active');
+
+            $.ajax({
+                type: 'POST',
+                url: '/save_metrics',
+                data: { tdee: tdeeValue, weight: weightValue },
+                success: function(response) {
+                    if(response.success) {
+                        saveFormState();
+                        const btn = saveTdeeBtn;
+                        btn.innerHTML = '<i class="fas fa-check me-1"></i>Saved!';
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Metrics';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-primary');
+                        }, 2000);
+                    } else {
+                        alert('Error saving: ' + (response.error || 'Unknown error'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert('Error saving. Please check console for details.');
+                },
+                complete: function() {
+                    loadingOverlay.classList.remove('active');
+                }
+            });
+        });
+    }
+
+    // Calculate TDEE function
+    function calculateTDEE() {
+        const age = parseInt(document.getElementById('age').value) || 30;
+        const weight = parseFloat(weightInput.value) || 70;
+        const height = parseInt(document.getElementById('height').value) || 175;
+
+        const sleepMin = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 +
+                         (parseInt(document.getElementById('sleep-minutes').value) || 0);
+        const intenseMin = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 +
+                           (parseInt(document.getElementById('intense-minutes').value) || 0);
+        const moderateMin = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 +
+                            (parseInt(document.getElementById('moderate-minutes').value) || 0);
+        const lightMin = (parseInt(document.getElementById('light-hours').value) || 0) * 60 +
+                         (parseInt(document.getElementById('light-minutes').value) || 0);
+        const walkingMin = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 +
+                           (parseInt(document.getElementById('walking-minutes').value) || 0);
+
+        const results = calculateEnergyExpenditure(currentGender, age, weight, height,
+            sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
+
+        document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
+        tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
+
+        document.getElementById('sleep-value').textContent = results.activityBreakdown.sleep + ' kcal';
+        document.getElementById('intense-value').textContent = '+' + results.activityBreakdown.intense + ' kcal';
+        document.getElementById('moderate-value').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
+        document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
+        document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
+
+        updateActivityBreakdown(results.activityBreakdown);
+        saveTdeeBtn.style.display = 'block';
+    }
+
+    // Energy expenditure formula
+    function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
+        let baseBMR = (gender==='male') ? 1139 : 939;
+        let baseTDEE = (gender==='male') ? 1511 : 1311;
+
+        const weightDiff = weight - 30;
+        const weightUnits = weightDiff / 0.5;
+
+        const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
+        const weightTDEEAdj = (gender==='male') ? weightUnits*12 : weightUnits*11;
+
+        let ageAdj = 0;
+        if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
+        else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
+
+        const heightAdj = (height>170) ? (height-170)*2 : 0;
+
+        let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
+        let tdee = baseTDEE + weightTDEEAdj + ageAdj + heightAdj;
+
+        const activityBreakdown = {};
+        activityBreakdown.sleep = -Math.round((sleepMin/5)*2.8);
+        tdee += activityBreakdown.sleep;
+
+        activityBreakdown.intense = (gender==='male') ? Math.round((intenseMin/5)*60) : Math.round((intenseMin/5)*56);
+        tdee += activityBreakdown.intense;
+
+        activityBreakdown.moderate = (gender==='male') ? Math.round((moderateMin/5)*33) : Math.round((moderateMin/5)*31);
+        tdee += activityBreakdown.moderate;
+
+        activityBreakdown.light = (gender==='male') ? Math.round((lightMin/5)*17) : Math.round((lightMin/5)*15);
+        tdee += activityBreakdown.light;
+
+        activityBreakdown.walking = (gender==='male') ? Math.round((walkingMin/5)*5) : Math.round((walkingMin/5)*4);
+        tdee += activityBreakdown.walking;
+
+        return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown };
+    }
+
+    // Progress bar updates
+    function updateActivityBreakdown(breakdown) {
+        const values = [Math.abs(breakdown.sleep), breakdown.intense, breakdown.moderate, breakdown.light, breakdown.walking];
+        const total = values.reduce((a,b)=>a+b,0);
+        const ids = ['progress-sleep','progress-intense','progress-moderate','progress-light','progress-walking'];
+
+        values.forEach((val,i)=>{
+            const pct = total>0 ? Math.round((val/total)*100) : 0;
+            const bar = document.getElementById(ids[i]);
+            if(bar){ bar.style.width = pct+'%'; bar.setAttribute('aria-valuenow',pct); }
+        });
+    }
+    
+    // Form state management
+    function saveFormState() {
+        const formState = {
+            gender: currentGender,
+            age: document.getElementById('age').value,
+            weight: document.getElementById('weight').value,
+            height: document.getElementById('height').value,
+            sleepHours: document.getElementById('sleep-hours').value,
+            sleepMinutes: document.getElementById('sleep-minutes').value,
+            intenseHours: document.getElementById('intense-hours').value,
+            intenseMinutes: document.getElementById('intense-minutes').value,
+            moderateHours: document.getElementById('moderate-hours').value,
+            moderateMinutes: document.getElementById('moderate-minutes').value,
+            lightHours: document.getElementById('light-hours').value,
+            lightMinutes: document.getElementById('light-minutes').value,
+            walkingHours: document.getElementById('walking-hours').value,
+            walkingMinutes: document.getElementById('walking-minutes').value
+        };
+        localStorage.setItem('activityFormState', JSON.stringify(formState));
+    }
+
+    function loadFormState() {
+        const savedState = localStorage.getItem('activityFormState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            
+            // Set gender
+            currentGender = state.gender;
+            document.querySelectorAll('.gender-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.gender === state.gender) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Set other inputs
+            document.getElementById('age').value = state.age || '';
+            document.getElementById('weight').value = state.weight || '';
+            document.getElementById('height').value = state.height || '';
+            document.getElementById('sleep-hours').value = state.sleepHours || '';
+            document.getElementById('sleep-minutes').value = state.sleepMinutes || '';
+            document.getElementById('intense-hours').value = state.intenseHours || '';
+            document.getElementById('intense-minutes').value = state.intenseMinutes || '';
+            document.getElementById('moderate-hours').value = state.moderateHours || '';
+            document.getElementById('moderate-minutes').value = state.moderateMinutes || '';
+            document.getElementById('light-hours').value = state.lightHours || '';
+            document.getElementById('light-minutes').value = state.lightMinutes || '';
+            document.getElementById('walking-hours').value = state.walkingHours || '';
+            document.getElementById('walking-minutes').value = state.walkingMinutes || '';
+            
+            // Recalculate if we have personal info
+            if (state.age && state.weight && state.height) {
+                calculateTDEE();
+            }
+        }
+    }
+    
+    // Load saved state on page load
+    loadFormState();
+});
+</script>
 </body>
 </html>
