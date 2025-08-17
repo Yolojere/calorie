@@ -72,6 +72,41 @@
     .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
         transform: scale(1.2);
     }
+    .health-metrics {
+        background: rgba(35, 35, 55, 0.6);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 30px;
+        border: 1px solid rgba(100, 100, 200, 0.2);
+    }
+    
+    .health-card {
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(25, 25, 40, 0.5);
+    }
+    
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 10px 0;
+    }
+    
+    .metric-label {
+        color: #b0b0b0;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .metric-icon {
+        font-size: 1.5rem;
+        color: #b989f0;
+        margin-bottom: 10px;
+    }
     
     /* Responsive adjustments */
     @media (max-width: 768px) {
@@ -123,6 +158,7 @@
                 <legend class="border-bottom mb-4">
                     <i class="fas fa-user-cog me-2"></i>Update Account Information
                 </legend>
+
                 
                 <!-- Username Field -->
                 <div class="form-group mb-4">
@@ -176,7 +212,56 @@
                 </button>
             </div>
         </form>
-        
+        <!-- Health Metrics Section -->
+        <div class="health-metrics">
+            <legend class="border-bottom mb-4">
+                <i class="fas fa-heartbeat me-2"></i>Health Metrics
+            </legend>
+            
+            <div class="row">
+                <!-- Weight Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="health-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-weight-scale"></i>
+                        </div>
+                        <div class="metric-label">Current Weight</div>
+                        <div class="metric-value">
+                            {% if current_weight %}
+                                {{ current_weight|round(1) }} kg
+                            {% else %}
+                                Not set
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Last updated from activity calculator</small>
+                    </div>
+                </div>
+                
+                <!-- TDEE Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="health-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="metric-label">Daily Energy Expenditure</div>
+                        <div class="metric-value">
+                            {% if current_tdee %}
+                                {{ current_tdee|round(0) }} kcal
+                            {% else %}
+                                Not calculated
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Based on your activity level</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="/activity" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-calculator me-1"></i> Update Metrics
+                </a>
+            </div>
+        </div>
         <!-- Password Reset Link -->
         <div class="border-top pt-3 mt-4 text-center">
             <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
