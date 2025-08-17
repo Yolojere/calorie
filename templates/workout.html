@@ -154,7 +154,7 @@
         }
         #workout-log-tab .card-body {
     overflow-y: auto;
-    max-height: calc(100vh - 150px); /* Adjust as needed */
+    max-height: calc(100vh - 170px); /* Adjust as needed */
 }
 
         /* === WORKOUT PAGE SPECIFIC STYLES === */
@@ -796,6 +796,7 @@
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
+                
             }
             
             .workout-header {
@@ -890,7 +891,7 @@
             }
             
             #workout-session-container-mobile {
-                padding-bottom: 80px;
+                padding-bottom: 80px !important;
                 height: 100%;
         overflow-y: auto;
         padding: 15px !important; /* Increased padding for better touch scrolling */
@@ -1123,7 +1124,7 @@
         <div class="container">
             <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
             <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
-                - Track your workouts -
+                - Track, lift, repeat -
             </a>
             
             <!-- Mobile Settings Dropdown (right-aligned) -->
@@ -1658,7 +1659,8 @@
         groups: {},
         exercises: {}
     };
-    
+    let savedScrollPosition = { desktop: 0, mobile: 0 };
+
     // Initialize workout page
     $(document).ready(function() {
         loadCollapseState();
@@ -1668,40 +1670,57 @@
         initTooltips();
         setupMobileTabs();
         loadTemplates();
-            setupMobileDateDropdown();
+        setupMobileDateDropdown();
     
     // Set initial date display
-    const today = new Date().toISOString().split('T')[0];
-    $("#mobile-date-display").text("Today");
+        const today = new Date().toISOString().split('T')[0];
+        $("#mobile-date-display").text("Today");
 
-        // Set initial active tab based on which pane is visible
-    if ($('#workout-log-tab').hasClass('active')) {
-        $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').addClass('active');
-        $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').removeClass('active');
-    } else {
-        $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').addClass('active');
-        $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').removeClass('active');
-    }
-});
+        // Set initial active tab
+        if ($('#workout-log-tab').hasClass('active')) {
+            $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').addClass('active');
+            $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').removeClass('active');
+        } else {
+            $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').addClass('active');
+            $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').removeClass('active');
+        }
+    });
     
+    // ===== NEW SCROLL POSITION FUNCTIONS =====
+    function saveScrollPosition() {
+        savedScrollPosition = {
+            desktop: $('#workout-session-container').scrollTop(),
+            mobile: $('#workout-session-container-mobile').scrollTop()
+        };
+    }
+    
+    function restoreScrollPosition() {
+        // Desktop restoration
+        if ($('#workout-session-container').is(':visible')) {
+            $('#workout-session-container').scrollTop(savedScrollPosition.desktop);
+        }
+        
+        // Mobile restoration
+        if ($('#workout-session-container-mobile').is(':visible')) {
+            // Wait for DOM to update
+            setTimeout(() => {
+                $('#workout-session-container-mobile').scrollTop(savedScrollPosition.mobile);
+            }, 50);
+        }
+    }
+    // ===== END SCROLL POSITION FUNCTIONS =====
     
     function setupMobileTabs() {
-        // Remove any existing tab bar click handlers
-        $('.mobile-tab-btn-workout').off('click');
-        
-        $('.mobile-tab-btn-workout').click(function() {
-            // Remove active class from all buttons
+        $('.mobile-tab-btn-workout').off('click').click(function() {
             $('.mobile-tab-btn-workout').removeClass('active');
-            
-            // Add active class to clicked button
             $(this).addClass('active');
-            
-            // Hide all panes
             $('.mobile-tab-pane').removeClass('active');
-            
-            // Show the corresponding pane
             const panelId = $(this).data('panel');
             $('#' + panelId).addClass('active');
+            
+            // Save and restore scroll position when switching tabs
+            saveScrollPosition();
+            setTimeout(restoreScrollPosition, 100);
         });
     }
     
@@ -1716,7 +1735,7 @@
         localStorage.setItem('workoutCollapseState', JSON.stringify(collapseState));
     }
     
-function initTooltips() {
+    function initTooltips() {
 
 
     // Mobile-specific tooltip tap handling
@@ -1747,9 +1766,9 @@ function initTooltips() {
     // Load current week dates
     function loadCurrentWeek() {
         $.get("/workout/get_current_week", function(data) {
-            currentSelectedDate = data.current_date; // Set the current date
+            currentSelectedDate = data.current_date;
             renderWeekDates(data.dates);
-            loadWorkoutSession(currentSelectedDate); // Load session for current date
+            loadWorkoutSession(currentSelectedDate);
         });
     }
     
@@ -1763,19 +1782,23 @@ function initTooltips() {
     
     // Load workout session for a date
     function loadWorkoutSession(date) {
-        // Show loading indicator
         $("#workout-session-container, #workout-session-container-mobile").html(
             '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
         );
     
         $.post("/workout/get_session", { date: date }, function(data) {
             renderWorkoutSession(data.session, data.exercises);
-            initTooltips(); // Reinitialize tooltips after rendering
+            initTooltips();
+            
+            // Restore scroll position after rendering
+            setTimeout(restoreScrollPosition, 100);
         });
     }
     
     // Save a new set
     function saveSet(isMobile = false) {
+        saveScrollPosition(); // Save before making changes
+        
         const exerciseId = isMobile ? $("#exercise-select-mobile").val() : $("#exercise-select").val();
         const reps = isMobile ? $("#reps-input-mobile").val() : $("#reps-input").val();
         const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
@@ -1801,12 +1824,8 @@ function initTooltips() {
                 loadWorkoutSession(date);
                 resetSetForm(isMobile);
                 
-                // On mobile, switch to workout log tab after adding a set
                 if (isMobile) {
-                    $('.mobile-tab').removeClass('active');
-                    $('[data-tab="workout-log-tab"]').addClass('active');
-                    $('.mobile-tab-pane').removeClass('active');
-                    $('#workout-log-tab').addClass('active');
+                    $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').click();
                 }
             } else {
                 alert("Error: " + response.error);
@@ -1816,13 +1835,14 @@ function initTooltips() {
     
     // Delete a set
     function deleteSet(setId, $button) {
+        saveScrollPosition(); // Save before making changes
+        
         $.post("/workout/delete_set", { set_id: setId }, function(response) {
             if (response.success) {
                 const date = $(".workout-date.active").data("date");
                 loadWorkoutSession(date);
             } else {
                 alert("Error: " + response.error);
-                // Re-enable button on error
                 $button.prop('disabled', false).html('<i class="fas fa-trash"></i>');
             }
         }).fail(function() {
@@ -2170,11 +2190,6 @@ exercise.sets.forEach((set, index) => {
             const isExpanded = exerciseSets.is(":visible");
             const currentDate = $(".workout-date.active").data("date");
             
-            // Toggle visibility
-            exerciseSets.toggle(!isExpanded);
-            $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
-            $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
-            
         // Toggle visibility
             exerciseSets.toggle(!isExpanded);
             $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
@@ -2228,17 +2243,17 @@ exercise.sets.forEach((set, index) => {
 }
 
     function handleSetUpdate() {
+        saveScrollPosition(); // Save before making changes
+        
         const row = $(this).closest("tr");
         const setId = row.data("set-id");
         const reps = parseFloat(row.find(".set-reps").val());
         const weight = parseFloat(row.find(".set-weight").val());
         const date = $(".workout-date.active").data("date");
         
-        // Only save if values have changed
         if (reps != row.find(".set-reps").data("original") || 
             weight != row.find(".set-weight").data("original")) {
             
-            // Show saving indicator
             const volumeDisplay = row.find(".volume-display");
             volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
             
@@ -2248,19 +2263,13 @@ exercise.sets.forEach((set, index) => {
                 weight: weight
             }, function(response) {
                 if (response.success) {
-                    // Update volume display
                     const volume = (reps * weight).toFixed(1);
                     volumeDisplay.text(volume);
-                    
-                    // Update original values
                     row.find(".set-reps").data("original", reps);
                     row.find(".set-weight").data("original", weight);
-                    
-                    // Reload group totals
                     loadWorkoutSession(date);
                 } else {
                     alert("Error: " + response.error);
-                    // Revert to original values
                     row.find(".set-reps").val(row.find(".set-reps").data("original"));
                     row.find(".set-weight").val(row.find(".set-weight").data("original"));
                     volumeDisplay.text(
@@ -2441,62 +2450,50 @@ function loadTemplates() {
 
 
 function setupEventListeners() {
-    // Setup muscle group change listener for both desktop and mobile
-    $("#muscle-group-select, #muscle-group-select-mobile").change(renderExerciseOptions);
-    
-    // Save set listeners for both desktop and mobile
-    $("#save-set-btn").click(() => saveSet(false));
-    $("#save-set-btn-mobile").click(() => saveSet(true));
-    
-    // Add exercise
-    $("#save-exercise-btn").click(addExercise);
-    
-    // Week navigation
-    $("#prev-week-btn").click(() => navigateWeek('prev'));
-    $("#next-week-btn").click(() => navigateWeek('next'));
-    
-    // Allow Enter key to submit set on both desktop and mobile
-    $("#comments-input, #comments-input-mobile").keypress(function(e) {
-        if (e.which === 13) { // Enter key
-            saveSet($(this).attr('id') === 'comments-input-mobile');
-        }
-    });
-
-    // Apply template  
-    $("#save-template-btn").click(saveTemplate);
-    $("#apply-template-btn").click(function() {
-        const templateId = $(this).data('template-id');
-        applyTemplate(templateId);
+        // Setup muscle group change listener
+        $("#muscle-group-select, #muscle-group-select-mobile").change(renderExerciseOptions);
         
-        // Close the modal properly
-        const modal = bootstrap.Modal.getInstance(document.getElementById('templatePreviewModal'));
-        if (modal) {
-            modal.hide();
-        }
-    });
-    
-    $(document).on("click", ".template-item", function(e) {
-    e.preventDefault();
-    const templateId = $(this).data('id');
-    previewTemplate(templateId);
-});
+        // Save set listeners
+        $("#save-set-btn").click(() => saveSet(false));
+        $("#save-set-btn-mobile").click(() => saveSet(true));
+        
+        // Add exercise
+        $("#save-exercise-btn").click(addExercise);
+        
+        // Week navigation
+        $("#prev-week-btn").click(() => navigateWeek('prev'));
+        $("#next-week-btn").click(() => navigateWeek('next'));
+        
+        // Enter key submit
+        $("#comments-input, #comments-input-mobile").keypress(function(e) {
+            if (e.which === 13) {
+                saveSet($(this).attr('id') === 'comments-input-mobile');
+            }
+        });
 
-// Show copy modal
-$("#copy-workout-btn").click(function() {
-    populateDateOptions();
-    $("#copyWorkoutModal").modal("show");
-});
+        // Template handling
+        $("#save-template-btn").click(saveTemplate);
+        $("#apply-template-btn").click(function() {
+            const templateId = $(this).data('template-id');
+            applyTemplate(templateId);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('templatePreviewModal'));
+            if (modal) modal.hide();
+        });
+        
+        $(document).on("click", ".template-item", function(e) {
+            e.preventDefault();
+            previewTemplate($(this).data('id'));
+        });
 
-// Copy workout buttons
-    $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
-        populateDateOptions();
-        $("#copyWorkoutModal").modal("show");
-    });
-    // Add event delegation for dynamically generated date options
-    $(document).on("click", ".date-option", function() {
-        const targetDate = $(this).data("date");
-        copyWorkoutToDate(targetDate);
-    });
+        // Copy workout
+        $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
+            populateDateOptions();
+            $("#copyWorkoutModal").modal("show");
+        });
+        
+        $(document).on("click", ".date-option", function() {
+            copyWorkoutToDate($(this).data("date"));
+        });
 
 // Populate date options in modal
 function populateDateOptions() {
