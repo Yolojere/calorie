@@ -154,7 +154,8 @@
         }
         #workout-log-tab .card-body {
     overflow-y: auto;
-    max-height: calc(100vh - 170px); /* Adjust as needed */
+    max-height: calc(100vh - 160px) !important; /* Reduced from 170px */
+        height: calc(100vh - 160px) !important;
 }
 
         /* === WORKOUT PAGE SPECIFIC STYLES === */
@@ -230,9 +231,6 @@
     padding: 8px 4px !important; /* Reduced padding for better fit */
     
 }
-        
-        
-        
         .set-row input {
             width: 80px;
             background-color: #333;
@@ -328,6 +326,19 @@
             display: inline-block;
             white-space: nowrap;
         }
+     
+    /* Input validation */
+    .invalid-input {
+        border: 2px solid #ff5252 !important;
+        background-color: #442222 !important;
+        animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-3px); }
+        40%, 80% { transform: translateX(3px); }
+    }
         
         .comment-icon {
             color: #dfdbdb;
@@ -364,6 +375,15 @@
         }
         .tooltip {
     z-index: 1080 !important;
+}
+.custom-tooltip {
+    position: fixed !important;
+    transform: translate3d(0,0,0) !important;
+    will-change: transform !important;
+    backface-visibility: hidden !important;
+}
+.tooltip {
+    pointer-events: none;
 }
         
         .tooltip-inner {
@@ -645,6 +665,15 @@
             display: flex;
             align-items: center;
         }
+        /* === COPY BUTTON STYLES === */
+#copy-workout-btn, #copy-workout-mobile-btn {
+    background: linear-gradient(to bottom, #ffffff, #afafaf);
+    border: none;
+    color: rgb(0, 0, 0);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
         /* === DESKTOP LAYOUT ADJUSTMENTS === */
         @media (min-width: 768px) {
             .workout-grid-container {
@@ -711,15 +740,56 @@
         padding: 10px 15px;
     }
     
-    #mobileDateDropdown {
-        font-size: 14px;
-        padding: 5px 10px;
-    }
-    
-    #copy-workout-mobile-btn {
-        font-size: 14px;
-        padding: 5px 10px;
-    }
+#copyWorkoutModal .modal-content {
+    background-color: #222;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+#copyWorkoutModal .modal-header {
+    border-bottom: 1px solid #444;
+}
+
+#copyWorkoutModal .modal-footer {
+    border-top: 1px solid #444;
+}
+
+#date-selection-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.copy-date-btn {
+    background-color: #333 !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #555 !important;
+    border-radius: 6px;
+    padding: 8px 5px;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.copy-date-btn:hover:not(.disabled) {
+    background-color: #444 !important;
+    border-color: #6dc0d5 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(109, 192, 213, 0.4);
+}
+
+.copy-date-btn:active:not(.disabled) {
+    transform: translateY(0);
+}
+
+.copy-date-btn.disabled {
+    background-color: #1a1a1a !important;
+    color: #777 !important;
+    border-color: #333 !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
     
     .dropdown-menu {
         max-height: 300px;
@@ -785,10 +855,15 @@
         filter: none !important;
     }
             .workout-container {
-            padding: 0 !important;
+            padding-bottom: 70px;
             margin: 0 !important;
             max-width: 100% !important;
         }
+        #workout-session-container-mobile {
+    max-height: calc(100vh - 160px) !important;
+    height: calc(100vh - 160px) !important;
+    overflow-y: auto !important;
+}
             
             /* Show mobile tabs on mobile, unclosed code, dont add anything here*/
             .mobile-tabs-container {
@@ -1058,6 +1133,7 @@
         
         /* Adjust tab content height to account for bottom bar */
         .mobile-tab-content {
+            height: calc(100vh - 50px);
             flex: 1;
         overflow-y: auto;
         height: auto; /* Remove fixed calc, use flex instead */
@@ -1509,21 +1585,15 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
         <h5 class="m-0 me-2">Workout Log</h5>
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                    type="button" 
-                    id="mobileDateDropdown" 
-                    data-bs-toggle="dropdown">
-                <span id="mobile-date-display">Today</span>
-            </button>
-            <ul class="dropdown-menu" id="mobile-date-dropdown-menu">
-                <!-- Dates will be populated here -->
-            </ul>
-        </div>
-    </div>
-    <button class="btn btn-sm btn-info" id="copy-workout-mobile-btn">
+        <button class="btn btn-sm btn-primary me-2" id="copy-workout-mobile-btn">
         <i class="fas fa-copy me-1 d-none d-sm-inline"></i> Copy
     </button>
+</div>
+    <div>
+        <select id="mobile-date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
+            <!-- Dates will be populated here -->
+        </select>
+    </div>
 </div>
                         </div>
                         <div class="card-body p-0">
@@ -1640,9 +1710,11 @@
 
 <!-- Add this button to the bottom left corner -->
 <div class="position-fixed bottom-0 start-0 m-3" style="z-index: 1000;">
-    <button class="btn btn-info me-2" id="copy-workout-btn">
-        <i class="fas fa-copy me-1"></i> Copy Workout
-    </button>
+    <button class="btn btn-primary position-fixed bottom-0 start-0 m-3" 
+        id="copy-workout-btn" 
+        style="z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+    <i class="fas fa-copy me-1"></i> Copy Workout
+</button>
 </div>
 
     
@@ -1670,9 +1742,14 @@
         initTooltips();
         setupMobileTabs();
         loadTemplates();
-        setupMobileDateDropdown();
+        setupMobileDateSelector();
     
-    // Set initial date display
+        
+    
+        // Set initial date display
+        const weekDates = getWeekDates(new Date());
+        renderWeekDates(weekDates);
+        loadWorkoutSession(currentSelectedDate);
         const today = new Date().toISOString().split('T')[0];
         $("#mobile-date-display").text("Today");
 
@@ -1697,17 +1774,17 @@
     function restoreScrollPosition() {
         // Desktop restoration
         if ($('#workout-session-container').is(':visible')) {
-            $('#workout-session-container').scrollTop(savedScrollPosition.desktop);
-        }
+        $('#workout-session-container').scrollTop(savedScrollPosition.desktop);
+    }
         
         // Mobile restoration
         if ($('#workout-session-container-mobile').is(':visible')) {
-            // Wait for DOM to update
-            setTimeout(() => {
-                $('#workout-session-container-mobile').scrollTop(savedScrollPosition.mobile);
-            }, 50);
-        }
+        // Wait for DOM to update
+        setTimeout(() => {
+            $('#workout-session-container-mobile').scrollTop(savedScrollPosition.mobile);
+        }, 50);
     }
+}
     // ===== END SCROLL POSITION FUNCTIONS =====
     
     function setupMobileTabs() {
@@ -1736,6 +1813,7 @@
     }
     
     function initTooltips() {
+        $('.comment-icon').tooltip('dispose');
 
 
     // Mobile-specific tooltip tap handling
@@ -1747,10 +1825,10 @@
         $('.comment-icon').not(this).tooltip('hide');
         $(this).tooltip('show');
 
-        // Auto-hide after 3s
+        // Auto-hide after 6s
         setTimeout(() => {
             $(this).tooltip('hide');
-        }, 3000);
+        }, 6000);
     });
 
     // Hide tooltips when clicking/tapping elsewhere
@@ -1782,21 +1860,29 @@
     
     // Load workout session for a date
     function loadWorkoutSession(date) {
-        $("#workout-session-container, #workout-session-container-mobile").html(
-            '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
-        );
+    saveScrollPosition(); // Save before loading new data
     
-        $.post("/workout/get_session", { date: date }, function(data) {
-            renderWorkoutSession(data.session, data.exercises);
-            initTooltips();
-            
-            // Restore scroll position after rendering
-            setTimeout(restoreScrollPosition, 100);
-        });
-    }
+    $("#workout-session-container, #workout-session-container-mobile").html(
+        '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
+    );
+    
+    $.post("/workout/get_session", { date: date }, function(data) {
+        renderWorkoutSession(data.session, data.exercises);
+        initTooltips();
+        
+        // Restore scroll position after rendering
+        setTimeout(restoreScrollPosition, 100);
+    });
+}
     
     // Save a new set
     function saveSet(isMobile = false) {
+        const repsInput = isMobile ? $("#reps-input-mobile") : $("#reps-input");
+        const weightInput = isMobile ? $("#weight-input-mobile") : $("#weight-input");
+        
+        if (!validateInput(repsInput[0]) || !validateInput(weightInput[0])) {
+            return;
+        }
         saveScrollPosition(); // Save before making changes
         
         const exerciseId = isMobile ? $("#exercise-select-mobile").val() : $("#exercise-select").val();
@@ -2150,6 +2236,7 @@ exercise.sets.forEach((set, index) => {
         container.html(sessionHTML);
         mobileContainer.html(sessionHTML);
         initTooltips();
+        setTimeout(initTooltips, 100);
 
         // Apply initial expanded class based on collapse state
     $(".exercise").each(function() {
@@ -2243,43 +2330,53 @@ exercise.sets.forEach((set, index) => {
 }
 
     function handleSetUpdate() {
-        saveScrollPosition(); // Save before making changes
-        
-        const row = $(this).closest("tr");
-        const setId = row.data("set-id");
-        const reps = parseFloat(row.find(".set-reps").val());
-        const weight = parseFloat(row.find(".set-weight").val());
-        const date = $(".workout-date.active").data("date");
-        
-        if (reps != row.find(".set-reps").data("original") || 
-            weight != row.find(".set-weight").data("original")) {
-            
-            const volumeDisplay = row.find(".volume-display");
-            volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
-            
-            $.post("/workout/update_set", {
-                set_id: setId,
-                reps: reps,
-                weight: weight
-            }, function(response) {
-                if (response.success) {
-                    const volume = (reps * weight).toFixed(1);
-                    volumeDisplay.text(volume);
-                    row.find(".set-reps").data("original", reps);
-                    row.find(".set-weight").data("original", weight);
-                    loadWorkoutSession(date);
-                } else {
-                    alert("Error: " + response.error);
-                    row.find(".set-reps").val(row.find(".set-reps").data("original"));
-                    row.find(".set-weight").val(row.find(".set-weight").data("original"));
-                    volumeDisplay.text(
-                        (row.find(".set-reps").data("original") * 
-                         row.find(".set-weight").data("original")).toFixed(1)
-                    );
-                }
-            });
-        }
+    const row = $(this).closest("tr");
+    const repsInput = row.find(".set-reps");
+    const weightInput = row.find(".set-weight");
+
+    // Validate input - prevent empty/null
+    const repsVal = repsInput.val().trim();
+    const weightVal = weightInput.val().trim();
+
+    if (repsVal === "" || weightVal === "" || isNaN(repsVal) || isNaN(weightVal)) {
+        // Reset back to original values if invalid
+        repsInput.val(repsInput.data("original"));
+        weightInput.val(weightInput.data("original"));
+        return; 
     }
+
+    const setId = row.data("set-id");
+    const reps = parseFloat(repsVal);
+    const weight = parseFloat(weightVal);
+    const date = $(".workout-date.active").data("date");
+
+    if (reps != repsInput.data("original") || weight != weightInput.data("original")) {
+        const volumeDisplay = row.find(".volume-display");
+        volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.post("/workout/update_set", {
+            set_id: setId,
+            reps: reps,
+            weight: weight
+        }, function(response) {
+            if (response.success) {
+                const volume = (reps * weight).toFixed(1);
+                volumeDisplay.text(volume);
+                repsInput.data("original", reps);
+                weightInput.data("original", weight);
+                saveScrollPosition();  
+                loadWorkoutSession(date);
+            } else {
+                alert("Error: " + response.error);
+                repsInput.val(repsInput.data("original"));
+                weightInput.val(weightInput.data("original"));
+                volumeDisplay.text(
+                    (repsInput.data("original") * weightInput.data("original")).toFixed(1)
+                );
+            }
+        });
+    }
+}
 
     // Helper functions
     function resetSetForm(isMobile = false) {
@@ -2516,12 +2613,12 @@ function populateDateOptions() {
         const isCurrent = dateString === currentDate.toISOString().split('T')[0];
         
         container.append(`
-            <div class="date-option btn btn-outline-primary m-1 ${isCurrent ? 'disabled' : ''}"
-                 data-date="${dateString}"
-                 ${isCurrent ? 'disabled' : ''}>
-                ${formattedDate}
-            </div>
-        `);
+    <div class="date-option btn btn-dark m-1 border-secondary ${isCurrent ? 'disabled' : ''}"
+         data-date="${dateString}"
+         ${isCurrent ? 'disabled' : ''}>
+        ${formattedDate}
+    </div>
+`);
     }
 }
 
@@ -2650,7 +2747,140 @@ function formatMobileDate(date) {
         day: 'numeric' 
     });
 }
+function generateDateOptions(centerDate) {
+    const dates = [];
+    const center = new Date(centerDate);
+    
+    // Generate -3 to +3 days from center date
+    for (let i = -3; i <= 3; i++) {
+        const date = new Date(center);
+        date.setDate(center.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        dates.push({
+            date: dateStr,
+            formatted: formatDateForSelector(date)
+        });
+    }
+    return dates;
+}
 
+function formatDateForSelector(date) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    let dateString = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+
+    if (date.toDateString() === today.toDateString()) {
+        return "Today - " + dateString;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday - " + dateString;
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+        return "Tomorrow - " + dateString;
+    } else {
+        return dateString;
+    }
+}
+
+function populateMobileDateSelector(selectedDate) {
+    const $selector = $("#mobile-date-selector");
+    const dates = generateDateOptions(selectedDate);
+    
+    $selector.empty();
+    dates.forEach(d => {
+        const selected = d.date === selectedDate;
+        $selector.append(`<option value="${d.date}" ${selected ? 'selected' : ''}>${d.formatted}</option>`);
+    });
+}
+
+function setupMobileDateSelector() {
+    // Initialize with today
+    populateMobileDateSelector(currentSelectedDate);
+    
+    $("#mobile-date-selector").change(function() {
+        const selectedDate = $(this).val();
+        currentSelectedDate = selectedDate;
+        loadWorkoutSession(selectedDate);
+        
+        // Regenerate options with new center
+        populateMobileDateSelector(selectedDate);
+    });
+}
+function getWeekDates(date) {
+        const dates = [];
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when Sunday
+        const monday = new Date(d.setDate(diff));
+        
+        for (let i = 0; i < 7; i++) {
+            const newDate = new Date(monday);
+            newDate.setDate(monday.getDate() + i);
+            dates.push(newDate.toISOString().split('T')[0]);
+        }
+        return dates;
+    }
+
+    function formatDate(date) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function getWeekNumber(date) {
+        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    }
+
+    // Updated navigateWeek function
+    function navigateWeek(direction) {
+        const days = direction === 'prev' ? -7 : 7;
+        currentDate.setDate(currentDate.getDate() + days);
+        const weekDates = getWeekDates(currentDate);
+        renderWeekDates(weekDates);
+    }
+
+    // Updated renderWeekDates function
+    function renderWeekDates(dates) {
+        const container = $("#week-dates-container");
+        container.empty();
+        
+        dates.forEach(date => {
+            const dateObj = new Date(date);
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+            const dayNumber = dateObj.getDate();
+            const isToday = date === new Date().toISOString().split('T')[0];
+            
+            const dateElement = `
+                <div class="workout-date btn btn-outline-secondary mx-1 ${isToday ? 'active' : ''}" 
+                     data-date="${date}">
+                    <div>${dayName}</div>
+                    <div class="fw-bold">${dayNumber}</div>
+                </div>
+            `;
+            container.append(dateElement);
+        });
+        
+        // Add click event to dates
+        $(".workout-date").click(function() {
+            $(".workout-date").removeClass("active");
+            $(this).addClass("active");
+            currentSelectedDate = $(this).data("date");
+            loadWorkoutSession($(this).data("date"));
+        });
+        
+        // Update week display
+        const start = new Date(dates[0]);
+        const end = new Date(dates[6]);
+        const weekDisplay = `Week ${getWeekNumber(start)}: ${formatDate(start)} - ${formatDate(end)}`;
+        $("#week-display").text(weekDisplay);
+    }
 
 </script>
 <div class="mobile-tab-bar-workout d-block d-md-none">
