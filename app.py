@@ -1261,25 +1261,45 @@ def log_food():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
-
-
-
+    
 @app.route('/update_session', methods=['POST'])
 @login_required
 def update_session():
     user_id = current_user.id
     date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    
+    # Fetch current TDEE from user profile
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT tdee FROM users WHERE id = %s", (user_id,))
+    user_data = cursor.fetchone()
+    current_tdee = user_data[0] if user_data and user_data[0] else 0
+    cursor.close()
+    conn.close()
+    
     eaten_items, current_date = get_current_session(user_id, date)
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
     current_date_formatted = format_date(current_date)
+    
+    # Calculate calorie difference and status
+    calorie_difference = totals['calories'] - current_tdee
+    status_dict = calculate_calorie_status(calorie_difference)
+    calorie_status = status_dict['status']
+    calorie_status_class = status_dict['class']
+    calorie_difference_str = status_dict['display']
+
     return jsonify({
         'session': eaten_items,
         'totals': totals,
         'current_date': current_date,
         'current_date_formatted': current_date_formatted,
-        'breakdown': group_breakdown
+        'breakdown': group_breakdown,
+        'calorie_difference': calorie_difference_str,
+        'calorie_status': calorie_status,
+        'calorie_status_class': calorie_status_class,
+        'current_tdee': current_tdee,
+        'calorie_difference_raw': calorie_difference
     })
 
 @app.route('/delete_food', methods=['POST'])
