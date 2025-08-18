@@ -660,7 +660,7 @@
                     <div class="col-md-4 mb-3">
     <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
     <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" 
-           value="{{ current_weight or 0 }}" placeholder="Enter weight">
+           value="{% if current_weight %}{{ current_weight }}{% endif %}" placeholder="Enter weight">
 </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-ruler me-2"></i>Height (cm)</label>
@@ -808,7 +808,7 @@
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
                             <h5><i class="fas fa-burn me-2"></i>Total Daily Energy Expenditure (TDEE)</h5>
-                            <div class="result-value" id="tdee-result">{{ tdee or 0 }} kcal</div>
+                            <div class="result-value" id="tdee-result">{% if tdee %}{{ tdee }}{% else %}0{% endif %} kcal</div>
                             <p>Total calories burned per day</p>
                         </div>
                     </div>
@@ -881,6 +881,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const genderButtons = document.querySelectorAll('.gender-btn');
     let currentGender = 'male';
+
+    // Initialize form with empty values on first visit
+    if(!localStorage.getItem('activityFormState')) {
+        clearFormFields();
+    } else {
+        loadFormState();
+    }
 
     // Pre-select gender button if needed
     genderButtons.forEach(btn => {
@@ -1003,8 +1010,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
         document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
 
+        // Update results section
+        document.getElementById('sleep-result').textContent = results.activityBreakdown.sleep + ' kcal';
+        document.getElementById('intense-result').textContent = '+' + results.activityBreakdown.intense + ' kcal';
+        document.getElementById('moderate-result').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
+        document.getElementById('light-result').textContent = '+' + results.activityBreakdown.light + ' kcal';
+        document.getElementById('walking-result').textContent = '+' + results.activityBreakdown.walking + ' kcal';
+        
         updateActivityBreakdown(results.activityBreakdown);
         saveTdeeBtn.style.display = 'block';
+        saveFormState(); // Save after calculation
     }
 
     // Energy expenditure formula
@@ -1046,19 +1061,49 @@ document.addEventListener('DOMContentLoaded', function() {
         return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown };
     }
 
-    // Progress bar updates
+    // Progress bar updates (using real input values)
     function updateActivityBreakdown(breakdown) {
-        const values = [Math.abs(breakdown.sleep), breakdown.intense, breakdown.moderate, breakdown.light, breakdown.walking];
+        // Use absolute values for all calculations
+        const values = [
+            Math.abs(breakdown.sleep),
+            breakdown.intense,
+            breakdown.moderate,
+            breakdown.light,
+            breakdown.walking
+        ];
+        
         const total = values.reduce((a,b)=>a+b,0);
         const ids = ['progress-sleep','progress-intense','progress-moderate','progress-light','progress-walking'];
-
-        values.forEach((val,i)=>{
-            const pct = total>0 ? Math.round((val/total)*100) : 0;
-            const bar = document.getElementById(ids[i]);
-            if(bar){ bar.style.width = pct+'%'; bar.setAttribute('aria-valuenow',pct); }
-        });
+        
+        // Only update if we have valid data
+        if(total > 0) {
+            values.forEach((val,i)=>{
+                const pct = Math.round((val/total)*100);
+                const bar = document.getElementById(ids[i]);
+                if(bar) { 
+                    bar.style.width = pct+'%'; 
+                    bar.setAttribute('aria-valuenow',pct); 
+                }
+            });
+        }
     }
     
+    // Clear form fields on first visit
+    function clearFormFields() {
+        document.getElementById('age').value = '';
+        document.getElementById('height').value = '';
+        document.getElementById('sleep-hours').value = '8';
+        document.getElementById('sleep-minutes').value = '';
+        document.getElementById('intense-hours').value = '';
+        document.getElementById('intense-minutes').value = '';
+        document.getElementById('moderate-hours').value = '';
+        document.getElementById('moderate-minutes').value = '';
+        document.getElementById('light-hours').value = '';
+        document.getElementById('light-minutes').value = '';
+        document.getElementById('walking-hours').value = '';
+        document.getElementById('walking-minutes').value = '';
+    }
+
     // Form state management
     function saveFormState() {
         const formState = {
@@ -1096,7 +1141,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set other inputs
             document.getElementById('age').value = state.age || '';
-            document.getElementById('weight').value = state.weight || '';
             document.getElementById('height').value = state.height || '';
             document.getElementById('sleep-hours').value = state.sleepHours || '';
             document.getElementById('sleep-minutes').value = state.sleepMinutes || '';
@@ -1115,9 +1159,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
-    // Load saved state on page load
-    loadFormState();
 });
 </script>
 </body>
