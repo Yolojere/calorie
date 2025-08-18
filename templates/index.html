@@ -55,15 +55,36 @@
 
 /* Specific style for confirm button */
 #confirm-action {
-    background: linear-gradient(to right, #b989f0, #ad75ec) !important;
-    color: white !important;
+    background: linear-gradient(to right, #ffffff, #9b9a9a) !important;
+    color: rgb(0, 0, 0) !important;
 }
 
 #save-grams {
     background: linear-gradient(to right, #c0bfbf, #9b9a9a) !important;
     color: white !important;
 }
-        
+#action-move, #action-copy {
+    background: #353535 !important;
+    color: #ffffff !important;
+    border: 1px solid #888 !important;
+}
+
+#action-move:hover, 
+#action-move:focus,
+#action-copy:hover,
+#action-copy:focus {
+    background: #fff !important;
+    color: #000000 !important;
+    border-color: #888 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+#action-move.active, 
+#action-copy.active {
+    background: #fff !important;
+    color: #000000 !important;
+}
         .card-header {
             background-color: #000;
             border-bottom: 1px solid #444;
@@ -1068,9 +1089,7 @@
             font-size: 1.8vh !important;
             margin-top: 2px;
         }
-        .card-footerTHISISFORBACKGROUNDMOVERECIPEMODULS
-
-
+       
         /* Cell-specific styles */
         .grid-cell:nth-child(1) {
             background-color: #b61336;
@@ -1744,6 +1763,7 @@
     }
 }
 
+
 /* real time scaling for mobile */
 @media (max-width: 767px) {
     #rt-breakdown-container .d-flex {
@@ -1911,6 +1931,143 @@
     padding: 8px 15px !important;
     font-size: 14px !important;
 }
+}
+/* Activity Grid Styles */
+        .activity-grid-container {
+            position: fixed;
+            top: 100px;
+            left: calc(50% - 590px - 120px);
+            width: 120px;
+            height: 300px;
+            z-index: 100;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.88);
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-rows: repeat(2, 1fr);
+            height: 100%;
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #2b2b2b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .grid-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 5px;
+            font-size: 15px;
+            text-align: center;
+            border-bottom: 1px solid #2b2b2b;
+            transition: all 0.3s ease;
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.03);
+            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .grid-cell i {
+            font-size: 1.8vh !important;
+            margin-bottom: 3px !important;
+        }
+
+        .grid-value {
+            font-weight: bold;
+            font-size: 1.5vh !important;
+            margin-top: 5px;
+        }
+
+        .grid-status {
+            font-size: 1.0rem;
+            font-weight: bold;
+            margin-top: 5px;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .grid-activity {
+            background: linear-gradient(135deg, #202020, #000000);
+            color: #ffffff;
+        }
+
+        .grid-today {
+            background: linear-gradient(135deg, #ffffff, #737473);
+            color: #000;
+        }
+
+        .status-maintain {
+            background-color: rgba(160, 76, 160, 0.7);
+            color: #000;
+        }
+
+        .status-gain {
+            background-color: rgba(255, 100, 100, 0.7);
+            color: #000000;
+        }
+
+        .status-loss {
+            background-color: rgba(100, 200, 100, 0.7);
+            color: #000000;
+        }
+
+        .calorie-diff {
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+
+        .calorie-positive {
+            color: #ff0000;
+        }
+
+        .calorie-negative {
+            color: #00ff00;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1400px) {
+            .activity-grid-container {
+                left: calc(50% - 520px - 11vw);
+                transform: scale(0.85);
+                width: 11vw;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .activity-grid-container {
+                left: calc(50% - 480px - 10vw);
+                transform: scale(0.9);
+                width: 10vw;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .activity-grid-container {
+                left: calc(50% - 460px - 10vw);
+                transform: scale(0.95);
+            }
+        }
+
+        @media (max-height: 800px) {
+            .grid-cell {
+                padding: 4px 1px !important;
+                min-height: 50px !important;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .activity-grid-container {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2085,6 +2242,26 @@
 </div>
 
     <div class="container-main">
+         <!-- Activity Grid (Left side) -->
+        <div class="activity-grid-container">
+            <div class="activity-grid">
+                <div class="grid-cell grid-activity">
+                    <i class="fas fa-running"></i>
+                    <span>Activity</span>
+                    <div class="grid-value" id="tdee-value">{% if current_tdee %}
+                                {{ current_tdee|round(0) }} kcal
+                            {% else %}
+                                Not calculated
+                            {% endif %}</div>
+                </div>
+                <div class="grid-cell grid-today">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Today</span>
+                    <div class="calorie-diff" id="calorie-difference">{{ calorie_difference }}</div>
+                    <div class="grid-status status-loss" id="calorie-status">{{ calorie_status }}</div>
+                </div>
+            </div>
+        </div>
         <!-- Top: Add Food (Full Width) -->
     <div class="grid-panel top-panel mobile-panel active" id="add-food-panel">
         <div class="card bg-dark h-100">
@@ -2288,14 +2465,13 @@
 
                 <div class="card-footer py-2 d-flex justify-content-between">
                     <div>
-                        <button id="move-items" class="btn glassy-btn me-2">MOVE</button>
+                        <button id="move-items" class="btn glassy-btn me-2">Move</button>
                         <button id="create-recipe" class="btn d-none" disabled>Recipe</button>
                     </div>
                     <button id="clear-session" class="btn">Clear All</button>
                 </div>
             </div>
         </div>
-        
 <!-- Nutrition Panel (Mobile) -->
 <div class="grid-panel mobile-panel" id="nutrition-panel">
     <div class="card bg-dark h-100">
@@ -2305,9 +2481,22 @@
         <div class="card-body">
             <div class="nutrition-grid-mobile">
                 <div class="grid-row-mobile">
+                    <div class="grid-cell-mobile grid-calories-mobile" id="mobile-calories-cell">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>TODAY</span>
+                        <div class="grid-value" id="calorie-difference-mobile">{{ calorie_difference }}</div>
+                    <div class="grid-status status-loss" id="calorie-status-mobile">{{ calorie_status }}</div>
+                    </div>
+                </div>
+                <div class="grid-row-mobile">
                     <div class="grid-cell-mobile grid-header-mobile">
-                        <i class="fas fa-calculator"></i>
-                        <span>NUTRITION</span>
+                        <i class="fas fa-running"></i>
+                        <span>ACTIVITY</span>
+                        <div class="grid-value" id="mobile-tdee">{% if current_tdee %}
+                                {{ current_tdee|round(0) }}
+                            {% else %}
+                                Not calculated
+                            {% endif %}</div>
                     </div>
                 </div>
                 <div class="grid-row-mobile">
@@ -2434,7 +2623,7 @@
                 </div>
                 <div class="modal-footer bg-black py-1">
 <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Cancel</button>
-<button type="button" id="save-grams" class="btn" style="background-color: #c0bfbf; color: black;">Save</button>
+<button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Save</button>
                 </div>
             </div>
         </div>
@@ -2470,8 +2659,8 @@
                 <div class="mb-3">
                     <label class="form-label">Action</label>
                     <div class="btn-group w-100" role="group">
-                        <button type="button" id="action-move" class="btn btn-danger">Move</button>
-                        <button type="button" id="action-copy" class="btn btn-success">Copy</button>
+                        <button type="button" id="action-move" class="btn action-btn">Move</button>
+                        <button type="button" id="action-copy" class="btn action-btn">Copy</button>
                     </div>
                 </div>
             </div>
@@ -2574,6 +2763,7 @@
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
+            updateCalorieDifference();
 
             // Function to initialize icons ===== FIXED ICONS =====
     function initializeIcons() {
@@ -2634,6 +2824,7 @@ $('#confirm-action').click(function() {
         
         updateSessionDisplay(response.session, response.totals, response.breakdown);
         refreshDateSelector();
+        updateCalorieDifference();
     });
 });
 
@@ -2642,6 +2833,7 @@ $('#confirm-action').click(function() {
     
     $.post('/update_session', { date: currentDate }, function(response) {
         updateSessionDisplay(response.session, response.totals, response.breakdown);
+        updateCalorieDifference();
         $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
     });
 }
@@ -3013,6 +3205,7 @@ const button = $(`
         const scrollPos = $('#food-log').scrollTop();
         
         updateSessionDisplay(response.session, response.totals, response.breakdown);
+        updateCalorieDifference();
         
         // Restore scroll position after update
         $('#food-log').scrollTop(scrollPos);
@@ -3189,6 +3382,7 @@ $('#save-grams').click(function() {
             date: date   // Add date parameter
         }, function(response) {
             updateSessionDisplay(response.session, response.totals, response.breakdown);
+            updateCalorieDifference();
             editGramsModal.hide();
         });
     } else {
@@ -3200,6 +3394,7 @@ $('#save-grams').click(function() {
             date: date   // Add date parameter
         }, function(response) {
             updateSessionDisplay(response.session, response.totals, response.breakdown);
+            updateCalorieDifference();
             editGramsModal.hide();
         });
     }
@@ -3259,6 +3454,8 @@ $(document).on('click', '.delete-item', function(e) {
         date: date
     }, function(response) {
         updateSessionDisplay(response.session, response.totals, response.breakdown);
+        updateCalorieDifference();
+
     }).fail(function() {
         // Revert button on failure
         button.html(originalHTML);
@@ -3277,6 +3474,7 @@ $(document).on('click', '.delete-item', function(e) {
                     date: date
                 }, function(response) {
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
                 });
             });
             // Clear session
@@ -3285,6 +3483,7 @@ $(document).on('click', '.delete-item', function(e) {
                 
                 $.post('/clear_session', {}, function(response) {
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
                 });
             });
 
@@ -3293,6 +3492,7 @@ $(document).on('click', '.delete-item', function(e) {
                 const date = $(this).val();
                 $.post('/update_session', { date: date }, function(response) {
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
                     $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
                 });
             });
@@ -3342,6 +3542,7 @@ $(document).on('click', '.group-items .list-group-item', function(e) {
                     $('#create-recipe').addClass('d-none').prop('disabled', true);
                     $('#moveItemsModal').modal('hide');
                     updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
                 });
             });
 
@@ -3422,6 +3623,7 @@ function resetRecipeSelection() {
 function updateSessionDisplay(session, totals, breakdown) {
     updateNutritionGrid(totals);
     updateMobileNutrition(totals);
+    updateCalorieDifference();
     
     // Add this block to remember collapsed states
     const collapseStates = {};
@@ -3552,10 +3754,12 @@ function updateSessionDisplay(session, totals, breakdown) {
                 $('#grid-sugars').text(totals.sugars.toFixed(1) + 'g');
                 $('#grid-fiber').text(totals.fiber.toFixed(1) + 'g');
                 $('#grid-salt').text(totals.salt.toFixed(1) + 'g');
+                
 }
                 
                 // Update mobile nutrition panel
                 updateMobileNutrition(totals);
+                updateCalorieDifference();
             }
             
                     function updateMobileNutrition(totals) {
@@ -3599,6 +3803,34 @@ function updateSessionDisplay(session, totals, breakdown) {
                 // Close modals if open
                 $('.modal').modal('hide');
             });
+function updateCalorieDifference() {
+    const tdee = {% if current_tdee %}{{ current_tdee }}{% else %}0{% endif %};
+    const loggedCalories = parseFloat($('#grid-calories').text()) || 0;
+    const difference = tdee - loggedCalories;
+    const absDiff = Math.abs(difference);
+
+    // Update the calorie difference display
+    $('#calorie-difference').text(absDiff.toFixed(0));
+    $('#calorie-difference-mobile').text(absDiff.toFixed(0));
+
+    // Determine status and set appropriate class
+    let status, statusClass;
+    if (absDiff <= 50) {
+        status = "maintaining";
+        statusClass = "status-maintain";
+    } else if (difference > 0) {
+        status = "calories left";
+        statusClass = "status-loss";
+    } else {
+        status = "calories over";
+        statusClass = "status-gain";
+    }
+
+    // Update status text and class
+    $('#calorie-status, #calorie-status-mobile').text(status)
+        .removeClass('status-maintain status-loss status-gain')
+        .addClass(statusClass);
+}
 
             // Initialize mobile view
             if ($(window).width() < 992) {
@@ -3876,6 +4108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
  });
+ 
         </script>
         <script>
         // Initialize Font Awesome
