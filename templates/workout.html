@@ -1877,47 +1877,44 @@
     
     // Save a new set
     function saveSet(isMobile = false) {
-        const repsInput = isMobile ? $("#reps-input-mobile") : $("#reps-input");
-        const weightInput = isMobile ? $("#weight-input-mobile") : $("#weight-input");
-        
-        if (!validateInput(repsInput[0]) || !validateInput(weightInput[0])) {
-            return;
-        }
-        saveScrollPosition(); // Save before making changes
-        
-        const exerciseId = isMobile ? $("#exercise-select-mobile").val() : $("#exercise-select").val();
-        const reps = isMobile ? $("#reps-input-mobile").val() : $("#reps-input").val();
-        const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
-        const muscleGroup = isMobile ? $("#muscle-group-select-mobile").val() : $("#muscle-group-select").val();
-        const setsCount = isMobile ? $("#sets-input-mobile").val() : $("#sets-input").val();
-        const rirRaw = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
-        const comments = isMobile ? $("#comments-input-mobile").val() : $("#comments-input").val();
-        const date = $(".workout-date.active").data("date");
-        const rir = rirRaw === "Failure" ? -1 : 
+    const repsInput = isMobile ? $("#reps-input-mobile") : $("#reps-input");
+    const weightInput = isMobile ? $("#weight-input-mobile") : $("#weight-input");
+    
+    saveScrollPosition();
+    
+    const exerciseId = isMobile ? $("#exercise-select-mobile").val() : $("#exercise-select").val();
+    const reps = isMobile ? $("#reps-input-mobile").val() : $("#reps-input").val();
+    const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
+    const muscleGroup = isMobile ? $("#muscle-group-select-mobile").val() : $("#muscle-group-select").val();
+    const setsCount = isMobile ? $("#sets-input-mobile").val() : $("#sets-input").val();
+    const rirRaw = isMobile ? $("#rir-input-mobile").val() : $("#rir-input").val();
+    const comments = isMobile ? $("#comments-input-mobile").val() : $("#comments-input").val();
+    const date = $(".workout-date.active").data("date");
+    const rir = rirRaw === "Failure" ? -1 : 
            (rirRaw === "" ? null : Number(rirRaw));
-        
-        $.post("/workout/save_set", {
-            date: date,
-            exercise_id: exerciseId,
-            reps: reps,
-            weight: weight,
-            muscle_group: muscleGroup,
-            sets_count: setsCount,
-            rir: rir,
-            comments: comments
-        }, function(response) {
-            if (response.success) {
-                loadWorkoutSession(date);
-                resetSetForm(isMobile);
-                
-                if (isMobile) {
-                    $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').click();
-                }
-            } else {
-                alert("Error: " + response.error);
+    
+    $.post("/workout/save_set", {
+        date: date,
+        exercise_id: exerciseId,
+        reps: reps,
+        weight: weight,
+        muscle_group: muscleGroup,
+        sets_count: setsCount,
+        rir: rir,
+        comments: comments
+    }, function(response) {
+        if (response.success) {
+            loadWorkoutSession(date);
+            resetSetForm(isMobile);
+            
+            if (isMobile) {
+                $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').click();
             }
-        });
-    }
+        } else {
+            alert("Error: " + response.error);
+        }
+    });
+}
     
     // Delete a set
     function deleteSet(setId, $button) {
