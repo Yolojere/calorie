@@ -107,6 +107,11 @@
         color: #b989f0;
         margin-bottom: 10px;
     }
+    /* Focus effect for new inputs */
+#full_name, #main_sport, #fitness_goals {
+    transition: all 0.3s ease;
+}
+
     
     /* Responsive adjustments */
     @media (max-width: 768px) {
@@ -203,6 +208,36 @@
                         </div>
                     {% endif %}
                 </div>
+                <legend class="border-bottom mb-4">
+        <i class="fas fa-user me-2"></i>General Information
+    </legend>
+
+    <!-- Full Name Field -->
+    <div class="form-group mb-4">
+        <label for="full_name" class="form-label">Full Name</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+            <input type="text" class="form-control" id="full_name" name="full_name" placeholder="John Doe" value="{{ current_user.full_name or '' }}">
+        </div>
+    </div>
+
+    <!-- Main Sport Field -->
+    <div class="form-group mb-4">
+        <label for="main_sport" class="form-label">Main Sport / Activity</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
+            <input type="text" class="form-control" id="main_sport" name="main_sport" placeholder="e.g. Weightlifting, Running" value="{{ current_user.main_sport or '' }}">
+        </div>
+    </div>
+
+    <!-- Fitness Goals Field -->
+    <div class="form-group mb-4">
+        <label for="fitness_goals" class="form-label">Fitness Goals</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-bullseye"></i></span>
+            <input type="text" class="form-control" id="fitness_goals" name="fitness_goals" placeholder="Lose weight, Build muscle, Improve endurance" value="{{ current_user.fitness_goals or '' }}">
+        </div>
+    </div>
             </fieldset>
             
             <!-- Submit Button -->
