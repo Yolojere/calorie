@@ -154,8 +154,8 @@
         }
         #workout-log-tab .card-body {
     overflow-y: auto;
-    max-height: calc(100vh - 175px) !important; /* Reduced from 170px */
-        height: calc(100vh - 175px) !important;
+    max-height: calc(100vh - 165px) !important; /* Reduced from 170px */
+        height: calc(100vh - 165px) !important;
 }
 
         /* === WORKOUT PAGE SPECIFIC STYLES === */
@@ -466,9 +466,6 @@
         }
 
         .group-items {
-            transition: max-height 0.4s ease;
-            overflow: hidden;
-            
             background-color: #222;
             padding: 15px;
             border-left: 3px solid var(--group-color);
@@ -655,8 +652,6 @@
         }
 
         .exercise-sets {
-            overflow: hidden;
-            transition: max-height 0.3s ease;
             margin-top: 10px;
             transition: all 0.3s ease;
         }
@@ -1195,7 +1190,9 @@
     vertical-align: middle;
     text-align: center;
 }
-
+#workout-session-container-mobile {
+    padding-bottom: 90px !important; /* Increased padding to ensure last items are visible */
+}
 
 
 
@@ -2926,5 +2923,3 @@ function getWeekDates(date) {
 </div>
 </body>
 </html>
-
-
