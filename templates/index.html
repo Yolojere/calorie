@@ -54,37 +54,8 @@
 }
 
 /* Specific style for confirm button */
-#confirm-action {
-    background: linear-gradient(to right, #ffffff, #9b9a9a) !important;
-    color: rgb(0, 0, 0) !important;
-}
 
-#save-grams {
-    background: linear-gradient(to right, #c0bfbf, #9b9a9a) !important;
-    color: white !important;
-}
-#action-move, #action-copy {
-    background: #353535 !important;
-    color: #ffffff !important;
-    border: 1px solid #888 !important;
-}
-
-#action-move:hover, 
-#action-move:focus,
-#action-copy:hover,
-#action-copy:focus {
-    background: #fff !important;
-    color: #000000 !important;
-    border-color: #888 !important;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-#action-move.active, 
-#action-copy.active {
-    background: #fff !important;
-    color: #000000 !important;
-}
+        
         .card-header {
             background-color: #000;
             border-bottom: 1px solid #444;
@@ -106,13 +77,6 @@
             border-color: #d1d1d1;
         }
 
-
-#recipe-yes {
-    background: linear-gradient(to right, #c0bfbf, #c0bfbf) !important;
-    color: black !important;
-    border: none;
-    transition: all 0.3s ease;
-}
 
 .food-group .group-header:hover {
     position: relative;
@@ -290,6 +254,49 @@
             font-weight: bold !important;
         }
 
+    /* MODAL BUTTON STYLES - UPDATED */
+        .modal-btn {
+            background: #353535 !important;
+            color: #fff !important;
+            border: 1px solid #888 !important;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:hover, 
+        .modal-btn:focus {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border-color: #888 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .modal-btn.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }    
+#action-move, #action-copy {
+    background: #353535 !important;
+    color: #fff !important;
+    border: 1px solid #888 !important;
+}
+
+#action-move:hover, 
+#action-move:focus,
+#action-copy:hover,
+#action-copy:focus {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #888 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+#action-move.active, 
+#action-copy.active {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
         #toggle-grid-btn {
   position: relative;
   border-radius: 50%;
@@ -2465,7 +2472,7 @@
 
                 <div class="card-footer py-2 d-flex justify-content-between">
                     <div>
-                        <button id="move-items" class="btn glassy-btn me-2">Move</button>
+                        <button id="move-items" class="btn glassy-btn me-2">MOVE</button>
                         <button id="create-recipe" class="btn d-none" disabled>Recipe</button>
                     </div>
                     <button id="clear-session" class="btn">Clear All</button>
@@ -2622,8 +2629,8 @@
                     <input type="hidden" id="edit-grams-id">
                 </div>
                 <div class="modal-footer bg-black py-1">
-<button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Cancel</button>
-<button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #c0bfbf; color: black;">Save</button>
+<button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
+<button type="button" id="save-grams" class="btn modal-btn">Save</button>
                 </div>
             </div>
         </div>
@@ -2659,14 +2666,14 @@
                 <div class="mb-3">
                     <label class="form-label">Action</label>
                     <div class="btn-group w-100" role="group">
-                        <button type="button" id="action-move" class="btn action-btn">Move</button>
-                        <button type="button" id="action-copy" class="btn action-btn">Copy</button>
+                        <button type="button" id="action-move" class="btn btn-secondary">Move</button>
+                        <button type="button" id="action-copy" class="btn btn-light">Copy</button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer bg-black py-1">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="button" id="confirm-action" class="btn">Confirm</button>
+                <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
+<button type="button" id="confirm-action" class="btn modal-btn">Confirm</button>
             </div>
         </div>
     </div>
@@ -2692,11 +2699,9 @@
                     </div>
                 </div>
 <div class="modal-footer bg-black py-1">
-    <button type="button" class="btn" data-bs-dismiss="modal" 
-            style="background-color: #c0bfbf; color: black;">Cancel</button>
-    <button type="button" id="recipe-yes" class="btn">Yes</button>
-    <button type="button" id="recipe-save" class="btn d-none" 
-            style="background: linear-gradient(to right, #28a745, #218838); color: white;">Save Recipe</button>
+    <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
+    <button type="button" id="recipe-yes" class="btn modal-btn">Yes</button>
+    <button type="button" id="recipe-save" class="btn modal-btn d-none">Save Recipe</button>
 </div>
             </div>
         </div>
