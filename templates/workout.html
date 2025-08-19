@@ -466,6 +466,9 @@
         }
 
         .group-items {
+            transition: max-height 0.4s ease;
+            overflow: hidden;
+            
             background-color: #222;
             padding: 15px;
             border-left: 3px solid var(--group-color);
@@ -474,6 +477,7 @@
             border-radius: 0 0 6px 6px;
             margin-bottom: 15px;
         }
+        
 
         .group-summary {
             display: flex;
@@ -651,9 +655,12 @@
         }
 
         .exercise-sets {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
             margin-top: 10px;
             transition: all 0.3s ease;
         }
+        
         
         .exercise-title {
             font-weight: bold;
@@ -860,8 +867,8 @@
             max-width: 100% !important;
         }
         #workout-session-container-mobile {
-    max-height: calc(100vh - 160px) !important;
-    height: calc(100vh - 160px) !important;
+    max-height: calc(100vh - 150px) !important;
+    height: calc(100vh - 150px) !important;
     overflow-y: auto !important;
 }
             
@@ -1723,7 +1730,7 @@
     <script>
         
     // Global variables
-    
+    let isApplyingTemplate = false;
     let currentSelectedDate = new Date().toISOString().split('T')[0];
     let currentDate = new Date();
     let exercises = [];
@@ -1743,7 +1750,7 @@
         setupMobileTabs();
         loadTemplates();
         setupMobileDateSelector();
-    
+        populateMobileDateSelector(new Date().toISOString().split('T')[0]);
         
     
         // Set initial date display
@@ -2052,56 +2059,75 @@
     
     
     function renderWorkoutSession(session, exercises) {
-        const container = $("#workout-session-container");
-        const mobileContainer = $("#workout-session-container-mobile");
-        container.empty();
-        mobileContainer.empty();
-        
-        if (!session || !exercises || exercises.length === 0) {
-            const message = `
-                <div class="alert alert-info">
-                    No workout recorded for this day. Add your first set below!
-                </div>
-            `;
-            container.html(message);
-            mobileContainer.html(message);
-            return;
+    const container = $("#workout-session-container");
+    const mobileContainer = $("#workout-session-container-mobile");
+    container.empty();
+    mobileContainer.empty();
+    
+    if (!session || !exercises || exercises.length === 0) {
+        const message = `
+            <div class="alert alert-info">
+                No workout recorded for this day. Add your first set below!
+            </div>
+        `;
+        container.html(message);
+        mobileContainer.html(message);
+        return;
+    }
+    
+    // Get current date for state tracking
+    const currentDate = $(".workout-date.active").data("date");
+    
+    // Initialize state for current date if needed
+    if (!collapseState.groups[currentDate]) {
+        collapseState.groups[currentDate] = {};
+    }
+    if (!collapseState.exercises[currentDate]) {
+        collapseState.exercises[currentDate] = {};
+    }
+    
+    // Group exercises by muscle group - MUST COME BEFORE isApplyingTemplate BLOCK
+    const groups = {};
+    exercises.forEach(exercise => {
+        const group = exercise.muscle_group;
+        if (!groups[group]) {
+            groups[group] = {
+                exercises: [],
+                totalSets: 0,
+                totalReps: 0,
+                totalVolume: 0
+            };
         }
         
-        // Get current date for state tracking
-        const currentDate = $(".workout-date.active").data("date");
+        // Calculate exercise totals
+        const exerciseVolume = exercise.sets.reduce((sum, set) => sum + set.volume, 0);
+        const exerciseSets = exercise.sets.length;
+        const exerciseReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
         
-        // Initialize state for current date if needed
-        if (!collapseState.groups[currentDate]) {
-            collapseState.groups[currentDate] = {};
-        }
-        if (!collapseState.exercises[currentDate]) {
-            collapseState.exercises[currentDate] = {};
+        groups[group].exercises.push({...exercise, exerciseVolume, exerciseSets, exerciseReps});
+        groups[group].totalSets += exerciseSets;
+        groups[group].totalReps += exerciseReps;
+        groups[group].totalVolume += exerciseVolume;
+    });
+    
+    // NOW we can safely use groups for template collapse
+    if (isApplyingTemplate) {
+        // Collapse all groups
+        for (const groupName in groups) {
+            collapseState.groups[currentDate][groupName] = true;
         }
         
-        // Group exercises by muscle group
-        const groups = {};
-        exercises.forEach(exercise => {
-            const group = exercise.muscle_group;
-            if (!groups[group]) {
-                groups[group] = {
-                    exercises: [],
-                    totalSets: 0,
-                    totalReps: 0,
-                    totalVolume: 0
-                };
-            }
-            
-            // Calculate exercise totals
-            const exerciseVolume = exercise.sets.reduce((sum, set) => sum + set.volume, 0);
-            const exerciseSets = exercise.sets.length;
-            const exerciseReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
-            
-            groups[group].exercises.push({...exercise, exerciseVolume, exerciseSets, exerciseReps});
-            groups[group].totalSets += exerciseSets;
-            groups[group].totalReps += exerciseReps;
-            groups[group].totalVolume += exerciseVolume;
-        });
+        // Collapse all exercises
+        for (const groupName in groups) {
+            groups[groupName].exercises.forEach(exercise => {
+                collapseState.exercises[currentDate][exercise.id] = true;
+            });
+        }
+        
+        // Save the state and reset flag
+        saveCollapseState();
+        isApplyingTemplate = false;
+    }
         
         // Render session
         let sessionHTML = '';
@@ -2109,7 +2135,7 @@
         for (const groupName in groups) {
             const groupData = groups[groupName];
             const groupCollapsed = collapseState.groups[currentDate][groupName] || false;
-            
+         
             sessionHTML += `
                 <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
                     <div class="group-header">
@@ -2495,6 +2521,7 @@ function previewTemplate(templateId) {
 // Apply Template Function
 function applyTemplate(templateId) {
     const currentDate = $(".workout-date.active").data("date");
+    isApplyingTemplate = true; // Set flag before loading session
     
     $.post("/workout/apply_template", {
         template_id: templateId,
@@ -2510,7 +2537,11 @@ function applyTemplate(templateId) {
             }
         } else {
             alert("Error: " + (response.error || "Failed to apply template"));
+            isApplyingTemplate = false; // Reset flag on failure
         }
+    }).fail(function() {
+        alert("Network error. Please try again.");
+        isApplyingTemplate = false; // Reset flag on failure
     });
 }
 function loadTemplates() {
@@ -2534,6 +2565,12 @@ function loadTemplates() {
             $templateListDesktop.append(noItem);
             $templateListMobile.append(noItem);
         }
+        // Attach click handler here with delegation
+        $(document).off("click", ".template-item"); // remove previous handlers
+        $(document).on("click", ".template-item", function(e) {
+            e.preventDefault();
+            previewTemplate($(this).data('id'));
+        });
     })
     .fail(function() {
         const errorItem = '<li><a class="dropdown-item" href="#">Error loading templates</a></li>';
@@ -2573,11 +2610,10 @@ function setupEventListeners() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('templatePreviewModal'));
             if (modal) modal.hide();
         });
-        
         $(document).on("click", ".template-item", function(e) {
-            e.preventDefault();
-            previewTemplate($(this).data('id'));
-        });
+    e.preventDefault();
+    previewTemplate($(this).data('id'));
+});
 
         // Copy workout
         $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
