@@ -11,16 +11,13 @@
     <style>
         /* === MAIN STYLES === */
         body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            background-color: #181818 !important;
             color: #e0e0e0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(106, 13, 173, 0.1) 0%, transparent 20%);
         }
         
         .bg-black, .modal-header, .modal-footer {
@@ -124,7 +121,7 @@
         }
         
         .glass-card {
-            background: rgba(30, 30, 40, 0.8);
+            background: rgba(27, 27, 29, 0.8);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(100, 100, 200, 0.3);
@@ -181,7 +178,7 @@
         .activity-icon {
             font-size: 1.8rem;
             margin-bottom: 15px;
-            color: #b989f0;
+            color: #ffffff;
             background: rgba(185, 137, 240, 0.1);
             width: 60px;
             height: 60px;
@@ -263,7 +260,7 @@
         .value-display {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #b989f0;
+            color: #ffffff;
             margin-top: 10px;
             min-height: 30px;
         }
@@ -295,7 +292,7 @@
         }
         
         .gender-btn.active {
-            background: rgba(106, 13, 173, 0.3);
+            background: rgba(54, 54, 54, 0.3);
             border-color: #b989f0;
             color: #ffffff;
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
@@ -305,16 +302,18 @@
             font-size: 1.8rem;
             margin-bottom: 10px;
             display: block;
-            color: #b989f0;
+            color: #ffffff;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 100%);
-            border: none;
+            display: inline-block;
+            background: linear-gradient(135deg, #252525 0%, #383838 100%);
+            border: 1 px solid #3f3f3f;
+            border-color:rgba(54, 54, 54, 0.2);
             padding: 12px 25px;
             font-weight: 600;
             letter-spacing: 0.5px;
-            border-radius: 10px;
+            border-radius: 20px;
             transition: all 0.3s ease;
             font-size: 1.1rem;
             position: relative;
@@ -322,9 +321,9 @@
         }
         
         .btn-primary:hover {
-            background: linear-gradient(135deg, #8a2be2 0%, #6a0dad 100%);
+            background: linear-gradient(135deg, #353535 0%, #494949 100%);
             transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 5px 20px rgba(92, 92, 92, 0.4);
         }
         
         /* === LAYOUT SPECIFIC STYLES === */
@@ -399,7 +398,7 @@
         }
         
         .analyzing-text {
-            color: #b989f0;
+            color: #bebebe;
             font-size: 1.5rem;
             margin-top: 15px;
             font-weight: 600;
@@ -423,7 +422,7 @@
             display: block;
             width: 25%;
             height: 25%;
-            background-color: #8a2be2;
+            background-color: #fff;
             border-radius: 50%;
             position: absolute;
             top: 0;
