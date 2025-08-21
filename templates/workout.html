@@ -161,6 +161,15 @@
         height: calc(100vh - 165px) !important;
 }
 
+.exercise-header, .group-header {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
         /* === WORKOUT PAGE SPECIFIC STYLES === */
         .workout-container {
             max-width: 1200px;
@@ -3453,7 +3462,7 @@ function setupExerciseGroupLongPress() {
         pressTimer = setTimeout(function() {
             const touch = originalEvent.touches[0];
             showMenu(touch.clientX, touch.clientY);
-        }, 1000);
+        }, 300);
     });
 
     // Long press on exercise headers (penkki, kyykky, dippi…)
@@ -3465,7 +3474,7 @@ function setupExerciseGroupLongPress() {
         pressTimer = setTimeout(function() {
             const touch = originalEvent.touches[0];
             showMenu(touch.clientX, touch.clientY);
-        }, 1000);
+        }, 300);
     });
 
     // Cancel long press if touch ends or moves
