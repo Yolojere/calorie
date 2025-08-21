@@ -22,6 +22,8 @@ import os
 from dotenv import load_dotenv
 import traceback
 import uuid
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 # Load environment variables
@@ -94,8 +96,8 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    # 1. Create users table first
+
+    # 1. Users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -106,37 +108,33 @@ def init_db():
             role TEXT NOT NULL DEFAULT 'user',
             reset_token TEXT,
             reset_token_expiration TIMESTAMP,
-            tdee REAL,  -- TDEE storage
-            weight REAL       
+            tdee REAL,
+            weight REAL
         )
     ''')
 
-    # Add columns if they don't exist
+    # Ensure columns exist (safe migration)
     cursor.execute("""
         DO $$
         BEGIN
             IF NOT EXISTS (
-                SELECT 1 
-                FROM information_schema.columns 
+                SELECT 1 FROM information_schema.columns 
                 WHERE table_name='users' AND column_name='tdee'
             ) THEN
                 ALTER TABLE users ADD COLUMN tdee REAL;
             END IF;
             
             IF NOT EXISTS (
-                SELECT 1 
-                FROM information_schema.columns 
+                SELECT 1 FROM information_schema.columns 
                 WHERE table_name='users' AND column_name='weight'
             ) THEN
                 ALTER TABLE users ADD COLUMN weight REAL;
             END IF;
         END
         $$;
-    """)   
+    """)
 
-    
-
-    # 2. Create foods table
+    # 2. Foods table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS foods (
             key TEXT PRIMARY KEY,
@@ -153,58 +151,81 @@ def init_db():
             half REAL,
             entire REAL,
             serving REAL,
-            ean TEXT
+            ean TEXT UNIQUE
         )
     ''')
-    
-    # 3. Create food_usage table
+
+    # 3. Food usage
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_usage (
             food_key TEXT PRIMARY KEY,
             count INTEGER DEFAULT 0,
-            FOREIGN KEY (food_key) REFERENCES foods(key)
+            FOREIGN KEY (food_key) REFERENCES foods(key) ON DELETE CASCADE
         )
     ''')
-    
-    # 4. Create user_sessions table last (depends on users)
+
+    # 4. User sessions
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_sessions (
             user_id INTEGER NOT NULL,
             date TEXT NOT NULL,
             data TEXT NOT NULL,
             PRIMARY KEY (user_id, date),
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
 
-    
-    # Workout templates table
+    # 5. Food templates
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS workout_templates (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        created_by INTEGER NOT NULL REFERENCES users(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-''')
+        CREATE TABLE IF NOT EXISTS food_templates (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (user_id, name) -- prevent duplicate names per user
+        )
+    ''')
 
-    # Workout template exercises table
+    # 6. Food template items
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS workout_template_exercises (
-        id SERIAL PRIMARY KEY,
-        template_id INTEGER NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
-        exercise_id INTEGER NOT NULL REFERENCES exercises(id),
-        reps INTEGER NOT NULL,
-        weight REAL NOT NULL,
-        rir REAL,
-        comments TEXT
-    )
-''')
-    
-    
+        CREATE TABLE IF NOT EXISTS food_template_items (
+            id SERIAL PRIMARY KEY,
+            template_id INTEGER NOT NULL REFERENCES food_templates(id) ON DELETE CASCADE,
+            food_key TEXT NOT NULL REFERENCES foods(key) ON DELETE CASCADE,
+            grams REAL NOT NULL
+        )
+    ''')
 
+    # Add index for performance
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_food_template_items_template_id
+        ON food_template_items(template_id)
+    ''')
 
-    # Create admin user if not exists
+    # 7. Workout templates
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_templates (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (created_by, name) -- prevent duplicate names per user
+        )
+    ''')
+
+    # 8. Workout template exercises
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_template_exercises (
+            id SERIAL PRIMARY KEY,
+            template_id INTEGER NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
+            exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+            reps INTEGER NOT NULL,
+            weight REAL NOT NULL,
+            rir REAL,
+            comments TEXT
+        )
+    ''')
+ # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
     admin_exists = cursor.fetchone()
@@ -230,6 +251,9 @@ def init_db():
             'Broccoli',
             7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
         ))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
      
 def init_workout_db():
@@ -869,7 +893,11 @@ def index():
         dates.append((date_str, formatted_date))
 
     current_date_formatted = format_date(current_date)
-
+    for group, group_data in group_breakdown.items():
+        for item in group_data['items']:
+            # Ensure each item has a key property (as a dictionary key, not attribute)
+            if 'key' not in item:
+                item['key'] = item['id']  # Use dictionary access, not attribute access
     return render_template(
         'index.html',
         eaten_items=eaten_items,
@@ -1065,7 +1093,7 @@ def search_foods():
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
             ORDER BY usage DESC, name ASC
-            LIMIT 10
+            LIMIT 15
         ''')
     else:
         cursor.execute('''
@@ -1074,7 +1102,7 @@ def search_foods():
             LEFT JOIN food_usage u ON f.key = u.food_key
             WHERE LOWER(f.name) LIKE %s OR f.ean = %s
             ORDER BY usage DESC, name ASC
-            LIMIT 10
+            LIMIT 15
         ''', (f'%{query.lower()}%', query))
     
     foods = cursor.fetchall()
@@ -1722,7 +1750,198 @@ def history():
     return render_template('history.html', 
                            history_data=history_data,
                            weekly_data=weekly_data)
+# food templates #
+@app.route('/save_template_food', methods=['POST'])
+@login_required
+def save_template_food():
+    try:
+        name = request.form.get('name')
+        items_json = request.form.get('items', '[]')
+        items = json.loads(items_json)
+        
+        if not name or not items:
+            return jsonify({'success': False, 'error': 'Invalid data'})
+        
+        # Check if template with this name already exists
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'SELECT id FROM food_templates WHERE user_id = %s AND name = %s',
+            (current_user.id, name)
+        )
+        if cursor.fetchone():
+            return jsonify({'success': False, 'error': 'Template with this name already exists'})
+        
+        # Save template to database
+        cursor.execute(
+            'INSERT INTO food_templates (user_id, name) VALUES (%s, %s) RETURNING id',
+            (current_user.id, name)
+        )
+        template_id = cursor.fetchone()[0]
+        
+        # Save template items
+        for item in items:
+            # Use the food_key directly from the request
+            food_key = item.get('food_key')
+            grams = item.get('grams')
+            
+            if not food_key or not grams:
+                print(f"Missing food_key or grams for item: {item}")
+                continue
+            
+            # Verify the food_key exists in foods table
+            cursor.execute('SELECT key FROM foods WHERE key = %s', (food_key,))
+            if not cursor.fetchone():
+                print(f"Invalid food_key: {food_key}")
+                continue
+            
+            # Insert into template items
+            cursor.execute(
+                'INSERT INTO food_template_items (template_id, food_key, grams) VALUES (%s, %s, %s)',
+                (template_id, food_key, grams)
+            )
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error saving template: {str(e)}")
+        if 'conn' in locals():
+            conn.rollback()
+            conn.close()
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
+@app.route('/get_templates_food', methods=['GET'])
+@login_required
+def get_templates_food():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'SELECT id, name FROM food_templates WHERE user_id = %s ORDER BY created_at DESC',
+            (current_user.id,)
+        )
+        templates = cursor.fetchall()
+        
+        return jsonify([{'id': t[0], 'name': t[1]} for t in templates])
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+@app.route('/apply_template_food', methods=['POST'])
+@login_required
+def apply_template_food():
+    try:
+        template_id = request.form.get('template_id')
+        meal_group = request.form.get('meal_group', 'other')
+        print(f"Applying template {template_id} with meal group: {meal_group}")
+        date_str = request.form.get('date', datetime.now().strftime('%Y-%m-%d'))
+        user_id = current_user.id
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get template items
+        cursor.execute('''
+            SELECT f.key, f.name, f.carbs, f.proteins, f.fats, f.calories, fti.grams
+            FROM food_template_items fti
+            JOIN foods f ON fti.food_key = f.key
+            WHERE fti.template_id = %s
+        ''', (template_id,))
+        
+        template_items = cursor.fetchall()
+        
+        if not template_items:
+            return jsonify({'success': False, 'error': 'Template not found or empty'})
+        
+        # Get current session data
+        session_data, _ = get_current_session(current_user.id, date_str)
+        
+        # Add each template item to the session
+        for item in template_items:
+            factor = item[6] / 100  # Convert from grams to factor
+            
+            session_data.append({
+                'id': str(uuid.uuid4()),  # Generate a unique ID for the session
+                'key': item[0],           # Store the food key
+                'name': item[1],
+                'carbs': item[2] * factor,
+                'proteins': item[3] * factor,
+                'fats': item[4] * factor,
+                'calories': item[5] * factor,
+                'grams': item[6],
+                'group': meal_group
+            })
+        
+        # Save updated session
+        save_current_session(current_user.id, session_data, date_str)
+        
+        # Get updated breakdown and totals
+        totals = calculate_totals(session_data)
+        breakdown = calculate_group_breakdown(session_data)
+        
+        return jsonify({
+            'success': True,
+            'session': session_data,
+            'totals': totals,
+            'breakdown': breakdown
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+@app.route('/debug_templates')
+@login_required
+def debug_templates():
+    """Endpoint to check existing templates for the current user"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'SELECT id, name FROM food_templates WHERE user_id = %s',
+            (current_user.id,)
+        )
+        templates = cursor.fetchall()
+        
+        return jsonify({
+            'success': True,
+            'templates': [{'id': t[0], 'name': t[1]} for t in templates]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/debug_food_key/<food_id>')
+@login_required
+def debug_food_key(food_id):
+    """Endpoint to check if a food key exists in the database"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'SELECT key, name FROM foods WHERE key = %s',
+            (food_id,)
+        )
+        food = cursor.fetchone()
+        
+        if food:
+            return jsonify({
+                'success': True,
+                'food': {'key': food[0], 'name': food[1]}
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Food with key {food_id} not found'
+            })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    finally:
+        if conn:
+            conn.close()    
 @app.route('/save_recipe', methods=['POST'])
 @login_required
 def save_recipe():
@@ -1743,6 +1962,25 @@ def save_recipe():
         
         # Calculate total nutrition
         total_grams = sum(item['grams'] for item in recipe_items)
+        
+        # Store individual ingredients with their original data
+        ingredients = []
+        for item in recipe_items:
+            ingredients.append({
+                "id": item['id'],
+                "name": item['name'],
+                "key": item['key'],
+                "grams": item['grams'],
+                "calories_per_100g": item['calories'] / item['grams'] * 100,
+                "proteins_per_100g": item['proteins'] / item['grams'] * 100,
+                "carbs_per_100g": item['carbs'] / item['grams'] * 100,
+                "fats_per_100g": item['fats'] / item['grams'] * 100,
+                "sugars_per_100g": item.get('sugars', 0) / item['grams'] * 100,
+                "fiber_per_100g": item.get('fiber', 0) / item['grams'] * 100,
+                "saturated_per_100g": item.get('saturated', 0) / item['grams'] * 100,
+                "salt_per_100g": item.get('salt', 0) / item['grams'] * 100
+            })
+        
         recipe_data = {
             "name": recipe_name,
             "key": normalize_key(recipe_name),
@@ -1755,7 +1993,9 @@ def save_recipe():
             "salt": sum(item.get('salt', 0) for item in recipe_items) / total_grams * 100,
             "calories": sum(item['calories'] for item in recipe_items) / total_grams * 100,
             "grams": 100,
-            "entire": total_grams  # Total grams of the recipe
+            "entire": total_grams,
+            "is_recipe": True,
+            "ingredients": ingredients
         }
         
         # Save the recipe
