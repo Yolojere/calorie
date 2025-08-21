@@ -1462,9 +1462,11 @@
         bottom: unset;
         top: 50% !important;
         left: 50% !important;
-        transform: translate(-85%, -50%) !important;
+        transform: translate(-80%, -50%) !important;
         width: 40%;
-        max-width: 200px;
+        max-width: 150px;
+        z-index: 6000 !important; /* Ensure it stays above other elements */
+        }
     }
         .ready-controls {
             position: absolute;
@@ -1479,7 +1481,7 @@
             margin-left: auto;
             padding-left: 10px;
         }
-    }
+    
     </style>
 </head>
 <body>
