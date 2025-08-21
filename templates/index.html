@@ -17,9 +17,9 @@
     <style>
         /* Base Styles */
         body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
             color: #e0e0e0;
         }
         
@@ -29,7 +29,7 @@
         }
         
         .card, .list-group-item, .modal-content {
-            background-color: #222;
+            background-color: #1d1d1d;
             color: #e0e0e0;
             border: 1px solid #444;
             
@@ -63,9 +63,9 @@
         }
         
         .form-control, .form-select {
-            background-color: #333;
+            background-color: #494949 !important;
             color: #e0e0e0;
-            border: 1px solid #555;
+            border: 1px solid #555 !important;
             font-size: 14px !important;
             padding: 6px 8px !important;
             height: 36px !important;
@@ -75,6 +75,12 @@
             background-color: #b4b4b4;
             color: #ffffff;
             border-color: #d1d1d1;
+        }
+        #add-food-panel .card {
+            background: #252525!important;
+        }
+        #food-log-panel .card {
+            background: #252525!important;
         }
 
 
@@ -100,11 +106,6 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
-}
-
-#recipe-yes:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
         /* NEW STYLES FOR ENHANCED MEAL GROUPS */
@@ -222,81 +223,21 @@
             animation: fadeIn 0.5s ease-out;
         }
 
-        /* Nutrition Value Styles */
-        .nutrition-value-sm, .nutrition-value-xs, .nutrition-value-xxs, .nutrition-value-xxxs {
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            min-width: 100px;
-        }
+        /* Nutrition Value Styles - Food Log stuff */
         
-        .nutrition-value-sm .value, .nutrition-value-xs .value {
-            display: block;
-            font-weight: bold;
-        }
-        
-        .nutrition-value-sm .value {
-            font-size: 1.3rem;
-        }
-        
-        .nutrition-value-xs .value {
-            font-size: 1.1rem;
-        }
         
         .nutrition-value-xxs {
             border-radius: 6px;
             min-width: 70px;
             padding: 2px 2px !important;
             display: flex;
+            text-align: center;
             justify-content: center;
             align-items: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             font-weight: bold !important;
         }
 
-    /* MODAL BUTTON STYLES - UPDATED */
-        .modal-btn {
-            background: #353535 !important;
-            color: #fff !important;
-            border: 1px solid #888 !important;
-            transition: all 0.2s ease;
-        }
-
-        .modal-btn:hover, 
-        .modal-btn:focus {
-            background: #ffffff !important;
-            color: #000000 !important;
-            border-color: #888 !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        .modal-btn.active {
-            background: #ffffff !important;
-            color: #000000 !important;
-        }    
-#action-move, #action-copy {
-    background: #353535 !important;
-    color: #fff !important;
-    border: 1px solid #888 !important;
-}
-
-#action-move:hover, 
-#action-move:focus,
-#action-copy:hover,
-#action-copy:focus {
-    background: #ffffff !important;
-    color: #000000 !important;
-    border-color: #888 !important;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-#action-move.active, 
-#action-copy.active {
-    background: #ffffff !important;
-    color: #000000 !important;
-}
         #toggle-grid-btn {
   position: relative;
   border-radius: 50%;
@@ -456,8 +397,8 @@
             overflow-y: auto;
             border: 1px solid #444;
             border-radius: 4px;
-            background-color: #222;
-            font-size: 18px;
+            background-color: #2b2b2b;
+            font-size: 15px;
         }
         
         #rt-breakdown-container {
@@ -515,7 +456,7 @@
             background-color: #2a2a2a !important;
         }
         
-        /* Buttons & Actions */
+    
         #clear-search {
             background-color: #161616 !important;
             color: white !important;
@@ -554,36 +495,7 @@
         .delete-item i {
             font-size: 18px !important;
             color: white !important;
-        }
-        /* Food Log Buttons */
-/* Add new styles matching .portion-btn */
-#move-items, #clear-session, #create-recipe {
-    background: linear-gradient(to bottom, #353535, #5c5c5c) !important;
-    color: #ffffff !important;
-    border: 1px solid #888 !important;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Hover state */
-#move-items:hover, #clear-session:hover, #create-recipe:hover {
-    background: linear-gradient(to bottom, #b9b9b9, #353535) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transform: translateY(-2px);
-}
-
-/* Active state */
-#move-items:active, #clear-session:active, #create-recipe:active {
-    background: #ffffff !important;
-    color: #000000 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transform: translateY(0);
-}
-        
+        }     
         #clear-search {
             background-color: #b61336;
             color: rgb(0, 0, 0);
@@ -601,7 +513,7 @@
         
         .edit-grams {
             padding: 1px 14px !important;
-            font-size: 14px !important;
+            font-size: 12px !important;
             min-width: 55px;
             height: 16px !important;
             display: flex;
@@ -1003,6 +915,7 @@
         font-size: 12px !important;
         padding: 6px 8px !important;
     }
+
     
     /* Adjust icon sizes */
     #add-food i,
@@ -1014,7 +927,29 @@
     .position-static {
         position: static !important;
     }
-}
+.card-footer {
+                padding: 8px !important;
+            }
+            
+            .card-footer > div {
+                justify-content: space-between;
+                width: 100%;
+            }
+            
+            #save-template-btn, #apply-template-btn {
+                font-size: 12px;
+                padding: 6px 10px;
+                margin-left: 4px;
+            }
+            
+            #save-template-btn span, #apply-template-btn span {
+                display: none;
+            }
+            
+            #save-template-btn i, #apply-template-btn i {
+                margin-right: 0 !important;
+            }
+        }
         /* Mobile Responsive */
         @media (max-width: 991px) {
             /* Show nutrition panel on mobile */
@@ -1322,9 +1257,9 @@
             }
             
             .nutrition-value-xxs {
-                font-size: 10px !important;
+                font-size: 8px !important;
                 min-width: 35px !important;
-                height: 16px !important;
+                height: 14px !important;
                 padding: 2px 4px !important;
                 margin: 0 1px !important;
             }
@@ -1362,7 +1297,7 @@
             }
             
             .food-item-container strong {
-                font-size: 14px !important;
+                font-size: 12px !important;
             }
             
             /* Mobile Nutrition Display */
@@ -1399,9 +1334,9 @@
             .group-nutrition .nutrition-calories,
             .nutrition-values-container .nutrition-calories {
                 min-width: 65px !important;
-                font-size: 14px !important;
+                font-size: 12px !important;
                 padding: 4px 4px 10px 4px !important;
-                line-height: 0.8;
+                line-height: 0.6;
             }
             
             #move-items span {
@@ -1460,6 +1395,9 @@
     color: white;
     font-weight: bold;
     font-size: 16px;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .grid-calories {
@@ -1714,23 +1652,6 @@
 }
 
 
-#create-recipe {
-    background: linear-gradient(to right, #28a745, #218838) !important;
-    color: white !important;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-#create-recipe:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(to right, #218838, #1e7e34) !important;
-}
-
-
 @media (max-height: 900px) {
     .nutrition-grid-container {
         transform: scale(0.8);
@@ -1850,7 +1771,7 @@
         font-size: 16px !important;
     }
 }
-
+/* camera shit */
 #camera-preview {
     width: 100%;
     max-height: 60vh;
@@ -1931,7 +1852,6 @@
     padding: 10px;
     z-index: 100;
 }
-/* Make buttons more visible */
 #toggle-camera, #resume-scan {
     background: rgba(0, 0, 0, 0.7) !important;
     border: 1px solid white !important;
@@ -2075,6 +1995,121 @@
                 display: none !important;
             }
         }
+   
+        /* BUTTONS */
+ /* MODAL BUTTON STYLES - UPDATED */
+        .modal-btn {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn:hover, 
+        .modal-btn:focus {
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .modal-btn.active {
+            background: #858585 !important;
+            color: #000000 !important;
+            transform: translateY(0);
+        }    
+#action-move, #action-copy {
+    background: #353535 !important;
+    color: #fff !important;
+    border: 1px solid #888 !important;
+}
+
+#action-move:hover, 
+#action-move:focus,
+#action-copy:hover,
+#action-copy:focus {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #888 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+#action-move.active, 
+#action-copy.active {
+    background: #ffffff !important;
+    color: #000000 !important;
+}       
+ #move-items, #clear-session {
+    display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+}
+
+#move-items:hover, #clear-session:hover {
+    background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+}
+
+#move-items:active, #clear-session:active {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(0);
+}       
+
+#save-template-btn, #apply-template-btn {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #save-template-btn:hover, #apply-template-btn:hover {
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        #save-template-btn:active, #apply-template-btn:active {
+            background: #858585 !important;
+            color: #000000 !important;
+            transform: translateY(0);
+        }
+
+        #save-template-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #save-template-btn:disabled:hover {
+            background: linear-gradient(to bottom, #353535, #5c5c5c) !important;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }       
+  .card-footer > div {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1px;
+        }      
     </style>
 </head>
 <body>
@@ -2429,7 +2464,8 @@
                                 </div>
                                 <ul class="group-items list-group list-group-flush">
                                     {% for item in group_data['items'] %}
-                                    <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-index="{{ loop.index0 }}">
+                                    <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-id="${item.id}" 
+    data-key="{{ item.key }}">
                                         <div class="food-item-container">
                                             <div>
                                                 <div class="d-flex align-items-center">
@@ -2437,7 +2473,8 @@
                                                 </div>
                                             </div>
                                             <span class="edit-grams badge edit-grams-btn mx-1" 
-                                                data-id="{{ item.id }}">
+                                                data-id="{{ item.id }}"
+                                                data-key="{{ item.key }}">
                                                 {{ item.grams|round(1) }}g
                                             </span>
                                         </div>
@@ -2471,14 +2508,22 @@
                 </div>
 
                 <div class="card-footer py-2 d-flex justify-content-between">
-                    <div>
-                        <button id="move-items" class="btn glassy-btn me-2">MOVE</button>
-                        <button id="create-recipe" class="btn d-none" disabled>Recipe</button>
-                    </div>
-                    <button id="clear-session" class="btn">Clear All</button>
+                <div>
+                    <button id="move-items" class="btn glassy-btn me-2">
+                    <i class="fa-solid fa-copy me-1"></i><span>Move</span></button>
+                    
+                    <!-- Template buttons moved here -->
+                    <button id="save-template-btn" class="btn ms-2" disabled>
+                        <i class="fas fa-save me-1"></i> <span>Save Template</span>
+                    </button>
+                    <button id="apply-template-btn" class="btn ms-2">
+                        <i class="fas fa-layer-group me-1"></i> <span>Apply Template</span>
+                    </button>
                 </div>
+                <button id="clear-session" class="btn">Clear All</button>
             </div>
         </div>
+    </div>
 <!-- Nutrition Panel (Mobile) -->
 <div class="grid-panel mobile-panel" id="nutrition-panel">
     <div class="card bg-dark h-100">
@@ -2749,7 +2794,59 @@
         </div>
     </div>
 </div>
-    
+<div class="modal fade" id="saveTemplateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header bg-black py-1">
+                <h5 class="modal-title">Save Food Template</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Template Name</label>
+                    <input type="text" id="template-name" class="form-control bg-secondary text-light" placeholder="Enter template name">
+                </div>
+            </div>
+            <div class="modal-footer bg-black py-1">
+                <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirm-save-template" class="btn modal-btn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="applyTemplateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header bg-black py-1">
+                <h5 class="modal-title">Apply Food Template</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Template</label>
+                    <select id="template-select" class="form-select bg-secondary text-light">
+                        <!-- Templates will be loaded here -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Meal Group</label>
+                    <select id="template-meal-group" class="form-select bg-secondary text-light">
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snack">Snack</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer bg-black py-1">
+                <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirm-apply-template" class="btn modal-btn">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -2768,8 +2865,11 @@
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             const DATES = {{ dates | tojson }};
             const CURRENT_DATE = "{{ current_date }}";
+            const SAVE_TEMPLATE_URL = "{{ url_for('save_template_food') }}";
+            const APPLY_TEMPLATE_URL = "{{ url_for('apply_template_food') }}";
             updateCalorieDifference();
-
+            updateTemplateButtonState();
+            
             // Function to initialize icons ===== FIXED ICONS =====
     function initializeIcons() {
         // Reinitialize Font Awesome icons for dynamically added content
@@ -3524,6 +3624,7 @@ $(document).on('click', '.group-items .list-group-item', function(e) {
     // Show recipe button if at least 2 items selected
     $('#create-recipe').toggleClass('d-none', selectedItems.length < 2);
     $('#create-recipe').prop('disabled', selectedItems.length < 2);
+    updateTemplateButtonState();
 });
 
             // Move button handler
@@ -3836,6 +3937,109 @@ function updateCalorieDifference() {
         .removeClass('status-maintain status-loss status-gain')
         .addClass(statusClass);
 }
+function loadTemplates() {
+        $.get('/get_templates_food', function(templates) {
+            const select = $('#template-select');
+            select.empty();
+            
+            if (templates.length === 0) {
+                select.append('<option value="">No templates available</option>');
+                $('#confirm-apply-template').prop('disabled', true);
+            } else {
+                templates.forEach(template => {
+                    select.append(`<option value="${template.id}">${template.name}</option>`);
+                });
+                $('#confirm-apply-template').prop('disabled', false);
+            }
+        });
+    }
+
+
+// Apply template button handler
+$('#apply-template-btn').click(function() {
+        loadTemplates();
+        $('#applyTemplateModal').modal('show');
+    });
+
+// Save template confirmation
+$('#confirm-save-template').click(function() {
+        const templateName = $('#template-name').val().trim();
+        if (!templateName) {
+            alert('Please enter a template name');
+            return;
+        }
+
+        // Get the current grams and food keys for each selected item
+        const itemsWithData = [];
+        selectedItems.forEach(itemId => {
+            const itemElement = $(`.list-group-item[data-id="${itemId}"]`);
+            const grams = parseFloat(itemElement.find('.edit-grams').text().replace('g', ''));
+            const foodKey = itemElement.find('.edit-grams').data('key');
+            
+            itemsWithData.push({
+                id: itemId,
+                food_key: foodKey,
+                grams: grams
+            });
+        });
+
+        $.post(SAVE_TEMPLATE_URL, {
+            name: templateName,
+            items: JSON.stringify(itemsWithData)
+        }, function(response) {
+            if (response.success) {
+                alert('Template saved successfully!');
+                $('#saveTemplateModal').modal('hide');
+                $('#template-name').val('');
+            } else {
+                alert('Error: ' + (response.error || 'Failed to save template'));
+            }
+        }).fail(function(xhr, status, error) {
+            console.error('Request failed:', status, error);
+            alert('Failed to save template. Please check your connection and try again.');
+        });
+    });
+function debugDataAttributes() {
+    console.log("=== Debugging Data Attributes ===");
+    $('.list-group-item').each(function() {
+        const id = $(this).data('id');
+        const key = $(this).data('key');
+        console.log(`Item ID: ${id}, Key: ${key}`);
+    });
+}            
+
+// Apply template confirmation
+$('#confirm-apply-template').click(function() {
+        const templateId = $('#template-select').val();
+        const mealGroup = $('#template-meal-group').val();
+        const date = $('#date-selector').val();
+        
+        if (!templateId) return;
+        
+        $.post(APPLY_TEMPLATE_URL, {
+            template_id: templateId,
+            meal_group: mealGroup,
+            date: date
+        }, function(response) {
+            if (response.success) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                updateCalorieDifference();
+                $('#applyTemplateModal').modal('hide');
+            } else {
+                alert('Error: ' + (response.error || 'Failed to apply template'));
+            }
+        });
+    });
+
+            // Update template button state
+            function updateTemplateButtonState() {
+                $('#save-template-btn').prop('disabled', selectedItems.length === 0);
+            }
+            // Save template button handler
+$('#save-template-btn').click(function() {
+        if (selectedItems.length === 0) return;
+        $('#saveTemplateModal').modal('show');
+    });
 
             // Initialize mobile view
             if ($(window).width() < 992) {
