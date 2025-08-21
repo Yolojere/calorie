@@ -33,9 +33,9 @@
 
         /* === MAIN STYLES === */
         body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
             color: #e0e0e0;
         }
         
@@ -45,9 +45,10 @@
         }
         
         .card, .list-group-item, .modal-content {
-            background-color: #222;
+            background-color: #1d1d1d;
             color: #e0e0e0;
             border: 1px solid #444;
+            
         }
         
         .form-control, .form-select {
@@ -609,7 +610,29 @@
         .workout-group {
             animation: fadeIn 0.5s ease-out;
         }
-        
+        .btn-jere {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-jere:hover, 
+        .btn-jere:focus {
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .btn-jere.active {
+            background: #858585 !important;
+            color: #000000 !important;
+            transform: translateY(0);
+        }    
 
 
         /* === IMPROVED COLLAPSE ICONS === */
@@ -669,11 +692,15 @@
         }
         /* === COPY BUTTON STYLES === */
 #copy-workout-btn, #copy-workout-mobile-btn {
-    background: linear-gradient(to bottom, #ffffff, #afafaf);
-    border: none;
-    color: rgb(0, 0, 0);
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
 }
 
         /* === DESKTOP LAYOUT ADJUSTMENTS === */
@@ -743,9 +770,15 @@
     }
     
 #copyWorkoutModal .modal-content {
-    background-color: #222;
-    color: #e0e0e0;
-    border: 1px solid #444;
+    display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
 }
 
 #copyWorkoutModal .modal-header {
@@ -764,14 +797,15 @@
 }
 
 .copy-date-btn {
-    background-color: #333 !important;
-    color: #e0e0e0 !important;
-    border: 1px solid #555 !important;
-    border-radius: 6px;
-    padding: 8px 5px;
-    text-align: center;
-    transition: all 0.3s ease;
-    font-size: 14px;
+    display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
 }
 
 .copy-date-btn:hover:not(.disabled) {
