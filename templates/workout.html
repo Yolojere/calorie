@@ -126,6 +126,8 @@
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
+            height: 100% !important;
+            
         }
         
         .mobile-tab-content {
@@ -205,7 +207,6 @@
             background-color: #000;
     padding: 10px;
     text-align: left;
-    position: sticky;
     top: 0;
     z-index: 10;
         }
@@ -324,8 +325,8 @@
             font-size: 12px;
             font-weight: bold;
             margin-right: 5px;
-            display: inline-block;
             white-space: nowrap;
+            cursor: pointer;
         }
      
     /* Input validation */
@@ -375,7 +376,7 @@
     font-size: 12px;
         }
         .tooltip {
-    z-index: 1080 !important;
+    z-index: 1040   !important;
 }
 .custom-tooltip {
     position: fixed !important;
@@ -705,6 +706,19 @@
 
         /* === DESKTOP LAYOUT ADJUSTMENTS === */
         @media (min-width: 768px) {
+            #workout-session-container-mobile {
+        padding-bottom: 80px; /* Extra space for the button */
+    }
+    
+    #copy-workout-mobile-btn {
+        position: sticky;
+        bottom: 15px;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        width: 90%;
+        margin: 0 auto;
+        display: block;
+    }
             .workout-grid-container {
                 display: block !important; /* Changed to block for vertical layout */
                 max-width: 1180px;
@@ -1169,10 +1183,11 @@
         
         /* Adjust tab content height to account for bottom bar */
         .mobile-tab-content {
-            height: calc(100vh - 50px);
             flex: 1;
-        overflow-y: auto;
-        height: auto; /* Remove fixed calc, use flex instead */
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+        
     }
         /* remove bottom border */
        
@@ -1224,12 +1239,247 @@
     vertical-align: middle;
     text-align: center;
 }
-#workout-session-container-mobile {
-    padding-bottom: 90px !important; /* Increased padding to ensure last items are visible */
+
+.mobile-tabs-container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .mobile-tab-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .mobile-tab-pane {
+                flex: 1;
+                display: none;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .mobile-tab-pane.active {
+                display: flex;
+            }
+            
+            #workout-log-tab .card {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            #workout-log-tab .card-body {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                padding: 0;
+            }
+            
+            #workout-session-container-mobile {
+                flex: 1;
+                overflow-y: auto;
+                padding: 15px;
+            }
 }
+        /* === NEW FOOTER STYLES === */
+        .workout-footer {
+            background-color: #161616;
+            padding: 15px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            margin-top: auto;
+            width: 100%;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Mobile specific footer styles */
+        @media (max-width: 768px) {
+            .workout-footer {
+                position: relative;
+                padding: 15px;
+            }
+            
+            /* Ensure content doesn't get hidden behind mobile tab bar */
+            .mobile-tab-content {
+                padding-bottom: 20px;
+            }
+        }
 
+        /* === RIR DROPDOWN STYLES === */
+        .rir-dropdown {
+            position: relative;
+            display: inline-block;
+            z-index: 1;
+        }
+        
+        .rir-options {
+            display: none;
+        position: absolute;
+        background-color: #333;
+        min-width: 80px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+        z-index: 9999 !important; /* Extremely high value */
+        border-radius: 5px;
+        overflow: visible; /* Prevent clipping */
+        border: 1px solid #555;
+        bottom: 100%; /* Position above the badge */
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 5px;
+        }
+        
+        .rir-option {
+            color: #e0e0e0;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .rir-option:last-child {
+            border-bottom: none;
+        }
+        
+        .rir-option:hover {
+            background-color: #6dc0d5;
+            color: #fff;
+        }
+        
+        /* Comment tooltip styling */
+        .comment-tooltip {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 1050;
+            width: 250px;
+            border: 1px solid #555;
+        }
+        
+        .comment-tooltip textarea {
+            width: 100%;
+            background-color: #2a2a2a;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        
+        .comment-tooltip button {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+/* === READY/UNDO BUTTON STYLES === */
+    .ready-controls {
+        display: flex;
+        gap: 8px;
+        margin-left: 10px;
+    }
+    
+    .ready-btn, .undo-btn {
+        background: none;
+        border: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .ready-btn {
+        color: #6dc0d5;
+        border: 1px solid #6dc0d5;
+    }
+    
+    .ready-btn:hover {
+        background-color: rgba(109, 192, 213, 0.2);
+    }
+    
+    .undo-btn {
+        color: #ff6b6b;
+        border: 1px solid #ff6b6b;
+        display: none;
+    }
+    
+    .undo-btn:hover {
+        background-color: rgba(255, 107, 107, 0.2);
+    }
+    
+    .item-ready .ready-btn {
+        display: none;
+    }
+    
+    .item-ready .undo-btn {
+        display: flex;
+    }
+    
+    /* Mobile specific styles */
+    @media (max-width: 768px) {
+        .comment-tooltip {
+            display: none;
+            position: fixed !important;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 1050;
+            width: 80%;
+            border: 1px solid #555;
+            bottom: unset;
+            transform: translate(-50%, -50%) !important;
+            top: 50% !important;
+        left: 50% !important;
 
-
+        }
+        .rir-options {
+        position: fixed !important; /* Use fixed positioning on mobile */
+        bottom: unset;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-85%, -50%) !important;
+        width: 40%;
+        max-width: 200px;
+    }
+        .ready-controls {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .exercise-header .ready-controls {
+            position: static;
+            transform: none;
+            margin-left: auto;
+            padding-left: 10px;
+        }
+    }
     </style>
 </head>
 <body>
@@ -1511,7 +1761,7 @@
                 </div>
             </div>
         </div>
-            
+ 
         <!-- Mobile Layout - Tabs Container -->
         <div class="mobile-tabs-container">
             <div class="mobile-tab-content">
@@ -1600,6 +1850,7 @@
                                 </div>
                             </div>
                 <!-- Load Template button for mobile -->
+                 
                     <div class="row mt-3">
     <div class="col-12">
         <div class="dropdown">
@@ -1623,9 +1874,6 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
         <h5 class="m-0 me-2">Workout Log</h5>
-        <button class="btn btn-sm btn-primary me-2" id="copy-workout-mobile-btn">
-        <i class="fas fa-copy me-1 d-none d-sm-inline"></i> Copy
-    </button>
 </div>
     <div>
         <select id="mobile-date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
@@ -1641,13 +1889,17 @@
                                     <i class="fas fa-spinner fa-spin me-2"></i> Loading workout data...
                                 </div>
                             </div>
+                             <div class="text-center mt-2 mb-3">
+                                <button class="btn btn-primary" id="copy-workout-mobile-btn">
+                                    <i class="fas fa-copy me-1"></i> Copy Workout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-        
     <!-- Add Exercise Modal (Admin Only) -->
     <div class="modal fade" id="addExerciseModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -1755,6 +2007,11 @@
 </button>
 </div>
 
+    <!-- Comment Tooltip (hidden by default) -->
+    <div class="comment-tooltip" id="comment-tooltip">
+        <textarea placeholder="Add your comment here..." rows="3"></textarea>
+        <button id="save-comment-btn">Save Comment</button>
+    </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1770,6 +2027,7 @@
         exercises: {}
     };
     let savedScrollPosition = { desktop: 0, mobile: 0 };
+    let currentCommentSetId = null; // Track which set is being commented on
 
     // Initialize workout page
     $(document).ready(function() {
@@ -1780,10 +2038,10 @@
         initTooltips();
         setupMobileTabs();
         loadTemplates();
+        setupExerciseGroupLongPress();
         setupMobileDateSelector();
         populateMobileDateSelector(new Date().toISOString().split('T')[0]);
         
-    
         // Set initial date display
         const weekDates = getWeekDates(new Date());
         renderWeekDates(weekDates);
@@ -1799,7 +2057,13 @@
             $('.mobile-tab-btn-workout[data-panel="add-set-tab"]').addClass('active');
             $('.mobile-tab-btn-workout[data-panel="workout-log-tab"]').removeClass('active');
         }
+        
+        // Setup RiR and comment functionality
+        setupRirDropdowns();
+        setupCommentTooltips();
     });
+
+
     
     // ===== NEW SCROLL POSITION FUNCTIONS =====
     function saveScrollPosition() {
@@ -1863,10 +2127,10 @@
         $('.comment-icon').not(this).tooltip('hide');
         $(this).tooltip('show');
 
-        // Auto-hide after 6s
+        // Auto-hide after 10s
         setTimeout(() => {
             $(this).tooltip('hide');
-        }, 6000);
+        }, 10000);
     });
 
     // Hide tooltips when clicking/tapping elsewhere
@@ -1878,6 +2142,136 @@
     });
 }
     
+    // Setup RiR dropdown functionality
+    function setupRirDropdowns() {
+        // Hide dropdown when clicking elsewhere
+        $(document).click(function() {
+            $('.rir-options').hide();
+        });
+        
+        // RiR badge click
+        $(document).on('click', '.rir-badge', function(e) {
+            e.stopPropagation();
+            // Hide any other open dropdowns
+            $('.rir-options').hide();
+            
+            // Show this dropdown
+            $(this).siblings('.rir-options').toggle();
+        });
+        
+        // RiR option selection
+        $(document).on('click', '.rir-option', function(e) {
+            e.stopPropagation();
+            const value = $(this).data('value');
+            const badge = $(this).closest('.rir-dropdown').find('.rir-badge');
+            const setId = $(this).closest('.set-row').data('set-id');
+            
+            // Update badge text
+            if (value === 'Failure') {
+                badge.text('Failure');
+            } else {
+                badge.text(value + ' RiR');
+            }
+            
+            // Hide dropdown
+            $(this).closest('.rir-options').hide();
+            
+            // Update the RiR value in the database
+            updateRir(setId, value);
+        });
+    }
+    
+    // Setup comment tooltip functionality
+    function setupCommentTooltips() {
+        // Comment icon click
+        $(document).on('click', '.comment-icon', function(e) {
+            e.stopPropagation();
+            const tooltip = $('#comment-tooltip');
+            const comment = $(this).data('comment') || '';
+            const textarea = tooltip.find('textarea');
+            currentCommentSetId = $(this).closest('.set-row').data('set-id');
+            
+            // Set current comment
+            textarea.val(comment);
+            
+            // Position tooltip near the icon
+            const iconPos = $(this).offset();
+            tooltip.css({
+                top: iconPos.top - tooltip.outerHeight() - 10,
+                left: iconPos.left - (tooltip.outerWidth() / 2) + ($(this).outerWidth() / 2)
+            });
+            
+            // Show tooltip
+            tooltip.show();
+            textarea.focus();
+        });
+        
+        // Save comment
+        $('#save-comment-btn').click(function() {
+            const tooltip = $('#comment-tooltip');
+            const textarea = tooltip.find('textarea');
+            const comment = textarea.val();
+            const icon = $(`.set-row[data-set-id="${currentCommentSetId}"] .comment-icon`);
+            
+            // Update icon appearance based on whether there's a comment
+            if (comment) {
+                icon.removeClass('far').addClass('fas');
+                icon.data('comment', comment);
+            } else {
+                icon.removeClass('fas').addClass('far');
+                icon.data('comment', '');
+            }
+            
+            // Hide tooltip
+            tooltip.hide();
+            
+            // Update the comment in the database
+            updateComment(currentCommentSetId, comment);
+        });
+        
+        // Hide comment tooltip when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('.comment-icon, #comment-tooltip').length) {
+                $('#comment-tooltip').hide();
+            }
+        });
+        
+        // Prevent comment tooltip from closing when clicking inside it
+        $('#comment-tooltip').click(function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // Update RiR value via AJAX
+    function updateRir(setId, rirValue) {
+    $.ajax({
+        url: "/workout/update_rir",
+        method: "POST",
+        contentType: "application/json", // tell Flask this is JSON
+        data: JSON.stringify({ set_id: setId, rir: rirValue }),
+        success: function(response) {
+            if (!response.success) {
+                alert('Error updating RiR');
+                loadWorkoutSession(currentSelectedDate);
+            }
+        }
+    });
+}
+
+function updateComment(setId, comment) {
+    $.ajax({
+        url: "/workout/update_comment",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ set_id: setId, comment: comment }),
+        success: function(response) {
+            if (!response.success) {
+                alert('Error updating comment');
+                loadWorkoutSession(currentSelectedDate);
+            }
+        }
+    });
+}
     
     // Load current week dates
     function loadCurrentWeek() {
@@ -2088,7 +2482,6 @@
         }
     }
     
-    
     function renderWorkoutSession(session, exercises) {
     const container = $("#workout-session-container");
     const mobileContainer = $("#workout-session-container-mobile");
@@ -2129,224 +2522,265 @@
                 totalVolume: 0
             };
         }
-        
+
         // Calculate exercise totals
         const exerciseVolume = exercise.sets.reduce((sum, set) => sum + set.volume, 0);
         const exerciseSets = exercise.sets.length;
         const exerciseReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
-        
+
         groups[group].exercises.push({...exercise, exerciseVolume, exerciseSets, exerciseReps});
         groups[group].totalSets += exerciseSets;
         groups[group].totalReps += exerciseReps;
         groups[group].totalVolume += exerciseVolume;
     });
-    
-    // NOW we can safely use groups for template collapse
+
+    // Apply template collapse if needed
     if (isApplyingTemplate) {
-        // Collapse all groups
         for (const groupName in groups) {
-            collapseState.groups[currentDate][groupName] = true;
-        }
-        
-        // Collapse all exercises
-        for (const groupName in groups) {
+            collapseState.groups[currentDate][groupName] = { collapsed: true, done: false };
             groups[groupName].exercises.forEach(exercise => {
                 collapseState.exercises[currentDate][exercise.id] = true;
             });
         }
-        
-        // Save the state and reset flag
         saveCollapseState();
         isApplyingTemplate = false;
     }
-        
-        // Render session
-        let sessionHTML = '';
-        
-        for (const groupName in groups) {
-            const groupData = groups[groupName];
-            const groupCollapsed = collapseState.groups[currentDate][groupName] || false;
-         
-            sessionHTML += `
-                <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
-                    <div class="group-header">
-                        <div class="d-flex align-items-center">
-                            <div class="group-icon">
-                                <i class="fas fa-${getMuscleIcon(groupName)}"></i>
-                            </div>
-                            <span class="group-title">${groupName}</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="group-summary">
-                                <span class="summary-item">${groupData.totalSets} sets</span>
-                                <span class="summary-item">${groupData.totalReps} reps</span>
-                                <span class="summary-item">${groupData.totalVolume.toFixed(1)} kg</span>
-                            </div>
-                            <div class="group-actions">
-                                <button class="toggle-icon toggle-group" title="${groupCollapsed ? 'Expand' : 'Collapse'}">
-                                    <i class="fas fa-${groupCollapsed ? 'plus' : 'minus'}"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="group-items" style="${groupCollapsed ? 'display: none;' : ''}">
-            `;
-            
-            // Render exercises in this group
-            groupData.exercises.forEach(exercise => {
-                const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
-                const expandedClass = exerciseCollapsed ? '' : 'expanded';
-                
-                sessionHTML += `
-                    <div class="exercise" data-exercise-id="${exercise.id}">
-                        <div class="exercise-header ${expandedClass}">
-                            <div class="exercise-title">${exercise.name}</div>
-                            <div class="exercise-info">
-                                <div class="exercise-summary-text">
-                                    ${exercise.exerciseSets} sets, ${exercise.exerciseReps} reps, ${exercise.exerciseVolume.toFixed(1)} kg
-                                </div>
-                                <button class="toggle-icon toggle-exercise" title="${exerciseCollapsed ? 'Expand' : 'Collapse'}">
-                                    <i class="fas fa-${exerciseCollapsed ? 'plus' : 'minus'}"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="exercise-sets" style="${exerciseCollapsed ? 'display: none;' : ''}">
-                            <table class="workout-table">
-                                <thead>
-                                    <tr>
-                                        <th class="text-center">Set</th>
-                                        <th class="text-center">Reps</th>
-                                        <th class="text-center">Weight</th>
-                                        <th class="text-center">Volume</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                `;
-                
-                // Render sets
-exercise.sets.forEach((set, index) => {
-    // Prepare RiR badge if exists
-    let rirDisplay = '';
-        if (set.rir !== null && set.rir !== undefined && set.rir !== "") {
-            if (set.rir === -1 || set.rir === "Failure" || set.rir === 0) {
-                rirDisplay = `<span class="rir-badge">Failure</span>`;
-            } else {
-                rirDisplay = `<span class="rir-badge">${set.rir} RiR</span>`;
-            }
+
+    // Render session
+    let sessionHTML = '';
+
+    for (const groupName in groups) {
+        // Ensure group state exists
+        if (!collapseState.groups[currentDate][groupName]) {
+            collapseState.groups[currentDate][groupName] = { collapsed: false, done: false };
         }
 
-        // Prepare comment icon if exists
-        const commentIcon = set.comments ? 
-            `<i class="fas fa-comment comment-icon" 
-                data-bs-toggle="tooltip" 
-                data-bs-placement="top"
-                data-bs-container="body" 
-                title="${set.comments.replace(/"/g, '&quot;')}"></i>` : '';
+        const groupData = groups[groupName];
+        const groupState = collapseState.groups[currentDate][groupName];
+        const groupCollapsed = groupState.collapsed;
+        const groupIsDone = groupState.done;
 
-        sessionHTML += `
-           <tr class="set-row" data-set-id="${set.id}">
-                <td class="set-number-cell">
+        let groupBlock = `
+            <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
+                <div class="group-header">
                     <div class="d-flex align-items-center">
-                        <div class="me-2">${index + 1}</div>
-                        <div class="set-details">
-                            ${rirDisplay}
-                            ${commentIcon}
+                        <div class="group-icon">
+                            <i class="fas fa-${getMuscleIcon(groupName)}"></i>
+                        </div>
+                        <span class="group-title">${groupName}</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="group-summary">
+                            <span class="summary-item">${groupData.totalSets} sets</span>
+                            <span class="summary-item">${groupData.totalReps} reps</span>
+                            <span class="summary-item">${groupData.totalVolume.toFixed(1)} kg</span>
+                        </div>
+                        <div class="group-actions">
+                            <button class="toggle-icon toggle-group" title="${groupCollapsed ? 'Expand' : 'Collapse'}">
+                                <i class="fas fa-${groupCollapsed ? 'plus' : 'minus'}"></i>
+                            </button>
                         </div>
                     </div>
-                </td>
-                <td>
-                    <input type="number" class="form-control set-reps set-input" 
-                           value="${set.reps}" data-original="${set.reps}">
-                </td>
-                <td>
-                    <input type="number" class="form-control set-weight set-input" 
-                           value="${set.weight}" data-original="${set.weight}" step="0.5">
-                </td>
-                <td class="volume-display">${set.volume.toFixed(1)}</td>
-                <td class="actions-cell">
-                    <button class="btn delete-item">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
+                </div>
+                <div class="group-items" style="${groupCollapsed ? 'display: none;' : ''}">
         `;
-    });
-                
-                sessionHTML += `
-                                </tbody>
-                            </table>
+
+        // Add checkmark if group is done
+        if (groupIsDone) {
+            groupBlock = groupBlock.replace(
+                `<span class="group-title">${groupName}</span>`,
+                `<span class="group-title">${groupName}<i class="fas fa-check" style="margin-left: 8px; color: #4CAF50;"></i></span>`
+            );
+        }
+
+        // Render exercises
+        groupData.exercises.forEach(exercise => {
+            const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
+            const expandedClass = exerciseCollapsed ? '' : 'expanded';
+
+            groupBlock += `
+                <div class="exercise" data-exercise-id="${exercise.id}">
+                    <div class="exercise-header ${expandedClass}">
+                        <div class="exercise-title">${exercise.name}</div>
+                        <div class="exercise-info">
+                            <div class="exercise-summary-text">
+                                ${exercise.exerciseSets} sets, ${exercise.exerciseReps} reps, ${exercise.exerciseVolume.toFixed(1)} kg
+                            </div>
+                            <button class="toggle-icon toggle-exercise" title="${exerciseCollapsed ? 'Expand' : 'Collapse'}">
+                                <i class="fas fa-${exerciseCollapsed ? 'plus' : 'minus'}"></i>
+                            </button>
                         </div>
                     </div>
+                    <div class="exercise-sets" style="${exerciseCollapsed ? 'display: none;' : ''}">
+                        <table class="workout-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Set</th>
+                                    <th class="text-center">Reps</th>
+                                    <th class="text-center">Weight</th>
+                                    <th class="text-center">Volume</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            exercise.sets.forEach((set, index) => {
+                let rirDisplay = '';
+                if (set.rir !== null && set.rir !== undefined && set.rir !== "") {
+                    let rirText = (set.rir === -1 || set.rir === "Failure" || set.rir === 0) ? 'Failure' : `${set.rir} RiR`;
+                    rirDisplay = `
+                        <div class="rir-dropdown">
+                            <span class="rir-badge">${rirText}</span>
+                            <div class="rir-options">
+                                <div class="rir-option" data-value="Failure">Failure</div>
+                                <div class="rir-option" data-value="1">1 RiR</div>
+                                <div class="rir-option" data-value="2">2 RiR</div>
+                                <div class="rir-option" data-value="3">3 RiR</div>
+                                <div class="rir-option" data-value="4">4 RiR</div>
+                                <div class="rir-option" data-value="5">5 RiR</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // If no RiR is set, show "None" and allow setting it
+                    rirDisplay = `
+                        <div class="rir-dropdown">
+                            <span class="rir-badge">None</span>
+                            <div class="rir-options">
+                                <div class="rir-option" data-value="Failure">Failure</div>
+                                <div class="rir-option" data-value="1">1 RiR</div>
+                                <div class="rir-option" data-value="2">2 RiR</div>
+                                <div class="rir-option" data-value="3">3 RiR</div>
+                                <div class="rir-option" data-value="4">4 RiR</div>
+                                <div class="rir-option" data-value="5">5 RiR</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const commentIcon = set.comments ? 
+                    `<i class="fas fa-comment comment-icon" data-comment="${set.comments.replace(/"/g, '&quot;')}"></i>` :
+                    `<i class="far fa-comment comment-icon" data-comment=""></i>`;
+
+                groupBlock += `
+                    <tr class="set-row" data-set-id="${set.id}">
+                        <td class="set-number-cell">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">${index + 1}</div>
+                                <div class="set-details">
+                                    ${rirDisplay}
+                                    ${commentIcon}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control set-reps set-input" 
+                                value="${set.reps}" data-original="${set.reps}">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control set-weight set-input" 
+                                value="${set.weight}" data-original="${set.weight}" step="0.5">
+                        </td>
+                        <td class="volume-display">${set.volume.toFixed(1)}</td>
+                        <td class="actions-cell">
+                            <button class="btn delete-item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
                 `;
             });
-            
-            sessionHTML += `
+
+            groupBlock += `
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
-        }
-        
-        container.html(sessionHTML);
-        mobileContainer.html(sessionHTML);
-        initTooltips();
-        setTimeout(initTooltips, 100);
+        });
 
-        // Apply initial expanded class based on collapse state
+        groupBlock += `
+                </div>
+            </div>
+        `;
+
+        sessionHTML += groupBlock;
+    }
+
+    container.html(sessionHTML);
+    mobileContainer.html(sessionHTML);
+    initTooltips();
+    setTimeout(initTooltips, 100);
+    
+    // Setup the RiR dropdowns and comment tooltips
+    setupRirDropdowns();
+    setupCommentTooltips();
+
+    // Reorder done groups to bottom
+    $('.workout-group').each(function() {
+        const groupName = $(this).data('group');
+        const isDone = collapseState.groups[currentDate]?.[groupName]?.done || false;
+        if (isDone) {
+            if ($(window).width() <= 768) {
+                $('#workout-session-container-mobile').append($(this));
+            } else {
+                $('#workout-session-container').append($(this));
+            }
+        }
+    });
+
+    // Apply initial expanded class
     $(".exercise").each(function() {
         const exerciseId = $(this).data("exercise-id");
         const currentDate = $(".workout-date.active").data("date");
         const isCollapsed = collapseState.exercises[currentDate]?.[exerciseId] || false;
         const header = $(this).find(".exercise-header");
         if (!isCollapsed) {
-            header.addClass("expanded"); // Open by default if not collapsed
+            header.addClass("expanded");
         }
     });
-        
-        // Add group toggle functionality
-        $(".toggle-group").click(function() {
-            const groupHeader = $(this).closest(".group-header");
-            const groupContainer = groupHeader.closest(".workout-group");
-            const groupItems = groupContainer.find(".group-items");
-            const isExpanded = groupItems.is(":visible");
-            const groupName = groupContainer.data("group");
-            const currentDate = $(".workout-date.active").data("date");
-            
-            // Toggle visibility
-            groupItems.toggle(!isExpanded);
-            $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
-            $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
-            
-            // Update state
-            collapseState.groups[currentDate][groupName] = isExpanded;
-            saveCollapseState();
-        });
-        
-        // Add exercise toggle functionality
-        $(".toggle-exercise").click(function() {
-            const exerciseHeader = $(this).closest(".exercise-header");
-            const exerciseContainer = exerciseHeader.closest(".exercise");
-            const exerciseId = exerciseContainer.data("exercise-id");
-            const exerciseSets = exerciseContainer.find(".exercise-sets");
-            const isExpanded = exerciseSets.is(":visible");
-            const currentDate = $(".workout-date.active").data("date");
-            
-        // Toggle visibility
-            exerciseSets.toggle(!isExpanded);
-            $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
-            $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
 
-            // Toggle expanded class for visual
-            if (isExpanded) {
-                exerciseHeader.removeClass("expanded"); // Closed now
-            } else {
-                exerciseHeader.addClass("expanded"); // Open now
-            }
+    // Group toggle
+    $(".toggle-group").click(function() {
+        const groupHeader = $(this).closest(".group-header");
+        const groupContainer = groupHeader.closest(".workout-group");
+        const groupItems = groupContainer.find(".group-items");
+        const isExpanded = groupItems.is(":visible");
+        const groupName = groupContainer.data("group");
+        const currentDate = $(".workout-date.active").data("date");
 
-            // Update state
-            collapseState.exercises[currentDate][exerciseId] = isExpanded; // Note: isExpanded is before toggle, so it's the new collapsed state
-            saveCollapseState();
-        });
+        groupItems.toggle(!isExpanded);
+        $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
+        $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
+
+        collapseState.groups[currentDate][groupName].collapsed = isExpanded;
+        saveCollapseState();
+    });
+
+    // Exercise toggle
+    $(".toggle-exercise").click(function() {
+        const exerciseHeader = $(this).closest(".exercise-header");
+        const exerciseContainer = exerciseHeader.closest(".exercise");
+        const exerciseId = exerciseContainer.data("exercise-id");
+        const exerciseSets = exerciseContainer.find(".exercise-sets");
+        const isExpanded = exerciseSets.is(":visible");
+        const currentDate = $(".workout-date.active").data("date");
+
+        exerciseSets.toggle(!isExpanded);
+        $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
+        $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
+
+        if (isExpanded) {
+            exerciseHeader.removeClass("expanded");
+        } else {
+            exerciseHeader.addClass("expanded");
+        }
+
+        collapseState.exercises[currentDate][exerciseId] = isExpanded;
+        saveCollapseState();
+    });
+}
         
         // Double-click group toggle
         $(".group-header").on("dblclick", function() {
@@ -2359,12 +2793,12 @@ exercise.sets.forEach((set, index) => {
         });
         
         // Add input event handlers
-        $(".set-input").on('blur', handleSetUpdate);
-        $(".set-input").on('keyup', function(e) {
-            if (e.key === 'Enter') {
-                handleSetUpdate.call(this);
-            }
-        });
+        $(document).on('blur', '.set-input', handleSetUpdate);
+$(document).on('keyup', '.set-input', function(e) {
+    if (e.key === 'Enter') {
+        handleSetUpdate.call(this);
+    }
+});
         
         // Add delete handler
         $(document).off("click", ".delete-item"); // Remove old handlers first
@@ -2381,32 +2815,32 @@ exercise.sets.forEach((set, index) => {
             // Call delete with button reference
             deleteSet(setId, $button);
         });
-}
+
 
     function handleSetUpdate() {
-    const row = $(this).closest("tr");
-    const repsInput = row.find(".set-reps");
-    const weightInput = row.find(".set-weight");
+            const row = $(this).closest("tr");
+            const repsInput = row.find(".set-reps");
+            const weightInput = row.find(".set-weight");
 
-    // Validate input - prevent empty/null
-    const repsVal = repsInput.val().trim();
-    const weightVal = weightInput.val().trim();
+            // Validate input
+            const repsVal = repsInput.val().trim();
+            const weightVal = weightInput.val().trim();
 
-    if (repsVal === "" || weightVal === "" || isNaN(repsVal) || isNaN(weightVal)) {
-        // Reset back to original values if invalid
-        repsInput.val(repsInput.data("original"));
-        weightInput.val(weightInput.data("original"));
-        return; 
-    }
+            if (repsVal === "" || weightVal === "" || isNaN(repsVal) || isNaN(weightVal)) {
+                // Reset back to original values if invalid
+                repsInput.val(repsInput.data("original"));
+                weightInput.val(weightInput.data("original"));
+                return; 
+            }
 
-    const setId = row.data("set-id");
-    const reps = parseFloat(repsVal);
-    const weight = parseFloat(weightVal);
-    const date = $(".workout-date.active").data("date");
+            const setId = row.data("set-id");
+            const reps = parseFloat(repsVal);
+            const weight = parseFloat(weightVal);
+            const date = $(".workout-date.active").data("date");
 
-    if (reps != repsInput.data("original") || weight != weightInput.data("original")) {
-        const volumeDisplay = row.find(".volume-display");
-        volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
+            if (reps != repsInput.data("original") || weight != weightInput.data("original")) {
+                const volumeDisplay = row.find(".volume-display");
+                volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
 
         $.post("/workout/update_set", {
             set_id: setId,
@@ -2420,6 +2854,7 @@ exercise.sets.forEach((set, index) => {
                 weightInput.data("original", weight);
                 saveScrollPosition();  
                 loadWorkoutSession(date);
+                setupExerciseGroupLongPress();
             } else {
                 alert("Error: " + response.error);
                 repsInput.val(repsInput.data("original"));
@@ -2945,7 +3380,167 @@ function getWeekDates(date) {
         const weekDisplay = `Week ${getWeekNumber(start)}: ${formatDate(start)} - ${formatDate(end)}`;
         $("#week-display").text(weekDisplay);
     }
+function setupExerciseGroupLongPress() {
+    let pressTimer;
+    let activeElement = null;
+    let activeType = null; // "group" or "exercise"
 
+    // Create the tooltip/menu element
+    const menuHtml = `
+        <div id="exercise-longpress-menu" class="longpress-menu" style="
+            position: fixed;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid #444;
+        ">
+            <p style="margin: 0 0 10px 0; color: white; font-size: 14px;">Done?</p>
+            <div style="display: flex; gap: 20px;">
+                <button id="longpress-yes" style="
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 5px;
+                ">✅</button>
+                <button id="longpress-no" style="
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 5px;
+                ">❌</button>
+            </div>
+        </div>
+    `;
+
+    // Add the menu to the body if it doesn't exist
+    if (!$('#exercise-longpress-menu').length) {
+        $('body').append(menuHtml);
+    }
+
+    const $menu = $('#exercise-longpress-menu');
+
+    // Function to show menu at touch position
+    function showMenu(x, y) {
+        $menu.css({
+            left: x - 50 + 'px',
+            top: y - 70 + 'px',
+            display: 'flex'
+        });
+    }
+
+    function hideMenu() {
+        $menu.hide();
+        activeElement = null;
+        activeType = null;
+    }
+
+    // Long press on group headers (Chest/Back/etc.)
+    $(document).on('touchstart', '.workout-group .group-header', function(e) {
+        if ($(window).width() > 768) return; // only mobile
+        const originalEvent = e.originalEvent;
+        activeElement = $(this).closest('.workout-group');
+        activeType = "group";
+        pressTimer = setTimeout(function() {
+            const touch = originalEvent.touches[0];
+            showMenu(touch.clientX, touch.clientY);
+        }, 1000);
+    });
+
+    // Long press on exercise headers (penkki, kyykky, dippi…)
+    $(document).on('touchstart', '.exercise .exercise-header', function(e) {
+        if ($(window).width() > 768) return; // only mobile
+        const originalEvent = e.originalEvent;
+        activeElement = $(this).closest('.exercise');
+        activeType = "exercise";
+        pressTimer = setTimeout(function() {
+            const touch = originalEvent.touches[0];
+            showMenu(touch.clientX, touch.clientY);
+        }, 1000);
+    });
+
+    // Cancel long press if touch ends or moves
+    $(document).on('touchend touchmove', '.workout-group .group-header, .exercise .exercise-header', function() {
+        clearTimeout(pressTimer);
+    });
+
+    // ✅ Button
+    $('#longpress-yes').on('click touchstart', function(e) {
+        e.stopPropagation();
+
+        if (activeElement) {
+            const currentDate = $(".workout-date.active").data("date");
+
+            if (activeType === "group") {
+                // === GROUP DONE ===
+                const checkmark = $('<i class="fas fa-check" style="margin-left: 8px; color: #4CAF50;"></i>');
+                if (!activeElement.find('.fa-check').length) {
+                    activeElement.find('.group-title').append(checkmark);
+                }
+
+                // Move group to bottom
+                if ($(window).width() <= 768) {
+                    $('#workout-session-container-mobile').append(activeElement);
+                } else {
+                    $('#workout-session-container').append(activeElement);
+                }
+
+                const groupName = activeElement.data("group");
+                if (currentDate && groupName) {
+                    collapseState.groups[currentDate][groupName] = {
+                        ...collapseState.groups[currentDate][groupName],
+                        done: true
+                    };
+                    saveCollapseState();
+                }
+            } else if (activeType === "exercise") {
+                // === EXERCISE DONE ===
+                const checkmark = $('<i class="fas fa-check" style="margin-left: 8px; color: #4CAF50;"></i>');
+                if (!activeElement.find('.fa-check').length) {
+                    activeElement.find('.exercise-title').append(checkmark);
+                }
+
+                // Move exercise to bottom of its group
+                const parentGroup = activeElement.closest('.workout-group').find('.group-items');
+                parentGroup.append(activeElement);
+
+                const exerciseId = activeElement.data("exercise-id");
+                if (currentDate && exerciseId) {
+                    if (!collapseState.exercises[currentDate]) {
+                        collapseState.exercises[currentDate] = {};
+                    }
+                    collapseState.exercises[currentDate][exerciseId] = {
+                        collapsed: collapseState.exercises[currentDate][exerciseId]?.collapsed || false,
+                        done: true
+                    };
+                    saveCollapseState();
+                }
+            }
+        }
+
+        hideMenu();
+    });
+
+    // ❌ Button
+    $('#longpress-no').on('click touchstart', function(e) {
+        e.stopPropagation();
+        hideMenu();
+    });
+
+    // Hide menu when tapping elsewhere
+    $(document).on('touchstart', function(e) {
+        if (!$(e.target).closest('#exercise-longpress-menu, .group-header, .exercise-header').length) {
+            hideMenu();
+        }
+    });
+}
 </script>
 <div class="mobile-tab-bar-workout d-block d-md-none">
     <button class="mobile-tab-btn-workout active" data-panel="add-set-tab" style="background-color: #ff9e6d;">
