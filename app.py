@@ -2921,6 +2921,59 @@ def save_metrics():
     finally:
         if conn:
             conn.close()
+@app.route('/workout/update_rir', methods=['POST'])
+def update_rir():
+    data = request.json
+    set_id = data.get('set_id')
+    rir = data.get('rir')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the set exists
+    cursor.execute("SELECT id FROM workout_sets WHERE id = %s", (set_id,))
+    if cursor.fetchone() is None:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Set not found'})
+
+    # Handle "Failure" case (stored as -1)
+    rir_value = -1 if rir == "Failure" else (int(rir) if rir else None)
+
+    cursor.execute(
+        "UPDATE workout_sets SET rir = %s WHERE id = %s",
+        (rir_value, set_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+
+@app.route('/workout/update_comment', methods=['POST'])
+def update_comment():
+    data = request.json
+    set_id = data.get('set_id')
+    comment = data.get('comment')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the set exists
+    cursor.execute("SELECT id FROM workout_sets WHERE id = %s", (set_id,))
+    if cursor.fetchone() is None:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Set not found'})
+
+    cursor.execute(
+        "UPDATE workout_sets SET comments = %s WHERE id = %s",
+        (comment, set_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})            
 
 @app.route('/keepalive')
 @login_required
