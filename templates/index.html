@@ -3251,69 +3251,155 @@ if (data.length > 0) {
 
             // Update portion buttons
             function updatePortionButtons(food) {
-                const container = $('#portion-buttons');
-                container.empty();
-                
-                const portionTypes = [
-                    { type: 'serving', label: 'Serving', size: food.serving_size },
-                    { type: 'half', label: 'Half', size: food.half_size },
-                    { type: 'entire', label: 'Entire', size: food.entire_size }
-                ];
-                
-                portionTypes.forEach(portion => {
-                    if (portion.size) {
-const button = $(`
-    <button type="button" class="btn portion-btn" 
-            data-portion-type="${portion.type}" 
-            data-portion-size="${portion.size}">
-        ${portion.label} (${portion.size}g)
-    </button>
-`);
-                        container.append(button);
-                    }
-                });
-            }
+    const container = $('#portion-buttons');
+    container.empty();
+    
+    const portionTypes = [
+        { type: 'serving', label: 'Serving', size: food.serving_size },
+        { type: 'half', label: 'Half', size: food.half_size },
+        { type: 'entire', label: 'Entire', size: food.entire_size }
+    ];
+    
+    portionTypes.forEach(portion => {
+        if (portion.size) {
+            const button = $(`
+                <button type="button" class="btn portion-btn" 
+                        data-portion-type="${portion.type}" 
+                        data-portion-size="${portion.size}"
+                        data-multiple="1">
+                    ${portion.label} (${portion.size}g)
+                </button>
+            `);
+            container.append(button);
+        }
+    });
+}
+function initPortionControls() {
+    let portionHoldTimer = null;
 
-            // Portion button click
-            $(document).on('click', '.portion-btn', function() {
-    const portionSize = $(this).data('portion-size');
-    const isActive = $(this).hasClass('active');
-    
-    // Remove active class from all portion buttons
-    $('.portion-btn').removeClass('active');
-    
-    // If the button was already active, clear the grams input and focus on it
-    if (isActive) {
-        $('#grams').val('');
-        $('#grams').trigger('focus');
-    } else {
-        // Otherwise, activate this button and set the grams value
-        $(this).addClass('active');
-        $('#grams').val(portionSize);
+    // Portion button hold → reset
+    $(document).on('mousedown touchstart', '.portion-btn', function(e) {
+        const btn = $(this);
+
+        portionHoldTimer = setTimeout(function() {
+            const baseSize = parseFloat(btn.data('portion-size'));
+            const portionType = btn.data('portion-type');
+            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+
+            // Reset this button only
+            btn.text(`${label} (${baseSize}g)`);
+            btn.data('multiple', 0);
+            btn.removeClass('active');
+
+            // Clear grams input + focus back
+            $('#grams').val('').trigger('focus');
+            updateRealTimeBreakdownFromForm();
+        }, 600);
+    }).on('mouseup mouseleave touchend', '.portion-btn', function(e) {
+        if (portionHoldTimer) {
+            clearTimeout(portionHoldTimer);
+            portionHoldTimer = null;
+        }
+    });
+
+    // Portion button click (multiplying logic)
+    $(document).on('click', '.portion-btn', function(e) {
+        e.stopPropagation();
+        if (portionHoldTimer) {
+            clearTimeout(portionHoldTimer);
+            portionHoldTimer = null;
+        }
+
+        // Reset all OTHER buttons but not this one
+        $('.portion-btn').not(this).each(function() {
+            const baseSize = parseFloat($(this).data('portion-size'));
+            const portionType = $(this).data('portion-type');
+            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+            $(this).text(`${label} (${baseSize}g)`);
+            $(this).data('multiple', 0);
+            $(this).removeClass('active');
+        });
+
+        let multiple = parseInt($(this).data('multiple')) || 0;
+        const baseSize = parseFloat($(this).data('portion-size'));
+        const portionType = $(this).data('portion-type');
+        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+
+        // Increment multiple (first click = 1)
+        multiple++;
+
+        const totalGrams = baseSize * multiple;
+
+        $(this).text(`${multiple} ${label} (${totalGrams}g)`);
+        $(this).data('multiple', multiple);
+
+        $('#grams').val(totalGrams).trigger('focus');
         updateRealTimeBreakdownFromForm();
+
+        $(this).addClass('active');
+    });
+
+    // Outside click
+    $(document).on('click', function(e) {
+        const target = $(e.target);
+
+        if (target.closest('.portion-btn').length || target.is('#grams')) return;
+
+        if (target.closest('.meal-group, .btn, input, select, textarea').length) {
+            resetPortionButtons();
+            return;
+        }
+
+        resetPortionButtons();
+        $('#grams').trigger('focus');
+    });
+
+    // Grams manual input
+    $('#grams').on('input', function() {
+        deselectPortionButtons();
+        updateRealTimeBreakdownFromForm();
+    });
+
+    // Reset all buttons
+    function resetPortionButtons() {
+        $('.portion-btn').each(function() {
+            const baseSize = parseFloat($(this).data('portion-size'));
+            const portionType = $(this).data('portion-type');
+            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+            $(this).text(`${label} (${baseSize}g)`);
+            $(this).data('multiple', 0);
+            $(this).removeClass('active');
+        });
+        $('#grams').val('');
     }
+
+    // Deselect only (for typing)
+    function deselectPortionButtons() {
+        $('.portion-btn').each(function() {
+            const baseSize = parseFloat($(this).data('portion-size'));
+            const portionType = $(this).data('portion-type');
+            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+            $(this).text(`${label} (${baseSize}g)`);
+            $(this).data('multiple', 0);
+            $(this).removeClass('active');
+        });
+    }
+
+    // Public function to call after rendering a new food item
+    window.initializeNewFood = function() {
+        resetPortionButtons();
+        $('#grams').val('').trigger('focus'); // always focus grams on load
+    };
+}
+
+// Run once DOM is ready
+$(function() {
+    initPortionControls();
 });
 
-            // Grams input change
-            $('#grams').on('input', function() {
-    // Deselect all portion buttons when user manually enters a value
-    $('.portion-btn').removeClass('active');
-    updateRealTimeBreakdownFromForm();
-});
-$(document).on('click', function(e) {
-    // Check if click was outside portion buttons AND grams input
-    if (!$(e.target).closest('.portion-btn').length && !$(e.target).is('#grams')) {
-        // Remove active class from all portion buttons
-        $('.portion-btn').removeClass('active');
-        // Clear grams input
-        $('#grams').val('');
-        // Update the breakdown
-        
-    }
-    updateRealTimeBreakdownFromForm();
-});
-            
-            // Portion button hover
+
+
+// Portion button hover
             $(document).on('mouseenter', '.portion-btn', function() {
                 const portionSize = $(this).data('portion-size');
                 const factor = portionSize / 100;
