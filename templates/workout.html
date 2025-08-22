@@ -241,18 +241,28 @@ border-color: #555;
 .core { --group-color: #ff9e6d; }
 /* Group and Exercise Headers */
 .exercise-header, .group-header {
-user-select: none;
--webkit-tap-highlight-color: transparent;
-padding: 10px 15px;
-background: rgba(50, 50, 50, 0.7);
-border-radius: 6px;
-cursor: pointer;
-transition: all 0.2s ease;
-display: flex;
-justify-content: space-between;
-align-items: center;
-border-bottom: none !important;
-margin-bottom: 0;
+   padding: 8px 10px !important;
+    background: rgba(50, 50, 50, 0.7);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none !important;
+    margin-bottom: 0;
+    min-height: 40px; /* Ensure consistent height */
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+}
+.exercise-header-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    gap: 10px;
 }
 .exercise-header.expanded {
 background: color-mix(in srgb, var(--group-color) 50%, black);
@@ -267,6 +277,7 @@ border: none !important;
 position: relative;
 z-index: 1;
 }
+
 .workout-group .group-header:hover {
 filter: brightness(1.15);
 box-shadow: 0 0 10px rgba(255,255,255,0.5);
@@ -434,15 +445,22 @@ align-items: center;
 gap: 15px;
 }
 .exercise-summary-text {
-font-size: 14px;
-color: #aaa;
-font-weight: normal;
-white-space: nowrap;
+  font-size: 12px;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 .exercise-title {
 font-weight: bold;
-font-size: 16px;
-color: #f0f0f0;
+    font-size: 14px;
+    color: #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
 }
 #copy-workout-btn, #copy-workout-mobile-btn {
 display: inline-block;
@@ -556,9 +574,10 @@ transform: translateY(-2px);
 .workout-header { max-width: 1180px; margin-left: auto; margin-right: auto; }
 }
 @media (max-width: 768px) {
+#workout-session-container-mobile {padding-bottom: 80px !important;}
 .workout-grid-container { display: none; }
 #workout-log-tab .group-title { font-size: 13px !important; }
-#workout-log-tab .exercise-title { font-size: 14px; flex: 1;margin-right: 10px;}
+#workout-log-tab .exercise-title {font-size: 13px;}
 #workout-log-tab .workout-table th, #workout-log-tab .workout-table td { font-size: 13px; }
 #workout-log-tab .summary-item, #workout-log-tab .exercise-summary-text, #workout-log-tab .set-details { font-size: 11px; }
 #workout-log-tab .rir-badge { font-size: 10px; }
@@ -571,32 +590,33 @@ transform: translateY(-2px);
 .copy-date-btn:hover:not(.disabled) { background-color: #444 !important; border-color: #6dc0d5 !important; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(109, 192, 213, 0.4); }
 .copy-date-btn:active:not(.disabled) { transform: translateY(0); }
 .copy-date-btn.disabled { background-color: #1a1a1a !important; color: #777 !important; border-color: #333 !important; cursor: not-allowed; opacity: 0.7; }
+#copy-workout-mobile-btn-container {position: fixed;bottom: 80px;left: 0; right: 0;padding: 10px 15px;background: linear-gradient(to top, #161616 60%, transparent); z-index: 100;display: flex;justify-content: center;}
 .dropdown-menu { max-height: 300px; overflow-y: auto; }
 .workout-group .group-items { padding: 15px 0; border-left: none !important; border-right: none !important; border-bottom: none !important; }
 .group-items { padding-left: 0; padding-right: 0; border-left: none; border-right: none; }
-.workout-group .group-header {padding: 10px 15px !important;justify-content: space-between; align-items: center;flex-direction: row; display: flex;}
-.group-header-content { display: flex; align-items: center; flex: 1; min-width: 0; }
-.exercise-header {flex-direction: row !important;align-items: center !important;padding: 8px 10px !important;min-height: 50px;}
+.workout-group .group-header {padding: 10px 15px !important;justify-content: space-between; align-items: center;flex-direction: row; display: flex;min-width: 0;}
+.group-header-content { display: flex; align-items: center; flex: 1; min-width: 0;overflow: hidden; }
+.exercise-header {padding: 6px 8px !important;gap: 6px;}
+.exercise-header > * { flex-shrink: 0;   }
 .exercise-info { flex-direction: row !important; justify-content: space-between !important;width: auto !important;margin-top: 0 !important;flex: 0 0 auto;}
 .group-title {font-size: 14px !important;white-space: nowrap;overflow: hidden; text-align: right; }
-.summary-item, .exercise-summary-text { font-size: 11px !important;white-space: nowrap; margin-right: 8px;}
+.summary-item, .exercise-summary-text { font-size: 11px;}
 .workout-group .group-header:hover, .exercise-header:hover { border: none !important; box-shadow: none !important; filter: none !important; }
-#workout-session-container-mobile { max-height: calc(100vh - 150px) !important; height: calc(100vh - 150px) !important; overflow-y: auto !important; padding: 15px !important; }
+#workout-session-container-mobile { padding-bottom: 100px !important;height: calc(100vh - 200px) !important; overflow-y: auto;} }
 .mobile-tabs-container { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
-.workout-header { margin-top: 0; padding: 2px 2px; border-radius: 0; }
+.workout-header { margin-top: 0; padding: 2px 2px; border-radius: 0;}
 .workout-table th, .workout-table td {display: table-cell !important;padding: 6px 3px !important;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;text-align: center;vertical-align: middle; }
 .workout-table {display: table !important;width: 100% !important;table-layout: fixed !important;}
-.group-summary { flex-direction: row !important; gap: 8px;margin-left: 0;align-items: center; }
+.group-summary { flex-direction: row !important;margin-left: 0;align-items: center; }
 .summary-item { padding: 1px 6px; font-size: 12px; }
-.group-title { font-size: 14px !important;text-align: left !important;margin-right: 10px; flex-shrink: 0;}
+.group-title { font-size: 14px !important;text-align: left !important;margin-right: 10px; flex-shrink: 1;min-width: 0;white-space: nowrap;}
 .actions-cell { padding: 0 5px !important; }
 .set-number-cell { flex-direction: row !important; align-items: center !important;justify-content: center !important; }
 .set-number-cell > div:first-child { font-weight: bold; font-size: 14px; }
 .set-details {margin-top: 0 !important;margin-left: 5px;flex-wrap: nowrap; }
 .rir-badge { margin-bottom: 0; font-size: 11px; }
-.exercise-header { background: #333 !important; flex-direction: row !important; transition: all 0.3s ease; }
 .exercise-header.expanded {background: color-mix(in srgb, var(--group-color) 60%, transparent) !important;box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2) !important;border-left: 3px solid var(--group-color) !important;  }
-.exercise-info { display: flex; justify-content: space-between; width: 100%; margin-top: 8px; }
+.exercise-info { display: flex; justify-content: space-between; min-width: 0; margin-top: 8px; flex: 1;}
 .exercise-summary-text { font-size: 12px;white-space: nowrap;text-align: right; }
 .row.g-3 > div { margin-bottom: 8px; }
 #workout-session-container-mobile { padding-bottom: 80px !important; height: 100%; overflow-y: auto; padding: 15px !important; }
@@ -630,8 +650,36 @@ transform: translateY(-2px);
 #workout-session-container-mobile:after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(to bottom, transparent, #161616); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
 #workout-session-container-mobile.scrollable:after { opacity: 1; }
 #workout-session-container-mobile { max-height: calc(100vh - 250px) !important; overflow-y: auto; padding: 10px; }
-.fixed-copy-button { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 200px; background-color: #1d1d1d; padding: 10px; border-radius: 20px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5); border: 1px solid #444; }
-.workout-footer { background-color: #161616; padding: 15px; text-align: center; border-top: 1px solid #333; margin-top: auto; width: 100%; position: relative; }
+
+/* FIX: Remove fixed positioning for mobile copy button */
+#copy-workout-mobile-btn {
+    position: static !important;
+    margin: 15px auto !important;
+    width: 90% !important;
+    max-width: 200px !important;
+    transform: none !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+}
+#workout-session-container-mobile {
+    padding-bottom: 80px !important;
+    }
+/* FIX: Adjust header toggle buttons for mobile */
+.workout-header .d-flex.justify-content-center {
+    flex-wrap: wrap;
+    justify-content: center !important;
+    
+}
+
+.workout-header .btn-outline-secondary {
+    flex: 0 0 auto;
+    min-width: 40px;
+    padding: 5px 8px;
+    font-size: 12px;
+    
+}
+.toggle-icon {flex-shrink: 0;
+        margin-left: 0px;
+    }
 .rir-dropdown { position: relative; display: inline-block; z-index: 1; }
 .rir-options { display: none; position: absolute; background-color: #333; min-width: 80px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 9999 !important; border-radius: 5px; overflow: visible; border: 1px solid #555; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 5px; }
 .rir-option { color: #e0e0e0; padding: 8px 12px; text-decoration: none; display: block; cursor: pointer; text-align: center; border-bottom: 1px solid #444; }
@@ -651,8 +699,8 @@ transform: translateY(-2px);
 .comment-tooltip { position: fixed !important; transform: translate(-50%, -50%) !important; top: 50% !important; left: 50% !important; width: 80%; }
 .rir-options { position: fixed !important; bottom: unset; top: 50% !important; left: 50% !important; transform: translate(-80%, -50%) !important; width: 40%; max-width: 150px; z-index: 6000 !important; }
 .ready-controls { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
-.exercise-header .ready-controls { position: static; transform: none; margin-left: auto; padding-left: 10px; }
-}
+.exercise-header .ready-controls { position: static; transform: none; margin-left: auto; padding-left: 0px; }
+
 /* desktop only */
 @media (min-width: 769px) {
             .comment-tooltip {
@@ -667,6 +715,7 @@ transform: translateY(-2px);
                 display: block;
             }
         }
+    
     </style>
 </head>
 <body>
@@ -1184,15 +1233,6 @@ transform: translateY(-2px);
             </div>
         </div>
     </div>
-</div>
-
-<!-- Add this button to the bottom left corner -->
-<div class="position-fixed bottom-0 start-0 m-3" style="z-index: 1000;">
-    <button class="btn btn-primary position-fixed bottom-0 start-0 m-3" 
-        id="copy-workout-btn" 
-        style="z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
-    <i class="fas fa-copy me-1"></i> Copy Workout
-</button>
 </div>
 
     <!-- Comment Tooltip (hidden by default) -->
