@@ -2287,27 +2287,6 @@
         </div>
     </nav>
 
-    <!-- Mobile Navigation Bar -->
-    <div class="mobile-tab-bar d-block d-lg-none">
-        <button class="mobile-tab-btn active" data-panel="add-food-panel" style="background-color: #ff9e6d;">
-            <i class="fas fa-plus-circle"></i>
-        </button>
-        <button class="mobile-tab-btn" data-panel="food-log-panel" style="background-color: #6dc0d5;">
-            <i class="fas fa-utensils"></i>
-        </button>
-        <button class="mobile-tab-btn" data-panel="nutrition-panel" style="background-color: #b989f0;">
-            <i class="fas fa-chart-pie"></i>
-        </button>
-    </div>
-
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-
 <!-- Update mobile tab bar -->
 <div class="mobile-tab-bar d-block d-lg-none">
     <button class="mobile-tab-btn active" data-panel="add-food-panel" style="background-color: #ff9e6d;">
@@ -2399,7 +2378,7 @@
 </div>
             
                         <div class="mt-3 text-center" style="font-size: 15px;">
-                            <span>Per Grams: </span>
+                            <span>Per: </span>
                             <strong id="rt-grams" style="font-size: 15px;">0g</strong>
                         </div>
                     </div>
@@ -2414,7 +2393,7 @@
                        <div class="row mb-3 g-2">
         <div class="col-7 position-relative">
             <input type="number" id="grams" class="form-control bg-secondary text-light" 
-                   value="100" min="0.1" step="0.1" placeholder="Add yourself, love">
+                   value="100" min="0.1" step="0.1" placeholder="Grams">
             <span class="input-unit">grams</span>
                         </div>
                         <div class="col-5">
@@ -2545,7 +2524,10 @@
                     </div>
                 </div>
 
-                <div class="card-footer py-2">
+                <div class="card-footer py-2 d-flex justify-content-between">
+                
+                    <!-- Template buttons moved here -->
+                       <div class="card-footer py-2">
     <div class="d-flex justify-content-between gap-2 flex-wrap flex-md-nowrap">
 
         <!-- Move button -->
@@ -2571,9 +2553,11 @@
             <i class="fas fa-trash fa-lg"></i>
             <span class="btn-label d-block d-md-inline">Clear</span>
         </button>
-        </div>
- </div>
 </div>
+    </div>
+            </div>
+        </div>
+    </div>
 <!-- Nutrition Panel (Mobile) -->
 <div class="grid-panel mobile-panel" id="nutrition-panel">
     <div class="card bg-dark h-100">
@@ -3306,10 +3290,8 @@ const button = $(`
         // Otherwise, activate this button and set the grams value
         $(this).addClass('active');
         $('#grams').val(portionSize);
-        
+        updateRealTimeBreakdownFromForm();
     }
-    
-    updateRealTimeBreakdownFromForm();
 });
 
             // Grams input change
@@ -3326,8 +3308,9 @@ $(document).on('click', function(e) {
         // Clear grams input
         $('#grams').val('');
         // Update the breakdown
-        updateRealTimeBreakdownFromForm();
+        
     }
+    updateRealTimeBreakdownFromForm();
 });
             
             // Portion button hover
@@ -3668,13 +3651,27 @@ $(document).on('click', '.delete-item', function(e) {
             });
 
             // Change date
-            $('#date-selector').change(function() {
+           $(document).on('change', '#date-selector', function() {
                 const date = $(this).val();
-                $.post('/update_session', { date: date }, function(response) {
-                    updateSessionDisplay(response.session, response.totals, response.breakdown);
-                    updateCalorieDifference();
-                    $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
-                });
+                console.log("Date changed to:", date);
+                
+                $.post('/update_session', { date: date })
+                    .done(function(response) {
+                        console.log("Date change response:", response);
+                        if (response.session && response.totals && response.breakdown) {
+                            updateSessionDisplay(response.session, response.totals, response.breakdown);
+                            updateCalorieDifference();
+                            if (response.current_date_formatted) {
+                                $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
+                            }
+                        } else {
+                            console.error("Invalid response format from server");
+                        }
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error('Date change failed:', error);
+                        alert('Failed to change date. Please try again.');
+                    });
             });
 
 // Update the item selection handler
@@ -3802,6 +3799,7 @@ function resetRecipeSelection() {
     $('#create-recipe').addClass('d-none').prop('disabled', true);
 }
 function updateSessionDisplay(session, totals, breakdown) {
+    console.log("Updating session display:", totals, breakdown);
     updateNutritionGrid(totals);
     updateMobileNutrition(totals);
     updateCalorieDifference();
@@ -4407,4 +4405,3 @@ document.addEventListener('DOMContentLoaded', function() {
     
 </body>
 </html>
-
