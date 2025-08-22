@@ -208,8 +208,8 @@
         
         .workout-table {
             width: 100%;
-            border-collapse: collapse;
-    border-spacing: 0;
+            border-collapse: separate;
+    border-spacing: 0 5px;
             table-layout: fixed;
         }
         
@@ -686,7 +686,7 @@
         }
 
         .exercise-sets {
-            margin-top: 10px;
+            
             transition: all 0.3s ease;
         }
         
@@ -717,6 +717,9 @@
         /* === DESKTOP LAYOUT ADJUSTMENTS === */
         @media (min-width: 768px) {
             #workout-session-container-mobile {
+                max-height: calc(100vh - 250px) !important;
+                overflow-y: auto;
+        padding: 10px;
         padding-bottom: 80px; /* Extra space for the button */
     }
     
@@ -1193,11 +1196,10 @@
         
         /* Adjust tab content height to account for bottom bar */
         .mobile-tab-content {
-            flex: 1;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-        
+            height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
         /* remove bottom border */
        
@@ -1273,12 +1275,15 @@
             
             .mobile-tab-pane.active {
                 display: flex;
+                flex-direction: column;
+        overflow: hidden;
             }
             
             #workout-log-tab .card {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
             }
             
             #workout-log-tab .card-body {
@@ -1288,12 +1293,26 @@
                 overflow: hidden;
                 padding: 0;
             }
-            
+            #workout-session-container-mobile:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(to bottom, transparent, #161616);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    #workout-session-container-mobile.scrollable:after {
+        opacity: 1;
+    }
             #workout-session-container-mobile {
-                flex: 1;
-                overflow-y: auto;
-                padding: 15px;
-                padding-bottom: 70px;
+                max-height: calc(100vh - 250px) !important;
+        overflow-y: auto;
+        padding: 10px;
             }
             .fixed-copy-button {
             position: fixed;
@@ -2092,7 +2111,38 @@
     });
 
 
+    function checkScrollable() {
+        $('#workout-session-container-mobile').each(function() {
+            if (this.scrollHeight > this.clientHeight) {
+                $(this).addClass('scrollable');
+            } else {
+                $(this).removeClass('scrollable');
+            }
+        });
+    }
     
+    // Check on load and after content changes
+    checkScrollable();
+    $(document).on('workoutContentChanged', checkScrollable);
+    
+    // Improve scroll experience on mobile
+    $('#workout-session-container-mobile').on('scroll', function() {
+        const scrollPos = $(this).scrollTop();
+        const scrollHeight = $(this)[0].scrollHeight;
+        const clientHeight = $(this)[0].clientHeight;
+        
+        // Add/remove gradient overlay based on scroll position
+        if (scrollPos + clientHeight >= scrollHeight - 10) {
+            $(this).removeClass('scrollable');
+        } else {
+            $(this).addClass('scrollable');
+        }
+    });
+    
+    // Ensure proper rendering after exercises are loaded
+    $(document).on('workoutRendered', function() {
+        setTimeout(checkScrollable, 100);
+    });
     // ===== NEW SCROLL POSITION FUNCTIONS =====
     function saveScrollPosition() {
         savedScrollPosition = {
@@ -2821,6 +2871,8 @@ function updateComment(setId, comment) {
         collapseState.exercises[currentDate][exerciseId] = isExpanded;
         saveCollapseState();
     });
+$(document).trigger('workoutContentChanged');
+    $(document).trigger('workoutRendered');
 }
         
         // Double-click group toggle
