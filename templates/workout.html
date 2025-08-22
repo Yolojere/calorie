@@ -567,13 +567,14 @@ transform: translateY(-2px);
 }
 /* Media Queries */
 @media (min-width: 768px) {
-#workout-session-container-mobile { max-height: calc(100vh - 250px) !important; overflow-y: auto; padding: 10px; }
-#copy-workout-mobile-btn { bottom: 15px; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.5); width: 90%; margin: 0 auto; display: block; }
+#workout-session-container-mobile { max-height: calc(100vh - 250px) !important; overflow-y: auto; padding: 15px; }
+#copy-workout-mobile-btn {position: absolute !important;bottom: 15px; left: 50%;transform: translateX(-50%); width: 90%;max-width: 200px; z-index: 5; margin: 0 !important; }
 .workout-grid-container { display: block !important; max-width: 1180px; margin: 0 auto; }
 .grid-add-set, .grid-log { width: 100%; margin-bottom: 20px; }
 .workout-header { max-width: 1180px; margin-left: auto; margin-right: auto; }
 }
 @media (max-width: 768px) {
+#workout-log-tab .card-body {    position: relative;padding-bottom: 15px !important;}
 #workout-session-container-mobile {padding-bottom: 80px !important;}
 .workout-grid-container { display: none; }
 #workout-log-tab .group-title { font-size: 13px !important; }
@@ -596,10 +597,12 @@ transform: translateY(-2px);
 .group-items { padding-left: 0; padding-right: 0; border-left: none; border-right: none; }
 .workout-group .group-header {padding: 10px 15px !important;justify-content: space-between; align-items: center;flex-direction: row; display: flex;min-width: 0;}
 .group-header-content { display: flex; align-items: center; flex: 1; min-width: 0;overflow: hidden; }
+.group-header, .exercise-header {overflow: hidden;}
 .exercise-header {padding: 6px 8px !important;gap: 6px;}
 .exercise-header > * { flex-shrink: 0;   }
 .exercise-info { flex-direction: row !important; justify-content: space-between !important;width: auto !important;margin-top: 0 !important;flex: 0 0 auto;}
 .group-title {font-size: 14px !important;white-space: nowrap;overflow: hidden; text-align: right; }
+.group-title, .exercise-title {white-space: nowrap;overflow: hidden;text-overflow: ellipsis;transition: font-size 0.2s ease;}
 .summary-item, .exercise-summary-text { font-size: 11px;}
 .workout-group .group-header:hover, .exercise-header:hover { border: none !important; box-shadow: none !important; filter: none !important; }
 #workout-session-container-mobile { padding-bottom: 100px !important;height: calc(100vh - 200px) !important; overflow-y: auto;} }
@@ -617,9 +620,9 @@ transform: translateY(-2px);
 .rir-badge { margin-bottom: 0; font-size: 11px; }
 .exercise-header.expanded {background: color-mix(in srgb, var(--group-color) 60%, transparent) !important;box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2) !important;border-left: 3px solid var(--group-color) !important;  }
 .exercise-info { display: flex; justify-content: space-between; min-width: 0; margin-top: 8px; flex: 1;}
-.exercise-summary-text { font-size: 12px;white-space: nowrap;text-align: right; }
+.exercise-summary-text { font-size: 12px;white-space: nowrap;text-align: right;overflow: hidden;text-overflow: ellipsis; }
 .row.g-3 > div { margin-bottom: 8px; }
-#workout-session-container-mobile { padding-bottom: 80px !important; height: 100%; overflow-y: auto; padding: 15px !important; }
+#workout-session-container-mobile { padding-bottom: 80px !important; height: 100%; overflow-y: auto; padding: 15px !important;transition: font-size 0.2s ease; }
 #add-set-tab .card-body { padding: 15px; }
 .volume-display { font-size: 14px; font-weight: normal; }
 .volume-display::after { content: "" !important; text-align: center !important; }
@@ -1290,7 +1293,19 @@ transform: translateY(-2px);
         setupRirDropdowns();
         setupCommentTooltips();
     });
-
+    document.addEventListener('DOMContentLoaded', function() {
+    adjustExerciseHeaderFontSizes();
+    
+    // Also adjust when the window is resized
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(adjustExerciseHeaderFontSizes, 250);
+    });
+    
+    // Adjust after content is loaded (with a small delay)
+    setTimeout(adjustExerciseHeaderFontSizes, 500);
+});
 
     function checkScrollable() {
         $('#workout-session-container-mobile').each(function() {
@@ -2133,6 +2148,7 @@ $(document).on('keyup', '.set-input', function(e) {
                 saveScrollPosition();  
                 loadWorkoutSession(date);
                 setupExerciseGroupLongPress();
+                $(document).on('workoutContentChanged', adjustExerciseHeaderFontSizes);
             } else {
                 alert("Error: " + response.error);
                 repsInput.val(repsInput.data("original"));
@@ -2831,6 +2847,59 @@ function setupExerciseGroupLongPress() {
         }
     });
 }
+function adjustExerciseHeaderFontSizes() {
+    // Function to check if text overflows its container
+    function isOverflown(element) {
+        return element.scrollWidth > element.clientWidth;
+    }
+    
+    // Adjust font size for group headers
+    document.querySelectorAll('.group-header').forEach(header => {
+        const title = header.querySelector('.group-title');
+        if (!title) return;
+        
+        // Reset to default size first
+        title.style.fontSize = '';
+        
+        // Gradually reduce font size until it fits
+        let fontSize = 16; // Starting from default size
+        while (isOverflown(title) && fontSize > 10) {
+            fontSize--;
+            title.style.fontSize = `${fontSize}px`;
+        }
+    });
+    
+    // Adjust font size for exercise headers
+    document.querySelectorAll('.exercise-header').forEach(header => {
+        const title = header.querySelector('.exercise-title');
+        const summary = header.querySelector('.exercise-summary-text');
+        if (!title) return;
+        
+        // Reset to default sizes first
+        title.style.fontSize = '';
+        if (summary) summary.style.fontSize = '';
+        
+        // Check if the entire header overflows
+        if (isOverflown(header)) {
+            // Reduce title font size first
+            let titleFontSize = 14;
+            while (isOverflown(header) && titleFontSize > 10) {
+                titleFontSize--;
+                title.style.fontSize = `${titleFontSize}px`;
+                
+                // If still overflowing, reduce summary font size too
+                if (summary && isOverflown(header) && titleFontSize <= 12) {
+                    let summaryFontSize = 12;
+                    while (isOverflown(header) && summaryFontSize > 9) {
+                        summaryFontSize--;
+                        summary.style.fontSize = `${summaryFontSize}px`;
+                    }
+                }
+            }
+        }
+    });
+}
+
 </script>
 <div class="mobile-tab-bar-workout d-block d-md-none">
     <button class="mobile-tab-btn-workout active" data-panel="add-set-tab" style="background-color: #ff9e6d;">
