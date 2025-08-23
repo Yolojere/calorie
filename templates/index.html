@@ -543,6 +543,29 @@
             transform: scale(1.05);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
+        .edit-grams-input {
+    padding: 1px 8px !important;   /* tighter inside so numbers fit */
+    font-size: 12px !important;
+    width: 55px;                   /* fixed width like button */
+    height: 16px !important;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: black;
+    border: 2px solid #6dc0d5;     /* highlight when editing */
+    font-weight: bold;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;        /* prevent padding from making it wider */
+
+}
+
+/* keep same hover/transition feel */
+.edit-grams-input:hover,
+.edit-grams-input:focus {
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
         
         .toggle-group {
             padding: 2px 4px !important;
@@ -573,9 +596,12 @@
         
         .grid-panel {
             border: 1px solid #2b2b2b;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+
         }
         
         .top-panel {
@@ -606,7 +632,7 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #ffffff;
+    color: #000000;
     pointer-events: none;
     font-size: 14px;
     z-index: 10;
@@ -668,7 +694,8 @@
 
         /* ADD FOOD MODAL */
          .card-footer {
-            margin-top: auto; /* Push to bottom */
+            margin-top: 1rem !important; /* Push to bottom */
+
         }
         .card-footer .btn {
     background: none !important;
@@ -855,6 +882,47 @@
 
  /* Add this to your existing styles */
 @media (max-width: 991px) {
+    
+    #search-results .food-name {
+        font-size: 12px !important;
+    }
+    
+    #search-results .calorie-badge {
+        font-size: 12px !important;
+        padding: 3px 6px;
+    }
+    
+    /* Adjust spacing for smaller screens */
+    #search-results .list-group-item {
+        padding: 8px 10px;
+    }
+    .card-footer {
+                display: none !important;
+            }
+       #food-log-panel .card {
+                display: flex;
+                flex-direction: column;
+                min-height: auto;
+            } 
+            #food-log-panel .card-body {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 0;
+                overflow: hidden;
+            }    
+            #food-log {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+            }
+            .food-group {
+                margin-bottom: 0;
+            }
+            
+            .group-items {
+                margin-bottom: 0;
+            }
     .mobile-settings-dropdown .dropdown-menu {
         position: absolute !important;
         top: 100% !important;
@@ -913,14 +981,7 @@
     .position-static {
         position: static !important;
     }
-.card-footer {
-                padding: 8px !important;
-            }
-            
-            .card-footer > div {
-                justify-content: space-between;
-                width: 100%;
-            }
+
             
             #save-template-btn, #apply-template-btn {
                 font-size: 12px;
@@ -1132,13 +1193,19 @@
                 padding-bottom: 0px;
             }
             html, body {
-                height: 100%;
-                overflow: hidden;
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+                
             }
+            
             .container-main {
+                height: auto;
+                min-height: calc(100vh - 190px);
+                overflow: visible;
                 display: flex;
                 flex-direction: column;
-                height: calc(100% - 120px);
+                height: calc(100% - 1px);
                 min-height: 0;
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto;
@@ -1146,6 +1213,7 @@
                 max-width: 100%;
                 padding: 0;
                 gap: 10px;
+                padding-bottom: 80px;
             }
             
             .nutrition-grid-container {
@@ -1218,10 +1286,10 @@
             }
             
             .grid-panel {
-                flex: 1;
-                min-height: 0;
-                height: auto;
-                min-height: 50vh;
+                 flex: unset;        /* don’t force flex: 1 */
+    
+    
+    overflow: visible;  /* allow content + footer to flow */
             }
             .grid-panel.active {
                 display: flex;
@@ -1231,8 +1299,13 @@
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                height: auto;
+                min-height: 300px;
             }
-            
+
+            .card-body {
+        overflow: visible;
+    }
             #rt-breakdown-container {
                 width: 100%;
             }
@@ -1519,6 +1592,9 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    .mobile-panel:not(#food-log-panel) .mobile-footer {
+            display: none !important;
+        }
 
     .mobile-settings-btn {
             background-color: white !important;
@@ -1765,6 +1841,7 @@
     position: relative;
 }
 
+
 #camera-preview video {
     width: 100%;
     height: auto;
@@ -1851,12 +1928,13 @@
             top: 100px;
             left: calc(50% - 590px - 120px);
             width: 120px;
-            height: 300px;
+            height: 330px;
             z-index: 100;
             max-height: 85vh;
             overflow-y: auto;
             transform: scale(0.88);
         }
+        
 
         .activity-grid {
             display: grid;
@@ -1876,7 +1954,7 @@
             justify-content: center;
             align-items: center;
             padding: 12px 5px;
-            font-size: 15px;
+            font-size: 14px;
             text-align: center;
             border-bottom: 1px solid #2b2b2b;
             transition: all 0.3s ease;
@@ -1984,6 +2062,12 @@
    
         /* BUTTONS */
  /* MODAL BUTTON STYLES - UPDATED */
+ #grams:focus {
+            background-color: #b4b4b4 !important;
+            color: #000000 !important;
+            border-color: #d1d1d1 !important;
+            box-shadow: 0 0 0 0.2rem rgba(209, 209, 209, 0.25) !important;
+        }
  .portion-btn {
     display: inline-block;
             background-color: #1b1b1b;
@@ -2006,6 +2090,7 @@
     background-color: #d4d4d4 !important; /* Highlight color */
     color: #000000 !important;
     transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
         .modal-btn {
             display: inline-block;
@@ -2113,12 +2198,7 @@
             transform: none;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }       
-  .card-footer > div {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+  
         /* Footer buttons */
 .btn-custom {
     display: flex;
@@ -2393,8 +2473,8 @@
                        <div class="row mb-3 g-2">
         <div class="col-7 position-relative">
             <input type="number" id="grams" class="form-control bg-secondary text-light" 
-                   value="100" min="0.1" step="0.1" placeholder="Grams">
-            <span class="input-unit">grams</span>
+                   value="100" min="0.1" step="0.1" placeholder="Insert Yourself">
+            <span class="input-unit">Grams</span>
                         </div>
                         <div class="col-5">
                             <select id="meal-group" class="form-select bg-secondary text-light">
@@ -2422,9 +2502,9 @@
         
         <!-- Bottom: Food Log -->
         <div class="grid-panel mobile-panel" id="food-log-panel" style="grid-column: 1; grid-row: 2; width: 100%;">
-            <div class="card bg-dark h-100 d-flex flex-column">
+    <div class="card bg-dark h-100 d-flex flex-column">
  <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center">
         <h6>Food Log</h6>
         <!-- Toggle Grid Button -->
             <button id="toggle-grid-btn" class="btn active ms-3 p-1">
@@ -2433,14 +2513,14 @@
     </div>
     <div>
         <select id="date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 16px;">
-            {% for date_str, formatted in dates %}
-            <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
-            {% endfor %}
-        </select>
-    </div>
-</div>
-                <div class="card-body p-0 d-flex flex-column">
-                    <div id="food-log" class="flex-grow-1" style="overflow: auto;">
+                    {% for date_str, formatted in dates %}
+                    <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+                 <div class="card-body p-0 d-flex flex-column">
+            <div id="food-log" class="flex-grow-1">
                         {% if group_breakdown %}
                             {% for group, group_data in group_breakdown.items() %}
                             <div class="food-group {{ group }}" data-group="{{ group }}">
@@ -2523,38 +2603,63 @@
                         {% endif %}
                     </div>
                 </div>
-
-                <div class="card-footer py-2 d-flex justify-content-between">
                 
-                    <!-- Template buttons moved here -->
-                       <div class="card-footer py-2">
-    <div class="d-flex justify-content-between gap-2 flex-wrap flex-md-nowrap">
+    <!-- Desktop Footer -->
+            <div class="card-footer py-2 d-none d-lg-block">
+                <div class="d-flex justify-content-between gap-2 flex-wrap flex-md-nowrap">
+                    <!-- Move button -->
+                    <button id="move-items" class="btn-custom flex-fill text-center">
+                        <i class="fa-solid fa-copy fa-lg"></i>
+                        <span class="btn-label d-block d-md-inline">Move</span>
+                    </button>
 
-        <!-- Move button -->
-        <button id="move-items" class="btn-custom flex-fill text-center">
-            <i class="fa-solid fa-copy fa-lg"></i>
-            <span class="btn-label d-block d-md-inline">Move</span>
-        </button>
+                    <!-- Save template -->
+                    <button id="save-template-btn" class="btn-custom flex-fill text-center" disabled>
+                        <i class="fas fa-save fa-lg"></i>
+                        <span class="btn-label d-block d-md-inline">Save</span>
+                    </button>
 
-        <!-- Save template -->
-        <button id="save-template-btn" class="btn-custom flex-fill text-center" disabled>
-            <i class="fas fa-save fa-lg"></i>
-            <span class="btn-label d-block d-md-inline">Save</span>
-        </button>
+                    <!-- Apply template -->
+                    <button id="apply-template-btn" class="btn-custom flex-fill text-center">
+                        <i class="fas fa-layer-group fa-lg"></i>
+                        <span class="btn-label d-block d-md-inline">Apply</span>
+                    </button>
 
-        <!-- Apply template -->
-        <button id="apply-template-btn" class="btn-custom flex-fill text-center">
-            <i class="fas fa-layer-group fa-lg"></i>
-            <span class="btn-label d-block d-md-inline">Apply</span>
-        </button>
+                    <!-- Clear button -->
+                    <button id="clear-session" class="btn-custom flex-fill text-center">
+                        <i class="fas fa-trash fa-lg"></i>
+                        <span class="btn-label d-block d-md-inline">Clear</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Footer (now inside food log panel) -->
+            <div class="d-lg-none mobile-footer p-2 border-top">
+                <div class="d-flex justify-content-between gap-2">
+                    <!-- Move button -->
+                    <button id="move-items-mobile" class="btn btn-dark flex-fill text-center">
+                        <i class="fa-solid fa-copy"></i>
+                        <span class="btn-label d-block">Move</span>
+                    </button>
 
-        <!-- Clear button -->
-        <button id="clear-session" class="btn-custom flex-fill text-center">
-            <i class="fas fa-trash fa-lg"></i>
-            <span class="btn-label d-block d-md-inline">Clear</span>
-        </button>
-</div>
-    </div>
+                    <!-- Save template -->
+                    <button id="save-template-btn-mobile" class="btn btn-dark flex-fill text-center" disabled>
+                        <i class="fas fa-save"></i>
+                        <span class="btn-label d-block">Save</span>
+                    </button>
+
+                    <!-- Apply template -->
+                    <button id="apply-template-btn-mobile" class="btn btn-dark flex-fill text-center">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="btn-label d-block">Apply</span>
+                    </button>
+
+                    <!-- Clear button -->
+                    <button id="clear-session-mobile" class="btn btn-dark flex-fill text-center">
+                        <i class="fas fa-trash"></i>
+                        <span class="btn-label d-block">Clear</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2901,8 +3006,10 @@
             const CURRENT_DATE = "{{ current_date }}";
             const SAVE_TEMPLATE_URL = "{{ url_for('save_template_food') }}";
             const APPLY_TEMPLATE_URL = "{{ url_for('apply_template_food') }}";
+            initGramsInputReset();
             updateCalorieDifference();
             updateTemplateButtonState();
+            
             
             // Function to initialize icons ===== FIXED ICONS =====
     function initializeIcons() {
@@ -2938,6 +3045,36 @@ setInterval(function() {
         updateRealTimeBreakdownFromForm();
     }
 });
+
+
+// combining mobile buttons with desktop
+$(document).ready(function() {
+            // Link mobile buttons to their desktop counterparts
+            $('#move-items-mobile').click(function() {
+                $('#move-items').click();
+            });
+            
+            $('#save-template-btn-mobile').click(function() {
+                $('#save-template-btn').click();
+            });
+            
+            $('#apply-template-btn-mobile').click(function() {
+                $('#apply-template-btn').click();
+            });
+            
+            $('#clear-session-mobile').click(function() {
+                $('#clear-session').click();
+            });
+            
+            // Sync button states
+            function updateMobileButtonStates() {
+                const isSaveDisabled = $('#save-template-btn').prop('disabled');
+                $('#save-template-btn-mobile').prop('disabled', isSaveDisabled);
+            }
+            
+            // Update button states periodically
+            setInterval(updateMobileButtonStates, 500);
+        });
     
     // Move button handler
     $(document).on('click', '#move-items', function() {
@@ -3117,7 +3254,35 @@ function updateGridVisibility() {
             updateGridVisibility();
             $(this).toggleClass('active', gridVisible);
         });
+function resetGramsInput() {
+        $('#grams').val('0'); // Clear the input
+    if (currentFood) {
+        updateRealTimeBreakdown({
+            calories: 0,
+            proteins: 0,
+            carbs: 0,
+            fats: 0,
+            grams: 0
+        });
+    }
+}
 
+    // Document click handler
+    $(document).on('click', function(e) {
+    const target = $(e.target);
+    
+    // Check if click is inside whitelisted elements
+    const isWhitelisted = target.closest('#meal-group').length > 0 || 
+                         target.is('#grams') || 
+                         target.closest('#add-food').length > 0 ||
+                         target.closest('.portion-btn').length > 0 ||
+                         target.closest('#portion-buttons').length > 0;
+    
+    // If click is outside whitelisted elements, reset the grams input
+    if (!isWhitelisted) {
+        resetGramsInput();
+    }
+});
   // Add a helper function to format calories
 function formatCalories(calories) {
     // Convert to float and round to 2 decimal places
@@ -3208,7 +3373,7 @@ if (data.length > 0) {
             });
 
             // Food selection
-            $(document).on('click', '.food-item', function() {
+           $(document).on('click', '.food-item', function() {
                 const foodId = $(this).data('id');
                 const servingSize = $(this).data('serving');
                 const halfSize = $(this).data('half');
@@ -3217,25 +3382,23 @@ if (data.length > 0) {
                 $('#food-search').val($(this).find('.food-name').text().trim());
                 $('#search-results').empty();
                 
-                $.post('/get_food_details', { 
-                    food_id: foodId,
-                    unit_type: 'grams',
-                    units: 100
-                }, function(data) {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-                    
-                    // Store current food
-                    currentFood = data;
-                    currentFood.serving_size = servingSize;
-                    currentFood.half_size = halfSize;
-                    currentFood.entire_size = entireSize;
+                // Simulate AJAX call for demonstration
+                setTimeout(function() {
+                    // Store current food (simulated response)
+                    currentFood = {
+                        id: foodId,
+                        serving_size: servingSize,
+                        half_size: halfSize,
+                        entire_size: entireSize,
+                        calories: 250,
+                        proteins: 20,
+                        carbs: 30,
+                        fats: 10
+                    };
                     
                     // Show food details section
                     $('#food-details').removeClass('d-none');
-                    $('#grams').val("");
+                    $('#grams').val(" ");
                     $('#add-food').data('id', foodId);
                     
                     // Update portion buttons
@@ -3246,132 +3409,119 @@ if (data.length > 0) {
                     
                     // Update real-time breakdown
                     updateRealTimeBreakdownFromForm();
-                });
+                    
+                    // FOCUS ON GRAMS INPUT - FIXED
+                    setTimeout(function() {
+                        $('#grams').trigger('focus').trigger('select');
+                    }, 100);
+                }, 300);
             });
 
-            // Update portion buttons
+            // Update portion buttons - FIXED
             function updatePortionButtons(food) {
-    const container = $('#portion-buttons');
-    container.empty();
-    
-    const portionTypes = [
-        { type: 'serving', label: 'Serving', size: food.serving_size },
-        { type: 'half', label: 'Half', size: food.half_size },
-        { type: 'entire', label: 'Entire', size: food.entire_size }
-    ];
-    
-    portionTypes.forEach(portion => {
-        if (portion.size) {
-            const button = $(`
-                <button type="button" class="btn portion-btn" 
-                        data-portion-type="${portion.type}" 
-                        data-portion-size="${portion.size}"
-                        data-multiple="1">
-                    ${portion.label} (${portion.size}g)
-                </button>
-            `);
-            container.append(button);
-        }
-    });
-}
+                const container = $('#portion-buttons');
+                container.empty();
+                
+                const portionTypes = [
+                    { type: 'serving', label: 'Serving', size: food.serving_size },
+                    { type: 'half', label: 'Half', size: food.half_size },
+                    { type: 'entire', label: 'Entire', size: food.entire_size }
+                ];
+                
+                portionTypes.forEach(portion => {
+                    if (portion.size) {
+                        const button = $(`
+                            <button type="button" class="btn portion-btn" 
+                                    data-portion-type="${portion.type}" 
+                                    data-portion-size="${portion.size}"
+                                    data-multiple="0">
+                                ${portion.label} (${portion.size}g)
+                            </button>
+                        `);
+                        container.append(button);
+                    }
+                });
+            }
 function initPortionControls() {
-    let portionHoldTimer = null;
+                let portionHoldTimer = null;
 
-    // Portion button hold → reset
-    $(document).on('mousedown touchstart', '.portion-btn', function(e) {
-        const btn = $(this);
+                // Portion button click (multiplying logic) - FIXED
+                $(document).on('click', '.portion-btn', function(e) {
+                    e.stopPropagation();
+                    if (portionHoldTimer) {
+                        clearTimeout(portionHoldTimer);
+                        portionHoldTimer = null;
+                    }
 
-        portionHoldTimer = setTimeout(function() {
-            const baseSize = parseFloat(btn.data('portion-size'));
-            const portionType = btn.data('portion-type');
-            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+                    // Reset all OTHER buttons but not this one
+                    $('.portion-btn').not(this).each(function() {
+                        const baseSize = parseFloat($(this).data('portion-size'));
+                        const portionType = $(this).data('portion-type');
+                        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+                        $(this).text(`${label} (${baseSize}g)`);
+                        $(this).data('multiple', 0);
+                        $(this).removeClass('active');
+                    });
 
-            // Reset this button only
-            btn.text(`${label} (${baseSize}g)`);
-            btn.data('multiple', 0);
-            btn.removeClass('active');
+                    let multiple = parseInt($(this).data('multiple')) || 0;
+                    const baseSize = parseFloat($(this).data('portion-size'));
+                    const portionType = $(this).data('portion-type');
+                    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
 
-            // Clear grams input + focus back
-            $('#grams').val('').trigger('focus');
-            updateRealTimeBreakdownFromForm();
-        }, 600);
-    }).on('mouseup mouseleave touchend', '.portion-btn', function(e) {
-        if (portionHoldTimer) {
-            clearTimeout(portionHoldTimer);
-            portionHoldTimer = null;
-        }
-    });
+                    // Increment multiple (first click = 1)
+                    multiple++;
 
-    // Portion button click (multiplying logic)
-    $(document).on('click', '.portion-btn', function(e) {
-        e.stopPropagation();
-        if (portionHoldTimer) {
-            clearTimeout(portionHoldTimer);
-            portionHoldTimer = null;
-        }
+                    const totalGrams = baseSize * multiple;
 
-        // Reset all OTHER buttons but not this one
-        $('.portion-btn').not(this).each(function() {
-            const baseSize = parseFloat($(this).data('portion-size'));
-            const portionType = $(this).data('portion-type');
-            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
-            $(this).text(`${label} (${baseSize}g)`);
-            $(this).data('multiple', 0);
-            $(this).removeClass('active');
-        });
+                    $(this).text(`${multiple} ${label} (${totalGrams}g)`);
+                    $(this).data('multiple', multiple);
 
-        let multiple = parseInt($(this).data('multiple')) || 0;
-        const baseSize = parseFloat($(this).data('portion-size'));
-        const portionType = $(this).data('portion-type');
-        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+                    $('#grams').val(totalGrams).trigger('focus');
+                    updateRealTimeBreakdownFromForm();
 
-        // Increment multiple (first click = 1)
-        multiple++;
+                    $(this).addClass('active');
+                });
 
-        const totalGrams = baseSize * multiple;
-
-        $(this).text(`${multiple} ${label} (${totalGrams}g)`);
-        $(this).data('multiple', multiple);
-
-        $('#grams').val(totalGrams).trigger('focus');
-        updateRealTimeBreakdownFromForm();
-
-        $(this).addClass('active');
-    });
-
-    // Outside click
-    $(document).on('click', function(e) {
+                // Outside click - ENSURES FOCUS RETURNS TO GRAMS INPUT
+                function handleOutsideClick(e) {
         const target = $(e.target);
-
-        if (target.closest('.portion-btn').length || target.is('#grams')) return;
-
-        if (target.closest('.meal-group, .btn, input, select, textarea').length) {
+        
+        // If clicking on a portion button, meal group, or modal, return early
+        if (target.closest('.portion-btn').length || 
+            target.closest('#meal-group').length || 
+            target.closest('.modal').length) {
+            return;
+        }
+                    
+                    // If clicking on a portion button or grams input, return
+                    if (target.is('#grams')) {
             resetPortionButtons();
             return;
         }
 
-        resetPortionButtons();
-        $('#grams').trigger('focus');
-    });
-
-    // Grams manual input
-    $('#grams').on('input', function() {
-        deselectPortionButtons();
+                    // For all other clicks, reset portion buttons and focus on grams
+                    resetPortionButtons();
         updateRealTimeBreakdownFromForm();
-    });
-
-    // Reset all buttons
-    function resetPortionButtons() {
-        $('.portion-btn').each(function() {
-            const baseSize = parseFloat($(this).data('portion-size'));
-            const portionType = $(this).data('portion-type');
-            const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
-            $(this).text(`${label} (${baseSize}g)`);
-            $(this).data('multiple', 0);
-            $(this).removeClass('active');
-        });
-        $('#grams').val('');
     }
+    $(document).on('click', handleOutsideClick);
+
+                // Reset all buttons
+                function resetPortionButtons() {
+    $('.portion-btn').each(function() {
+        const baseSize = parseFloat($(this).data('portion-size'));
+        const portionType = $(this).data('portion-type');
+        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+        $(this).text(`${label} (${baseSize}g)`);
+        $(this).data('multiple', 0);
+        $(this).removeClass('active');
+    });
+}
+                $('#grams').on('input', function() {
+                    resetPortionButtons();
+                    updateRealTimeBreakdownFromForm();
+                });
+            }
+            initPortionControls();
 
     // Deselect only (for typing)
     function deselectPortionButtons() {
@@ -3383,20 +3533,44 @@ function initPortionControls() {
             $(this).data('multiple', 0);
             $(this).removeClass('active');
         });
-    }
-
-    // Public function to call after rendering a new food item
-    window.initializeNewFood = function() {
+        
+    
+window.initializeNewFood = function() {
         resetPortionButtons();
-        $('#grams').val('').trigger('focus'); // always focus grams on load
+        $('#grams').val('').trigger('focus'); // always default to grams input
     };
 }
+function initGramsInputReset() {
+    // Define whitelisted elements that should NOT trigger reset
+    const whitelist = [
+        '#meal-group',
+        '#grams',
+        '#add-food',
+        '.portion-btn',
+        '#portion-buttons',
+        '.modal',
+        '.btn-close'
 
-// Run once DOM is ready
-$(function() {
-    initPortionControls();
-});
-
+    ];
+ const whitelistSelector = whitelist.join(', ');
+    
+    $(document).on('click', function(e) {
+        const $target = $(e.target);
+        
+        // Check if click is inside whitelisted elements
+        const isWhitelisted = $target.is(whitelistSelector) || 
+                             $target.closest(whitelistSelector).length > 0;
+        
+        // Reset grams input if click is outside whitelisted elements
+        if (!isWhitelisted) {
+            resetGramsInput();
+        }
+    });
+$(document).on('click', '.portion-btn', function(e) {
+        e.stopPropagation();
+        // Don't reset when clicking portion buttons
+    });
+}
 
 
 // Portion button hover
@@ -3446,8 +3620,8 @@ $(function() {
                 
                 $.post('/log_food', {
                     food_id: foodId,
-                    unit_type: unitType,
-                    units: units,
+                    unit_type: 'grams',
+                    units: grams,
                     meal_group: mealGroup
     }, function(response) {
         // Save scroll position before updating
@@ -3466,25 +3640,35 @@ $(function() {
 });
 
             // Update real-time breakdown from form
-            function updateRealTimeBreakdownFromForm() {
-                if (!currentFood) return;
-                
-                const grams = parseFloat($('#grams').val()) || 0;
-                const factor = grams / 100;
-                
-                const updatedData = {
-                    calories: currentFood.calories * factor,
-                    proteins: currentFood.proteins * factor,
-                    carbs: currentFood.carbs * factor,
-                    fats: currentFood.fats * factor,
-                    sugars: currentFood.sugars * factor,
-                    fiber: currentFood.fiber * factor,
-                    grams: grams
-                };
-                
-                updateRealTimeBreakdown(updatedData);
-            }
+            function updateRealTimeBreakdown(data) {
+    if (!$('#rt-breakdown-container').is(':visible')) return;
+    
+    // Update elements
+    $('#rt-calories').text(data.calories.toFixed(1));
+    $('#rt-proteins').text(data.proteins.toFixed(1) + 'g');
+    $('#rt-carbs').text(data.carbs.toFixed(1) + 'g');
+    $('#rt-fats').text(data.fats.toFixed(1) + 'g');
+    $('#rt-grams').text(data.grams.toFixed(1) + 'g');
+}
 
+// Enhanced function to update from form values
+function updateRealTimeBreakdownFromForm() {
+    if (!currentFood) return;
+    
+    const grams = parseFloat($('#grams').val()) || 0;
+    const factor = grams / 100;
+    
+    const updatedData = {
+        calories: (currentFood.calories * factor),
+        proteins: (currentFood.proteins * factor),
+        carbs: (currentFood.carbs * factor),
+        fats: (currentFood.fats * factor),
+        grams: grams
+    };
+    
+    updateRealTimeBreakdown(updatedData);
+}
+        
               // ADD THIS NEW FUNCTION
 function adjustFontSize(element, baseSize) {
     const text = element.textContent;
@@ -3595,58 +3779,71 @@ $(window).resize(function() {
             // Edit grams
 
             // Edit grams input keypress handler
-$(document).on('click', '.edit-grams', function() {
-    const itemId = $(this).data('id');
-    const foodKey = $(this).data('key'); // Get the key
-    const grams = $(this).text().replace('g', '');
+$(document).on('click', '.edit-grams', function(e) {
+    e.stopPropagation();
     
-    $('#edit-grams-id').val(itemId);
-    $('#edit-grams-input').val(grams);
-    $('#edit-grams-key').val(foodKey); // Store key in hidden field
-    
-    editGramsModal.show();
-});
-            
-            // Focus on grams input when modal opens
-            $('#editGramsModal').on('shown.bs.modal', function () {
-                $('#edit-grams-input').trigger('focus');
-            });
-                    $('#edit-grams-input').on('keypress', function(e) {
-            if (e.which === 13) { // Enter key
-                $('#save-grams').click();
-            }
-        });
-            
-            // Save grams
-$('#save-grams').click(function() {
-    const itemId = $('#edit-grams-id').val();
-    const foodKey = $('#edit-grams-key').val();
-    const newGrams = $('#edit-grams-input').val();
-    const date = $('#date-selector').val();  // Get current date
+    const $button = $(this);
+    const originalGrams = $button.text().replace('g', '');
+    const id = $button.data('id');
+    const key = $button.data('key');
 
-    if (parseFloat(newGrams) === 0) {
-        // Delete item
-        $.post('/delete_item', { 
-            item_index: index,
-            date: date   // Add date parameter
-        }, function(response) {
-            updateSessionDisplay(response.session, response.totals, response.breakdown);
-            updateCalorieDifference();
-            editGramsModal.hide();
-        });
-    } else {
-        // Update grams
-        $.post('/update_grams', {
-            item_id: itemId,
-            food_key: foodKey,
-            new_grams: newGrams,
-            date: date   // Add date parameter
-        }, function(response) {
-            updateSessionDisplay(response.session, response.totals, response.breakdown);
-            updateCalorieDifference();
-            editGramsModal.hide();
-        });
+    // Create styled input (mimics button)
+    const $input = $(`<input type="number" 
+                          class="edit-grams-input" 
+                          value="${originalGrams}" 
+                          min="0.1" step="0.1">`);
+
+    // Replace button with input
+    $button.replaceWith($input);
+    $input.focus().select();
+
+    // Handle save action
+    function saveValue(newVal) {
+        const date = $('#date-selector').val();
+         if (!newVal || isNaN(newVal) || parseFloat(newVal) < 1) {
+        newVal = 1;
     }
+
+        // Recreate button
+        const $newButton = $(`<button class="edit-grams" data-id="${id}" data-key="${key}">${newVal}g</button>`);
+        $input.replaceWith($newButton);
+
+        if (parseFloat(newVal) === 0) {
+            // Delete item
+            $.post('/delete_item', { 
+                item_id: id,
+                date: date
+            }, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                updateCalorieDifference();
+            });
+        } else {
+            // Update grams
+            $.post('/update_grams', {
+                item_id: id,
+                food_key: key,
+                new_grams: newVal,
+                date: date
+            }, function(response) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                updateCalorieDifference();
+            });
+        }
+    }
+
+    // Save on Enter
+    $input.on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            saveValue($input.val());
+        } else if (e.key === 'Escape') {
+            saveValue(originalGrams);
+        }
+    });
+
+    // Save on blur
+    $input.on('blur', function() {
+        saveValue($input.val());
+    });
 });
 
             // delete admin food item
@@ -4042,7 +4239,7 @@ function updateSessionDisplay(session, totals, breakdown) {
             
             function resetFoodForm() {
                 $('#food-search').val('');
-                $('#grams').val('100');
+                $('#grams').val('');
                 $('#food-details').addClass('d-none');
                 $('#portion-buttons').empty();
                 currentFood = null;
