@@ -13,7 +13,7 @@ from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
-from itsdangerous import URLSafeTimedSerializer as Serializer
+from itsdangerous import URLSafeTimedSerializer
 import smtplib
 from email.mime.text import MIMEText
 from functools import wraps
@@ -23,6 +23,8 @@ from dotenv import load_dotenv
 import traceback
 import uuid
 import logging
+from flask import current_app
+from flask_mail import Mail
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -71,26 +73,28 @@ def safe_float(value, default=0.0, min_val=0.001, max_val=10000.0):
 
 # Database connection using Neon.tech URL
 def get_db_connection():
-    DATABASE_URL = os.getenv('DATABASE_URL')
-    print(f"Connecting to database: {DATABASE_URL.split('@')[-1]}")
+    """
+    Returns a psycopg2 connection to the database.
+    Chooses local or Neon DB based on DB_ENV environment variable.
+    """
+    db_env = os.getenv("DB_ENV", "local").lower()  # default to local
+    if db_env == "neon":
+        DATABASE_URL = os.getenv("NEON_DB_URL")
+    else:
+        DATABASE_URL = os.getenv("LOCAL_DB_URL")
+
+    if not DATABASE_URL:
+        raise ValueError(f"No database URL defined for DB_ENV={db_env}")
+
+    print(f"Connecting to database ({db_env}): {DATABASE_URL.split('@')[-1]}")
+
     try:
-        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(DATABASE_URL)
         conn.autocommit = True
         return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
         raise
-    result = urlparse(DATABASE_URL)
-    conn = psycopg2.connect(
-        database=result.path[1:],
-        user=result.username,
-        password=result.password,
-        host=result.hostname,
-        port=result.port,
-        sslmode='require'
-    )
-    conn.autocommit = True
-    return conn
 
 # Initialize database
 def init_db():
@@ -259,9 +263,9 @@ def init_db():
 def init_workout_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    # Exercises table (unchanged)
-    cursor.execute('''
+
+    # Ensure 'users' table exists before creating foreign key references
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS exercises (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
@@ -269,10 +273,10 @@ def init_workout_db():
             description TEXT,
             created_by_admin BOOLEAN DEFAULT TRUE
         )
-    ''')
-    
-    # Workout sessions table (unchanged)
-    cursor.execute('''
+    """)
+
+    # Only create workout_sessions if 'users' table exists
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS workout_sessions (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
@@ -281,44 +285,37 @@ def init_workout_db():
             notes TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
-    ''')
-    
-    # Workout sets table - ADD NEW COLUMNS
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS workout_sets (
-        id SERIAL PRIMARY KEY,
-        session_id INTEGER NOT NULL,
-        exercise_id INTEGER NOT NULL,
-        reps INTEGER NOT NULL,
-        weight REAL NOT NULL,
-        volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
-        rir REAL,
-        comments TEXT,
-        FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
-        FOREIGN KEY (exercise_id) REFERENCES exercises(id)
-    )
-''')
+    """)
 
+    # Only create workout_sets if 'exercises' and 'workout_sessions' exist
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS workout_sets (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER NOT NULL,
+            exercise_id INTEGER NOT NULL,
+            reps INTEGER NOT NULL,
+            weight REAL NOT NULL,
+            volume REAL GENERATED ALWAYS AS (reps * weight) STORED,
+            rir REAL,
+            comments TEXT,
+            FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (exercise_id) REFERENCES exercises(id)
+        )
+    """)
+
+    # Add missing columns safely
     try:
         cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS rir REAL")
         cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS comments TEXT")
+        cursor.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS is_saved BOOLEAN DEFAULT FALSE")
+        cursor.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS workout_type TEXT DEFAULT 'strength'")
     except Exception as e:
-        print(f"Error adding columns: {e}")
+        print(f"[WARNING] Error adding columns: {e}")
 
-    try:
-        cursor.execute("""
-            ALTER TABLE workout_sessions
-            ADD COLUMN IF NOT EXISTS is_saved BOOLEAN DEFAULT FALSE,
-            ADD COLUMN IF NOT EXISTS workout_type TEXT DEFAULT 'strength'
-        """)
-    except Exception as e:
-        print(f"Error adding columns to workout_sessions: {e}")        
-    
-    # Add default exercises if they don't exist
+    # Add default exercises if table is empty
     default_exercises = [
-
+        # Example: ('Bench Press', 'Chest', 'Barbell bench press exercise')
     ]
-    
     for name, group, desc in default_exercises:
         cursor.execute(
             "INSERT INTO exercises (name, muscle_group, description) "
@@ -326,12 +323,12 @@ def init_workout_db():
             "(SELECT 1 FROM exercises WHERE name = %s)",
             (name, group, desc, name)
         )
-    
-    conn.commit()
-    conn.close()
 
-# Initialize workout DB
-init_workout_db()
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print("[INIT] Workout database initialized safely.")
+
     
 
 # Migrate JSON data to database
@@ -511,18 +508,33 @@ class User(UserMixin):
         self.weight = weight
 
     def get_reset_token(self, expires_sec=1800):
-        s = Serializer(app.config['SECRET_KEY'], expires_sec)
-        return s.dumps({'user_id': self.id}).decode('utf-8')
+        """
+        Generate a secure password reset token that expires in `expires_sec` seconds.
+        """
+        s = URLSafeTimedSerializer(
+            secret_key=current_app.config['SECRET_KEY'],
+            salt='password-reset-salt'  # namespaced for reset tokens
+        )
+        return s.dumps({'user_id': self.id})
 
+    # -------------------------------
+    # Password reset token verification
+    # -------------------------------
     @staticmethod
-    def verify_reset_token(token):
-        s = Serializer(app.config['SECRET_KEY'])
+    def verify_reset_token(token, expires_sec=1800):
+        """
+        Verify a password reset token. Returns user_id if valid, None if invalid/expired.
+        """
+        s = URLSafeTimedSerializer(
+            secret_key=current_app.config['SECRET_KEY'],
+            salt='password-reset-salt'
+        )
         try:
-            user_id = s.loads(token)['user_id']
-        except:
+            data = s.loads(token, max_age=expires_sec)
+            return data.get('user_id')
+        except Exception:
             return None
-        return user_id
-        
+
 
 # User loader
 @login_manager.user_loader
@@ -816,7 +828,26 @@ def update_food_keys_normalization():
         conn.rollback()
     finally:
         conn.close()
-
+def calculate_calorie_status(calorie_difference):
+    abs_diff = abs(calorie_difference)
+    if abs_diff <= 50:
+        return {
+            'status': 'maintaining',
+            'class': 'status-maintain',
+            'display': f"{abs_diff:.0f}"
+        }
+    elif calorie_difference > 0:
+        return {
+            'status': 'calories over',
+            'class': 'status-gain', 
+            'display': f"{abs_diff:.0f}"
+        }
+    else:
+        return {
+            'status': 'calories left',
+            'class': 'status-loss',
+            'display': f"{abs_diff:.0f}"
+        }
 # Initialize database and migrate data
 init_db()
 migrate_json_to_db()
@@ -1188,18 +1219,19 @@ def get_food_details():
         print(f"- Fats: {fats}")
         
         return jsonify({
-            'name': food['name'],
-            'units': units,
-            'unit_type': unit_type,
-            'carbs': carbs,
-            'proteins': proteins,
-            'fats': fats,
-            'salt': salt,
-            'calories': calories,
-            'serving_size': food.get('serving'),
-            'half_size': food.get('half'),
-            'entire_size': food.get('entire')
-        })
+        "success": True,
+        "name": food["name"],
+        "units": units,
+        "unit_type": unit_type,
+        "calories": calories,
+        "proteins": proteins,
+        "carbs": carbs,
+        "fats": fats,
+        "salt": salt,
+        "serving_size": food.get("serving"),
+        "half_size": food.get("half"),
+        "entire_size": food.get("entire")
+    })
     except Exception as e:
         print(f"🔥 Error in get_food_details: {str(e)}")
         import traceback
@@ -1311,23 +1343,20 @@ def update_session():
     current_date_formatted = format_date(current_date)
     
     # Calculate calorie difference and status
-    calorie_difference = totals['calories'] - current_tdee
+    calorie_difference = current_tdee - totals['calories']  # Fixed: TDEE - calories consumed
     status_dict = calculate_calorie_status(calorie_difference)
     calorie_status = status_dict['status']
     calorie_status_class = status_dict['class']
     calorie_difference_str = status_dict['display']
-
+    
     return jsonify({
         'session': eaten_items,
         'totals': totals,
-        'current_date': current_date,
-        'current_date_formatted': current_date_formatted,
         'breakdown': group_breakdown,
+        'current_date_formatted': current_date_formatted,
         'calorie_difference': calorie_difference_str,
         'calorie_status': calorie_status,
-        'calorie_status_class': calorie_status_class,
-        'current_tdee': current_tdee,
-        'calorie_difference_raw': calorie_difference
+        'calorie_status_class': calorie_status_class
     })
 
 @app.route('/delete_food', methods=['POST'])
@@ -2975,16 +3004,36 @@ def update_comment():
 
     return jsonify({'success': True})            
 
-@app.route('/keepalive')
-@login_required
-def keepalive():
-    """Keep session alive by updating the session modified timestamp"""
-    session.modified = True
-    return jsonify(status="alive")          
+@app.route('/foods')
+def list_foods():
+    cursor = get_cursor()
+    cursor.execute("SELECT * FROM foods LIMIT 10;")
+    foods = cursor.fetchall()
+    cursor.close()
+    return jsonify(foods)        
     
 if __name__ == '__main__':
-        init_db()
-        init_workout_db()
+    try:
+        print("[INIT] Initializing main database...")
+        init_db()  # must run first: creates users, foods, etc.
+        print("[INIT] Main database initialized.")
+
+        print("[INIT] Initializing workout database...")
+        init_workout_db()  # now safe: users table exists
+        print("[INIT] Workout database initialized.")
+
+        print("[INIT] Migrating JSON food data (if any)...")
         migrate_json_to_db()
+        print("[INIT] JSON migration complete.")
+
+        print("[INIT] Updating food keys normalization...")
         update_food_keys_normalization()
+        print("[INIT] Food keys updated.")
+
+
+
+        print("[START] Running Flask app...")
         app.run(debug=True)
+
+    except Exception as e:
+        print(f"[ERROR] Initialization failed: {e}")
