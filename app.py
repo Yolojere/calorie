@@ -1873,7 +1873,7 @@ def apply_template_food():
         
         # Get template items
         cursor.execute('''
-            SELECT f.key, f.name, f.carbs, f.proteins, f.fats, f.calories, fti.grams
+            SELECT f.key, f.name, f.carbs, f.proteins, f.fats, f.saturated, f.fiber, f.sugars, f.salt, f.calories, fti.grams
             FROM food_template_items fti
             JOIN foods f ON fti.food_key = f.key
             WHERE fti.template_id = %s
@@ -1889,7 +1889,7 @@ def apply_template_food():
         
         # Add each template item to the session
         for item in template_items:
-            factor = item[6] / 100  # Convert from grams to factor
+            factor = item[9] / 100  # Convert from grams to factor
             
             session_data.append({
                 'id': str(uuid.uuid4()),  # Generate a unique ID for the session
@@ -1898,8 +1898,12 @@ def apply_template_food():
                 'carbs': item[2] * factor,
                 'proteins': item[3] * factor,
                 'fats': item[4] * factor,
-                'calories': item[5] * factor,
-                'grams': item[6],
+                'saturated': item[5] * factor,
+                'fiber': item[6] * factor,
+                'sugars': item[7] * factor,
+                'salt': item[8] * factor,
+                'calories': item[9] * factor,
+                'grams': item[10],
                 'group': meal_group
             })
         
