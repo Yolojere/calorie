@@ -3223,7 +3223,7 @@ def process_nutrition_label():
         api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict"
         
         # Your Mindee API key (store this securely in your config)
-        api_key = current_app.config.get('MINDEE_API_KEY')
+        api_key = os.getenv('MINDEE_API_KEY')
         
         if not api_key:
             return jsonify({'success': False, 'error': 'Mindee API key not configured'})
