@@ -4,327 +4,599 @@
 
 {% block head %}
 <style>
-    /* === PROFILE PAGE SPECIFIC STYLES === */
+    body {
+        background-color: #121212;
+        color: #eaeaea;
+        font-family: "Roboto", sans-serif;
+    }
+
+    .card {
+        background-color: #1b1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #2a2a2a;
+        background: transparent;
+        color: #fff;
+        text-align: center;
+        font-weight: bold;
+        border-top-left-radius: 20px; 
+        border-top-right-radius: 20px;
+    }
+
     .avatar-placeholder {
         width: 80px;
         height: 80px;
-        background: linear-gradient(to right, #414141, #c7c6c6);
+        background: #2a2a2a;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 2rem;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        color: #aaa;
     }
-    
+
     .account-heading {
-        color: #ffffff;
-        font-weight: bold;
+        color: #fff;
+        font-size: 1.6rem;
+        font-weight: 600;
     }
-    
+
     .text-secondary {
-        color: #b0b0b0 !important;
+        color: #bbb !important;
     }
-    
-    .accent-color {
-        color: #ffffff;
-    }
-    
+
     legend {
-        color: #ffffff;
-        font-size: 1.3rem;
-        border-bottom: 2px solid #444;
-        padding-bottom: 10px;
+        color: #fff;
+        font-size: 1.2rem;
+        border-bottom: 1px solid #2a2a2a;
+        padding-bottom: 6px;
+        margin-bottom: 15px;
     }
-    
+
+    .form-label {
+        font-weight: 500;
+        color: #ddd;
+    }
+
     .input-group-text {
-        background-color: #333 !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #555 !important;
+        background-color: #1e1e1e !important;
+        color: #ccc !important;
+        border: 1px solid #333 !important;
+        border-radius: 20px 0 0 20px;
     }
-    
-    .btn-accent {
-        background: linear-gradient(to right, #ffffff, #b3b3b3) !important;
-        color: #000 !important;
-        font-weight: bold;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
+
+    .form-control {
+        background-color: #121212;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 20px;
     }
-    
-    .btn-accent:hover {
-        background: linear-gradient(to right, #ffffff, #ffffff) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    .form-control:focus {
+        border-color: #555;
+        box-shadow: none;
+        background-color: #181818;
+        color: #eee;
     }
-    
-    .border-top {
-        border-top: 1px solid #444 !important;
+    .form-control::placeholder {
+        color: #ddd !important;
+        opacity: 0.6;
     }
-    
-    /* Security icons */
-    .fa-shield-alt, .fa-lock, .fa-user-shield {
-        color:white !important;
-        transition: transform 0.3s ease;
+
+    /* Button styles */
+    .btn, .btn-accent, .btn-outline-light, a.accent-color {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-family: Roboto, sans-serif;
+        color: #ffffff !important;
+        background-color: #1b1b1b;
+        border: 1px solid #444;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
     }
-    
-    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
-        transform: scale(1.2);
+
+    .btn:hover, .btn-accent:hover, .btn-outline-light:hover, a.accent-color:hover {
+        background-color: #3f3f3f;
+        transform: scale(1.02);
     }
+
+    .btn:active, .btn-accent:active, .btn-outline-light:active, a.accent-color:active {
+        transform: scale(0.98);
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 20px;
+    }
+
     .health-metrics {
-        background: rgba(35, 35, 55, 0.6);
-        border-radius: 12px;
+        background: #1b1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 20px;
         padding: 20px;
         margin-top: 30px;
-        border: 1px solid rgba(100, 100, 200, 0.2);
     }
-    
+
     .health-card {
         text-align: center;
         padding: 15px;
-        border-radius: 10px;
-        background: rgba(25, 25, 40, 0.5);
+        border-radius: 20px;
+        background: #121212;
+        border: 1px solid #2a2a2a;
     }
-    
+
     .metric-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #fff;
         margin: 10px 0;
     }
-    
+
     .metric-label {
-        color: #b0b0b0;
+        color: #bbb;
         font-size: 0.9rem;
-        margin-bottom: 5px;
     }
-    
+
     .metric-icon {
         font-size: 1.5rem;
-        color: #b989f0;
-        margin-bottom: 10px;
+        color: #888;
+        margin-bottom: 8px;
     }
-    /* Focus effect for new inputs */
-#full_name, #main_sport, #fitness_goals {
-    transition: all 0.3s ease;
-}
 
-    
-    /* Responsive adjustments */
+    a {
+        color: #ddd;
+        text-decoration: none;
+    }
+    a:hover {
+        color: #fff;
+    }
+
+    .border-top {
+        border-top: 1px solid #2a2a2a !important;
+    }
+
+    /* Avatar modal styles */
+    .avatar-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .avatar-modal-content {
+        background-color: #1b1b1b;
+        border-radius: 15px;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .avatar-options {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .avatar-option {
+        cursor: pointer;
+        border-radius: 50%;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .avatar-option img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1/1;
+    }
+
+    .avatar-option:hover {
+        transform: scale(1.1);
+    }
+
+    .avatar-option.selected {
+        box-shadow: 0 0 0 3px #0d6efd;
+    }
+
+    .upload-btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #2a2a2a;
+        color: #fff;
+        border-radius: 20px;
+        cursor: pointer;
+        text-align: center;
+        margin: 10px 0;
+        transition: background-color 0.3s;
+    }
+
+    .upload-btn:hover {
+        background-color: #3a3a3a;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    /* Icons */
+    .fa-shield-alt, .fa-lock, .fa-user-shield {
+        color:#fff !important;
+        transition: transform 0.2s ease;
+    }
+    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
+        transform: scale(1.15);
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
         .avatar-placeholder {
             width: 60px;
             height: 60px;
             font-size: 1.5rem;
         }
-        
         .account-heading {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
         }
         
-        legend {
-            font-size: 1.1rem;
+        .avatar-options {
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h3 class="text-center">Your Account Profile</h3>
-    </div>
-    <div class="card-body p-4">
-        <!-- User Profile Section -->
-        <div class="media mb-5 p-4 bg-dark rounded">
-            <div class="d-flex align-items-center">
-                <div class="me-4">
-                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="fas fa-user"></i>
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-center">Your Account Profile</h3>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row gap-4">
+                
+                <!-- Left Section: Avatar + User Info -->
+                <div class="text-center flex-shrink-0">
+                    <!-- Determine avatar folder based on whether it's a predefined avatar or uploaded -->
+                    {% if current_avatar in ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png', 'avatar4.png'] %}
+                        {% set avatar_folder = 'avatars' %}
+                    {% else %}
+                        {% set avatar_folder = 'uploads' %}
+                    {% endif %}
+                    
+                    <!-- Main Avatar - Clickable -->
+                    <div id="avatar-container" style="cursor: pointer;">
+                        <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ current_avatar) }}"
+                             class="rounded-circle shadow mb-3"
+                             width="120" height="120"
+                             id="main-avatar"
+                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
                     </div>
-                </div>
-                <div class="media-body">
+                    
+                    <!-- User Info -->
                     <h2 class="account-heading">{{ current_user.username }}</h2>
                     <p class="text-secondary mb-1">{{ current_user.email }}</p>
                     <p class="text-info mb-0">
                         <i class="fas fa-user-shield me-1"></i> Account Type: {{ role|capitalize }}
                     </p>
                 </div>
+
+                <!-- Right Section: Form -->
+                <div class="flex-grow-1">
+                    <form method="POST" enctype="multipart/form-data" id="profile-form">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control bg-dark text-light") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control bg-dark text-light") }}
+                        </div>
+
+                        {% if extra_columns_exist %}
+                            <legend class="border-bottom mb-4">
+                                <i class="fas fa-user me-2"></i>General Information
+                            </legend>
+
+                            <!-- Full Name Field -->
+                            <div class="form-group mb-4">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                                           value="{{ form.full_name.data or '' }}" placeholder="John Doe">
+                                </div>
+                            </div>
+
+                            <!-- Main Sport Field -->
+                            <div class="form-group mb-4">
+                                <label for="main_sport" class="form-label">Main Sport / Activity</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
+                                    <input type="text" class="form-control" id="main_sport" name="main_sport" 
+                                           value="{{ form.main_sport.data or '' }}" placeholder="e.g. Weightlifting, Running">
+                                </div>
+                            </div>
+
+                            <!-- Fitness Goals Field -->
+                            <div class="form-group mb-4">
+                                <label for="fitness_goals" class="form-label">Fitness Goals</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-bullseye"></i></span>
+                                    <input type="text" class="form-control" id="fitness_goals" name="fitness_goals" 
+                                           value="{{ form.fitness_goals.data or '' }}" placeholder="Lose weight, Build muscle, Improve endurance">
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Hidden avatar selection fields -->
+                        <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
+                        <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
+
+                        {{ form.submit(class="btn btn-primary rounded-pill px-4") }}
+                    </form>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Update Form -->
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">
-                    <i class="fas fa-user-cog me-2"></i>Update Account Information
-                </legend>
+    <!-- Avatar Selection Modal -->
+    <div class="avatar-modal" id="avatarModal">
+        <div class="avatar-modal-content">
+            <h4 class="text-center mb-3">Choose Your Avatar</h4>
+            
+            <div class="avatar-options">
+                {% for value, label in form.avatar_choice.choices %}
+                    {% set thumb_path = url_for('static', filename='avatars/' ~ value) %}
+                    <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
+                         data-value="{{ value }}">
+                        <img src="{{ thumb_path }}" 
+                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <label for="avatar_upload_input" class="upload-btn">
+                <i class="fas fa-upload me-1"></i> Upload Your Own
+            </label>
+            
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" id="cancelAvatar">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAvatar">Update</button>
+            </div>
+        </div>
+    </div>
 
-                
-                <!-- Username Field -->
-                <div class="form-group mb-4">
-                    {{ form.username.label(class="form-label") }}
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-user-edit"></i>
-                        </span>
-                        {% if form.username.errors %}
-                            {{ form.username(class="form-control is-invalid") }}
+    <!-- Health Metrics Section -->
+    <div class="health-metrics">
+        <legend class="border-bottom mb-4">
+            <i class="fas fa-heartbeat me-2"></i>Health Metrics
+        </legend>
+        
+        <div class="row">
+            <!-- Weight Card -->
+            <div class="col-md-6 mb-4">
+                <div class="health-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-weight-scale"></i>
+                    </div>
+                    <div class="metric-label">Current Weight</div>
+                    <div class="metric-value">
+                        {% if current_weight %}
+                            {{ current_weight|round(1) }} kg
                         {% else %}
-                            {{ form.username(class="form-control") }}
+                            Not set
                         {% endif %}
                     </div>
-                    {% if form.username.errors %}
-                        <div class="invalid-feedback d-block mt-1">
-                            {% for error in form.username.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                    <small class="metric-label">Last updated from activity calculator</small>
                 </div>
-                
-                <!-- Email Field -->
-                <div class="form-group mb-4">
-                    {{ form.email.label(class="form-label") }}
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-envelope"></i>
-                        </span>
-                        {% if form.email.errors %}
-                            {{ form.email(class="form-control is-invalid") }}
+            </div>
+            
+            <!-- TDEE Card -->
+            <div class="col-md-6 mb-4">
+                <div class="health-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="metric-label">Daily Energy Expenditure</div>
+                    <div class="metric-value">
+                        {% if current_tdee %}
+                            {{ current_tdee|round(0) }} kcal
                         {% else %}
-                            {{ form.email(class="form-control") }}
+                            Not calculated
                         {% endif %}
                     </div>
-                    {% if form.email.errors %}
-                        <div class="invalid-feedback d-block mt-1">
-                            {% for error in form.email.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                <legend class="border-bottom mb-4">
-        <i class="fas fa-user me-2"></i>General Information
-    </legend>
-
-    <!-- Full Name Field -->
-    <div class="form-group mb-4">
-        <label for="full_name" class="form-label">Full Name</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
-            <input type="text" class="form-control" id="full_name" name="full_name" placeholder="John Doe" value="{{ current_user.full_name or '' }}">
-        </div>
-    </div>
-
-    <!-- Main Sport Field -->
-    <div class="form-group mb-4">
-        <label for="main_sport" class="form-label">Main Sport / Activity</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
-            <input type="text" class="form-control" id="main_sport" name="main_sport" placeholder="e.g. Weightlifting, Running" value="{{ current_user.main_sport or '' }}">
-        </div>
-    </div>
-
-    <!-- Fitness Goals Field -->
-    <div class="form-group mb-4">
-        <label for="fitness_goals" class="form-label">Fitness Goals</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-bullseye"></i></span>
-            <input type="text" class="form-control" id="fitness_goals" name="fitness_goals" placeholder="Lose weight, Build muscle, Improve endurance" value="{{ current_user.fitness_goals or '' }}">
-        </div>
-    </div>
-            </fieldset>
-            
-            <!-- Submit Button -->
-            <div class="form-group d-grid mt-4">
-                <button type="submit" class="btn btn-accent">
-                    <i class="fas fa-save me-2"></i> Update Account
-                </button>
-            </div>
-        </form>
-        <!-- Health Metrics Section -->
-        <div class="health-metrics">
-            <legend class="border-bottom mb-4">
-                <i class="fas fa-heartbeat me-2"></i>Health Metrics
-            </legend>
-            
-            <div class="row">
-                <!-- Weight Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="health-card">
-                        <div class="metric-icon">
-                            <i class="fas fa-weight-scale"></i>
-                        </div>
-                        <div class="metric-label">Current Weight</div>
-                        <div class="metric-value">
-                            {% if current_weight %}
-                                {{ current_weight|round(1) }} kg
-                            {% else %}
-                                Not set
-                            {% endif %}
-                        </div>
-                        <small class="text-muted">Last updated from activity calculator</small>
-                    </div>
-                </div>
-                
-                <!-- TDEE Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="health-card">
-                        <div class="metric-icon">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                        <div class="metric-label">Daily Energy Expenditure</div>
-                        <div class="metric-value">
-                            {% if current_tdee %}
-                                {{ current_tdee|round(0) }} kcal
-                            {% else %}
-                                Not calculated
-                            {% endif %}
-                        </div>
-                        <small class="text-muted">Based on your activity level</small>
-                    </div>
+                    <small class="metric-label">Based on your activity level</small>
                 </div>
             </div>
-            
-            <div class="text-center mt-3">
-                <a href="/activity" class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-calculator me-1"></i> Update Metrics
-                </a>
-            </div>
-        </div>
-        <!-- Password Reset Link -->
-        <div class="border-top pt-3 mt-4 text-center">
-            <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-                <i class="fas fa-key me-1"></i> Request Password Reset
-            </a>
         </div>
         
-        <!-- Security Features -->
-        <div class="mt-5 pt-4 border-top">
-            <div class="d-flex justify-content-center">
-                <div class="me-4 text-center">
-                    <i class="fas fa-shield-alt fa-2x"></i>
-                    <p class="mt-2">Secure</p>
-                </div>
-                <div class="me-4 text-center">
-                    <i class="fas fa-lock fa-2x"></i>
-                    <p class="mt-2">Encrypted</p>
-                </div>
-                <div class="text-center">
-                    <i class="fas fa-user-shield fa-2x"></i>
-                    <p class="mt-2">Protected</p>
-                </div>
+        <div class="text-center mt-3">
+            <a href="/activity" class="btn btn">
+                <i class="fas fa-calculator me-1"></i> Update Metrics
+            </a>
+        </div>
+    </div>
+    
+    <!-- Password Reset Link -->
+    <div class="border-top pt-3 mt-4 text-center">
+        <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
+            <i class="fas fa-key me-1"></i> Request Password Reset
+        </a>
+    </div>
+    
+    <!-- Security Features -->
+    <div class="mt-5 pt-4 border-top">
+        <div class="d-flex justify-content-center">
+            <div class="me-4 text-center">
+                <i class="fas fa-shield-alt fa-2x"></i>
+                <p class="mt-2">Secure</p>
+            </div>
+            <div class="me-4 text-center">
+                <i class="fas fa-lock fa-2x"></i>
+                <p class="mt-2">Encrypted</p>
+            </div>
+            <div class="text-center">
+                <i class="fas fa-user-shield fa-2x"></i>
+                <p class="mt-2">Protected</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Avatar Modal Functionality
+    const avatarModal = document.getElementById('avatarModal');
+    const avatarContainer = document.getElementById('avatar-container');
+    const mainAvatar = document.getElementById('main-avatar');
+    const selectedAvatarInput = document.getElementById('selected_avatar');
+    const avatarUploadInput = document.getElementById('avatar_upload_input');
+    const cancelAvatarBtn = document.getElementById('cancelAvatar');
+    const updateAvatarBtn = document.getElementById('updateAvatar');
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    const profileForm = document.getElementById('profile-form');
+    
+    let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
+    let uploadedAvatarFile = null;
+    
+    // Open modal when clicking on avatar
+    avatarContainer.addEventListener('click', function() {
+        avatarModal.style.display = 'flex';
+    });
+    
+    // Close modal when clicking cancel
+    cancelAvatarBtn.addEventListener('click', function() {
+        avatarModal.style.display = 'none';
+        // Reset to original selection
+        resetAvatarSelection();
+    });
+    
+    // Update avatar when clicking update button
+    updateAvatarBtn.addEventListener('click', function() {
+        // Update the hidden input value
+        selectedAvatarInput.value = selectedAvatar;
+        
+        // If a file was uploaded, we need to handle it in the form submission
+        if (uploadedAvatarFile) {
+            // The file input will be part of the form submission
+        }
+        
+        // Update the main avatar preview
+        if (uploadedAvatarFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                mainAvatar.src = e.target.result;
+            };
+            reader.readAsDataURL(uploadedAvatarFile);
+        } else {
+            // Use the selected predefined avatar
+            mainAvatar.src = '/static/avatars/' + selectedAvatar;
+        }
+        
+        // Close the modal
+        avatarModal.style.display = 'none';
+    });
+    
+    // Handle avatar option selection
+    avatarOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            avatarOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Update selected avatar value
+            selectedAvatar = this.getAttribute('data-value');
+            
+            // Clear any uploaded file
+            uploadedAvatarFile = null;
+            avatarUploadInput.value = '';
+            
+            // Preview the selected avatar in the modal
+            previewAvatar('/static/avatars/' + selectedAvatar);
+        });
+    });
+    
+    // Handle file upload
+    avatarUploadInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file.');
+                this.value = '';
+                return;
+            }
+            
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Please select an image smaller than 2MB.');
+                this.value = '';
+                return;
+            }
+            
+            // Store the file for later submission
+            uploadedAvatarFile = file;
+            
+            // Remove selection from predefined avatars
+            avatarOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Preview the uploaded image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewAvatar(e.target.result);
+            };
+            reader.readAsDataURL(file);
+            
+            // Set selected avatar to empty since we're using an upload
+            selectedAvatar = '';
+        }
+    });
+    
+    // Function to preview avatar in modal
+    function previewAvatar(src) {
+        // This would typically update a preview area in the modal
+        // For simplicity, we're just updating the main avatar when Update is clicked
+    }
+    
+    // Function to reset avatar selection to original state
+    function resetAvatarSelection() {
+        // Reset predefined avatar selection
+        avatarOptions.forEach(opt => {
+            if (opt.getAttribute('data-value') === selectedAvatar) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+        
+        // Reset file input
+        avatarUploadInput.value = '';
+        uploadedAvatarFile = null;
+    }
+    
     // Input focus enhancement
     document.querySelectorAll('.form-control').forEach(input => {
         input.addEventListener('focus', function() {
