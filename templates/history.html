@@ -11,89 +11,118 @@
     <style>
         /* === MAIN STYLES === */
 body {
-    font-family: 'Calibri', sans-serif;
-    font-size: 15px;
-    background-color: #222 !important;
-    color: #e0e0e0;
-}
-
-.bg-black, .modal-header, .modal-footer {
-    background-color: #000 !important;
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
+            color: #e0e0e0;
+        }
+        
+        .bg-black, .modal-header, .modal-footer {
+    background-color: #0c0c0c !important;
     border-color: #444;
 }
+        
+        .card, .list-group-item, .modal-content {
+            background-color: #1d1d1d;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        .card-header {
+            background: rgba(39, 39, 39, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #e0e0e0;
+        }
+        
+        .form-control, .form-select {
+        background-color: #121212;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 0 20px 20px 0;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+         }
 
-.card, .list-group-item, .modal-content {
-    background-color: #222;
-    color: #e0e0e0;
-    border: 1px solid #444;
-}
+        .form-control:focus, .form-select:focus {
+            border-color: #555;
+            box-shadow: none;
+            background-color: #181818;
+            color: #eee;
+        }
 
-.form-control, .form-select {
-    background-color: #333;
-    color: #e0e0e0;
-    border: 1px solid #555;
-    font-size: 14px !important;
-    padding: 6px 8px !important;
-    height: 36px !important;
-}
+        .form-control::placeholder, .form-select::placeholder {
+            color: #ddd !important;
+            opacity: 0.6;
+        }
+        
+        .navbar-brand {
+            font-size: 26px;
+        }
 
-.form-control:focus, .form-select:focus {
-    background-color: #b4b4b4;
-    color: #ffffff;
-    border-color: #d1d1d1;
-}
+/* === NAVIGATION === */
+    .nav-link-box {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 15px !important;
+            margin: 0 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            
+        }
 
-.nav-link-box {
-    background-color: white !important;
-    color: black !important;
-    border-radius: 20px;
-    padding: 10px !important;
-    margin: 0 3px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 45px;
-    height: 45px;
-}
+        .nav-link-box:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: black !important;
+        }
 
-.nav-link-box:hover {
-    background-color: #f0f0f0 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
+        .nav-link-box i {
+            font-size: 17px !important;
+            margin: 0 !important;
+        }
+        
+        /* ===== MOBILE NAVIGATION ===== */
+        .mobile-settings-btn {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: rgb(255, 255, 255) !important;
+            border-radius: 50%;
+            padding: 10px !important;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-left: 10px
+                }
+        
+            .mobile-settings-btn:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #000 !important;
+        }
 
-.nav-link-box i {
-    font-size: 20px !important;
-    margin: 0 !important;
-}
-
-.mobile-settings-btn {
-    background-color: white !important;
-    color: black !important;
-    border-radius: 50%;
-    padding: 10px !important;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    margin-left: 10px;
-}
-
-.mobile-settings-btn:hover {
-    background-color: #f0f0f0 !important;
-    transform: translateY(-4px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.mobile-settings-btn i {
-    font-size: 20px !important;
-    margin: 0 !important;
-}
+        .mobile-settings-btn i {
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
 
 /* === HISTORY PAGE SPECIFIC STYLES === */
 .history-container {
@@ -423,7 +452,7 @@ body {
                 - Track, eat, repeat -
             </a>
             
-            <!-- Mobile Settings Dropdown -->
+            <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                 <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-wrench-adjustable"></i>
@@ -433,30 +462,37 @@ body {
                     style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
                     <li>
                         <a class="dropdown-item" 
-                           href="/custom_food"
+                           href="/"
                            style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                            <i class="fa-solid fa-house-chimney-window me-2"></i>Home
                         </a>
-                    </li>
-                    <li>
+                     </li>
+                        <li>
                         <a class="dropdown-item" 
+                        href="{{ url_for('workout') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-dumbbell me-2"></i>Workouts
+                        </a>
+                        </li>
+                        <li>
+                                    <a class="dropdown-item" 
                            href="/history"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-chart-pie me-2"></i>History
                         </a>
                     </li>
-                    <li>
-        <a class="dropdown-item" 
-           href="{{ url_for('workout') }}"
-           style="color: #e0e0e0; padding: 8px 15px;">
-            <i class="fas fa-dumbbell me-2"></i>Workouts
-        </a>
-    </li>
-    <li>
+                         <li>
                         <a class="dropdown-item" 
-                           href="/activity"
+                           href="{{ url_for('activity') }}"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-fire me-2"></i>Activity
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/custom_food"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
                         </a>
                     </li>
                     <li>
