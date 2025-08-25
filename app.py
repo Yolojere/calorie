@@ -3203,23 +3203,6 @@ def extract_nutrition_data(mindee_response):
         print(f"Error extracting nutrition data: {e}")
         return nutrition_data
 
-import os
-import base64
-import requests
-from flask import Flask, request, jsonify, current_app
-from flask_login import login_required
-
-# Make sure to load your .env first
-from dotenv import load_dotenv
-load_dotenv()
-
-app = Flask(__name__)
-# Load Mindee API key from environment
-app.config['MINDEE_API_KEY'] = os.getenv('MINDEE_API_KEY')
-
-# Optional: specify sandbox mode if needed
-app.config['MINDEE_USE_SANDBOX'] = os.getenv('MINDEE_USE_SANDBOX', 'false').lower() == 'true'
-
 @app.route('/process_nutrition_label', methods=['POST'])
 @login_required
 def process_nutrition_label():
