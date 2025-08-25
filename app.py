@@ -11,7 +11,7 @@ import time
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, FileField, RadioField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from itsdangerous import URLSafeTimedSerializer
 import smtplib
@@ -25,6 +25,9 @@ import uuid
 import logging
 from flask import current_app
 from flask_mail import Mail
+from io import BytesIO
+import base64
+import requests
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -465,6 +468,14 @@ class LoginForm(FlaskForm):
 class UpdateProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    full_name = StringField('Full Name')
+    main_sport = StringField('Main Sport')
+    fitness_goals = StringField('Fitness Goals')
+    avatar_choice = RadioField(
+        "Choose Avatar",
+        choices=[("avatar1.png", "Avatar 1"), ("avatar2.png", "Avatar 2"), ("avatar3.png", "Avatar 3")],
+        default="avatar1.png")
+    avatar_upload = FileField("Or Upload Avatar")
     submit = SubmitField('Update')
 
     def validate_username(self, username):
@@ -1016,6 +1027,15 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
+from werkzeug.utils import secure_filename
+from PIL import Image
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -1023,35 +1043,130 @@ def profile():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     
-    # Get current weight and TDEE
-    cursor.execute('SELECT weight, tdee FROM users WHERE id = %s', (current_user.id,))
-    user_data = cursor.fetchone()
-    current_weight = user_data['weight'] if user_data else None
-    current_tdee = user_data['tdee'] if user_data else None
+    # Initialize variables with default values
+    current_weight = None
+    current_tdee = None
+    current_avatar = 'default.png'
 
-    if form.validate_on_submit():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute(
-                'UPDATE users SET username = %s, email = %s WHERE id = %s',
-                (form.username.data, form.email.data, current_user.id)
-            )
+    # Define predefined avatars for the form choices
+    predefined_avatars = ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png', 'avatar4.png','avatar5.png','avatar6.png','avatar7.png']
+    form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
+
+    try:
+        # Check if the new columns exist in the database
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('full_name', 'main_sport', 'fitness_goals')
+        """)
+        extra_columns_exist = bool(cursor.fetchall())
+        
+        # Build the SELECT query based on available columns
+        select_query = 'SELECT username, email, weight, tdee, avatar'
+        if extra_columns_exist:
+            select_query += ', full_name, main_sport, fitness_goals'
+        select_query += ' FROM users WHERE id = %s'
+        
+        # Get current user info
+        cursor.execute(select_query, (current_user.id,))
+        user_data = cursor.fetchone()
+        
+        if user_data:
+            current_weight = user_data['weight']
+            current_tdee = user_data['tdee']
+            current_avatar = user_data['avatar'] if user_data['avatar'] else 'default.png'
+
+        if form.validate_on_submit():
+            avatar_filename = current_avatar  # default to current
+
+            # Handle avatar upload
+            if form.avatar_upload.data:
+                file = form.avatar_upload.data
+                if file and allowed_file(file.filename):
+                    # Generate unique filename to avoid conflicts
+                    timestamp = str(int(time.time()))
+                    filename = secure_filename(file.filename)
+                    name, ext = os.path.splitext(filename)
+                    unique_filename = f"{name}_{timestamp}{ext}"
+                    filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    
+                    # Create uploads directory if it doesn't exist
+                    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+                    
+                    file.save(filepath)
+
+                    # Resize to 200x200
+                    img = Image.open(filepath)
+                    img.thumbnail((200, 200))
+                    img.save(filepath)
+
+                    avatar_filename = unique_filename
+                else:
+                    flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
+
+            # Handle avatar choice (predefined avatars)
+            elif form.avatar_choice.data:
+                avatar_filename = form.avatar_choice.data
+
+            # Build the UPDATE query based on available columns
+            update_query = '''UPDATE users SET username = %s, email = %s, avatar = %s'''
+            update_params = [form.username.data, form.email.data, avatar_filename]
+            
+            # Add extra fields if they exist
+            if extra_columns_exist:
+                update_query += ', full_name = %s, main_sport = %s, fitness_goals = %s'
+                update_params.extend([
+                    request.form.get('full_name', ''),
+                    request.form.get('main_sport', ''),
+                    request.form.get('fitness_goals', '')
+                ])
+            
+            update_query += ' WHERE id = %s'
+            update_params.append(current_user.id)
+            
+            # Update user information
+            cursor.execute(update_query, tuple(update_params))
             conn.commit()
             flash('Your profile has been updated!', 'success')
             return redirect(url_for('profile'))
-        except psycopg2.IntegrityError:
-            flash('Username or email already taken', 'danger')
-        finally:
-            conn.close()
-    elif request.method == 'GET':
-        form.username.data = current_user.username
-        form.email.data = current_user.email
-    return render_template('profile.html', 
-                           title='Profile', 
-                           form=form,
-                           current_weight=current_weight,
-                           current_tdee=current_tdee)
+
+        # GET request: pre-fill form
+        elif request.method == 'GET' and user_data:
+            form.username.data = user_data['username']
+            form.email.data = user_data['email']
+            
+            # Pre-fill extra fields if they exist
+            if extra_columns_exist:
+                form.full_name.data = user_data.get('full_name', '')
+                form.main_sport.data = user_data.get('main_sport', '')
+                form.fitness_goals.data = user_data.get('fitness_goals', '')
+            
+            # Set avatar choice - use default.png if none is set
+            if user_data['avatar'] and user_data['avatar'] in predefined_avatars:
+                form.avatar_choice.data = user_data['avatar']
+            else:
+                form.avatar_choice.data = 'default.png'
+
+    except psycopg2.IntegrityError:
+        flash('Username or email already taken', 'danger')
+    except Exception as e:
+        flash(f'An error occurred: {str(e)}', 'danger')
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'profile.html',
+        title='Profile',
+        form=form,
+        current_weight=current_weight,
+        current_tdee=current_tdee,
+        current_avatar=current_avatar,
+        role=current_user.role,
+        extra_columns_exist=extra_columns_exist  # Pass this to template
+    )
+
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
@@ -1571,8 +1686,6 @@ def save_food_route():
     try:
         # Extract form data
         name = request.form.get('name', '').strip()
-        calories_input = request.form.get('calories')  # MOVE THIS LINE UP
-        
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
         
@@ -1616,11 +1729,16 @@ def save_food_route():
         grams = safe_float(grams_val, 100, min_val=0.001)
         
         # Handle calories - use if provided, otherwise calculate
-        if calories_input and calories_input.strip():
+        calories_input = request.form.get('calories', '').strip()
+        if calories_input:
             try:
                 calories = float(calories_input)
+                # Validate that the provided calories make sense
+                calculated_calories = calculate_calories(carbs, proteins, fats)
+                # If provided calories are significantly different from calculated, use calculated
+                if abs(calories - calculated_calories) > calculated_calories * 0.5:  # 50% difference threshold
+                    calories = calculated_calories
             except ValueError:
-                # Fallback to calculation if invalid input
                 calories = calculate_calories(carbs, proteins, fats)
         else:
             # Calculate calories if not provided
@@ -1698,6 +1816,13 @@ def save_food_route():
     finally:
         if conn:
             conn.close()
+
+def calculate_calories(carbs, proteins, fats):
+    """
+    Calculate calories using the standard formula:
+    carbs * 4 + proteins * 4 + fats * 9
+    """
+    return carbs * 4 + proteins * 4 + fats * 9
 
 def calculate_weekly_averages(session_history):
     weekly_data = {}
@@ -3006,8 +3131,183 @@ def update_comment():
     conn.commit()
     conn.close()
 
-    return jsonify({'success': True})            
+    return jsonify({'success': True})
 
+def extract_nutrition_data(mindee_response):
+    """
+    Extract nutrition data from Mindee API response
+    with support for Finnish nutrient names and kJ conversion.
+    """
+    nutrition_data = {}
+
+    # Finnish → English mapping
+    NUTRIENT_MAP = {
+        "rasva": "fat",
+        "tyydyttynyt rasva": "saturated fat",
+        "hiilihydraatit": "carbohydrate",
+        "sokerit": "sugars",
+        "proteiini": "protein",
+        "suola": "salt",
+        "kuitu": "fiber",
+        "energia": "energy"
+    }
+
+    try:
+        predictions = mindee_response.get('document', {}).get('inference', {}).get('prediction', {})
+
+        # Product name
+        if 'product_name' in predictions:
+            nutrition_data['product_name'] = predictions['product_name'].get('value')
+
+        # Nutrients
+        nutrients = predictions.get('nutrients', [])
+        for nutrient in nutrients:
+            nutrient_name = nutrient.get('name', '').lower()
+            nutrient_value = nutrient.get('quantity')
+            nutrient_unit = nutrient.get('unit', '').lower()
+
+            if not nutrient_name or nutrient_value is None:
+                continue
+
+            # Map Finnish to English
+            nutrient_name = NUTRIENT_MAP.get(nutrient_name, nutrient_name)
+
+            # Energy: convert kJ → kcal if needed
+            if nutrient_name in ["energy", "energy kcal"]:
+                if nutrient_unit == "kj":
+                    nutrition_data['calories'] = round(nutrient_value / 4.184, 2)
+                else:
+                    nutrition_data['calories'] = nutrient_value
+
+            elif nutrient_name in ["fat", "total fat"]:
+                nutrition_data['fats'] = nutrient_value
+            elif nutrient_name == "saturated fat":
+                nutrition_data['saturated_fat'] = nutrient_value
+            elif nutrient_name in ["carbohydrate", "total carbohydrate"]:
+                nutrition_data['carbohydrates'] = nutrient_value
+            elif nutrient_name in ["sugars", "sugar"]:
+                nutrition_data['sugars'] = nutrient_value
+            elif nutrient_name in ["fiber", "dietary fiber"]:
+                nutrition_data['fiber'] = nutrient_value
+            elif nutrient_name == "protein":
+                nutrition_data['proteins'] = nutrient_value
+            elif nutrient_name in ["salt", "sodium"]:
+                if nutrient_name == "sodium":
+                    nutrition_data['salt'] = nutrient_value * 2.5  # Na → salt conversion
+                else:
+                    nutrition_data['salt'] = nutrient_value
+
+        return nutrition_data
+
+    except Exception as e:
+        print(f"Error extracting nutrition data: {e}")
+        return nutrition_data
+
+@app.route('/process_nutrition_label', methods=['POST'])
+@login_required
+def process_nutrition_label():
+    try:
+        # Check if image was uploaded
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'No image uploaded'})
+        
+        image_file = request.files['image']
+        
+        # Read image file
+        image_data = image_file.read()
+        
+        # Encode image to base64
+        encoded_image = base64.b64encode(image_data).decode('utf-8')
+        
+        # Mindee API endpoint for nutrition labels
+        api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict"
+        
+        # Your Mindee API key (store this securely in your config)
+        api_key = current_app.config.get('MINDEE_API_KEY')
+        
+        if not api_key:
+            return jsonify({'success': False, 'error': 'Mindee API key not configured'})
+        
+        # Prepare request headers and data
+        headers = {
+            'Authorization': f'Token {api_key}',
+            'Content-Type': 'application/json',
+        }
+        
+        data = {
+            'document': encoded_image
+        }
+        
+        # Send request to Mindee API
+        response = requests.post(api_url, headers=headers, json=data)
+        
+        if response.status_code != 201:
+            return jsonify({'success': False, 'error': f'Mindee API error: {response.status_code}'})
+        
+        # Parse response
+        result = response.json()
+        
+        # Extract nutrition data
+        nutrition_data = extract_nutrition_data(result)
+        
+        return jsonify({
+            'success': True,
+            'data': nutrition_data
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+def extract_nutrition_data(mindee_response):
+    """
+    Extract nutrition data from Mindee API response
+    """
+    nutrition_data = {}
+    
+    try:
+        # Get predictions from response
+        predictions = mindee_response.get('document', {}).get('inference', {}).get('prediction', {})
+        
+        # Extract product name if available
+        if 'product_name' in predictions:
+            nutrition_data['product_name'] = predictions['product_name']['value']
+        
+        # Extract nutrients
+        nutrients = predictions.get('nutrients', [])
+        
+        for nutrient in nutrients:
+            nutrient_name = nutrient.get('name')
+            nutrient_value = nutrient.get('quantity')
+            nutrient_unit = nutrient.get('unit')
+            
+            if nutrient_name and nutrient_value:
+                # Convert to common field names
+                if nutrient_name.lower() in ['energy', 'energy kcal']:
+                    nutrition_data['calories'] = nutrient_value
+                elif nutrient_name.lower() in ['fat', 'total fat']:
+                    nutrition_data['fats'] = nutrient_value
+                elif nutrient_name.lower() in ['saturated fat']:
+                    nutrition_data['saturated_fat'] = nutrient_value
+                elif nutrient_name.lower() in ['carbohydrate', 'total carbohydrate']:
+                    nutrition_data['carbohydrates'] = nutrient_value
+                elif nutrient_name.lower() in ['sugars', 'sugar']:
+                    nutrition_data['sugars'] = nutrient_value
+                elif nutrient_name.lower() in ['fiber', 'dietary fiber']:
+                    nutrition_data['fiber'] = nutrient_value
+                elif nutrient_name.lower() in ['protein']:
+                    nutrition_data['proteins'] = nutrient_value
+                elif nutrient_name.lower() in ['salt', 'sodium']:
+                    # Convert sodium to salt if needed
+                    if nutrient_name.lower() == 'sodium':
+                        nutrition_data['salt'] = nutrient_value * 2.5  # Approximate conversion
+                    else:
+                        nutrition_data['salt'] = nutrient_value
+        
+        return nutrition_data
+        
+    except Exception as e:
+        print(f"Error extracting nutrition data: {e}")
+        return nutrition_data
 @app.route('/foods')
 def list_foods():
     cursor = get_cursor()
