@@ -3203,111 +3203,111 @@ def extract_nutrition_data(mindee_response):
         print(f"Error extracting nutrition data: {e}")
         return nutrition_data
 
+import os
+import base64
+import requests
+from flask import Flask, request, jsonify, current_app
+from flask_login import login_required
+
+# Make sure to load your .env first
+from dotenv import load_dotenv
+load_dotenv()
+
+app = Flask(__name__)
+# Load Mindee API key from environment
+app.config['MINDEE_API_KEY'] = os.getenv('MINDEE_API_KEY')
+
+# Optional: specify sandbox mode if needed
+app.config['MINDEE_USE_SANDBOX'] = os.getenv('MINDEE_USE_SANDBOX', 'false').lower() == 'true'
+
 @app.route('/process_nutrition_label', methods=['POST'])
 @login_required
 def process_nutrition_label():
     try:
+        api_key = current_app.config.get('MINDEE_API_KEY')
+        if not api_key:
+            return jsonify({'success': False, 'error': 'Mindee API key not configured in .env'})
+
+        # Choose endpoint based on sandbox flag
+        if current_app.config.get('MINDEE_USE_SANDBOX'):
+            api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict/sandbox"
+        else:
+            api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict"
+
         # Check if image was uploaded
         if 'image' not in request.files:
             return jsonify({'success': False, 'error': 'No image uploaded'})
-        
+
         image_file = request.files['image']
-        
-        # Read image file
         image_data = image_file.read()
-        
-        # Encode image to base64
         encoded_image = base64.b64encode(image_data).decode('utf-8')
-        
-        # Mindee API endpoint for nutrition labels
-        api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict"
-        
-        # Your Mindee API key (store this securely in your config)
-        api_key = os.getenv('MINDEE_API_KEY')
-        
-        if not api_key:
-            return jsonify({'success': False, 'error': 'Mindee API key not configured'})
-        
-        # Prepare request headers and data
+
         headers = {
             'Authorization': f'Token {api_key}',
             'Content-Type': 'application/json',
         }
-        
-        data = {
-            'document': encoded_image
-        }
-        
-        # Send request to Mindee API
+        data = {'document': encoded_image}
+
         response = requests.post(api_url, headers=headers, json=data)
-        
-        if response.status_code != 201:
-            return jsonify({'success': False, 'error': f'Mindee API error: {response.status_code}'})
-        
-        # Parse response
+
+        # Handle common errors
+        if response.status_code == 401:
+            return jsonify({'success': False, 'error': 'Unauthorized: Check your Mindee API key or endpoint (sandbox vs production)'})
+        elif response.status_code != 201:
+            return jsonify({'success': False, 'error': f'Mindee API error: {response.status_code} - {response.text}'})
+
         result = response.json()
-        
-        # Extract nutrition data
         nutrition_data = extract_nutrition_data(result)
-        
-        return jsonify({
-            'success': True,
-            'data': nutrition_data
-        })
-        
+
+        return jsonify({'success': True, 'data': nutrition_data})
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
 
 def extract_nutrition_data(mindee_response):
     """
     Extract nutrition data from Mindee API response
     """
     nutrition_data = {}
-    
+
     try:
-        # Get predictions from response
         predictions = mindee_response.get('document', {}).get('inference', {}).get('prediction', {})
-        
-        # Extract product name if available
+
         if 'product_name' in predictions:
             nutrition_data['product_name'] = predictions['product_name']['value']
-        
-        # Extract nutrients
+
         nutrients = predictions.get('nutrients', [])
-        
         for nutrient in nutrients:
-            nutrient_name = nutrient.get('name')
-            nutrient_value = nutrient.get('quantity')
-            nutrient_unit = nutrient.get('unit')
-            
-            if nutrient_name and nutrient_value:
-                # Convert to common field names
-                if nutrient_name.lower() in ['energy', 'energy kcal']:
-                    nutrition_data['calories'] = nutrient_value
-                elif nutrient_name.lower() in ['fat', 'total fat']:
-                    nutrition_data['fats'] = nutrient_value
-                elif nutrient_name.lower() in ['saturated fat']:
-                    nutrition_data['saturated_fat'] = nutrient_value
-                elif nutrient_name.lower() in ['carbohydrate', 'total carbohydrate']:
-                    nutrition_data['carbohydrates'] = nutrient_value
-                elif nutrient_name.lower() in ['sugars', 'sugar']:
-                    nutrition_data['sugars'] = nutrient_value
-                elif nutrient_name.lower() in ['fiber', 'dietary fiber']:
-                    nutrition_data['fiber'] = nutrient_value
-                elif nutrient_name.lower() in ['protein']:
-                    nutrition_data['proteins'] = nutrient_value
-                elif nutrient_name.lower() in ['salt', 'sodium']:
-                    # Convert sodium to salt if needed
-                    if nutrient_name.lower() == 'sodium':
-                        nutrition_data['salt'] = nutrient_value * 2.5  # Approximate conversion
-                    else:
-                        nutrition_data['salt'] = nutrient_value
-        
+            name = nutrient.get('name', '').lower()
+            value = nutrient.get('quantity')
+            unit = nutrient.get('unit')
+
+            if name and value is not None:
+                if name in ['energy', 'energy kcal']:
+                    nutrition_data['calories'] = value
+                elif name in ['fat', 'total fat']:
+                    nutrition_data['fats'] = value
+                elif name == 'saturated fat':
+                    nutrition_data['saturated_fat'] = value
+                elif name in ['carbohydrate', 'total carbohydrate']:
+                    nutrition_data['carbohydrates'] = value
+                elif name in ['sugars', 'sugar']:
+                    nutrition_data['sugars'] = value
+                elif name in ['fiber', 'dietary fiber']:
+                    nutrition_data['fiber'] = value
+                elif name == 'protein':
+                    nutrition_data['proteins'] = value
+                elif name in ['salt', 'sodium']:
+                    nutrition_data['salt'] = value if name == 'salt' else value * 2.5
+
         return nutrition_data
-        
+
     except Exception as e:
         print(f"Error extracting nutrition data: {e}")
         return nutrition_data
+
+    
 @app.route('/foods')
 def list_foods():
     cursor = get_cursor()
