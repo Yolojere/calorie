@@ -24,9 +24,9 @@
         }
         
         .bg-black, .modal-header, .modal-footer {
-            background-color: #000 !important;
-            border-color: #444;
-        }
+    background-color: #0c0c0c !important;
+    border-color: #444;
+}
         
         .card, .list-group-item, .modal-content {
             background-color: #1d1d1d;
@@ -35,36 +35,35 @@
         }
         
         .card-header {
-            background-color: #000;
-            border-bottom: 1px solid #444;
-            font-weight: bold;
+            background: rgba(39, 39, 39, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #e0e0e0;
         }
         
         .form-control, .form-select {
-            background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #555;
-            font-size: 14px !important;
-            padding: 6px 8px !important;
-            height: 36px !important;
-        }
-        
-        .form-control::placeholder,
-        .form-select::placeholder {
-            color: #ffffff;
-            opacity: 0.7;
-        }
-        
-        .form-control:focus::placeholder,
-        .form-select:focus::placeholder {
-            color: #000000;
-            opacity: 0.7;
-        }
-        
+        background-color: #121212 !important;
+        border: 1px solid #333 !important;
+        color: #eee !;
+        border-radius: 20px !important;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+         }
+
         .form-control:focus, .form-select:focus {
-            background-color: #b4b4b4;
-            color: #ffffff !important;
-            border-color: #d1d1d1;
+            border-color: #555;
+            box-shadow: none;
+            background-color: #181818;
+            color: #eee;
+        }
+
+        .form-control::placeholder, .form-select::placeholder {
+            color: #ddd !important;
+            opacity: 0.6;
         }
         
         .navbar-brand {
@@ -444,11 +443,9 @@
         
         /* ===== BUTTONS ===== */
         #clear-search {
-            background-color: #b61336;
-            color: rgb(0, 0, 0);
-            width: 32px;
-            height: 32px;
-            font-size: 18px;
+            background-color: #000000;
+            color: rgb(214, 214, 214);
+            font-size: 16px;
             margin-left: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             border: none;
@@ -459,12 +456,14 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            transition: all 0.5s ease;
+            transition: all 0.3s ease;
+            padding: 20px;
         }
         
         #clear-search:hover {
-            background-color: #ff000048;
+            background-color: #e4e4e448;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            color: rgb(0, 0, 0) !important;
         }
         
         .delete-item {
@@ -472,8 +471,6 @@
             border: none;
             color: #ffffff !important;
             padding: 0;
-            width: 20px; 
-            height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -518,23 +515,35 @@
         .edit-grams-input {
             padding: 1px 8px !important;
             font-size: 12px !important;
-            width: 55px;
-            height: 16px !important;
-            border-radius: 4px;
+            width: 54px !important;
+            height: 20px !important;
+            border-radius: 2px;
             background-color: #ffffff;
-            color: black;
-            border: 2px solid #6dc0d5;
-            font-weight: bold;
+            color: black !important;
+            border: 1px solid #ffffff;
+            font-weight: bold !important;
             text-align: center;
             outline: none;
             transition: all 0.2s ease;
             box-sizing: border-box;
+            
         }
         
         .edit-grams-input:hover,
         .edit-grams-input:focus {
-            transform: scale(1.01);
+            transform: scale(1.00);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        /* Chrome, Edge, Safari remove arrows for desktop */
+        .edit-grams-input::-webkit-outer-spin-button,
+        .edit-grams-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        .edit-grams-input[type=number] {
+            -moz-appearance: textfield;
         }
         
         #add-food {
@@ -602,20 +611,21 @@
         }
         
         .portion-btn:hover {
-            background-color: #353232;
-            color: #ffffff;
+            background-color: #f0f0f0;
+            color: #000000;
             transform: scale(1.02);
         }
         
         .portion-btn.active {
-            background-color: #d4d4d4 !important;
+            background-color: #ffffff !important;
             color: #000000 !important;
+            border: solid 2px;
             transform: scale(1.02);
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
         
         #action-move, #action-copy {
-            background: #353535 !important;
+            background: #1b1b1b !important;
             color: #fff !important;
             border: 1px solid #888 !important;
         }
@@ -1117,11 +1127,32 @@
             right: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #000000;
+            color: #ffffff;
             pointer-events: none;
             font-size: 14px;
             z-index: 10;
         }
+    /* Hide number input arrows (Chrome, Safari, Edge, Opera) */
+    .input-type [type=number]::-webkit-inner-spin-button,
+    .input-type [type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Hide number input arrows (Firefox) */
+    .input-type .form-control[type=number] {
+        -moz-appearance: textfield;
+    }
+    /* Make hr/min spans match seamlessly */
+    .input-group .input-group-text {
+        border: none;
+        border-radius: 0;
+        background-color: #121212;
+        color: #bbb; /* slightly lighter text */
+        font-size: 14px;
+        padding: 6px 10px;
+        height: 36px;
+}
         
         #grams {
             padding-right: 50px !important;
@@ -1170,11 +1201,13 @@
         }
         
         /* ===== NAV LINK BOX ===== */
-        .nav-link-box {
-            background-color: white !important;
-            color: black !important;
+                .nav-link-box {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
             border-radius: 20px;
-            padding: 10px !important;
+            padding: 15px !important;
             margin: 0 3px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
@@ -1183,16 +1216,18 @@
             justify-content: center;
             width: 45px;
             height: 45px;
+            
         }
-        
+
         .nav-link-box:hover {
             background-color: #f0f0f0 !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: black !important;
         }
-        
+
         .nav-link-box i {
-            font-size: 20px !important;
+            font-size: 17px !important;
             margin: 0 !important;
         }
         
@@ -1208,7 +1243,7 @@
             border-top: 1px solid #444;
             display: flex;
             justify-content: center;
-            height: 70px;
+            height: 45px;
         }
         
         .mobile-tab-btn {
@@ -1217,18 +1252,19 @@
             padding: 0;
             border-radius: 50%;
             font-size: 18px;
-            width: 50px;
-            height: 50px;
+            width: 50px !important;
+            height: 50px !important;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             position: absolute;
+            bottom: 2px;
         }
         
         .mobile-tab-btn:nth-child(1) {
-            left: calc(50% - 80px);
+            left: calc(50% - 70px);
         }
         
         .mobile-tab-btn:nth-child(2) {
@@ -1238,7 +1274,7 @@
         
         .mobile-tab-btn:nth-child(3) {
             left: calc(50% + 55px);
-            margin-left: -25px;
+            margin-left: -35px;
         }
         
         .mobile-tab-btn.active {
@@ -1259,8 +1295,9 @@
         
         /* ===== MOBILE SETTINGS ===== */
         .mobile-settings-btn {
-            background-color: white !important;
-            color: black !important;
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: rgb(255, 255, 255) !important;
             border-radius: 50%;
             padding: 10px !important;
             width: 45px;
@@ -1270,15 +1307,16 @@
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            margin-left: 10px;
-        }
+            margin-left: 10px
+                }
         
-        .mobile-settings-btn:hover {
+            .mobile-settings-btn:hover {
             background-color: #f0f0f0 !important;
             transform: translateY(-4px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #000 !important;
         }
-        
+
         .mobile-settings-btn i {
             font-size: 20px !important;
             margin: 0 !important;
