@@ -11,43 +11,92 @@
     <style>
         /* === MAIN STYLES FROM INDEX PAGE === */
         body {
-            font-family: 'Calibri', sans-serif;
-            font-size: 15px;
-            background-color: #222 !important;
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
             color: #e0e0e0;
         }
         
         .bg-black, .modal-header, .modal-footer {
-            background-color: #000 !important;
-            border-color: #444;
-        }
+    background-color: #0c0c0c !important;
+    border-color: #444;
+}
         
         .card, .list-group-item, .modal-content {
-            background-color: #222;
+            background-color: #1d1d1d;
             color: #e0e0e0;
             border: 1px solid #444;
         }
         
-        .form-control, .form-select {
-            background-color: #333;
+        .card-header {
+            background: rgba(39, 39, 39, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.4rem;
             color: #e0e0e0;
-            border: 1px solid #555;
-            font-size: 14px !important;
-            padding: 6px 8px !important;
-            height: 36px !important;
         }
         
+        
+         /* FORM CONTROL */    
+        .form-control, .form-select {
+        background-color: #121212;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 20px;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+         }
+
         .form-control:focus, .form-select:focus {
-            background-color: #b4b4b4;
-            color: #ffffff;
-            border-color: #d1d1d1;
+            border-color: #555;
+            box-shadow: none;
+            background-color: #181818;
+            color: #eee;
         }
-        
-        .nav-link-box {
-            background-color: white !important;
-            color: black !important;
+
+        .form-control::placeholder, .form-select::placeholder {
+            color: #ddd !important;
+            opacity: 0.6;
+        }
+        .input-group-text {
+    background-color: #121212;
+    color: #eee;
+    border: 1px solid #333;
+    border-radius: 0 20px 20px 0;
+}
+.input-group {
+    border: 1px solid #333 !important;
+    border-radius: 9999px !important; /* pill shape */
+    overflow: hidden !important;      /* clip children inside pill */
+    background-color: #121212 !important;
+}
+
+/* Hide number input arrows (Chrome, Safari, Edge, Opera) */
+.nutrition-row .form-control[type=number]::-webkit-inner-spin-button,
+.nutrition-row .form-control[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide number input arrows (Firefox) */
+.nutrition-row .form-control[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* === NAVIGATION === */
+ .navbar-brand {
+            font-size: 26px;
+        }
+    .nav-link-box {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
             border-radius: 20px;
-            padding: 10px !important;
+            padding: 15px !important;
             margin: 0 3px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
@@ -56,22 +105,26 @@
             justify-content: center;
             width: 45px;
             height: 45px;
+            
         }
-        
+
         .nav-link-box:hover {
             background-color: #f0f0f0 !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: black !important;
         }
-        
+
         .nav-link-box i {
-            font-size: 20px !important;
+            font-size: 17px !important;
             margin: 0 !important;
         }
         
+        /* ===== MOBILE NAVIGATION ===== */
         .mobile-settings-btn {
-            background-color: white !important;
-            color: black !important;
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: rgb(255, 255, 255) !important;
             border-radius: 50%;
             padding: 10px !important;
             width: 45px;
@@ -81,15 +134,16 @@
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            margin-left: 10px;
-        }
+            margin-left: 10px
+                }
         
-        .mobile-settings-btn:hover {
+            .mobile-settings-btn:hover {
             background-color: #f0f0f0 !important;
             transform: translateY(-4px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #000 !important;
         }
-        
+
         .mobile-settings-btn i {
             font-size: 20px !important;
             margin: 0 !important;
@@ -101,10 +155,6 @@
             margin-bottom: 4px;
         }
         
-        .btn {
-            font-size: 15px;
-            padding: 8px;
-        }
         
         .card {
             border-radius: 8px;
@@ -133,18 +183,74 @@
             padding-left: 10px;
         }
         .save-food-btn {
-            background-color: #c0bfbf !important;
-            color: black !important;
-            padding: 10px !important;
-            font-size: 18px !important;
+            background-color: #121212;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 20px;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
             }
             .save-food-btn:hover {
-    background: linear-gradient(to bottom, #b9b9b9, #ffffff) !important;
-    box-shadow: 0 0px 1px rgba(0, 0, 0, 0.3);
-    transform: translateY(-1px);
+            background-color: #f0f0f0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: black !important;
 }
+              .scan-btn {
+            background-color: #121212;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 20px;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+        
+            .scan-btn:hover {
+                background-color: #f0f0f0 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                color: black !important;
+             }
 
+        /* Modal styles for camera */
+        #cameraModal .modal-content {
+            background-color: #333;
+            color: #e0e0e0;
+        }
 
+        #cameraModal .modal-header, #cameraModal .modal-footer {
+            border-color: #555;
+        }
+
+        #cameraVideo {
+            width: 100%;
+            height: auto;
+            background-color: #000;
+            border-radius: 5px;
+        }
+
+        #captureCanvas {
+            display: none;
+        }
+
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
+        }
         
         /* Animation for success */
         @keyframes pulse {
@@ -178,24 +284,7 @@
         }
         
         /* Form specific adjustments */
-        input[type="number"], input[type="text"] {
-            background-color: #333 !important;
-            color: #e0e0e0 !important;
-            border: 1px solid #555 !important;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(to right, #ffffff, #969696) !important;
-            border: none;
-            color: rgb(0, 0, 0) !important;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(to right, #ffffff, #ffffff) !important;
-            transform: scale(1.02);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
+                
     </style>
 </head>
 <body>
@@ -217,30 +306,37 @@
                     style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
                     <li>
                         <a class="dropdown-item" 
-                           href="/custom_food"
+                           href="/"
                            style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                            <i class="fa-solid fa-house-chimney-window me-2"></i>Home
                         </a>
-                    </li>
-                    <li>
+                     </li>
+                        <li>
                         <a class="dropdown-item" 
+                        href="{{ url_for('workout') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-dumbbell me-2"></i>Workouts
+                        </a>
+                        </li>
+                        <li>
+                                    <a class="dropdown-item" 
                            href="/history"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-chart-pie me-2"></i>History
                         </a>
                     </li>
-                    <li>
-        <a class="dropdown-item" 
-           href="{{ url_for('workout') }}"
-           style="color: #e0e0e0; padding: 8px 15px;">
-            <i class="fas fa-dumbbell me-2"></i>Workouts
-        </a>
-    </li>
-    <li>
+                         <li>
                         <a class="dropdown-item" 
-                           href="/activity"
+                           href="{{ url_for('activity') }}"
                            style="color: #e0e0e0; padding: 8px 15px;">
                             <i class="fas fa-fire me-2"></i>Activity
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                           href="/custom_food"
+                           style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
                         </a>
                     </li>
                     <li>
@@ -342,6 +438,15 @@
                         <h4 class="mb-0">Add Custom Food</h4>
                     </div>
                     <div class="card-body">
+                        <!-- Scan Nutrition Label Button -->
+                        <div class="row nutrition-row">
+                            <div class="col-md-6">
+                                <button id="scanNutritionLabel" class="btn scan-btn">
+                                    <i class="fa-solid fa-camera me-2"></i>Scan Nutrition Label
+                                </button>
+                            </div>
+                        </div>
+                        
                         <!-- Updated Form Structure -->
 <form id="food-form">
     <!-- Row 1: Food Name -->
@@ -372,11 +477,11 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Fats (g)*</label>
-            <input type="number" name="fats" class="form-control" step="0.1" min="0" required>
+            <input type="number" name="fats" class="form-control" step="0.1" min="0" placeholder="required" required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Saturated Fats (g)</label>
-            <input type="number" name="saturated" class="form-control" step="0.1" min="0" value="0">
+            <input type="number" name="saturated" class="form-control" step="0.1" min="0" placeholder="g">
         </div>
     </div>
     
@@ -384,15 +489,15 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Carbohydrates (g)*</label>
-            <input type="number" name="carbs" class="form-control" step="0.1" min="0" required>
+            <input type="number" name="carbs" class="form-control" step="0.1" min="0" placeholder="required" required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Sugars (g)</label>
-            <input type="number" name="sugars" class="form-control" step="0.1" min="0" value="0">
+            <input type="number" name="sugars" class="form-control" step="0.1" min="0" placeholder="g">
         </div>
         <div class="col-md-2">
             <label class="form-label">Fiber (g)</label>
-            <input type="number" name="fiber" class="form-control" step="0.1" min="0" value="0">
+            <input type="number" name="fiber" class="form-control" step="0.1" min="0" placeholder="g">
         </div>
     </div>
     
@@ -400,7 +505,7 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Proteins (g)*</label>
-            <input type="number" name="proteins" class="form-control" step="0.1" min="0" required>
+            <input type="number" name="proteins" class="form-control" step="0.1" min="0" placeholder="required" required>
         </div>
     </div>
     
@@ -408,7 +513,7 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Salt (g)</label>
-            <input type="number" name="salt" class="form-control" step="0.0001" min="0" value="0">
+            <input type="number" name="salt" class="form-control" step="0.1" min="0" placeholder="g">
         </div>
     </div>
    
@@ -416,14 +521,14 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Serving Size (g)</label>
-            <input type="number" name="serving" class="form-control" step="0.1" min="0">
+            <input type="number" name="serving" class="form-control" step="0.1" min="0" placeholder="1 piece/serving">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Half Portion (g)</label>
+            <label class="form-label">Half Package (g)</label>
             <input type="number" name="half" class="form-control" step="0.1" min="0">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Entire Portion (g)</label>
+            <label class="form-label">Entire Package (g)</label>
             <input type="number" name="entire" class="form-control" step="0.1" min="0">
         </div>
     </div>
@@ -431,7 +536,7 @@
     <!-- Row 9: Base Grams -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Base (grams)*</label>
+            <label class="form-label">Per (grams)*</label>
             <input type="number" name="grams" class="form-control" step="0.1" min="0" value="100" required>
         </div>
     </div>
@@ -457,120 +562,296 @@
         </div>
     </div>
 
+    <!-- Camera Modal -->
+    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Scan Nutrition Label</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="position-relative">
+                        <video id="cameraVideo" autoplay playsinline></video>
+                        <div id="scanningOverlay" class="scanning-overlay d-none">
+                            <div class="text-center">
+                                <div class="spinner-border text-light mb-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p>Processing image...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="captureCanvas" class="d-none"></canvas>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="captureImage" class="btn btn-primary">Capture & Process</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Enter key support for form submission
-        $('#food-form input').on('keypress', function(e) {
-            if (e.which === 13) { // Enter key
-                $('#food-form').submit();
-                return false;
-            }
-        });
-        
-        $('#food-form').on('submit', function(e) {
-            e.preventDefault();
-            const name = $('input[name="name"]').val().trim();
+    <script>
+        $(document).ready(function() {
+            let stream = null;
+            const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             
-            if (!name) {
-                showError('Food name is required');
-                return;
-            }
+            // Open camera when scan button is clicked
+            $('#scanNutritionLabel').on('click', function() {
+                openCamera();
+                cameraModal.show();
+            });
             
-            // Reset messages
-            $('#success-message').addClass('d-none');
-            $('#error-message').addClass('d-none');
+            // Capture image when capture button is clicked
+            $('#captureImage').on('click', function() {
+                captureImage();
+            });
             
-            // Collect form data
-            const formData = {
-                name: $('input[name="name"]').val().trim(),
-                calories: $('input[name="calories"]').val() || null,
-                carbs: $('input[name="carbs"]').val(),
-                proteins: $('input[name="proteins"]').val(),
-                fats: $('input[name="fats"]').val(),
-                sugars: $('input[name="sugars"]').val(),
-                fiber: $('input[name="fiber"]').val(),
-                saturated: $('input[name="saturated"]').val(),
-                salt: $('input[name="salt"]').val(),
-                grams: $('input[name="grams"]').val(),
-                ean: $('input[name="ean"]').val().trim() || null
-            };
+            // Clean up when modal is closed
+            $('#cameraModal').on('hidden.bs.modal', function() {
+                stopCamera();
+            });
             
-            // Get optional fields
-            const serving = $('input[name="serving"]').val();
-            const half = $('input[name="half"]').val();
-            const entire = $('input[name="entire"]').val();
-            
-            if (serving) formData.serving = serving;
-            if (half) formData.half = half;
-            if (entire) formData.entire = entire;
-            
-            // Validate required fields
-            if (!formData.name) {
-                showError('Food name is required');
-                return;
+            // Open camera function
+            function openCamera() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                        .then(function(videoStream) {
+                            stream = videoStream;
+                            const video = document.getElementById('cameraVideo');
+                            video.srcObject = videoStream;
+                        })
+                        .catch(function(error) {
+                            console.error('Camera error: ', error);
+                            alert('Unable to access camera: ' + error.message);
+                        });
+                } else {
+                    alert('Your browser does not support camera access.');
+                }
             }
             
-            if (!formData.carbs || !formData.proteins || !formData.fats) {
-                showError('Carbs, proteins and fats are required');
-                return;
+            // Stop camera function
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
             }
             
-            // Submit the form
-            $.ajax({
-                type: 'POST',
-                url: '/save_food',
-                data: formData,
-                success: function(response) {
-                    if (response.success) {
-                        // Create celebration animation
-                        const celebration = $('<div class="success-animation">✓</div>');
-                        $('body').append(celebration);
-                        
-                        // Remove after animation
-                        setTimeout(() => celebration.remove(), 1500);
-                        
-                        // Show success message with animation
-                        const successMessage = $('#success-message');
-                        successMessage.removeClass('d-none');
-                        
-                        // Add pulse animation to success message
-                        successMessage.css('animation', 'pulse 0.5s');
-                        setTimeout(() => successMessage.css('animation', ''), 500);
-                        
-                        // Reset form after delay
-                        setTimeout(() => {
-                            $('#food-form')[0].reset();
-                            $('input[name="grams"]').val('100');
-                            successMessage.addClass('d-none');
-                        }, 3000);
-                    } else {
-                        showError(response.error || 'Failed to save food');
-                    }
-                },
-                error: function(xhr) {
-                    let errorMsg = 'Error saving food';
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.error) {
-                            errorMsg = response.error;
+            // Capture image function
+            function captureImage() {
+                const video = document.getElementById('cameraVideo');
+                const canvas = document.getElementById('captureCanvas');
+                const context = canvas.getContext('2d');
+                
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw current video frame to canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Show processing overlay
+                $('#scanningOverlay').removeClass('d-none');
+                
+                // Convert canvas to blob and send to server
+                canvas.toBlob(function(blob) {
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('image', blob, 'nutrition-label.jpg');
+                    
+                    // Send to server for processing
+                    $.ajax({
+                        url: '/process_nutrition_label',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                // Fill form with extracted data
+                                fillFormWithNutritionData(response.data);
+                                cameraModal.hide();
+                            } else {
+                                alert('Error: ' + response.error);
+                            }
+                            $('#scanningOverlay').addClass('d-none');
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Error processing image: ' + error);
+                            $('#scanningOverlay').addClass('d-none');
                         }
-                    } catch (e) {
-                        console.error('Error parsing response:', e);
-                    }
-                    showError(errorMsg);
+                    });
+                }, 'image/jpeg', 0.8);
+            }
+            
+            // Fill form with extracted nutrition data
+            function fillFormWithNutritionData(nutritionData) {
+                // Fill basic fields
+                if (nutritionData.product_name) {
+                    $('input[name="name"]').val(nutritionData.product_name);
+                }
+                
+                if (nutritionData.calories) {
+                    $('input[name="calories"]').val(nutritionData.calories);
+                }
+                
+                // Fill macronutrients
+                if (nutritionData.fats) {
+                    $('input[name="fats"]').val(nutritionData.fats);
+                }
+                
+                if (nutritionData.saturated_fat) {
+                    $('input[name="saturated"]').val(nutritionData.saturated_fat);
+                }
+                
+                if (nutritionData.carbohydrates) {
+                    $('input[name="carbs"]').val(nutritionData.carbohydrates);
+                }
+                
+                if (nutritionData.sugars) {
+                    $('input[name="sugars"]').val(nutritionData.sugars);
+                }
+                
+                if (nutritionData.fiber) {
+                    $('input[name="fiber"]').val(nutritionData.fiber);
+                }
+                
+                if (nutritionData.proteins) {
+                    $('input[name="proteins"]').val(nutritionData.proteins);
+                }
+                
+                if (nutritionData.salt) {
+                    $('input[name="salt"]').val(nutritionData.salt);
+                }
+                
+                // Show success message
+                showMessage('Nutrition data extracted successfully!', 'success');
+            }
+            
+            // Show message function
+            function showMessage(message, type) {
+                const messageElement = type === 'success' ? $('#success-message') : $('#error-message');
+                messageElement.text(message).removeClass('d-none');
+                
+                if (type === 'success') {
+                    $('#error-message').addClass('d-none');
+                } else {
+                    $('#success-message').addClass('d-none');
+                }
+                
+                // Scroll to message
+                $('html, body').animate({
+                    scrollTop: messageElement.offset().top - 100
+                }, 500);
+            }
+            
+            // Enter key support for form submission
+            $('#food-form input').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    $('#food-form').submit();
+                    return false;
                 }
             });
-        });
-        
-        function showError(message) {
-            const errorMessage = $('#error-message');
-            errorMessage.text(message).removeClass('d-none');
-            errorMessage.css('animation', 'pulse 0.5s');
-            setTimeout(() => errorMessage.css('animation', ''), 500);
+            
+            $('#food-form').on('submit', function(e) {
+    e.preventDefault();
+
+    const name = $('input[name="name"]').val().trim();
+    if (!name) {
+        showError('Food name is required');
+        return;
+    }
+
+    // Reset messages
+    $('#success-message').addClass('d-none');
+    $('#error-message').addClass('d-none');
+
+    const formData = {};
+
+    $('#food-form input').each(function() {
+        const input = $(this);
+        const name = input.attr('name');
+        let value = input.val().trim();
+
+        // Skip EAN, keep as null if empty
+        if (name === 'ean') {
+            formData[name] = value || null;
+            return;
+        }
+
+        // Required fields: carbs, fats, proteins, grams
+        if (['carbs', 'fats', 'proteins', 'grams'].includes(name)) {
+            if (value === '') {
+                showError('Carbs, fats, proteins, and base grams are required');
+                throw 'ValidationError';
+            }
+        }
+
+        // For numeric inputs, default empty to 0
+        if (input.attr('type') === 'number' && value === '') {
+            value = 0;
+        }
+
+        formData[name] = value;
+    });
+
+    // Optional fields: serving, half, entire
+    const serving = $('input[name="serving"]').val();
+    const half = $('input[name="half"]').val();
+    const entire = $('input[name="entire"]').val();
+
+    if (serving) formData.serving = serving;
+    if (half) formData.half = half;
+    if (entire) formData.entire = entire;
+
+    // Submit via AJAX
+    $.ajax({
+        type: 'POST',
+        url: '/save_food',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                const celebration = $('<div class="success-animation">✓</div>');
+                $('body').append(celebration);
+                setTimeout(() => celebration.remove(), 1500);
+
+                const successMessage = $('#success-message');
+                successMessage.removeClass('d-none').css('animation', 'pulse 0.5s');
+                setTimeout(() => successMessage.css('animation', ''), 500);
+
+                setTimeout(() => {
+                    $('#food-form')[0].reset();
+                    $('input[name="grams"]').val('100');
+                    successMessage.addClass('d-none');
+                }, 3000);
+            } else {
+                showError(response.error || 'Failed to save food');
+            }
+        },
+        error: function(xhr) {
+            let errorMsg = 'Error saving food';
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.error) errorMsg = response.error;
+            } catch (e) {
+                console.error('Error parsing response:', e);
+            }
+            showError(errorMsg);
         }
     });
-</script>
+});
+            
+            function showError(message) {
+                const errorMessage = $('#error-message');
+                errorMessage.text(message).removeClass('d-none');
+                errorMessage.css('animation', 'pulse 0.5s');
+                setTimeout(() => errorMessage.css('animation', ''), 500);
+            }
+        });
+    </script>
 </body>
 </html>
