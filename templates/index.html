@@ -46,7 +46,7 @@
         .form-control, .form-select {
         background-color: #121212 !important;
         border: 1px solid #333 !important;
-        color: #eee !;
+        color: #eee;
         border-radius: 20px !important;
         font-size: 14px !important;
         padding: 6px 12px !important;
@@ -55,10 +55,10 @@
          }
 
         .form-control:focus, .form-select:focus {
-            border-color: #555;
-            box-shadow: none;
-            background-color: #181818;
-            color: #eee;
+            border-color: #555 !important;
+            box-shadow: none !important;
+            background-color: #181818 !important;
+            color: #eee !important;
         }
 
         .form-control::placeholder, .form-select::placeholder {
@@ -112,24 +112,52 @@
         
         /* ===== LAYOUT & COMPONENTS ===== */
         .container-main {
-            display: grid;
+            display: auto;
             grid-template-columns: 1180px;
-            grid-template-rows: 550px 690px;
-            gap: 0;
+            grid-template-rows: 500px 740px;
+            gap: 15;
             margin: 0 auto;
             width: 1180px;
             position: relative;
         }
-        
+    /* glass effect on cards */
         .grid-panel {
-            border: 1px solid #2b2b2b;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
             display: flex;
             flex-direction: column;
             flex: 1;
             min-height: 0;
             overflow: hidden;
+            border-radius: 16px !important; /* Rounded corners */
+            background: rgba(30, 30, 30, 0.7) !important; /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1); /* Depth and inner highlight */
         }
-        
+        .grid-panel .card {
+    border-radius: 16px;
+    background: transparent;
+    border: none;
+        }
+        .grid-panel .card-header {
+    border-radius: 16px 16px 0 0 !important;
+    background: rgba(39, 39, 39, 0.6) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+.grid-panel .card-body {
+    border-radius: 0 0 16px 16px;
+}
+.group-header {
+    user-select: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.6)) !important;
+}
+.group-items {
+    border-radius: 0 0 8px 8px !important;
+}
+
         .top-panel {
             grid-column: 1;
         }
@@ -443,21 +471,21 @@
         
         /* ===== BUTTONS ===== */
         #clear-search {
-            background-color: #000000;
+            background-color: #121212;
             color: rgb(214, 214, 214);
             font-size: 16px;
             margin-left: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             border: none;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
+            border-radius: 16px;
+            width: 20px;
+            height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             transition: all 0.3s ease;
-            padding: 20px;
+            padding: 16px;
         }
         
         #clear-search:hover {
@@ -794,21 +822,20 @@
         }
         
         .grid-cell i {
-            font-size: 1.8vh !important;
+            font-size: 1.4vh !important;
             margin-bottom: 3px !important;
         }
         
         .grid-value {
             font-weight: bold;
-            font-size: 1.8vh !important;
+            font-size: 1.4vh !important;
             margin-top: 2px;
         }
         
-        .grid-cell:nth-child(1) {
-            background-color: #b61336;
+        .grid-cell:nth-child(1) {     
             color: #fffefe;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .grid-cell:nth-child(2) {
@@ -819,7 +846,6 @@
         .grid-cell:nth-child(3),
         .grid-cell:nth-child(4),
         .grid-cell:nth-child(5) {
-            background-color: #b61336;
             color: #000000;
         }
         
@@ -909,15 +935,19 @@
         .grid-activity {
             background: linear-gradient(135deg, #202020, #000000);
             color: #ffffff;
+            font-size: 0.8rem !important;
+            font-weight: bold;
         }
         
         .grid-today {
             background: linear-gradient(135deg, #ffffff, #737473);
             color: #000;
+            font-size: 0.8rem !important;
+            font-weight: bold;
         }
         
         .grid-status {
-            font-size: 1.0rem;
+            font-size: 0.8rem;
             font-weight: bold;
             margin-top: 5px;
             padding: 3px 8px;
@@ -941,7 +971,7 @@
         
         .calorie-diff {
             font-weight: bold;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
         }
         
         .calorie-positive {
@@ -1133,16 +1163,16 @@
             z-index: 10;
         }
     /* Hide number input arrows (Chrome, Safari, Edge, Opera) */
-    .input-type [type=number]::-webkit-inner-spin-button,
-    .input-type [type=number]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
+    input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
-    /* Hide number input arrows (Firefox) */
-    .input-type .form-control[type=number] {
-        -moz-appearance: textfield;
-    }
+/* For Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
     /* Make hr/min spans match seamlessly */
     .input-group .input-group-text {
         border: none;
@@ -1955,6 +1985,57 @@
                 font-size: 20px !important;
                 opacity: 0.7 !important;
                 margin-top: -5px !important;
+            }
+
+            /* Mobile footer container */
+            .mobile-footer {
+                background-color: #121212; /* match dark theme */
+                border-top: 1px solid #333;
+                height: 52px;              /* fixed compact height */
+                padding: 0 4px;            /* tighter side padding */
+                display: flex;
+                align-items: center;       /* vertically center buttons */
+            }
+
+            /* Footer buttons */
+            .mobile-footer .btn {
+                background-color: #1b1b1b !important;
+                color: #ffffff !important;
+                border: 1px solid #444 !important;
+                border-radius: 10px;       /* slightly rounded */
+                padding: 2px;              /* super tight padding */
+                font-size: 10px;           /* compact labels */
+                font-weight: 600;
+                line-height: 1.1;
+                min-width: 0;
+                height: 40px; 
+                width: 70px;             /* fits inside footer */
+                flex: 1;                   /* all buttons equal width */
+                display: flex;
+                flex-direction: column;    /* icon above text */
+                align-items: center;
+                justify-content: center;
+                gap: 1px;                  /* tiny gap between icon + text */
+                margin: 0 2px;             /* spacing between buttons */
+            }
+
+            /* Icons smaller */
+            .mobile-footer .btn i {
+                font-size: 14px;
+                margin: 0;
+            }
+
+            /* Label text */
+            .mobile-footer .btn .btn-label {
+                font-size: 9px;  /* small but readable */
+                font-weight: 500;
+            }
+
+            /* Disabled state */
+            .mobile-footer .btn:disabled {
+                opacity: 0.4;
+                color: #aaa !important;
+                border-color: #333 !important;
             }
         }
         
@@ -2836,6 +2917,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        console.log("Script loaded");
+        console.log("Button exists:", $("#clear-session-mobile").length);
         $(document).ready(function() {
             // ===== CONSTANTS AND CONFIGURATION =====
             const DATES = {{ dates | tojson }};
@@ -2870,9 +2953,6 @@
                 loadTopFoods();
                 positionNutritionGrid();
                 initPortionControls();
-                
-                // Keep session alive
-                setInterval(keepSessionAlive, 5 * 60 * 1000);
                 
                 // Mobile button linking
                 $('#move-items-mobile').click(() => $('#move-items').click());
@@ -3156,19 +3236,25 @@
                 }
             }
             
-            function toggleFoodGroup() {
+                        function toggleFoodGroup(e) {
+                // Prevent double-click from triggering two click events
+                if (e.type === 'dblclick') {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                
                 const groupHeader = $(this).closest('.group-header');
                 const groupContainer = groupHeader.closest('.food-group');
                 const groupItems = groupHeader.next('.group-items');
                 const isExpanded = groupItems.is(':visible');
                 
                 if (isExpanded) {
-                    groupItems.hide();
-                    $(this).text('+');
+                    groupItems.slideUp(1);
+                    groupContainer.find('.toggle-group').text('+');
                     groupContainer.addClass('collapsed-group');
                 } else {
-                    groupItems.show();
-                    $(this).text('−');
+                    groupItems.slideDown(1);
+                    groupContainer.find('.toggle-group').text('−');
                     groupContainer.removeClass('collapsed-group');
                 }
             }
