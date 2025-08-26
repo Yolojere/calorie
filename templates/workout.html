@@ -1,5 +1,4 @@
 <script>
-    // Add this at the very top of workout.html
     const current_user_role = "{{ current_user_role }}";
 </script>
 <!DOCTYPE html>
@@ -51,23 +50,12 @@
         border-bottom: 2px solid var(--border-color);
     }
 
-    .workout-grid-container { 
-        display: block !important; 
-        max-width: 1180px; 
-        margin: 0 auto; 
-    }
-
     #workout-session-container, 
     #workout-session-container-mobile { 
         min-height: 200px; 
-    }
-
-    #workout-session-container-mobile {
-        max-height: calc(100vh - 250px) !important; 
-        overflow-y: auto; 
-        padding: 15px;
-        padding-bottom: 80px !important;
-        height: calc(100vh - 200px) !important;
+        height: auto;
+        overflow: visible;
+        padding-bottom: 70px;
     }
 
     /* ===== TYPOGRAPHY & TEXT ===== */
@@ -358,7 +346,7 @@
     .workout-table thead th:last-child {
         background-color: #000;
         color: transparent;
-        position: relative;
+        position:relative;
     }
 
     .workout-table thead th:last-child::after {
@@ -372,13 +360,85 @@
         color: var(--text-primary);
         font-size: 14px;
     }
+    /* Complete exercise dropdown styles */
+        .complete-exercise-dropdown {
+            position: relative;
+            display: inline-block;
+            margin-right: 8px;
+            z-index: 9998 !important;
+        }
 
+        .complete-exercise-icon {
+            background: none;
+            border: none;
+            color: #d0d0d0;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .complete-exercise-icon:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .complete-exercise-icon i.completed {
+            color: var(--success-color);
+        }
+
+        .complete-exercise-options {
+            display: none;
+            position: relative;
+            background-color: #333;
+            min-width: 140px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+            z-index: 9999;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #555;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 5px;
+        }
+
+        .complete-option {
+            color: var(--text-primary);
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .complete-option:last-child {
+            border-bottom: none;
+        }
+
+        .complete-option:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .exercise-header.completed {
+            background: rgba(32, 126, 82, 0.774) !important;
+            
+        }
+
+        /* Adjust exercise header to accommodate new icon */
+        .exercise-header-content {
+            display: flex;
+            align-items: center;
+        }
     /* Column widths */
     .workout-table th:nth-child(1), .workout-table td:nth-child(1) { width: 25%; }
     .workout-table th:nth-child(2), .workout-table td:nth-child(2) { width: 20%; }
     .workout-table th:nth-child(3), .workout-table td:nth-child(3) { width: 20%; }
     .workout-table th:nth-child(4), .workout-table td:nth-child(4) { width: 25%; }
-    .workout-table th:nth-child(5), .workout-table td:nth-child(5) { width: 10%; text-align: center; }
+    .workout-table th:nth-child(5), .workout-table td:nth-child(5) { width: 10%; }
 
     /* ===== WORKOUT GROUP & EXERCISE STYLES ===== */
     /* Muscle Group Colors */
@@ -496,8 +556,7 @@
     .group-actions {
         display: flex;
         align-items: center;
-        gap: 5px;
-        margin-left: 15px;
+        gap: 2px;
     }
 
     .exercise-info {
@@ -538,12 +597,10 @@
         margin-right: 4px;
     }
     .actions-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        background-color: var(--bg-tertiary) !important;
-        padding: 0 !important;
+    background-color: var(--bg-tertiary) !important;
+    padding: 0 !important;
+    text-align: center;     /* horizontally center content */
+    vertical-align: middle; /* vertically center content */
     }
 
     /* ===== BADGES & INDICATORS ===== */
@@ -740,6 +797,15 @@
             width: 100%; 
             margin-bottom: 15px; 
         }
+        .grid-log {
+            display: block !important; 
+            max-height: calc(100vh - 150px);
+            padding: 15px;
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 200px;
+            }
+
         
         /* Desktop only comment tooltip */
         .comment-tooltip {
@@ -758,7 +824,11 @@
     @media (max-width: 768px) {
         .workout-grid-container { 
             display: block !important; 
-        }
+            padding: 15px;
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 200px;
+ }
         
         #workout-log-tab .card-body {    
             position: relative;
@@ -1352,7 +1422,7 @@
             
             <!-- Workout Session Container -->
             <div class="grid-log">
-                <div class="card h-100">
+                <div class="card">
                     <!-- Card Header -->
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Workout Log</h5>
@@ -1490,6 +1560,8 @@
         };
         let savedScrollPosition = { desktop: 0, mobile: 0 };
         let currentCommentSetId = null;
+        // Store completed exercises state
+        let completedExercises = {};
 
         // Initialize workout page
         $(document).ready(function() {
@@ -1510,6 +1582,9 @@
             // Setup RiR and comment functionality
             setupRirDropdowns();
             setupCommentTooltips();
+            // Setup exercise completion functionality
+            setupExerciseCompletion();
+            attachTemplateEventHandlers();
         });
 
         // ===== INITIALIZATION FUNCTIONS =====
@@ -1518,10 +1593,17 @@
             if (savedState) {
                 collapseState = JSON.parse(savedState);
             }
+            
+            // Load completed exercises state
+            const savedCompleted = localStorage.getItem('completedExercises');
+            if (savedCompleted) {
+                completedExercises = JSON.parse(savedCompleted);
+            }
         }
         
         function saveCollapseState() {
             localStorage.setItem('workoutCollapseState', JSON.stringify(collapseState));
+            localStorage.setItem('completedExercises', JSON.stringify(completedExercises));
         }
         
         function initTooltips() {
@@ -1551,6 +1633,7 @@
                 }
             });
         }
+
         
         function setupEventListeners() {
             // Setup muscle group change listener
@@ -1586,7 +1669,8 @@
                 e.preventDefault();
                 previewTemplate($(this).data('id'));
             });
-
+    
+            
             // Copy workout
             $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
                 populateDateOptions();
@@ -1600,6 +1684,7 @@
             // Admin-only events
             if (current_user_role === 'admin') {
                 $("#save-template-btn").click(saveTemplate);
+                $("#save-template-mobile-btn").click(saveTemplate);
             }
         }
         
@@ -1607,6 +1692,7 @@
             // Hide dropdown when clicking elsewhere
             $(document).click(function() {
                 $('.rir-options').hide();
+                $('.complete-exercise-options').hide();
             });
             
             // RiR badge click
@@ -1614,6 +1700,7 @@
                 e.stopPropagation();
                 // Hide any other open dropdowns
                 $('.rir-options').hide();
+                $('.complete-exercise-options').hide();
                 
                 // Show this dropdown
                 $(this).siblings('.rir-options').toggle();
@@ -1638,6 +1725,110 @@
                 
                 // Update the RiR value in the database
                 updateRir(setId, value);
+            });
+        }
+        // Reattach when workout content changes (for mobile/desktop switching)
+        $(document).on('workoutContentChanged', function() {
+            attachTemplateEventHandlers();
+        });
+
+        function setupExerciseCompletion() {
+            // Complete exercise icon click
+            $(document).on('click', '.complete-exercise-icon', function(e) {
+                e.stopPropagation();
+                // Hide any other open dropdowns
+                $('.rir-options').hide();
+                
+                // Show this dropdown
+                $(this).siblings('.complete-exercise-options').toggle();
+            });
+            
+            // Complete option selection
+            $(document).on('click', '.complete-option', function(e) {
+                e.stopPropagation();
+                const value = $(this).data('value');
+                const exerciseId = $(this).closest('.exercise').data('exercise-id');
+                const groupName = $(this).closest('.workout-group').data('group');
+                const date = $(".workout-date.active").data("date");
+                
+                // Update completed state
+                if (value === 'yes') {
+                    markExerciseCompleted(exerciseId, groupName, date);
+                } else {
+                    markExerciseNotCompleted(exerciseId, groupName, date);
+                }
+                
+                // Hide dropdown
+                $(this).closest('.complete-exercise-options').hide();
+            });
+        }
+        
+        function markExerciseCompleted(exerciseId, groupName, date) {
+            // Store completed state
+            if (!completedExercises[date]) completedExercises[date] = {};
+            completedExercises[date][exerciseId] = true;
+            
+            // Update UI
+            const $exercise = $(`.exercise[data-exercise-id="${exerciseId}"]`);
+            $exercise.find('.exercise-header').addClass('completed');
+            $exercise.find('.complete-exercise-icon i').addClass('completed');
+            
+            // Move to end of group
+            const $groupItems = $exercise.closest('.group-items');
+            $exercise.detach().appendTo($groupItems);
+            
+            // Save state
+            saveCollapseState();
+            
+            // Collapse the exercise
+            const exerciseCollapsed = collapseState.exercises[date] && collapseState.exercises[date][exerciseId];
+            if (!exerciseCollapsed) {
+                $exercise.find('.toggle-exercise').click();
+            }
+            
+            // Send to server
+            $.post("/workout/mark_exercise_completed", {
+                exercise_id: exerciseId,
+                date: date,
+                completed: true
+            }, function(response) {
+                if (!response.success) {
+                    console.error('Error updating exercise completion status');
+                }
+            });
+        }
+        
+        function markExerciseNotCompleted(exerciseId, groupName, date) {
+            // Remove completed state
+            if (completedExercises[date] && completedExercises[date][exerciseId]) {
+                delete completedExercises[date][exerciseId];
+            }
+            
+            // Update UI
+            const $exercise = $(`.exercise[data-exercise-id="${exerciseId}"]`);
+            $exercise.find('.exercise-header').removeClass('completed');
+            $exercise.find('.complete-exercise-icon i').removeClass('completed');
+            
+            // Move back to original position (first in group)
+            const $groupItems = $exercise.closest('.group-items');
+            const $firstExercise = $groupItems.find('.exercise').first();
+            
+            if ($firstExercise.length && !$firstExercise.is($exercise)) {
+                $exercise.detach().insertBefore($firstExercise);
+            }
+            
+            // Save state
+            saveCollapseState();
+            
+            // Send to server
+            $.post("/workout/mark_exercise_completed", {
+                exercise_id: exerciseId,
+                date: date,
+                completed: false
+            }, function(response) {
+                if (!response.success) {
+                    console.error('Error updating exercise completion status');
+                }
             });
         }
         
@@ -1750,39 +1941,47 @@
         }
         
         function loadTemplates() {
-            $.get("/workout/templates", function(data) {
-                const $templateListDesktop = $("#template-list-desktop");
-                const $templateListMobile = $("#template-list-mobile");
-                $templateListDesktop.empty();
-                $templateListMobile.empty();
-                
-                if (data.templates && data.templates.length > 0) {
-                    data.templates.forEach(template => {
-                        const item = `
-                            <li><a class="dropdown-item template-item" href="#" 
-                                   data-id="${template.id}">${template.name}</a></li>
-                        `;
-                        $templateListDesktop.append(item);
-                        $templateListMobile.append(item);
-                    });
-                } else {
-                    const noItem = '<li><a class="dropdown-item" href="#">No templates found</a></li>';
-                    $templateListDesktop.append(noItem);
-                    $templateListMobile.append(noItem);
-                }
-                // Attach click handler here with delegation
-                $(document).off("click", ".template-item"); // remove previous handlers
-                $(document).on("click", ".template-item", function(e) {
-                    e.preventDefault();
-                    previewTemplate($(this).data('id'));
-                });
-            })
-            .fail(function() {
-                const errorItem = '<li><a class="dropdown-item" href="#">Error loading templates</a></li>';
-                $("#template-list-desktop").html(errorItem);
-                $("#template-listMobile").html(errorItem);
+    $.get("/workout/templates", function(data) {
+        const $templateListDesktop = $("#template-list-desktop");
+        const $templateListMobile = $("#template-list-mobile");
+        $templateListDesktop.empty();
+        $templateListMobile.empty();
+        
+        if (data.templates && data.templates.length > 0) {
+            data.templates.forEach(template => {
+                const item = `
+                    <li><a class="dropdown-item template-item" href="#" 
+                           data-id="${template.id}">${template.name}</a></li>
+                `;
+                $templateListDesktop.append(item);
+                $templateListMobile.append(item);
             });
+            
+            // Reattach event handlers after populating the lists
+            attachTemplateEventHandlers();
+        } else {
+            const noItem = '<li><a class="dropdown-item" href="#">No templates found</a></li>';
+            $templateListDesktop.append(noItem);
+            $templateListMobile.append(noItem);
         }
+    })
+    .fail(function() {
+        const errorItem = '<li><a class="dropdown-item" href="#">Error loading templates</a></li>';
+        $("#template-list-desktop").html(errorItem);
+        $("#template-list-mobile").html(errorItem);
+    });
+}
+// Add this function to properly attach event handlers
+function attachTemplateEventHandlers() {
+    // Remove any existing handlers to prevent duplication
+    $(".template-item").off('click');
+    
+    // Attach new handlers
+    $(".template-item").on('click', function(e) {
+        e.preventDefault();
+        previewTemplate($(this).data('id'));
+    });
+}
 
         // ===== RENDERING FUNCTIONS =====
         function renderWeekDates(dates) {
@@ -1954,15 +2153,38 @@
                         <div class="group-items" style="${groupCollapsed ? 'display: none;' : ''}">
                 `;
 
+                // Sort exercises: completed ones last
+                groupData.exercises.sort((a, b) => {
+                    const aCompleted = completedExercises[currentDate] && completedExercises[currentDate][a.id];
+                    const bCompleted = completedExercises[currentDate] && completedExercises[currentDate][b.id];
+                    
+                    if (aCompleted && !bCompleted) return 1;
+                    if (!aCompleted && bCompleted) return -1;
+                    return 0;
+                });
+
                 // Render exercises
                 groupData.exercises.forEach(exercise => {
                     const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
                     const expandedClass = exerciseCollapsed ? '' : 'expanded';
+                    const isCompleted = completedExercises[currentDate] && completedExercises[currentDate][exercise.id];
+                    const completedClass = isCompleted ? 'completed' : '';
 
                     groupBlock += `
                         <div class="exercise" data-exercise-id="${exercise.id}">
-                            <div class="exercise-header ${expandedClass}">
-                                <div class="exercise-title">${exercise.name}</div>
+                            <div class="exercise-header ${expandedClass} ${completedClass}">
+                                <div class="exercise-header-content">
+                                    <div class="complete-exercise-dropdown">
+                                        <button class="complete-exercise-icon">
+                                            <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
+                                        </button>
+                                        <div class="complete-exercise-options">
+                                            <div class="complete-option" data-value="yes">Yes</div>
+                                            <div class="complete-option" data-value="no">No</div>
+                                        </div>
+                                    </div>
+                                    <div class="exercise-title">${exercise.name}</div>
+                                </div>
                                 <div class="exercise-info">
                                     <div class="exercise-summary-text">
                                         ${exercise.exerciseSets} sets, ${exercise.exerciseVolume.toFixed(1)} kg
@@ -2076,6 +2298,7 @@
             // Setup the RiR dropdowns and comment tooltips
             setupRirDropdowns();
             setupCommentTooltips();
+            setupExerciseCompletion();
 
             // Apply initial expanded class
             $(".exercise").each(function() {
@@ -2325,66 +2548,82 @@
         }
         
         function previewTemplate(templateId) {
-            // Hide all tooltips before showing modal
-            $('.comment-icon').tooltip('hide');
+    // Show loading state
+    $("#template-preview-body").html(
+        '<tr><td colspan="4" class="text-center py-3">' +
+        '<i class="fas fa-spinner fa-spin me-2"></i>Loading template...' +
+        '</td></tr>'
+    );
+    
+    $("#templatePreviewModal").modal('show');
+    
+    fetch(`/workout/templates/${templateId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $("#template-preview-name").text(data.template.name);
+            const $previewBody = $("#template-preview-body");
+            $previewBody.empty();
             
-            fetch(`/workout/templates/${templateId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    $("#template-preview-name").text(data.template.name);
-                    const $previewBody = $("#template-preview-body");
-                    $previewBody.empty();
-                    
-                    data.exercises.forEach(ex => {
-                        $previewBody.append(`
-                            <tr>
-                                <td>${ex.name}</td>
-                                <td>${ex.muscle_group}</td>
-                                <td>${ex.reps}</td>
-                                <td>${ex.weight} kg</td>
-                            </tr>
-                        `);
-                    });
-                    
-                    // Reinitialize tooltips after modal content is updated
-                    initTooltips();
-                    
-                    // Store template ID on the button
-                    $("#apply-template-btn").data('template-id', templateId);
-                    
-                    // Show the modal
-                    const modal = new bootstrap.Modal(document.getElementById('templatePreviewModal'));
-                    modal.show();
-                } else {
-                    alert("Error: " + (data.error || "Template not found"));
-                }
-            })
-            .catch(error => {
-                alert("Error loading template: " + error.message);
-            });
+            if (data.exercises && data.exercises.length > 0) {
+                data.exercises.forEach(ex => {
+                    $previewBody.append(`
+                        <tr>
+                            <td>${ex.name}</td>
+                            <td>${ex.muscle_group}</td>
+                            <td>${ex.reps}</td>
+                            <td>${ex.weight} kg</td>
+                        </tr>
+                    `);
+                });
+            } else {
+                $previewBody.append(
+                    '<tr><td colspan="4" class="text-center py-3">No exercises in this template</td></tr>'
+                );
+            }
+            
+            // Store template ID on the button
+            $("#apply-template-btn").data('template-id', templateId);
+        } else {
+            alert("Error: " + (data.error || "Template not found"));
+            $("#templatePreviewModal").modal('hide');
         }
+    })
+    .catch(error => {
+        alert("Error loading template: " + error.message);
+        $("#templatePreviewModal").modal('hide');
+    });
+}
         
-        function applyTemplate(templateId) {
-            const currentDate = $(".workout-date.active").data("date");
-            isApplyingTemplate = true; // Set flag before loading session
-            
-            $.post("/workout/apply_template", {
-                template_id: templateId,
-                date: currentDate
-            }, function(response) {
-                if (response.success) {
-                    $("#templatePreviewModal").modal('hide');
-                    loadWorkoutSession(currentDate);
-                } else {
-                    alert("Error: " + (response.error || "Failed to apply template"));
-                    isApplyingTemplate = false; // Reset flag on failure
-                }
-            }).fail(function() {
-                alert("Network error. Please try again.");
+         function applyTemplate(templateId) {
+    const currentDate = $(".workout-date.active").data("date");
+    isApplyingTemplate = true; // Set flag before loading session
+    
+    // Send as JSON instead of form data
+    $.ajax({
+        url: "/workout/apply_template",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            template_id: templateId,
+            date: currentDate
+        }),
+        success: function(response) {
+            if (response.success) {
+                $("#templatePreviewModal").modal('hide');
+                loadWorkoutSession(currentDate);
+            } else {
+                alert("Error: " + (response.error || "Failed to apply template"));
                 isApplyingTemplate = false; // Reset flag on failure
-            });
+            }
+        },
+        error: function(xhr, status, error) {
+            alert("Network error. Please try again.");
+            isApplyingTemplate = false; // Reset flag on failure
+            console.error("Error applying template:", error);
         }
+    });
+}
         
         function copyWorkoutToDate(targetDate) {
             const sourceDate = currentSelectedDate;
@@ -2421,7 +2660,7 @@
         }
         
         function navigateWeek(direction) {
-            const days = direction === 'prev' ? -7 : 7;
+            const days = direction === 'prev' ? -7 : 7
             currentDate.setDate(currentDate.getDate() + days);
             const weekDates = getWeekDates(currentDate);
             renderWeekDates(weekDates);
