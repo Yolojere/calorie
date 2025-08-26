@@ -21,7 +21,7 @@ body {
 }
 
 .bg-black, .modal-header, .modal-footer {
-    background-color: #000 !important;
+    background-color: #0c0c0c !important;
     border-color: #444;
 }
 
@@ -155,7 +155,7 @@ body {
 /* === NAVIGATION === */
     .nav-link-box {
             display: inline-block;
-            background-color: #1b1b1b;
+            background-color: #1b1b1b !important;
             color: #ffffff;
             border: 1px solid #444 !important;
             border-radius: 20px;
@@ -297,7 +297,7 @@ body {
     flex: 1;
     padding: 15px;
     border-radius: 10px;
-    background: rgba(40, 40, 60, 0.7);
+    background: 121212(40, 40, 60, 0.7);
     border: 1px solid rgba(100, 100, 200, 0.3);
     color: #e0e0e0;
     text-align: center;
@@ -306,9 +306,10 @@ body {
 }
 
 .gender-btn.active {
-    background: rgba(82, 82, 82, 0.3);
-    border-color: #ffe600;
-    color: #ffffff;
+    background: rgb(255, 255, 255);
+    border-color: #1f1f1f;
+    border: solid 1px;
+    color: #000000 !important;
     box-shadow: 0 0 15px rgba(70, 69, 70, 0.3);
 }
 
@@ -318,8 +319,15 @@ body {
     display: block;
     color: #ffffff;
 }
+.gender-btn.active i {
+    color: #000 !important;
+}
 
 /* Progress bars */
+.progress-bar-other {
+    background: linear-gradient(135deg, #bdbdbd 0%, #e0e0e0 100%);
+    opacity: 0.7;
+}
 .progress {
     height: 12px;
     background: rgba(40, 40, 60, 0.7);
@@ -330,7 +338,6 @@ body {
 }
 
 .progress-bar {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
     border-radius: 10px;
     position: relative;
     overflow: visible;
@@ -464,6 +471,7 @@ body {
         font-size: 2rem;
     }
 }
+
 </style>
 
 </head>
@@ -688,7 +696,7 @@ body {
                                 <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes">
                                 <span class="input-group-text">min</span>
                             </div>
-                            <div class="value-display negative-value" id="sleep-value"></div>
+                            <div class="value-display negative-value" id="sleep-value" style="display: none;"></div>
                         </div>
                     </div>
                     
@@ -764,7 +772,7 @@ body {
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="activity-card">
                             <div class="activity-icon">
-                                <i class="fas fa-footsteps"></i>
+                                <i class="fa-solid fa-face-grin-hearts"></i>
                             </div>
                             <h5 class="activity-title">Steps (Future)</h5>
                             <div class="input-group">
@@ -800,7 +808,9 @@ body {
                         <div class="result-card">
                             <h5><i class="fas fa-heartbeat me-2"></i>Basal Metabolic Rate (BMR)</h5>
                             <div class="result-value" id="bmr-result"></div>
-                            <p>Calories burned at complete rest</p>
+                            <p>How much your body needs calories at rest.
+                                (function of organs,heart,brain - breathing, temperature and so on..)
+                            </p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
@@ -813,57 +823,86 @@ body {
                 </div>
                 
                 <div class="tdee-explanation">
-                    <h5><i class="fas fa-chart-pie me-2"></i>Activity Breakdown</h5>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-bed me-2"></i>Sleep</span>
-                            <span class="negative-value" id="sleep-result"></span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="progress-sleep" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-fire me-2"></i>Intense Exercise</span>
-                            <span class="positive-value" id="intense-result"></span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="progress-intense" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-biking me-2"></i>Moderate Exercise</span>
-                            <span class="positive-value" id="moderate-result"></span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="progress-moderate" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-walking me-2"></i>Light Exercise</span>
-                            <span class="positive-value" id="light-result"></span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="progress-light" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-shoe-prints me-2"></i>Standing/Walking</span>
-                            <span class="positive-value" id="walking-result"></span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="progress-walking" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                </div>
+    <h5><i class="fas fa-chart-pie me-2"></i>Energy Breakdown</h5>
+    
+    <!-- BMR Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span><i class="fas fa-heartbeat me-2"></i>BMR</span>
+            <span class="positive-value" id="bmr-breakdown-result"></span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progress-bmr" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+    
+    <!-- Intense Exercise Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span><i class="fas fa-fire me-2"></i>Intense Exercise</span>
+            <span class="positive-value" id="intense-result"></span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progress-intense" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%)"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+    
+    <!-- Moderate Exercise Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span><i class="fas fa-biking me-2"></i>Moderate Exercise</span>
+            <span class="positive-value" id="moderate-result"></span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progress-moderate" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%)"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+    
+    <!-- Light Exercise Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span><i class="fas fa-walking me-2"></i>Light Exercise</span>
+            <span class="positive-value" id="light-result"></span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progress-light" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%)"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+    
+    <!-- Standing/Walking Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span><i class="fas fa-shoe-prints me-2"></i>Standing/Walking</span>
+            <span class="positive-value" id="walking-result"></span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progress-walking" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #AB47BC 0%, #BA68C8 100%)"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+
+    <!-- Other (Fidgeting, passive moving etc.) Progress Bar -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <span class="text-white"><i class="fas fa-random me-2"></i>Other (Fidgeting, passive moving etc.)</span>
+            <span class="positive-value text-white" id="other-result"></span>
+        </div>
+        <div class="progress" style="height: 0.6rem;">
+            <div class="progress-bar" id="progress-other" role="progressbar"
+                style="width: 0%; background: linear-gradient(135deg, #bdbdbd 0%, #e0e0e0 100%); opacity: 0.7;"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>
@@ -1007,108 +1046,141 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
         tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
 
-        document.getElementById('sleep-value').textContent = results.activityBreakdown.sleep + ' kcal';
+        // Hide sleep value in input fields
+        document.getElementById('sleep-value').style.display = 'none';      
         document.getElementById('intense-value').textContent = '+' + results.activityBreakdown.intense + ' kcal';
         document.getElementById('moderate-value').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
         document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
         document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
 
         // Update results section
-        document.getElementById('sleep-result').textContent = results.activityBreakdown.sleep + ' kcal';
+        document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
         document.getElementById('intense-result').textContent = '+' + results.activityBreakdown.intense + ' kcal';
         document.getElementById('moderate-result').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
         document.getElementById('light-result').textContent = '+' + results.activityBreakdown.light + ' kcal';
         document.getElementById('walking-result').textContent = '+' + results.activityBreakdown.walking + ' kcal';
+        document.getElementById('other-result').textContent = '+' + results.activityBreakdown.other + ' kcal';
         
-        updateActivityBreakdown(results.activityBreakdown);
+        updateActivityBreakdown(results.bmr, results.tdee, results.activityBreakdown);
         saveTdeeBtn.style.display = 'block';
         saveFormState(); // Save after calculation
     }
 
     // Energy expenditure formula
     function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
-        let baseBMR = (gender==='male') ? 1139 : 939;
-        let baseTDEE = (gender==='male') ? 1511 : 1311;
+    let baseBMR = (gender==='male') ? 1139 : 939;
+    let baseTDEE = (gender==='male') ? 1511 : 1311;
 
-        const weightDiff = weight - 30;
-        const weightUnits = weightDiff / 0.5;
+    const weightDiff = weight - 30;
+    const weightUnits = weightDiff / 0.5;
 
-        const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
-        const weightTDEEAdj = (gender==='male') ? weightUnits*12 : weightUnits*11;
+    const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
+    const weightTDEEAdj = (gender==='male') ? weightUnits*12 : weightUnits*11;
 
-        let ageAdj = 0;
-        if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
-        else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
+    let ageAdj = 0;
+    if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
+    else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
 
-        const heightAdj = (height>170) ? (height-170)*2 : 0;
+    const heightAdj = (height>170) ? (height-170)*2 : 0;
 
-        let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
-        let tdee = baseTDEE + weightTDEEAdj + ageAdj + heightAdj;
+    let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
+    let tdee = baseTDEE + weightTDEEAdj + ageAdj + heightAdj;
 
-        const activityBreakdown = {};
-        activityBreakdown.sleep = -Math.round((sleepMin/5)*2.8);
-        tdee += activityBreakdown.sleep;
+    const activityBreakdown = {};
+    activityBreakdown.sleep = -Math.round((sleepMin/5)*2.8); // deducted silently
+    tdee += activityBreakdown.sleep;
 
-        activityBreakdown.intense = (gender==='male') ? Math.round((intenseMin/5)*60) : Math.round((intenseMin/5)*56);
-        tdee += activityBreakdown.intense;
+    activityBreakdown.intense = (gender==='male') ? Math.round((intenseMin/5)*60) : Math.round((intenseMin/5)*56);
+    tdee += activityBreakdown.intense;
 
-        activityBreakdown.moderate = (gender==='male') ? Math.round((moderateMin/5)*33) : Math.round((moderateMin/5)*31);
-        tdee += activityBreakdown.moderate;
+    activityBreakdown.moderate = (gender==='male') ? Math.round((moderateMin/5)*33) : Math.round((moderateMin/5)*31);
+    tdee += activityBreakdown.moderate;
 
-        activityBreakdown.light = (gender==='male') ? Math.round((lightMin/5)*17) : Math.round((lightMin/5)*15);
-        tdee += activityBreakdown.light;
+    activityBreakdown.light = (gender==='male') ? Math.round((lightMin/5)*17) : Math.round((lightMin/5)*15);
+    tdee += activityBreakdown.light;
 
-        activityBreakdown.walking = (gender==='male') ? Math.round((walkingMin/5)*5) : Math.round((walkingMin/5)*4);
-        tdee += activityBreakdown.walking;
+    activityBreakdown.walking = (gender==='male') ? Math.round((walkingMin/5)*5) : Math.round((walkingMin/5)*4);
+    tdee += activityBreakdown.walking;
 
-        return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown };
+    // ✅ Calculate used energy BEFORE Other
+    const usedEnergy = bmr +
+        activityBreakdown.intense +
+        activityBreakdown.moderate +
+        activityBreakdown.light +
+        activityBreakdown.walking;
+
+    activityBreakdown.other = Math.max(tdee - usedEnergy, 0);
+
+    return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown };
+}
+
+    // Progress bar updates (showing BMR and activities as percentages of TDEE)
+    function updateActivityBreakdown(bmr, tdee, breakdown) {
+    // Calculate percentages for each component relative to TDEE
+    const bmrPct = Math.round((bmr / tdee) * 100);
+    const intensePct = Math.round((breakdown.intense / tdee) * 100);
+    const moderatePct = Math.round((breakdown.moderate / tdee) * 100);
+    const lightPct = Math.round((breakdown.light / tdee) * 100);
+    const walkingPct = Math.round((breakdown.walking / tdee) * 100);
+
+    // Update progress bars
+    const bmrBar = document.getElementById('progress-bmr');
+    if(bmrBar) { 
+        bmrBar.style.width = bmrPct+'%'; 
+        bmrBar.setAttribute('aria-valuenow', bmrPct); 
     }
 
-    // Progress bar updates (using real input values)
-    function updateActivityBreakdown(breakdown) {
-        // Use absolute values for all calculations
-        const values = [
-            Math.abs(breakdown.sleep),
-            breakdown.intense,
-            breakdown.moderate,
-            breakdown.light,
-            breakdown.walking
-        ];
-        
-        const total = values.reduce((a,b)=>a+b,0);
-        const ids = ['progress-sleep','progress-intense','progress-moderate','progress-light','progress-walking'];
-        
-        // Only update if we have valid data
-        if(total > 0) {
-            values.forEach((val,i)=>{
-                const pct = Math.round((val/total)*100);
-                const bar = document.getElementById(ids[i]);
-                if(bar) { 
-                    bar.style.width = pct+'%'; 
-                    bar.setAttribute('aria-valuenow',pct); 
-                }
-            });
-        }
+    const intenseBar = document.getElementById('progress-intense');
+    if(intenseBar) { 
+        intenseBar.style.width = intensePct+'%'; 
+        intenseBar.setAttribute('aria-valuenow', intensePct); 
     }
+
+    const moderateBar = document.getElementById('progress-moderate');
+    if(moderateBar) { 
+        moderateBar.style.width = moderatePct+'%'; 
+        moderateBar.setAttribute('aria-valuenow', moderatePct); 
+    }
+
+    const lightBar = document.getElementById('progress-light');
+    if(lightBar) { 
+        lightBar.style.width = lightPct+'%'; 
+        lightBar.setAttribute('aria-valuenow', lightPct); 
+    }
+
+    const walkingBar = document.getElementById('progress-walking');
+    if(walkingBar) { 
+        walkingBar.style.width = walkingPct+'%'; 
+        walkingBar.setAttribute('aria-valuenow', walkingPct); 
+    }
+
+    // Calculate remaining % for Other
+    const otherPct = Math.max(100 - (bmrPct + intensePct + moderatePct + lightPct + walkingPct), 0);
+    const otherBar = document.getElementById('progress-other');
+    if(otherBar) {
+        otherBar.style.width = otherPct + '%';
+        otherBar.setAttribute('aria-valuenow', otherPct);
+    }
+}
     
     // Initialize all result fields to empty
     function initializeResultFields() {
-        // Activity cards
-        document.getElementById('sleep-value').textContent = '';
+        // Activity cards - hide sleep value display
+        document.getElementById('sleep-value').style.display = 'none';
         document.getElementById('intense-value').textContent = '';
         document.getElementById('moderate-value').textContent = '';
         document.getElementById('light-value').textContent = '';
         document.getElementById('walking-value').textContent = '';
         
         // Results section
-        document.getElementById('sleep-result').textContent = '';
+        document.getElementById('bmr-breakdown-result').textContent = '';
         document.getElementById('intense-result').textContent = '';
         document.getElementById('moderate-result').textContent = '';
         document.getElementById('light-result').textContent = '';
         document.getElementById('walking-result').textContent = '';
         
         // Progress bars
-        const progressBars = ['progress-sleep', 'progress-intense', 'progress-moderate', 'progress-light', 'progress-walking'];
+        const progressBars = ['progress-bmr', 'progress-intense', 'progress-moderate', 'progress-light', 'progress-walking'];
         progressBars.forEach(id => {
             const bar = document.getElementById(id);
             bar.style.width = '0%';
