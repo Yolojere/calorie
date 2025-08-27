@@ -1,0 +1,60 @@
+# ===================================
+# Python
+# ===================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# ===================================
+# Virtual Environments
+# ===================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ===================================
+# IDE / Editor Files
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ===================================
+# Logs & Caches
+# ===================================
+*.log
+*.out
+*.err
+*.sqlite3
+*.db
+instance/
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ===================================
+# Flask specific
+# ===================================
+# Don’t commit your actual env with secrets
+.env  
+# But DO commit the example
+!.env.example
+
+# ===================================
+# Others
+# ===================================
+*.bak
+*.tmp
