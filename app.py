@@ -82,8 +82,8 @@ def get_db_connection():
     Chooses local or Neon DB based on DB_ENV environment variable.
     """
     db_env = os.getenv("DB_ENV", "local").lower()  # default to local
-    if db_env == "neon":
-        DATABASE_URL = os.getenv("NEON_DB_URL")
+    if db_env == "render":
+        DATABASE_URL = os.getenv("RENDER_DB_URL")
     else:
         DATABASE_URL = os.getenv("LOCAL_DB_URL")
 
