@@ -1064,7 +1064,7 @@ def profile():
         # Build the SELECT query based on available columns
         select_query = 'SELECT username, email, weight, tdee, avatar'
         if extra_columns_exist:
-            select_query += ', full_name, main_sport, fitness_goals'
+            select_query += ', full_name'
         select_query += ' FROM users WHERE id = %s'
         
         # Get current user info
@@ -1114,11 +1114,9 @@ def profile():
             
             # Add extra fields if they exist
             if extra_columns_exist:
-                update_query += ', full_name = %s, main_sport = %s, fitness_goals = %s'
+                update_query += ', full_name = %s'
                 update_params.extend([
                     request.form.get('full_name', ''),
-                    request.form.get('main_sport', ''),
-                    request.form.get('fitness_goals', '')
                 ])
             
             update_query += ' WHERE id = %s'
@@ -1138,8 +1136,6 @@ def profile():
             # Pre-fill extra fields if they exist
             if extra_columns_exist:
                 form.full_name.data = user_data.get('full_name', '')
-                form.main_sport.data = user_data.get('main_sport', '')
-                form.fitness_goals.data = user_data.get('fitness_goals', '')
             
             # Set avatar choice - use default.png if none is set
             if user_data['avatar'] and user_data['avatar'] in predefined_avatars:
