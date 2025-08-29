@@ -467,35 +467,62 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class UpdateProfileForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    username = StringField(
+        'Username',
+        validators=[DataRequired(), Length(min=4, max=20)]
+    )
+    email = StringField(
+        'Email',
+        validators=[DataRequired(), Email()]
+    )
+
+    # Optional fields - safe to access even if DB column doesn't exist
     full_name = StringField('Full Name')
-    avatar_choice = RadioField(
-        "Choose Avatar",
-        choices=[("avatar1.png", "Avatar 1"), ("avatar2.png", "Avatar 2"), ("avatar3.png", "Avatar 3")],
-        default="avatar1.png")
+    main_sport = StringField('Main Sport / Activity')
+    fitness_goals = StringField('Fitness Goals')
+
+    # Avatar fields
+    avatar_choice = RadioField("Choose Avatar", choices=[], default="default.png")
     avatar_upload = FileField("Or Upload Avatar")
+
     submit = SubmitField('Update')
 
+    # -------------------------------
+    # Validators
+    # -------------------------------
     def validate_username(self, username):
-        if username.data != current_user.username:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM users WHERE username = %s', (username.data,))
+        current_username = getattr(current_user, 'username', None)
+        if not current_username or username.data == current_username:
+            return  # no change, no check needed
+
+        # Check uniqueness in DB
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('SELECT id FROM users WHERE username = %s', (username.data,))
             user = cursor.fetchone()
-            conn.close()
             if user:
                 raise ValidationError('Username already taken. Please choose a different one.')
+        finally:
+            cursor.close()
+            conn.close()
 
     def validate_email(self, email):
-        if email.data != current_user.email:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM users WHERE email = %s', (email.data,))
+        current_email = getattr(current_user, 'email', None)
+        if not current_email or email.data == current_email:
+            return  # no change, no check needed
+
+        # Check uniqueness in DB
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('SELECT id FROM users WHERE email = %s', (email.data,))
             user = cursor.fetchone()
-            conn.close()
             if user:
                 raise ValidationError('Email already registered. Please use a different email.')
+        finally:
+            cursor.close()
+            conn.close()
 
 class RequestResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
