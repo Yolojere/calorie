@@ -90,6 +90,26 @@
     border-radius: 8px 8px 0 0 !important;
     background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.6)) !important;
 }
+/* ===== DROPDOWNS & MODALS ===== */
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        right: 0 !important;
+        width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: absolute;
+    }
+
+    .dropdown-item {
+        color: #fff;
+    }
+
+    .dropdown-item:hover {
+        background-color: #333;
+        color: #ffffff;
+    }
 
     .avatar-placeholder {
         width: 80px;
@@ -315,8 +335,10 @@
 
     .avatar-option.selected {
         border-color: var(--accent-color);
-        box-shadow: 0 0 0 3px rgba(74, 140, 255, 0.5);
-    }
+        box-shadow: 0 0 0 3px rgb(148, 40, 255);
+        animation: glow 1s ease-in-out infinite alternate;
+}
+
 
     .upload-btn {
         display: inline-flex;
@@ -397,6 +419,11 @@
 
     /* Responsive */
     @media (max-width: 768px) {
+            .avatar-modal {
+        align-items: flex-start; /* align to top */
+        padding-top: 40px;       /* optional spacing from top */
+        overflow-y: auto;        /* allow scrolling if modal is taller than screen */
+    }
         .avatar-placeholder {
             width: 60px;
             height: 60px;
@@ -423,6 +450,11 @@
 
     }
      @media (max-width: 576px) {
+            .avatar-modal {
+        align-items: flex-start; /* align to top */
+        padding-top: 40px;       /* optional spacing from top */
+        overflow-y: auto;        /* allow scrolling if modal is taller than screen */
+    }
         .avatar-options {
             grid-template-columns: repeat(3, 1fr);
         }
