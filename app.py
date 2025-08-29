@@ -1077,8 +1077,7 @@ def profile():
     role = getattr(current_user, 'role', 'user')
 
     # Predefined avatars
-    predefined_avatars = ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png',
-                          'avatar4.png', 'avatar5.png', 'avatar6.png', 'avatar7.png']
+    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 16)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
 
     try:
@@ -1925,15 +1924,25 @@ def save_template_food():
     try:
         name = request.form.get('name')
         items_json = request.form.get('items', '[]')
-        items = json.loads(items_json)
         
-        if not name or not items:
-            return jsonify({'success': False, 'error': 'Invalid data'})
+        print(f"Template save request: name={name}, items={items_json}")
         
-        # Check if template with this name already exists
+        if not name:
+            return jsonify({'success': False, 'error': 'Template name is required'})
+        
+        try:
+            items = json.loads(items_json)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            return jsonify({'success': False, 'error': 'Invalid items format'})
+        
+        if not items or len(items) == 0:
+            return jsonify({'success': False, 'error': 'Template must contain at least one item'})
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Check if template with this name already exists
         cursor.execute(
             'SELECT id FROM food_templates WHERE user_id = %s AND name = %s',
             (current_user.id, name)
@@ -1948,14 +1957,25 @@ def save_template_food():
         )
         template_id = cursor.fetchone()[0]
         
-        # Save template items
+        # Save template items with validation
+        valid_items = 0
         for item in items:
-            # Use the food_key directly from the request
             food_key = item.get('food_key')
             grams = item.get('grams')
             
-            if not food_key or not grams:
+            # Validate required fields
+            if not food_key or grams is None:
                 print(f"Missing food_key or grams for item: {item}")
+                continue
+            
+            # Convert grams to float if it's a string
+            try:
+                grams = float(grams)
+                if grams <= 0:
+                    print(f"Invalid grams value (must be positive): {grams}")
+                    continue
+            except (ValueError, TypeError):
+                print(f"Invalid grams value: {grams}")
                 continue
             
             # Verify the food_key exists in foods table
@@ -1969,13 +1989,26 @@ def save_template_food():
                 'INSERT INTO food_template_items (template_id, food_key, grams) VALUES (%s, %s, %s)',
                 (template_id, food_key, grams)
             )
+            valid_items += 1
+        
+        if valid_items == 0:
+            conn.rollback()
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'error': 'No valid items to save as template'})
         
         conn.commit()
         cursor.close()
         conn.close()
+        
+        print(f"Template saved successfully with {valid_items} items")
         return jsonify({'success': True})
+        
     except Exception as e:
         print(f"Error saving template: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         if 'conn' in locals():
             conn.rollback()
             conn.close()
@@ -1997,13 +2030,13 @@ def get_templates_food():
         return jsonify([{'id': t[0], 'name': t[1]} for t in templates])
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+    
 @app.route('/apply_template_food', methods=['POST'])
 @login_required
 def apply_template_food():
     try:
         template_id = request.form.get('template_id')
         meal_group = request.form.get('meal_group', 'other')
-        print(f"Applying template {template_id} with meal group: {meal_group}")
         date_str = request.form.get('date', datetime.now().strftime('%Y-%m-%d'))
         user_id = current_user.id
         
@@ -2012,7 +2045,8 @@ def apply_template_food():
         
         # Get template items
         cursor.execute('''
-            SELECT f.key, f.name, f.carbs, f.proteins, f.fats, f.saturated, f.fiber, f.sugars, f.salt, f.calories, fti.grams
+            SELECT f.key, f.name, f.carbs, f.proteins, f.fats, f.saturated, f.fiber, 
+                   f.sugars, f.salt, f.calories, fti.grams
             FROM food_template_items fti
             JOIN foods f ON fti.food_key = f.key
             WHERE fti.template_id = %s
@@ -2028,21 +2062,35 @@ def apply_template_food():
         
         # Add each template item to the session
         for item in template_items:
-            factor = item[9] / 100  # Convert from grams to factor
+            food_key = item[0]
+            name = item[1]
+            # Nutrition values per 100g
+            carbs_per_100 = item[2] or 0
+            proteins_per_100 = item[3] or 0
+            fats_per_100 = item[4] or 0
+            saturated_per_100 = item[5] or 0
+            fiber_per_100 = item[6] or 0
+            sugars_per_100 = item[7] or 0
+            salt_per_100 = item[8] or 0
+            calories_per_100 = item[9] or 0
+            grams = item[10] or 0
+            
+            # Calculate actual values based on grams
+            factor = grams / 100.0
             
             session_data.append({
-                'id': str(uuid.uuid4()),  # Generate a unique ID for the session
-                'key': item[0],           # Store the food key
-                'name': item[1],
-                'carbs': item[2] * factor,
-                'proteins': item[3] * factor,
-                'fats': item[4] * factor,
-                'saturated': item[5] * factor,
-                'fiber': item[6] * factor,
-                'sugars': item[7] * factor,
-                'salt': item[8] * factor,
-                'calories': item[9] * factor,
-                'grams': item[10],
+                'id': str(uuid.uuid4()),
+                'key': food_key,
+                'name': name,
+                'carbs': carbs_per_100 * factor,
+                'proteins': proteins_per_100 * factor,
+                'fats': fats_per_100 * factor,
+                'saturated': saturated_per_100 * factor,
+                'fiber': fiber_per_100 * factor,
+                'sugars': sugars_per_100 * factor,
+                'salt': salt_per_100 * factor,
+                'calories': calories_per_100 * factor,
+                'grams': grams,
                 'group': meal_group
             })
         
@@ -2060,6 +2108,7 @@ def apply_template_food():
             'breakdown': breakdown
         })
     except Exception as e:
+        print(f"Error applying template: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 @app.route('/debug_templates')
 @login_required
