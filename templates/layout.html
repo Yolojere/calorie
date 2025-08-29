@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Nutrition Tracker{% endblock %}</title>
@@ -185,6 +186,7 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+    <div id="toastNotification" class="toast-notification"></div>
     <!-- Updated Navbar for layout -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
@@ -358,7 +360,16 @@
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             })
+            
         });
+        $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        let token = $('meta[name="csrf-token"]').attr('content');
+        if (token) {
+            xhr.setRequestHeader("X-CSRFToken", token);
+        }
+    }
+});
     </script>
     {% block scripts %}{% endblock %}
 </body>
