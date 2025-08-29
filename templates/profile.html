@@ -4,28 +4,92 @@
 
 {% block head %}
 <style>
-    body {
-        background-color: #121212;
-        color: #eaeaea;
-        font-family: "Roboto", sans-serif;
-    }
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
+            color: #e0e0e0;
+        }
+        
+        .bg-black, .modal-header, .modal-footer {
+    background-color: #0c0c0c !important;
+    border-color: #444;
+}
+        
+        .card, .list-group-item, .modal-content {
+            background-color: #1d1d1d;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        .card-header {
+            background: rgba(39, 39, 39, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px !important;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #e0e0e0;
+        }
+        
+        .form-control, .form-select {
+        background-color: #121212 !important;
+        border: 1px solid #333 !important;
+        color: #eee;
+        border-radius: 20px !important;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+         }
 
-    .card {
-        background-color: #1b1b1b;
-        border: 1px solid #2a2a2a;
-        border-radius: 20px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
+        .form-control:focus, .form-select:focus {
+            border-color: #555 !important;
+            box-shadow: none !important;
+            background-color: #181818 !important;
+            color: #eee !important;
+        }
 
-    .card-header {
-        border-bottom: 1px solid #2a2a2a;
-        background: transparent;
-        color: #fff;
-        text-align: center;
-        font-weight: bold;
-        border-top-left-radius: 20px; 
-        border-top-right-radius: 20px;
-    }
+        .form-control::placeholder, .form-select::placeholder {
+            color: #ddd !important;
+            opacity: 0.6;
+        }
+        
+        .navbar-brand {
+            font-size: 26px;
+        }
+                .content-section {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            border-radius: 16px !important; /* Rounded corners */
+            background: rgba(30, 30, 30, 0.7) !important; /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1); /* Depth and inner highlight */
+        }
+        .content-section .card {
+    border-radius: 16px;
+    background: transparent;
+    border: none;
+        }
+        .content-section .card-header {
+    border-radius: 16px!important;
+    background: rgba(39, 39, 39, 0.6) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+.content-section .card-body {
+    border-radius: 0 0 16px 16px;
+}
+.group-header {
+    user-select: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.6)) !important;
+}
 
     .avatar-placeholder {
         width: 80px;
@@ -69,33 +133,17 @@
         border-radius: 20px 0 0 20px;
     }
 
-    .form-control {
-        background-color: #121212;
-        border: 1px solid #333;
-        color: #eee;
-        border-radius: 20px;
-    }
-    .form-control:focus {
-        border-color: #555;
-        box-shadow: none;
-        background-color: #181818;
-        color: #eee;
-    }
-    .form-control::placeholder {
-        color: #ddd !important;
-        opacity: 0.6;
-    }
 
     /* Button styles */
     .btn, .btn-accent, .btn-outline-light, a.accent-color {
         display: inline-block;
         padding: 10px 16px;
-        border-radius: 25px;
+        border-radius: 25px !important;
         font-size: 14px;
         font-family: Roboto, sans-serif;
         color: #ffffff !important;
-        background-color: #1b1b1b;
-        border: 1px solid #444;
+        background-color: #1b1b1b !important;
+        border: 1px solid #444 !important;
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.3s ease;
     }
@@ -106,9 +154,10 @@
     }
 
     .btn:active, .btn-accent:active, .btn-outline-light:active, a.accent-color:active {
-        transform: scale(0.98);
+        transform: scale(0.99);
+        background-color: #1b1b1b !important;
+ 
     }
-
     .btn-sm {
         padding: 6px 12px;
         font-size: 13px;
@@ -162,79 +211,181 @@
     }
 
     /* Avatar modal styles */
-    .avatar-modal {
+        .avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--border-color);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .avatar-container:hover .avatar-img {
+        border-color: var(--accent-color);
+        transform: scale(1.03);
+    }
+
+    .avatar-edit-indicator {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        opacity: 0;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .avatar-container:hover .avatar-edit-indicator {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+     .avatar-modal {
         display: none;
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: rgba(0, 0, 0, 0.85);
         z-index: 1000;
         justify-content: center;
         align-items: center;
+        backdrop-filter: blur(4px);
     }
 
     .avatar-modal-content {
-        background-color: #1b1b1b;
-        border-radius: 15px;
-        padding: 20px;
+        background-color: var(--card-bg);
+        border-radius: 20px;
+        padding: 25px;
         width: 90%;
-        max-width: 500px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        max-width: 560px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border-color);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .avatar-options {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+        margin: 20px 0;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
     }
 
     .avatar-option {
         cursor: pointer;
         border-radius: 50%;
         overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
+        aspect-ratio: 1/1;
+        border: 2px solid transparent;
     }
 
     .avatar-option img {
         width: 100%;
-        height: auto;
-        aspect-ratio: 1/1;
+        height: 100%;
+        object-fit: cover;
     }
 
     .avatar-option:hover {
         transform: scale(1.1);
+        border-color: var(--accent-color);
     }
 
     .avatar-option.selected {
-        box-shadow: 0 0 0 3px #0d6efd;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(74, 140, 255, 0.5);
     }
 
     .upload-btn {
-        display: inline-block;
-        padding: 8px 16px;
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 18px;
         background-color: #2a2a2a;
         color: #fff;
         border-radius: 20px;
         cursor: pointer;
         text-align: center;
-        margin: 10px 0;
-        transition: background-color 0.3s;
+        margin: 12px 0;
+        transition: all 0.3s ease;
+        border: 1px dashed #555;
     }
 
     .upload-btn:hover {
-        background-color: #3a3a3a;
+        background-color: #333;
+        border-color: var(--accent-color);
     }
 
     .modal-buttons {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        margin-top: 15px;
+        gap: 12px;
+        margin-top: 20px;
     }
 
+    /* spinner load */
+    /* Loading spinner */
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+ /* Toast notification */
+    .toast-notification {
+        background-color: #ffffff !important;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--success-color);
+        color: rgb(0, 0, 0) !important;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1050;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        max-width: 300px;
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-notification.error {
+        background-color: var(--error-color);
+    }
     /* Icons */
     .fa-shield-alt, .fa-lock, .fa-user-shield {
         color:#fff !important;
@@ -256,7 +407,36 @@
         }
         
         .avatar-options {
+            grid-template-columns: repeat(4, 1fr);
+        }
+                .d-flex.flex-column.flex-md-row {
+            flex-direction: column;
+        }
+                
+        .modal-buttons {
+            flex-direction: column;
+        }
+               .modal-buttons button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+    }
+     @media (max-width: 576px) {
+        .avatar-options {
             grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .card-body.p-4 {
+            padding: 1.5rem !important;
+        }
+        
+        .health-metrics {
+            padding: 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
         }
     }
 </style>
@@ -268,7 +448,6 @@
         <div class="card-header">
             <h3 class="text-center">Your Account Profile</h3>
         </div>
-
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row gap-4">
                 
@@ -282,12 +461,15 @@
                     {% endif %}
                     
                     <!-- Main Avatar - Clickable -->
-                    <div id="avatar-container" style="cursor: pointer;">
+                     <div class="avatar-container" id="avatar-container">
                         <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ current_avatar) }}"
-                             class="rounded-circle shadow mb-3"
-                             width="120" height="120"
+                             class="avatar-img"
                              id="main-avatar"
+                             alt="{{ current_user.username }}'s avatar"
                              onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                        <div class="avatar-edit-indicator">
+                            <i class="fas fa-camera"></i>
+                        </div>
                     </div>
                     
                     <!-- User Info -->
@@ -353,7 +535,10 @@
                         <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
                         <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
 
-                        {{ form.submit(class="btn btn-primary rounded-pill px-4") }}
+                   <button type="submit" class="btn btn-primary" id="submit-button">
+                            <span id="submit-text">Update Profile</span>
+                            <span id="submit-spinner" class="d-none"><span class="spinner"></span> Updating...</span>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -364,6 +549,7 @@
     <div class="avatar-modal" id="avatarModal">
         <div class="avatar-modal-content">
             <h4 class="text-center mb-3">Choose Your Avatar</h4>
+            <p class="text-center text-secondary mb-4">Select from our options or upload your own image</p>
             
             <div class="avatar-options">
                 {% for value, label in form.avatar_choice.choices %}
@@ -371,18 +557,20 @@
                     <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
                          data-value="{{ value }}">
                         <img src="{{ thumb_path }}" 
+                             alt="Avatar option {{ value }}"
                              onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
                     </div>
                 {% endfor %}
             </div>
             
             <label for="avatar_upload_input" class="upload-btn">
-                <i class="fas fa-upload me-1"></i> Upload Your Own
+                <i class="fas fa-upload me-2"></i> Upload Your Own Image
             </label>
+            <small class="d-block text-secondary mb-3">Max file size: 2MB (JPG, PNG)</small>
             
             <div class="modal-buttons">
-                <button type="button" class="btn btn-secondary" id="cancelAvatar">Cancel</button>
-                <button type="button" class="btn btn-primary" id="updateAvatar">Update</button>
+                <button type="button" class="btn btn-outline-secondary" id="cancelAvatar">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAvatar">Change Avatar</button>
             </div>
         </div>
     </div>
@@ -464,8 +652,9 @@
     </div>
 </div>
 
-<script>
-    // Avatar Modal Functionality
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM elements
     const avatarModal = document.getElementById('avatarModal');
     const avatarContainer = document.getElementById('avatar-container');
     const mainAvatar = document.getElementById('main-avatar');
@@ -475,115 +664,124 @@
     const updateAvatarBtn = document.getElementById('updateAvatar');
     const avatarOptions = document.querySelectorAll('.avatar-option');
     const profileForm = document.getElementById('profile-form');
-    
+    const submitButton = document.getElementById('submit-button');
+    const submitText = document.getElementById('submit-text');
+    const submitSpinner = document.getElementById('submit-spinner');
+
+    // Initial avatar state
     let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
     let uploadedAvatarFile = null;
-    
-    // Open modal when clicking on avatar
-    avatarContainer.addEventListener('click', function() {
-        avatarModal.style.display = 'flex';
-    });
-    
-    // Close modal when clicking cancel
-    cancelAvatarBtn.addEventListener('click', function() {
+
+    // Helper to show toast safely
+    function showToast(message, isError = false) {
+    let toast = document.getElementById('toastNotification');
+
+    // Create toast if it doesn't exist
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toastNotification';
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+
+    if (isError) toast.classList.add('error');
+    else toast.classList.remove('error');
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+    // Open modal when clicking avatar
+    if (avatarContainer) {
+        avatarContainer.addEventListener('click', function() {
+            avatarModal.style.display = 'flex';
+        });
+    }
+
+    // Close modal
+    function closeModal() {
         avatarModal.style.display = 'none';
-        // Reset to original selection
         resetAvatarSelection();
-    });
-    
-    // Update avatar when clicking update button
-    updateAvatarBtn.addEventListener('click', function() {
-        // Update the hidden input value
-        selectedAvatarInput.value = selectedAvatar;
-        
-        // If a file was uploaded, we need to handle it in the form submission
-        if (uploadedAvatarFile) {
-            // The file input will be part of the form submission
-        }
-        
-        // Update the main avatar preview
-        if (uploadedAvatarFile) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                mainAvatar.src = e.target.result;
-            };
-            reader.readAsDataURL(uploadedAvatarFile);
-        } else {
-            // Use the selected predefined avatar
-            mainAvatar.src = '/static/avatars/' + selectedAvatar;
-        }
-        
-        // Close the modal
-        avatarModal.style.display = 'none';
-    });
-    
-    // Handle avatar option selection
+    }
+
+    if (cancelAvatarBtn) {
+        cancelAvatarBtn.addEventListener('click', closeModal);
+    }
+
+    // Update avatar
+    if (updateAvatarBtn) {
+        updateAvatarBtn.addEventListener('click', function() {
+            if (!selectedAvatarInput || !mainAvatar) return;
+
+            selectedAvatarInput.value = selectedAvatar;
+
+            if (uploadedAvatarFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    mainAvatar.src = e.target.result;
+                };
+                reader.readAsDataURL(uploadedAvatarFile);
+            } else if (selectedAvatar) {
+                mainAvatar.src = '/static/avatars/' + selectedAvatar;
+            }
+
+            showToast('Avatar updated successfully!');
+            closeModal();
+        });
+    }
+
+    // Avatar option selection
     avatarOptions.forEach(option => {
         option.addEventListener('click', function() {
-            // Remove selected class from all options
             avatarOptions.forEach(opt => opt.classList.remove('selected'));
-            
-            // Add selected class to clicked option
             this.classList.add('selected');
-            
-            // Update selected avatar value
             selectedAvatar = this.getAttribute('data-value');
-            
-            // Clear any uploaded file
+
+            // Clear uploaded file
             uploadedAvatarFile = null;
-            avatarUploadInput.value = '';
-            
-            // Preview the selected avatar in the modal
-            previewAvatar('/static/avatars/' + selectedAvatar);
+            if (avatarUploadInput) avatarUploadInput.value = '';
         });
     });
-    
-    // Handle file upload
-    avatarUploadInput.addEventListener('change', function(e) {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
-            
-            // Validate file type
-            if (!file.type.match('image.*')) {
-                alert('Please select an image file.');
-                this.value = '';
-                return;
+
+    // File upload handling
+    if (avatarUploadInput) {
+        avatarUploadInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+
+                if (!file.type.match('image.*')) {
+                    showToast('Please select an image file (JPG, PNG).', true);
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('Please select an image smaller than 2MB.', true);
+                    this.value = '';
+                    return;
+                }
+
+                uploadedAvatarFile = file;
+                avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                selectedAvatar = '';
+
+                // Optional: preview uploaded file in modal
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Can preview inside modal if needed
+                };
+                reader.readAsDataURL(file);
             }
-            
-            // Validate file size (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Please select an image smaller than 2MB.');
-                this.value = '';
-                return;
-            }
-            
-            // Store the file for later submission
-            uploadedAvatarFile = file;
-            
-            // Remove selection from predefined avatars
-            avatarOptions.forEach(opt => opt.classList.remove('selected'));
-            
-            // Preview the uploaded image
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewAvatar(e.target.result);
-            };
-            reader.readAsDataURL(file);
-            
-            // Set selected avatar to empty since we're using an upload
-            selectedAvatar = '';
-        }
-    });
-    
-    // Function to preview avatar in modal
-    function previewAvatar(src) {
-        // This would typically update a preview area in the modal
-        // For simplicity, we're just updating the main avatar when Update is clicked
+        });
     }
-    
-    // Function to reset avatar selection to original state
+
+    // Reset avatar selection
     function resetAvatarSelection() {
-        // Reset predefined avatar selection
         avatarOptions.forEach(opt => {
             if (opt.getAttribute('data-value') === selectedAvatar) {
                 opt.classList.add('selected');
@@ -591,23 +789,38 @@
                 opt.classList.remove('selected');
             }
         });
-        
-        // Reset file input
-        avatarUploadInput.value = '';
+
+        if (avatarUploadInput) avatarUploadInput.value = '';
         uploadedAvatarFile = null;
     }
-    
+
+    // Form submission handling
+    if (profileForm) {
+        profileForm.addEventListener('submit', function() {
+            if (!submitText || !submitSpinner || !submitButton) return;
+            submitText.classList.add('d-none');
+            submitSpinner.classList.remove('d-none');
+            submitButton.disabled = true;
+        });
+    }
+
     // Input focus enhancement
     document.querySelectorAll('.form-control').forEach(input => {
         input.addEventListener('focus', function() {
-            this.parentElement.querySelector('.input-group-text').style.borderColor = '#f08e0e';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#444';
+            if (this.parentElement) this.parentElement.classList.add('focused');
         });
-        
         input.addEventListener('blur', function() {
-            this.parentElement.querySelector('.input-group-text').style.borderColor = '#555';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#333';
+            if (this.parentElement) this.parentElement.classList.remove('focused');
         });
     });
+
+    // Escape key closes modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && avatarModal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+});
 </script>
+
 {% endblock %}
