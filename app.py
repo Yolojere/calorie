@@ -28,6 +28,7 @@ from flask_mail import Mail
 from io import BytesIO
 import base64
 import requests
+from flask_wtf.csrf import CSRFProtect
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -47,7 +48,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
-
+csrf = CSRFProtect(app)
 # Update the normalize_key function
 def normalize_key(key):
     """Normalize food key while preserving non-ASCII characters"""
@@ -469,8 +470,6 @@ class UpdateProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     full_name = StringField('Full Name')
-    main_sport = StringField('Main Sport')
-    fitness_goals = StringField('Fitness Goals')
     avatar_choice = RadioField(
         "Choose Avatar",
         choices=[("avatar1.png", "Avatar 1"), ("avatar2.png", "Avatar 2"), ("avatar3.png", "Avatar 3")],
@@ -925,7 +924,7 @@ def index():
     totals = calculate_totals(eaten_items)
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
-
+    
     # Generate dates for selector - 3 days past, today, 3 days future
     dates = []
     today = datetime.now()
@@ -1058,7 +1057,7 @@ def profile():
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name', 'main_sport', 'fitness_goals')
+            AND column_name IN ('full_name')
         """)
         extra_columns_exist = bool(cursor.fetchall())
         
@@ -2966,7 +2965,7 @@ def get_exercises_list():  # Changed function name
 # Get exercise details endpoint
 @app.route('/workout/exercise/<int:exercise_id>')
 @login_required
-def get_exercise_history(exercise_id):  # Different function name
+def get_exercise_history(exercise_id):
     user_id = current_user.id
     
     conn = get_db_connection()
@@ -2985,7 +2984,7 @@ def get_exercise_history(exercise_id):  # Different function name
                 s.date,
                 COUNT(ws.id) AS sets,
                 MAX(ws.weight) AS best_weight,
-                MAX(ws.weight || ' kg × ' || ws.reps) AS best_set,
+                MAX(ws.weight || 'x' || ws.reps || 'kg') AS best_set,
                 SUM(ws.volume) AS volume
             FROM workout_sets ws
             JOIN workout_sessions s ON ws.session_id = s.id
@@ -2995,27 +2994,18 @@ def get_exercise_history(exercise_id):  # Different function name
         ''', (user_id, exercise_id))
         
         history = []
-        previous_volume = None
         rows = cursor.fetchall()
         
         for row in rows:
             volume = float(row['volume'] or 0)
-            progress = 0
-            
-            # Calculate progress compared to previous session
-            if previous_volume is not None and previous_volume > 0:
-                progress = ((volume - previous_volume) / previous_volume) * 100
             
             history.append({
                 'date': row['date'].strftime('%Y-%m-%d'),
                 'sets': row['sets'],
                 'best_weight': float(row['best_weight'] or 0),
                 'best_set': row['best_set'] or '-',
-                'volume': volume,
-                'progress': progress
+                'volume': volume
             })
-            
-            previous_volume = volume
         
         # Get personal best
         cursor.execute('''
@@ -3026,29 +3016,34 @@ def get_exercise_history(exercise_id):  # Different function name
         ''', (user_id, exercise_id))
         personal_best = float(cursor.fetchone()['personal_best'] or 0)
         
-        # Get total volume
+        # Get monthly volume (current month)
         cursor.execute('''
-            SELECT SUM(ws.volume) AS total_volume
+            SELECT SUM(ws.volume) AS monthly_volume
             FROM workout_sets ws
             JOIN workout_sessions s ON ws.session_id = s.id
             WHERE s.user_id = %s AND ws.exercise_id = %s
+            AND s.date >= date_trunc('month', CURRENT_DATE)
+            AND s.date < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
         ''', (user_id, exercise_id))
-        total_volume = float(cursor.fetchone()['total_volume'] or 0)
+        monthly_volume = float(cursor.fetchone()['monthly_volume'] or 0)
         
-        # Get volume trend (simplified)
-        volume_trend = 0
-        if len(history) > 1:
-            current = history[0]['volume']
-            previous = history[1]['volume']
-            if previous > 0:
-                volume_trend = ((current - previous) / previous) * 100
+        # Get best set (set with highest volume)
+        cursor.execute('''
+            SELECT weight, reps, volume
+            FROM workout_sets ws
+            JOIN workout_sessions s ON ws.session_id = s.id
+            WHERE s.user_id = %s AND ws.exercise_id = %s
+            ORDER BY volume DESC
+            LIMIT 1
+        ''', (user_id, exercise_id))
+        best_set_row = cursor.fetchone()
+        best_set = f"{best_set_row['reps']}x{best_set_row['weight']}kg" if best_set_row else '-'
         
         return jsonify({
             'name': exercise['name'],
             'personal_best': personal_best,
-            'total_volume': total_volume,
-            'volume_trend': volume_trend,
-            'last_performed': history[0]['date'] if history else None,
+            'monthly_volume': monthly_volume,
+            'best_set': best_set,
             'history': history
         })
         
