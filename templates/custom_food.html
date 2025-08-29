@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Custom Food</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -36,7 +37,51 @@
             font-size: 1.4rem;
             color: #e0e0e0;
         }
-        
+        /* ===== DROPDOWNS & MODALS ===== */
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        right: 0 !important;
+        width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: absolute;
+    }
+
+    .dropdown-item {
+        color: #fff;
+    }
+
+    .dropdown-item:hover {
+        background-color: #333;
+        color: #ffffff;
+    }
+    .nav-logo-box {
+            display:inline-block;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border: solid 1px !important;
+            border-color: #353535 !important;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* ensures it’s above other elements */
+            background-color: #101010;
+            color: #ffffff;
+            border-radius: 30px;
+            padding: 2px;
+            margin: 0 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 55px;
+            height: 55px;
+              }
+                .nav-logo-box img.nav-logo {
+            max-width: 100%;   /* scale the logo down */
+            max-height: 100%;  /* maintain aspect ratio */
+            object-fit: contain;
+        }
         
          /* FORM CONTROL */    
         .form-control, .form-select {
@@ -87,9 +132,7 @@
 }
 
 /* === NAVIGATION === */
- .navbar-brand {
-            font-size: 26px;
-        }
+
     .nav-link-box {
             display: inline-block;
             background-color: #1b1b1b;
@@ -289,12 +332,15 @@
 </head>
 <body>
     <!-- Updated Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 16px;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, eat, repeat -
             </a>
+                            <div class="nav-logo-box">
+    <img src="{{ url_for('static', filename='images/trackyoulogo.png') }}" alt="TrackYou Logo" class="nav-logo">
+</div>
             
             <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
@@ -594,6 +640,14 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        let token = $('meta[name="csrf-token"]').attr('content');
+        if (token) {
+            xhr.setRequestHeader("X-CSRFToken", token);
+        }
+    }
+});</script>
     <script>
         $(document).ready(function() {
             let stream = null;
