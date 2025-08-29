@@ -67,11 +67,6 @@
             opacity: 0.6;
         }
         
-        .navbar-brand {
-            font-size: 16px !important;
-        }
-
-        
         /* ===== ANIMATIONS & KEYFRAMES ===== */
         @keyframes rotate {
             100% {
@@ -768,6 +763,7 @@
     box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
 }
 
+
         /* ===== MEAL GROUP COLORS ===== */
         .breakfast {
             --group-color: #ff9e6d;
@@ -1105,6 +1101,26 @@
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
         }
+        /* ===== DROPDOWNS & MODALS ===== */
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        right: 0 !important;
+        width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: absolute;
+    }
+
+    .dropdown-item {
+        color: #fff;
+    }
+
+    .dropdown-item:hover {
+        background-color: #333;
+        color: #ffffff;
+    }
         
         /* ===== FONT FACE ===== */
         @font-face {
@@ -1225,10 +1241,18 @@ input[type=number] {
             margin: 0 !important;
         }
         .nav-logo-box {
-            background-color: #0c0c0c;
+            display:inline-block;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border: solid 1px !important;
+            border-color: #353535 !important;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* ensures it’s above other elements */
+            background-color: #101010;
             color: #ffffff;
-            border-radius: 20px;
-            padding: 0;
+            border-radius: 30px;
+            padding: 2px;
             margin: 0 3px;
             display: flex;
             align-items: center;
@@ -1648,10 +1672,6 @@ input[type=number] {
                 font-size: 12px !important;
             }
             
-            .navbar-brand {
-                font-size: 16px !important;
-            }
-            
             .card-header h6 {
                 font-size: 18px !important;
             }
@@ -1670,7 +1690,7 @@ input[type=number] {
             #date-selector {
                 font-size: 12px !important;
                 height: 36px !important;
-                width: 180px;
+                width: 160px;
             }
             
             
@@ -1795,7 +1815,7 @@ input[type=number] {
                 z-index: 1050;
                 transform: none !important;
                 margin-top: 0 !important;
-                font: 14px !important;
+                font: 12px !important;
             }
             
             #add-food-panel .card-header h6 {
@@ -2126,11 +2146,13 @@ input[type=number] {
     
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 26px;">Track You</a>
+            <a class="navbar-brand d-md-inline" href="/" style="font-size: 16px;">Track You</a>
             <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, eat, repeat -
             </a>
-            
+                            <div class="nav-logo-box">
+    <img src="{{ url_for('static', filename='images/trackyoulogo.png') }}" alt="TrackYou Logo" class="nav-logo">
+</div>
             <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                 <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -2885,28 +2907,1533 @@ input[type=number] {
 </div>    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  const DATES = {{ dates | tojson }};
-  const CURRENT_DATE = {{ current_date | tojson }};
-  const SAVE_TEMPLATE_URL = "{{ url_for('save_template_food') }}";
-  const APPLY_TEMPLATE_URL = "{{ url_for('apply_template_food') }}";
-  const ADMIN_KEY_COMBO = ['i', 'd', 'd', 'q', 'd'];
-  const tdee = {% if current_tdee %}{{ current_tdee }}{% else %}0{% endif %};
-  const CURRENT_TDEE = {{ current_tdee | default(0) | tojson }};
+    <script>
+ // CSRF TOKEN //
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        let token = $('meta[name="csrf-token"]').attr('content');
+        if (token) {
+            xhr.setRequestHeader("X-CSRFToken", token);
+        }
+    }
+});
+const csrfToken = $('meta[name="csrf-token"]').attr('content');
+function initializeIcons() {
+    if (window.FontAwesome) {
+        FontAwesome.dom.i2svg();
+    }
+}
+
+// Font Awesome watcher (from the separate script)
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.FontAwesome) {
+        FontAwesome.dom.watch();
+    }
+});
 </script>
-<script src="{{ url_for('static', filename='js/app-init.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-admin.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-grid.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-search.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-portion.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-log.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-session.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-selection.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-camera.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-mobile.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-events.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app-main.js') }}"></script>    
+<script>
+
+        $(document).ready(function() {
+            // ===== CONSTANTS AND CONFIGURATION =====
+            const DATES = {{ dates | tojson }};
+            const CURRENT_DATE = "{{ current_date }}";
+            const SAVE_TEMPLATE_URL = "{{ url_for('save_template_food') }}";
+            const APPLY_TEMPLATE_URL = "{{ url_for('apply_template_food') }}";
+            const ADMIN_KEY_COMBO = ['i', 'd', 'd', 'q', 'd'];
+            
+            // ===== STATE VARIABLES =====
+            let currentSelectedDate = CURRENT_DATE;
+            let codeReader = null;
+            let currentFood = null;
+            let selectedItems = [];
+            let selectedItemsForRecipe = [];
+            let gridVisible = true;
+            let isAdminMode = false;
+            let keySequence = [];
+            let currentCamera = localStorage.getItem('cameraPreference') || 'user';
+            let scanningActive = false;
+            let lastScannedCode = null;
+            
+            // ===== MODAL INSTANCES =====
+            const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
+            const moveItemsModal = new bootstrap.Modal(document.getElementById('moveItemsModal'));
+            const recipeModal = new bootstrap.Modal(document.getElementById('recipeModal'));
+            const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+            
+            // ===== INITIALIZATION =====
+            function initializeApp() {
+                initGramsInputReset();
+                updateCalorieDifference();
+                updateTemplateButtonState();
+                loadTopFoods();
+                positionNutritionGrid();
+                initPortionControls();
+                
+                // Mobile button linking
+                $('#move-items-mobile').click(() => $('#move-items').click());
+                $('#apply-template-btn-mobile').click(() => $('#apply-template-btn').click());
+                $('#clear-session-mobile').click(() => $('#clear-session').click());
+
+                $(document).on('click', '#save-template-btn-mobile', function() {
+               if (selectedItems.length === 0) {
+                        alert('Please select at least one food item to save as template');
+                        return;
+                    }
+                    showSaveTemplateModal();
+                });
+                $(document).on('click', '#apply-template-btn-mobile', showApplyTemplateModal);        
+                // Initial grid state
+                $('#toggle-grid-btn').addClass('active');
+                updateGridVisibility();
+            }
+            // CSRF TOKEN //
+            $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                let token = $('meta[name="csrf-token"]').attr('content');
+                if (token) {
+                    xhr.setRequestHeader("X-CSRFToken", token);
+                }
+            }
+        });
+            // ===== EVENT HANDLERS =====
+            $('#date-selector').val(currentSelectedDate);
+            initializeApp();
+            setTimeout(() => {
+          $('#date-selector').trigger('change');
+             }   , 100);
+
+            // Admin mode
+            $(document).keydown(handleAdminKeyCombo);
+            $('#admin-toggle').click(toggleAdminMode);
+            
+            // Grid toggle
+            $('#toggle-grid-btn').click(toggleGridVisibility);
+            
+            // Food search
+            $('#food-search').on('input', handleFoodSearch);
+            $('#clear-search').click(clearSearch);            
+            
+            // Portion controls
+            $(document).on('click', '.portion-btn', handlePortionClick);
+            $('#grams').on('input', handleGramsInput);
+            
+            // Add food
+            $('#add-food').click(addFoodToLog);
+            $('#grams').on('keypress', handleGramsEnterKey);
+            
+            // Food groups
+            $(document).on('click', '.toggle-group', toggleFoodGroup);
+            $(document).on('dblclick', '.group-header', toggleFoodGroup);
+            
+            // Edit grams
+            $(document).on('click', '.edit-grams', handleEditGrams);
+            
+            // Delete items
+            $(document).on('click', '.delete-food-btn', handleAdminFoodDelete);
+            $(document).on('click', '.delete-item', handleFoodItemDelete);
+            
+            // Session management
+            $('#clear-session').click(clearSession);
+            $('#date-selector').on('change', handleDateChange);
+            
+            // Item selection
+            $(document).on('click', '.group-items .list-group-item', handleItemSelection);
+            updateTemplateButtonState();
+            
+            // Move/copy functionality
+            $('#move-items').click(showMoveItemsModal);
+            $('#action-move, #action-copy').click(handleActionSelection);
+            $('#confirm-action').click(confirmMoveCopyAction);
+            
+            // Recipe functionality
+            $('#create-recipe').click(showRecipeModal);
+            $('#recipe-yes').click(showRecipeNameInput);
+            $('#recipe-save').click(saveRecipe);
+            
+            // Templates
+            $('#save-template-btn').click(showSaveTemplateModal);
+            $('#confirm-save-template').click(saveTemplate);
+            $('#apply-template-btn').click(showApplyTemplateModal);
+            $('#confirm-apply-template').click(applyTemplate);
+            
+            // Camera functionality
+            $('#scan-ean').click(showCameraModal);
+            $('#toggle-camera').click(toggleCamera);
+            $('#resume-scan').click(resumeScanning);
+            $('#cameraModal').on('show.bs.modal', prepareCameraModal);
+            $('#cameraModal').on('shown.bs.modal', initializeCamera);
+            $('#cameraModal').on('hidden.bs.modal', stopCamera);
+            
+            // Mobile navigation
+            $('.mobile-tab-btn').click(handleMobileTabSwitch);
+            
+            // Window events
+            $(window).resize(handleWindowResize);
+            
+            // ===== HELPER FUNCTIONS =====
+            
+            function handleWindowResize() {
+                positionNutritionGrid();
+                updateGridFontSizes();
+                adjustGridScale();
+                
+                if (currentFood) {
+                    updateRealTimeBreakdownFromForm();
+                }
+            }
+                        
+            function toggleAdminMode() {
+                isAdminMode = !isAdminMode;
+                $('#admin-toggle').toggle(isAdminMode);
+                $('body').toggleClass('admin-active', isAdminMode);
+                $('.delete-food-btn').toggle(isAdminMode);
+                
+                alert(`Admin mode ${isAdminMode ? 'ENABLED' : 'DISABLED'}`);
+            }
+ 
+            $('#saveTemplateModal').on('show.bs.modal', function() {
+    setTimeout(debugTemplateItems, 500);
+});
+            function handleAdminKeyCombo(e) {
+                keySequence.push(e.key);
+                if (keySequence.length > ADMIN_KEY_COMBO.length) {
+                    keySequence.shift();
+                }
+                
+                if (keySequence.join('') === ADMIN_KEY_COMBO.join('')) {
+                    toggleAdminMode();
+                    keySequence = [];
+                }
+            }
+            
+            function toggleGridVisibility() {
+                gridVisible = !gridVisible;
+                updateGridVisibility();
+                $(this).toggleClass('active', gridVisible);
+            }
+            
+            function updateGridVisibility() {
+                gridVisible ? $('.nutrition-grid-container').show() : $('.nutrition-grid-container').hide();
+            }
+            
+            function handleFoodSearch() {
+                const query = $(this).val().trim();
+                
+                if (query.length === 0) {
+                    loadTopFoods();
+                    return;
+                }
+                
+                $.post('/search_foods', { query }, data => {
+                    let resultsHtml = '';
+                    
+                    if (data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
+                        data.forEach(food => resultsHtml += createFoodItemHtml(food));
+                        resultsHtml += '</div>';
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    }
+                    
+                    $('#search-results').html(resultsHtml);
+                });
+            }
+            
+            function clearSearch() {
+                $('#food-search').val('');
+                loadTopFoods();
+                $('#food-details').addClass('d-none');
+                currentFood = null;
+                $('#rt-breakdown-container').addClass('d-none');
+            }
+            
+            $(document).on('click', '.food-item', function() {
+    const foodId = $(this).data('id');
+    const servingSize = $(this).data('serving');
+    const halfSize = $(this).data('half');
+    const entireSize = $(this).data('entire');
+    
+    $('#food-search').val($(this).find('.food-name').text().trim());
+    $('#search-results').empty();
+    
+    // Fetch actual food data from server
+    $.post('/get_food_details', { 
+        food_id: foodId 
+    }, function(foodData) {
+        if (foodData && foodData.success) {
+            // Store current food with actual nutrition data
+            currentFood = {
+                id: foodId,
+                serving_size: servingSize,
+                half_size: halfSize,
+                entire_size: entireSize,
+                calories: parseFloat(foodData.calories) || 0,
+                proteins: parseFloat(foodData.proteins) || 0,
+                carbs: parseFloat(foodData.carbs) || 0,
+                fats: parseFloat(foodData.fats) || 0,
+                saturated: parseFloat(foodData.saturated) || 0,
+                fiber: parseFloat(foodData.fiber) || 0,
+                sugars: parseFloat(foodData.sugars) || 0,
+                salt: parseFloat(foodData.salt) || 0
+            };
+            
+            $('#food-details').removeClass('d-none');
+            $('#grams').val(""); // Default to 100g
+            $('#add-food').data('id', foodId);
+            
+            updatePortionButtons(currentFood);
+            $('#rt-breakdown-container').removeClass('d-none');
+            updateRealTimeBreakdownFromForm();
+            
+            setTimeout(function() {
+                $('#grams').trigger('focus').trigger('select');
+            }, 100);
+        } else {
+            alert('Error loading food details');
+        }
+    }).fail(function() {
+        alert('Failed to fetch food details');
+    });
+});
+            
+            function handlePortionClick(e) {
+                e.stopPropagation();
+                
+                // Reset all OTHER buttons but not this one
+                $('.portion-btn').not(this).each(function() {
+                    const baseSize = parseFloat($(this).data('portion-size'));
+                    const portionType = $(this).data('portion-type');
+                    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+                    $(this).text(`${label} (${baseSize}g)`);
+                    $(this).data('multiple', 0);
+                    $(this).removeClass('active');
+                });
+
+                let multiple = parseInt($(this).data('multiple')) || 0;
+                const baseSize = parseFloat($(this).data('portion-size'));
+                const portionType = $(this).data('portion-type');
+                const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+
+                // Increment multiple (first click = 1)
+                multiple++;
+
+                const totalGrams = baseSize * multiple;
+
+                $(this).text(`${multiple} ${label} (${totalGrams}g)`);
+                $(this).data('multiple', multiple);
+
+                $('#grams').val(totalGrams).trigger('focus');
+                updateRealTimeBreakdownFromForm();
+                $(this).addClass('active');
+            }
+            
+            function handleGramsInput() {
+                resetPortionButtons();
+                updateRealTimeBreakdownFromForm();
+            }
+            
+            function addFoodToLog() {
+                const foodId = $(this).data('id');
+                const grams = parseFloat($('#grams').val()) || 0;
+                const mealGroup = $('#meal-group').val();
+                
+                let unitType = 'grams';
+                let units = grams;
+                
+                // Check if there is an active portion button
+                const activeButton = $('.portion-btn.active');
+                if (activeButton.length) {
+                    unitType = activeButton.data('portion-type');
+                    units = 1;
+                }
+                
+                $.post('/log_food', {
+                    food_id: foodId,
+                    unit_type: 'grams',
+                    units: grams,
+                    meal_group: mealGroup
+                }, response => {
+                    // Save scroll position before updating
+                    const scrollPos = $('#food-log').scrollTop();
+                    
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
+                    
+                    // Restore scroll position after update
+                    $('#food-log').scrollTop(scrollPos);
+                    resetFoodForm();
+                    
+                    if (response.is_mobile) {
+                        $('.mobile-tab-btn[data-panel="food-log-panel"]').click();
+                    }
+                });
+            }
+            
+            function handleGramsEnterKey(e) {
+                if (e.which === 13) { // Enter key
+                    $('#add-food').click();
+                }
+            }
+            
+                        function toggleFoodGroup(e) {
+                // Prevent double-click from triggering two click events
+                if (e.type === 'dblclick') {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                
+                const groupHeader = $(this).closest('.group-header');
+                const groupContainer = groupHeader.closest('.food-group');
+                const groupItems = groupHeader.next('.group-items');
+                const isExpanded = groupItems.is(':visible');
+                
+                if (isExpanded) {
+                    groupItems.slideUp(1);
+                    groupContainer.find('.toggle-group').text('+');
+                    groupContainer.addClass('collapsed-group');
+                } else {
+                    groupItems.slideDown(1);
+                    groupContainer.find('.toggle-group').text('−');
+                    groupContainer.removeClass('collapsed-group');
+                }
+            }
+            
+            function handleEditGrams(e) {
+    e.stopPropagation();
+    
+    const $button = $(this);
+    const originalGrams = $button.text().replace('g', '').trim();
+    const id = $button.data('id');
+    const key = $button.data('key');
+
+    // Create styled input (mimics button)
+    const $input = $(`
+        <input type="number" 
+               class="edit-grams-input" 
+               value="${originalGrams}" 
+               min="0.1" step="0.1">
+    `);
+
+    // Replace button with input
+    $button.replaceWith($input);
+    $input.focus().select();
+
+    // Handle save action
+    function saveValue(newVal) {
+        const date = $('#date-selector').val();
+        if (!newVal || isNaN(newVal) || parseFloat(newVal) < 1) {
+            newVal = 1;
+        }
+
+        // Recreate button with both data-id and data-key
+        const $newButton = $(`
+            <button class="edit-grams badge edit-grams-btn mx-1" 
+                    data-id="${id}" 
+                    data-key="${key}">
+                ${parseFloat(newVal).toFixed(1)}g
+            </button>
+        `);
+        $input.replaceWith($newButton);
+
+        if (parseFloat(newVal) === 0) {
+            // Delete item
+            $.post('/delete_item', { 
+                item_id: id,
+                date: date
+            }, response => {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                updateCalorieDifference();
+            });
+        } else {
+            // Update grams
+            $.post('/update_grams', {
+                item_id: id,
+                food_key: key,
+                new_grams: newVal,
+                date: date
+            }, response => {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                updateCalorieDifference();
+            });
+        }
+    }
+
+    // Save value on blur or Enter
+    $input.on('blur', () => saveValue($input.val()));
+    $input.on('keypress', e => {
+        if (e.key === 'Enter') {
+            saveValue($input.val());
+        }
+    });
+}
+            
+            function handleAdminFoodDelete(e) {
+                e.stopPropagation();
+                const foodId = $(this).data('id');
+                
+                if (!confirm('Are you sure you want to permanently delete this food from the database?')) {
+                    return;
+                }
+                
+                // Show processing indicator
+                const button = $(this);
+                const originalHTML = button.html();
+                button.html('<div class="spinner-delete"></div>');
+                
+                // Send delete request
+                $.post('/delete_food', { 
+                    food_id: foodId 
+                }, response => {
+                    if (response.success) {
+                        // Remove the food item from search results
+                        $(`a.food-item[data-id="${foodId}"]`).remove();
+                        
+                        // If we're viewing the food details, reset the form
+                        if (currentFood && currentFood.id === foodId) {
+                            resetFoodForm();
+                        }
+                    } else {
+                        alert('Error: ' + (response.error || 'Failed to delete food'));
+                    }
+                }).fail(() => {
+                    alert('Failed to delete food. Please try again.');
+                }).always(() => {
+                    button.html(originalHTML);
+                });
+            }
+            
+            function handleFoodItemDelete(e) {
+                e.stopPropagation();
+                const button = $(this);
+                const itemId = button.data('id');
+                const date = $('#date-selector').val();
+                
+                // Store original content
+                const originalHTML = button.html();
+                
+                // Show spinner and disable button
+                button.prop('disabled', true);
+                button.html('<div class="spinner-delete"></div>');
+                
+                $.post('/delete_item', {
+                    item_id: itemId,
+                    date: date
+                }, response => {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
+                }).fail(() => {
+                    // Revert button on failure
+                    button.html(originalHTML);
+                    button.prop('disabled', false);
+                    alert('Failed to delete item. Please try again.');
+                });
+            }
+            
+            function clearSession() {
+                if (!confirm('Are you sure you want to clear all items?')) return;
+                
+                $.post('/clear_session', {}, response => {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
+                });
+            }
+            
+            function handleDateChange() {
+            const date = $(this).val();
+            currentSelectedDate = date; // Update the global date variable
+            console.log("Date changed to:", date);
+            
+                $.post('/update_session', { date })
+                    .done(response => {
+                        console.log("Date change response:", response);
+                        if (response.session && response.totals && response.breakdown) {
+                            updateSessionDisplay(response.session, response.totals, response.breakdown);
+                            updateCalorieDifference();
+                            if (response.current_date_formatted) {
+                                $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
+                            }
+                        } else {
+                            console.error("Invalid response format from server");
+                        }
+                    })
+                    .fail((xhr, status, error) => {
+                        console.error('Date change failed:', error);
+                        alert('Failed to change date. Please try again.');
+                    });
+            }
+            
+        function handleItemSelection(e) {
+            if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
+                return;
+            }
+            
+            const itemId = $(this).data('id');
+            const isSelected = $(this).hasClass('selected');
+            
+            if (isSelected) {
+                $(this).removeClass('selected');
+                selectedItems = selectedItems.filter(id => id !== itemId);
+            } else {
+                $(this).addClass('selected');
+                selectedItems.push(itemId);
+            }
+            
+            // Enable/disable buttons based on selection
+            $('#move-items, #move-items-mobile').prop('disabled', selectedItems.length === 0);
+            
+            // Show recipe button if at least 2 items selected
+            $('#create-recipe').toggleClass('d-none', selectedItems.length < 2);
+            $('#create-recipe').prop('disabled', selectedItems.length < 2);
+            updateTemplateButtonState();
+        }
+            
+            function showMoveItemsModal() {
+                $('#moveItemsModal').modal('show');
+            }
+            
+            function handleActionSelection() {
+                selectedAction = $(this).attr('id') === 'action-move' ? 'move' : 'copy';
+                
+                if (selectedAction === 'move') {
+                    $('#action-move').addClass('active').addClass('btn-danger').removeClass('btn-outline-danger');
+                    $('#action-copy').removeClass('active').removeClass('btn-success').addClass('btn-outline-success');
+                } else {
+                    $('#action-copy').addClass('active').addClass('btn-success').removeClass('btn-outline-success');
+                    $('#action-move').removeClass('active').removeClass('btn-danger').addClass('btn-outline-danger');
+                }
+            }
+            
+        function confirmMoveCopyAction() {
+            const targetDate = $('#target-date').val();
+            const targetGroup = $('#target-group').val();
+            const currentDate = currentSelectedDate; // Use the global date variable
+            
+            $.post('/' + selectedAction + '_items', {
+                date: currentDate,
+                item_ids: JSON.stringify(selectedItems),
+                new_group: targetGroup,
+                target_date: targetDate
+            }, response => {
+                selectedItems = [];
+                $('#move-items, #move-items-mobile').prop('disabled', true);
+                $('#create-recipe').addClass('d-none').prop('disabled', true);
+                $('#moveItemsModal').modal('hide');
+                
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                refreshDateSelector();
+                updateCalorieDifference();
+            }).fail(function(xhr, status, error) {
+                console.error('Move/Copy error:', error);
+                alert('Failed to move/copy items. Please try again.');
+            });
+        }
+            
+            function showRecipeModal() {
+                selectedItemsForRecipe = selectedItems.map(itemId => itemId);
+                
+                $('#recipe-confirm').removeClass('d-none');
+                $('#recipe-name-input').addClass('d-none');
+                $('#recipe-yes').removeClass('d-none');
+                $('#recipe-save').addClass('d-none');
+                recipeModal.show();
+            }
+            
+            function showRecipeNameInput() {
+                $('#recipe-confirm').addClass('d-none');
+                $('#recipe-name-input').removeClass('d-none');
+                $('#recipe-yes').addClass('d-none');
+                $('#recipe-save').removeClass('d-none');
+            }
+            
+            function saveRecipe() {
+                const recipeName = $('#recipe-name').val().trim();
+                const date = $('#date-selector').val();
+                
+                if (!recipeName) {
+                    alert('Please enter a recipe name');
+                    return;
+                }
+                
+                $.post('/save_recipe', {
+                    recipe_name: recipeName,
+                    selected_ids: JSON.stringify(selectedItemsForRecipe),
+                    date: date
+                }, response => {
+                    if (response.success) {
+                        alert('Recipe saved successfully!');
+                        recipeModal.hide();
+                        resetRecipeSelection();
+                        loadTopFoods();
+                    } else {
+                        alert('Error: ' + (response.error || 'Failed to save recipe'));
+                    }
+                }).fail(xhr => {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
+                });
+            }
+            function adjustMobileFontSize(){}
+            function showSaveTemplateModal() {
+                if (selectedItems.length === 0) return;
+                $('#saveTemplateModal').modal('show');
+            }
+            
+function saveTemplate() {
+    const templateName = $('#template-name').val().trim();
+    if (!templateName) {
+        alert('Please enter a template name');
+        return;
+    }
+
+    const itemsWithData = [];
+    const isMobile = $(window).width() < 992;
+    const itemSelector = '.list-group-item'; // works for both desktop & mobile
+
+    $(itemSelector).each(function() {
+        const itemId = $(this).data('id');
+
+        // Primary: data-key on the <li>
+        let foodKey = $(this).data('key');
+
+        // Fallback 1: attribute directly
+        if (!foodKey) foodKey = $(this).attr('data-key');
+
+        // Fallback 2: child element with data-key
+        if (!foodKey) {
+            foodKey = $(this).find('.edit-grams, .edit-grams-btn').data('key');
+        }
+
+        // Fallback 3: hidden input or .food-key span
+        if (!foodKey) {
+            foodKey = $(this).find('.food-key').text().trim() || 
+                      $(this).find('input.food-key').val();
+        }
+
+        // Get grams safely
+        let gramsElement = $(this).find('.edit-grams');
+        if (isMobile && gramsElement.length === 0) {
+            gramsElement = $(this).find('.edit-grams-btn');
+        }
+
+        let gramsText = gramsElement.text().trim();
+        if (gramsText.endsWith('g')) gramsText = gramsText.slice(0, -1);
+
+        const grams = parseFloat(gramsText);
+
+        console.log(`Item: id=${itemId}, key=${foodKey}, grams=${grams}`);
+
+        if (!isNaN(grams) && grams > 0 && foodKey) {
+            itemsWithData.push({
+                id: itemId,
+                food_key: foodKey,
+                grams: grams
+            });
+        }
+    });
+
+    console.log('Items to save:', itemsWithData);
+
+    if (itemsWithData.length === 0) {
+        alert('No valid items to save as template. Please make sure you have food items with valid quantities.');
+        return;
+    }
+
+    const saveBtn = $('#confirm-save-template');
+    const originalText = saveBtn.html();
+    saveBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+
+    $.ajax({
+        url: SAVE_TEMPLATE_URL,
+        method: 'POST',
+        data: {
+            name: templateName,
+            items: JSON.stringify(itemsWithData)
+        },
+        success: function(response) {
+            saveBtn.html(originalText);
+            if (response.success) {
+                alert('Template saved successfully!');
+                $('#saveTemplateModal').modal('hide');
+                $('#template-name').val('');
+            } else {
+                alert('Error: ' + (response.error || 'Failed to save template'));
+            }
+        },
+        error: function(xhr, status, error) {
+            saveBtn.html(originalText);
+            console.error('Template error:', error, xhr.responseText);
+            alert('Failed to save template. Please check your connection and try again.');
+        }
+    });
+}
+function debugTemplateItems() {
+    console.log("=== DEBUG TEMPLATE ITEMS ===");
+    
+    // Check mobile state
+    const isMobile = $(window).width() < 992;
+    console.log("Is mobile:", isMobile);
+    
+    // Count all items
+    const allItems = $('.list-group-item');
+    console.log("Total items found:", allItems.length);
+    
+    // Check each item
+    allItems.each(function(index) {
+        const item = $(this);
+        const id = item.data('id');
+        const key = item.data('key');
+        const gramsText = item.find('.edit-grams').text() || item.find('.edit-grams-btn').text();
+        const grams = parseFloat(gramsText.replace('g', ''));
+        
+        console.log(`Item ${index}: id=${id}, key=${key}, grams=${grams}, valid=${!isNaN(grams) && grams > 0 && key}`);
+        
+        // Highlight problematic items
+        if (!key || isNaN(grams) || grams <= 0) {
+            item.css('border', '2px solid red');
+        }
+    });
+    
+    console.log("=== END DEBUG ===");
+}           
+            function showApplyTemplateModal() {
+                loadTemplates();
+                $('#applyTemplateModal').modal('show');
+            }
+            
+function applyTemplate() {
+    const templateId = $('#template-select').val();
+    const mealGroup = $('#template-meal-group').val();
+    
+    if (!templateId) return;
+    
+    // Show loading state
+    const applyBtn = $('#confirm-apply-template');
+    const originalText = applyBtn.html();
+    applyBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span> Applying...');
+    
+    $.post(APPLY_TEMPLATE_URL, {
+        template_id: templateId,
+        meal_group: mealGroup,
+        date: currentSelectedDate
+    }, response => {
+        applyBtn.html(originalText);
+        
+        if (response.success) {
+            updateSessionDisplay(response.session, response.totals, response.breakdown);
+            updateCalorieDifference();
+            $('#applyTemplateModal').modal('hide');
+        } else {
+            alert('Error: ' + (response.error || 'Failed to apply template'));
+        }
+    }).fail((xhr, status, error) => {
+        applyBtn.html(originalText);
+        console.error('Template application error:', error);
+        alert('Failed to apply template. Please try again.');
+    });
+}
+            
+            function showCameraModal() {
+                cameraModal.show();
+            }
+            
+            function toggleCamera() {
+                currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+                localStorage.setItem('cameraPreference', currentCamera);
+                stopCamera();
+                
+                // Update status
+                const cameraType = currentCamera === 'environment' ? 'back' : 'front';
+                $('#camera-status').text(`Switching to ${cameraType} camera...`);
+                
+                setTimeout(startCamera, 500);
+            }
+            
+            function resumeScanning() {
+                lastScannedCode = null;
+                $('#scanned-result').text('');
+                startCamera();
+            }
+            
+            function prepareCameraModal() {
+                // Recreate overlay elements
+                $('#scanner-overlay').html(`
+                    <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
+                    <div class="scan-guide"></div>
+                    <div class="scan-line"></div>
+                    <div id="scanned-result" class="scanned-result"></div>
+                `);
+            }
+            
+            function initializeCamera() {
+                setTimeout(startCamera, 300);
+            }
+            
+            function handleMobileTabSwitch() {
+                const panelId = $(this).data('panel');
+                
+                // Hide all panels
+                $('.mobile-panel').removeClass('active');
+                
+                // Show selected panel
+                $('#' + panelId).addClass('active');
+                
+                // Update active button
+                $('.mobile-tab-btn').removeClass('active');
+                $(this).addClass('active');
+                
+                // Close modals if open
+                $('.modal').modal('hide');
+            }
+            
+            // ===== UTILITY FUNCTIONS =====
+            
+            function loadTopFoods() {
+                $.post('/search_foods', { query: '' }, data => {
+                    let resultsHtml = '';
+                    if (data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
+                        data.forEach(food => resultsHtml += createFoodItemHtml(food));
+                        resultsHtml += '</div>';
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No foods available</div>';
+                    }
+                    $('#search-results').html(resultsHtml);
+                });
+            }
+            
+            function createFoodItemHtml(food) {
+                const displayCalories = formatCalories(food.calories) + ' kcal';
+                
+                return `
+                    <a class="list-group-item list-group-item-action food-item small text-start" 
+                       data-id="${food.id}" 
+                       data-serving="${food.serving_size || ''}"
+                       data-half="${food.half_size || ''}"
+                       data-entire="${food.entire_size || ''}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="food-name">${food.name}</span>
+                            <div>
+                                <span class="calorie-badge">${displayCalories}</span>
+                                <button class="delete-food-btn" data-id="${food.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }
+            
+            function formatCalories(calories) {
+                const num = parseFloat(calories);
+                if (isNaN(num)) return "0";
+                
+                const formatted = num.toFixed(2);
+                return formatted.length > 5 ? num.toFixed(1) : formatted;
+            }
+            
+            function updatePortionButtons(food) {
+                const container = $('#portion-buttons');
+                container.empty();
+                
+                const portionTypes = [
+                    { type: 'serving', label: 'Serving', size: food.serving_size },
+                    { type: 'half', label: 'Half', size: food.half_size },
+                    { type: 'entire', label: 'Entire', size: food.entire_size }
+                ];
+                
+                portionTypes.forEach(portion => {
+                    if (portion.size) {
+                        const button = $(`
+                            <button type="button" class="btn portion-btn" 
+                                    data-portion-type="${portion.type}" 
+                                    data-portion-size="${portion.size}"
+                                    data-multiple="0">
+                                ${portion.label} (${portion.size}g)
+                            </button>
+                        `);
+                        container.append(button);
+                    }
+                });
+            }
+            
+            function initPortionControls() {
+                // Document click handler to reset portion buttons
+                $(document).on('click', function(e) {
+                    const target = $(e.target);
+                    
+                    // Check if click is inside whitelisted elements
+                    const isWhitelisted = target.closest('#meal-group').length > 0 || 
+                                         target.is('#grams') || 
+                                         target.closest('#add-food').length > 0 ||
+                                         target.closest('.portion-btn').length > 0 ||
+                                         target.is('#date-selector, #date-selector option');                  
+                    // If click is outside whitelisted elements, reset the portion buttons
+                    if (!isWhitelisted) {
+                        resetPortionButtons();
+                        updateRealTimeBreakdownFromForm();
+                    }
+                });
+            }
+            
+            function resetPortionButtons() {
+                $('.portion-btn').each(function() {
+                    const baseSize = parseFloat($(this).data('portion-size'));
+                    const portionType = $(this).data('portion-type');
+                    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+                    $(this).text(`${label} (${baseSize}g)`);
+                    $(this).data('multiple', 0);
+                    $(this).removeClass('active');
+                });
+            
+                            if (!$('#grams').is(':focus')) {
+                setTimeout(() => {
+                    $('#grams').trigger('focus').trigger('select');
+                        }, 50);
+                    }
+                }
+                        
+                    
+            function initGramsInputReset() {
+                // Define whitelisted elements that should NOT trigger reset
+                const whitelist = [
+                    '#meal-group',
+                    '#grams',
+                    '#add-food',
+                    '.portion-btn',
+                    '#portion-buttons',
+                    '.modal',
+                    '.btn-close'
+                ];
+                
+                const whitelistSelector = whitelist.join(', ');
+                
+                $(document).on('click', function(e) {
+                    const $target = $(e.target);
+                    
+                    // Check if click is inside whitelisted elements
+                    const isWhitelisted = $target.is(whitelistSelector) || 
+                                         $target.closest(whitelistSelector).length > 0;
+                    
+                    // Reset grams input if click is outside whitelisted elements
+                    if (!isWhitelisted) {
+                        resetGramsInput();
+                    }
+                });
+            }
+            
+            function resetGramsInput() {
+                $('#grams').val('');
+                if (currentFood) {
+                    updateRealTimeBreakdown({
+                        calories: 0,
+                        proteins: 0,
+                        carbs: 0,
+                        fats: 0,
+                        grams: 0
+                        });
+                    }
+                        if (!$('#grams').is(':focus')) {
+                        setTimeout(() => {
+                            $('#grams').trigger('focus').trigger('select');
+                        }, 50);
+                            }
+                        }
+                        
+                    function updateRealTimeBreakdownFromForm() {
+                if (!currentFood) return;
+                
+                const grams = parseFloat($('#grams').val()) || 0;
+                const factor = grams / 100;
+                
+                const updatedData = {
+                    calories: (currentFood.calories * factor),
+                    proteins: (currentFood.proteins * factor),
+                    carbs: (currentFood.carbs * factor),
+                    fats: (currentFood.fats * factor),
+                    saturated: (currentFood.saturated * factor),
+                    fiber: (currentFood.fiber * factor),
+                    sugars: (currentFood.sugars * factor),
+                    salt: (currentFood.salt * factor),
+                    grams: grams
+                };
+                
+                updateRealTimeBreakdown(updatedData);
+            }
+
+            // Enhanced function to handle decimal values properly + mobile scaling
+            function updateRealTimeBreakdown(data) {
+                if (!$('#rt-breakdown-container').is(':visible')) return;
+                
+                const formatValue = (value) => {
+                    if (value < 0.1) return value.toFixed(2);
+                    if (value < 1) return value.toFixed(1);
+                    return value.toFixed(0);
+                };
+                
+                // Update values
+                $('#rt-calories').text(formatValue(data.calories));
+                $('#rt-proteins').text(formatValue(data.proteins) + 'g');
+                $('#rt-carbs').text(formatValue(data.carbs) + 'g');
+                $('#rt-fats').text(formatValue(data.fats) + 'g');
+                $('#rt-grams').text(formatValue(data.grams) + 'g');
+                
+                // Mobile-specific font adjustments
+                if ($(window).width() < 992) {
+                    const isOldPhone = window.innerWidth <= 360;
+                    const baseSize = isOldPhone ? 12 : 14;
+                    
+                    adjustMobileFontSize($('#rt-calories')[0], baseSize);
+                    adjustMobileFontSize($('#rt-proteins')[0], baseSize);
+                    adjustMobileFontSize($('#rt-carbs')[0], baseSize);
+                    adjustMobileFontSize($('#rt-fats')[0], baseSize);
+                }
+            }
+            
+            function updateSessionDisplay(session, totals, breakdown) {
+                console.log("Updating session display:", totals, breakdown);
+                updateNutritionGrid(totals);
+                updateMobileNutrition(totals);
+                updateCalorieDifference();
+                
+                // Remember collapsed states
+                const collapseStates = {};
+                $('.food-group').each(function() {
+                    const group = $(this).data('group');
+                    collapseStates[group] = $(this).hasClass('collapsed-group');
+                });
+                
+                let logHtml = '';
+                
+                if (breakdown) {
+                    for (const group in breakdown) {
+                        const groupData = breakdown[group];
+                        logHtml += `
+                            <div class="food-group ${group}" data-group="${group}">
+                                <div class="group-header d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="group-icon">
+                                            ${group === 'breakfast' ? '<i class="fas fa-sun"></i>' : 
+                                              group === 'lunch' ? '<i class="fas fa-utensils"></i>' : 
+                                              group === 'dinner' ? '<i class="fas fa-moon"></i>' : 
+                                              group === 'snack' ? '<i class="fas fa-apple-alt"></i>' : 
+                                              '<i class="fas fa-question"></i>'}
+                                        </div>
+                                        <span class="group-title">${group.toUpperCase()}</span>
+                                    </div>
+                                    <div class="group-nutrition-container">
+                                        <div class="group-nutrition">
+                                            <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                                                <span>${groupData['calories'].toFixed(1)} kcal</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
+                                                <span>${groupData['proteins'].toFixed(1)}g P</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <span>${groupData['carbs'].toFixed(1)}g C</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <span>${groupData['fats'].toFixed(1)}g F</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm toggle-group ms-1">−</button>
+                                    </div>
+                                </div>
+                                <ul class="group-items list-group list-group-flush">
+                        `;
+                        
+                        groupData['items'].forEach((item, index) => {
+                            logHtml += `
+                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-id="${item.id}" data-key="${item.key}">
+                                    <div class="food-item-container">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <strong>${item.name}</strong>
+                                            </div>
+                                        </div>
+                                        <span class="edit-grams badge edit-grams-btn mx-1" 
+                                            data-id="${item.id}" 
+                                            data-key="${item.key}">
+                                            ${item.grams.toFixed(1)}g
+                                                </span>
+                                    </div>
+                                    <div class="nutrition-and-actions">
+                                        <div class="nutrition-values-container d-flex">
+                                            <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                                                <span>${item.calories.toFixed(1)} kcal</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
+                                                <span>${item.proteins.toFixed(1)}g P</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.carbs.toFixed(1)}g C</span>
+                                            </div>
+                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                                                <span>${item.fats.toFixed(1)}g F</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn delete-item" data-id="${item.id}">
+                                            <i class="fa-solid fa-circle-xmark"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                        
+                        logHtml += `
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }
+                
+                if (logHtml === '') {
+                    logHtml = '<div class="empty-state">No food logged yet</div>';
+                }
+                
+                $('#food-log').html(logHtml);
+                
+                // Auto-scroll on mobile if items exist
+                if ($(window).width() < 992 && session.length > 0) {
+                    setTimeout(() => {
+                        const lastItem = $('.list-group-item').last();
+                        if (lastItem.length) {
+                            $('#food-log').animate({
+                                scrollTop: lastItem.offset().top - 100
+                            }, 500);
+                        }
+                    }, 300);
+                }
+
+                // Reapply collapse states
+                Object.keys(collapseStates).forEach(group => {
+                    if (collapseStates[group]) {
+                        $(`.food-group[data-group="${group}"]`).addClass('collapsed-group');
+                        $(`.food-group[data-group="${group}"] .group-items`).hide();
+                        $(`.food-group[data-group="${group}"] .toggle-group`).text('+');
+                    }
+                });
+            }
+            
+            function updateNutritionGrid(totals) {
+                const safeParse = (value) => {
+                    const num = parseFloat(value) || 0;
+                    if (num < 0.1) return num.toFixed(2);
+                    if (num < 1) return num.toFixed(1);
+                    return num.toFixed(0);
+                };
+                
+                $('#grid-calories').text(safeParse(totals.calories));
+                $('#grid-proteins').text(safeParse(totals.proteins) + 'g');
+                $('#grid-carbs').text(safeParse(totals.carbs) + 'g');
+                $('#grid-fats').text(safeParse(totals.fats) + 'g');
+                $('#grid-saturated').text(safeParse(totals.saturated) + 'g');
+                $('#grid-sugars').text(safeParse(totals.sugars) + 'g');
+                $('#grid-fiber').text(safeParse(totals.fiber) + 'g');
+                $('#grid-salt').text(safeParse(totals.salt) + 'g');
+            }
+
+            function updateMobileNutrition(totals) {
+            const safeParse = (value) => {
+                const num = parseFloat(value) || 0;
+                if (num < 0.1) return num.toFixed(2);
+                if (num < 1) return num.toFixed(1);
+                return num.toFixed(0);
+            };
+            
+            $('#mobile-calories').text(safeParse(totals.calories));
+            $('#mobile-proteins').text(safeParse(totals.proteins) + 'g');
+            $('#mobile-carbs').text(safeParse(totals.carbs) + 'g');
+            $('#mobile-fats').text(safeParse(totals.fats) + 'g');
+            $('#mobile-sugars').text(safeParse(totals.sugars) + 'g');
+            $('#mobile-fiber').text(safeParse(totals.fiber) + 'g');
+            $('#mobile-salt').text(safeParse(totals.salt) + 'g');
+            $('#mobile-saturated').text(safeParse(totals.saturated) + 'g');
+        }
+                                
+            function updateCalorieDifference() {
+                const tdee = {% if current_tdee %}{{ current_tdee }}{% else %}0{% endif %};
+                const loggedCalories = parseFloat($('#grid-calories').text()) || 0;
+                const difference = tdee - loggedCalories;
+                const absDiff = Math.abs(difference);
+
+                // Update the calorie difference display
+                $('#calorie-difference').text(absDiff.toFixed(0));
+                $('#calorie-difference-mobile').text(absDiff.toFixed(0));
+
+                // Determine status and set appropriate class
+                let status, statusClass;
+                if (absDiff <= 50) {
+                    status = "maintaining";
+                    statusClass = "status-maintain";
+                } else if (difference > 0) {
+                    status = "calories left";
+                    statusClass = "status-loss";
+                } else {
+                    status = "calories over";
+                    statusClass = "status-gain";
+                }
+
+                // Update status text and class
+                $('#calorie-status, #calorie-status-mobile').text(status)
+                    .removeClass('status-maintain status-loss status-gain')
+                    .addClass(statusClass);
+            }
+            
+            function resetFoodForm() {
+                $('#food-search').val('');
+                $('#grams').val('');
+                $('#food-details').addClass('d-none');
+                $('#portion-buttons').empty();
+                currentFood = null;
+                $('#rt-breakdown-container').addClass('d-none');
+                loadTopFoods();
+                initializeIcons();
+            }
+            
+            function resetRecipeSelection() {
+                selectedItems = [];
+                selectedItemsForRecipe = [];
+                $('.list-group-item.selected').removeClass('selected');
+                $('#move-items').prop('disabled', true);
+                $('#create-recipe').addClass('d-none').prop('disabled', true);
+            }
+            
+            function refreshDateSelector() {
+                const currentDate = $('#date-selector').val();
+                
+                $.post('/update_session', { date: currentDate }, response => {
+                    updateSessionDisplay(response.session, response.totals, response.breakdown);
+                    updateCalorieDifference();
+                    $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
+                });
+            }
+            
+        function loadTemplates() {
+            // Show loading state
+            const select = $('#template-select');
+            select.html('<option value="">Loading templates...</option>');
+            
+            $.get('/get_templates_food', templates => {
+                select.empty();
+                
+                if (templates.length === 0) {
+                    select.append('<option value="">No templates available</option>');
+                    $('#confirm-apply-template').prop('disabled', true);
+                } else {
+                    templates.forEach(template => {
+                        select.append(`<option value="${template.id}">${template.name}</option>`);
+                    });
+                    $('#confirm-apply-template').prop('disabled', false);
+                }
+            }).fail(() => {
+                select.html('<option value="">Error loading templates</option>');
+            });
+        }
+            
+            function updateTemplateButtonState() {
+            const hasSelection = selectedItems.length > 0;
+            $('#save-template-btn, #save-template-btn-mobile').prop('disabled', !hasSelection);
+        }
+            
+            function positionNutritionGrid() {
+                const navbarHeight = $('.navbar').outerHeight();
+                const container = $('.container-main');
+                const containerOffset = container.offset();
+                const containerWidth = container.width();
+                
+                // Calculate responsive position
+                const responsiveOffset = Math.min(40, window.innerWidth * 0.02);
+                const gridLeft = containerOffset.left + containerWidth + responsiveOffset;
+                
+                // Apply responsive sizing
+                const gridHeight = Math.min(900, window.innerHeight * 0.7);
+                
+                $('.nutrition-grid-container').css({
+                    'top': navbarHeight + 20,
+                    'left': gridLeft,
+                    'height': gridHeight + 'px'
+                });
+            }
+            
+            function updateGridFontSizes() {
+                const baseSize = Math.min(16, window.innerWidth * 0.012);
+                $('.grid-cell').css('font-size', baseSize + 'px');
+                $('.grid-value').css('font-size', (baseSize * 1.1) + 'px');
+                $('.grid-cell i').css('font-size', (baseSize * 1.4) + 'px');
+            }
+            
+            function adjustGridScale() {
+                const grid = $('.nutrition-grid-container');
+                const windowHeight = window.innerHeight;
+                const gridHeight = grid.height();
+                
+                if (windowHeight < 900) {
+                    const scale = Math.max(0.7, Math.min(1, windowHeight / 1000));
+                    grid.css('transform', `scale(${scale})`);
+                    
+                    // Adjust cell padding dynamically
+                    const cellPadding = Math.max(4, 8 * scale);
+                    $('.grid-cell').css('padding', `${cellPadding}px 3px`);
+                }
+            }
+            
+            function initializeIcons() {
+                if (window.FontAwesome) {
+                    FontAwesome.dom.i2svg();
+                }
+            }
+            
+            function startCamera() {
+                scanningActive = true;
+                $('#scanned-result').text('Initializing camera...').css('color', 'white');
+                
+                // Show the preview container
+                $('#camera-preview').css('visibility', 'visible');
+
+                // Initialize ZXing
+                if (!codeReader) {
+                    codeReader = new ZXing.BrowserMultiFormatReader();
+                }
+
+                // Force back camera by default
+                currentCamera = 'environment';
+                
+                // List available cameras
+                codeReader.listVideoInputDevices()
+                    .then(videoInputDevices => {
+                        if (videoInputDevices.length === 0) {
+                            $('#scanned-result').html('No cameras found');
+                            return;
+                        }
+                        
+                        let cameraId;
+                        let cameraLabel = '';
+                        let backCamera = null;
+                        let frontCamera = null;
+                        
+                        // Classify cameras
+                        videoInputDevices.forEach(device => {
+                            if (/back|rear|environment|1|primary|main|wide/i.test(device.label.toLowerCase())) {
+                                backCamera = device;
+                            } else if (/front|user|0|selfie|face/i.test(device.label.toLowerCase())) {
+                                frontCamera = device;
+                            }
+                        });
+                        
+                        // Select camera based on preference
+                        if (currentCamera === 'environment' && backCamera) {
+                            cameraId = backCamera.deviceId;
+                            cameraLabel = 'back';
+                        } else if (currentCamera === 'user' && frontCamera) {
+                            cameraId = frontCamera.deviceId;
+                            cameraLabel = 'front';
+                        } else {
+                            // Fallback to first available camera
+                            cameraId = videoInputDevices[0].deviceId;
+                            cameraLabel = videoInputDevices[0].label;
+                        }
+
+                        // Start decoding
+                        codeReader.decodeFromVideoDevice(cameraId, 'camera-video', (result, err) => {
+                            if (result) {
+                                const code = result.text;
+                                if (lastScannedCode === code) return;
+                                
+                                lastScannedCode = code;
+                                $('#scanned-result').html(`<strong>SCANNED:</strong> ${code}<br>Processing...`)
+                                    .css('color', '#00ff00');
+                                
+                                handleScannedCode(code);
+                            } 
+                            
+                            if (err && !(err instanceof ZXing.NotFoundException)) {
+                                console.error('ZXing error:', err);
+                                $('#scanned-result').text(`Error: ${err.message}`).css('color', 'red');
+                            }
+                        });
+                        
+                        $('#camera-status').text(`Using ${cameraLabel} camera`);
+                    })
+                    .catch(err => {
+                        console.error('Camera error:', err);
+                        $('#scanned-result').text(`Camera error: ${err.message}`).css('color', 'red');
+                    });
+            }
+            
+            function stopCamera() {
+                scanningActive = false;
+                if (codeReader) {
+                    try {
+                        codeReader.reset();
+                        // Stop video tracks without removing elements
+                        const videoElement = document.getElementById('camera-video');
+                        if (videoElement && videoElement.srcObject) {
+                            const tracks = videoElement.srcObject.getTracks();
+                            tracks.forEach(track => track.stop());
+                            videoElement.srcObject = null;
+                        }
+                        codeReader = null;
+                    } catch (e) {
+                        console.warn('Error stopping camera:', e);
+                    }
+                }
+                
+                // Clear scanned result but preserve overlay
+                $('#scanned-result').text('');
+            }
+            
+            function handleScannedCode(code) {
+                // Validate EAN code
+                if (!/^\d{8,13}$/.test(code)) {
+                    $('#scanned-result').html(`<strong>Invalid barcode:</strong> ${code}<br>Only EAN-8/EAN-13 supported`)
+                        .css('color', 'orange');
+                    return;
+                }
+
+                // Close modal and process
+                cameraModal.hide();
+                stopCamera();
+                
+                // Set search field value
+                $('#food-search').val(code);
+                
+                // Highlight the search field
+                $('#food-search').addClass('highlight-search');
+                setTimeout(() => $('#food-search').removeClass('highlight-search'), 3000);
+                
+                // Trigger search
+                setTimeout(() => {
+                    $('#food-search').focus();
+                    const query = $('#food-search').val().trim();
+                    if (query.length > 0) {
+                        performFoodSearch(query);
+                    }
+                }, 100);
+            }
+            
+            function performFoodSearch(query) {
+                $.post('/search_foods', { query }, data => {
+                    let resultsHtml = '';
+                    if (data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
+                        data.forEach(food => resultsHtml += createFoodItemHtml(food));
+                        resultsHtml += '</div>';
+                        
+                        // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+                        setTimeout(() => {
+                            if ($('.food-item').length > 0) {
+                                $('.food-item:first').trigger('click');
+                            }
+                        }, 300);
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    }
+                    $('#search-results').html(resultsHtml);
+                });
+            }
+            
+            // ===== INITIALIZE THE APP =====
+            initializeApp();
+        });
+    </script>
 </body>
 </html>
-
