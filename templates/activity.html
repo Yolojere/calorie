@@ -130,6 +130,51 @@ body {
     font-size: 13px;
     border-radius: 20px;
 }
+.nav-logo-box {
+            display:inline-block;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border: solid 1px !important;
+            border-color: #353535 !important;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* ensures it’s above other elements */
+            background-color: #101010;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 2px;
+            margin: 0 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 55px;
+            height: 55px;
+              }
+                .nav-logo-box img.nav-logo {
+            max-width: 100%;   /* scale the logo down */
+            max-height: 100%;  /* maintain aspect ratio */
+            object-fit: contain;
+        }
+/* ===== DROPDOWNS & MODALS ===== */
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        right: 0 !important;
+        width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: absolute;
+    }
+
+    .dropdown-item {
+        color: #fff;
+    }
+
+    .dropdown-item:hover {
+        background-color: #333;
+        color: #ffffff;
+    }
 
 /* Override btn-primary to match theme */
 .btn-primary {
@@ -498,12 +543,15 @@ body {
     </div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand" href="/" style="font-size: 26px;">Track You</a>
-            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 15px;color: #ffffff; ">
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 16px;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, eat, repeat -
             </a>
+                            <div class="nav-logo-box">
+    <img src="{{ url_for('static', filename='images/trackyoulogo.png') }}" alt="TrackYou Logo" class="nav-logo">
+</div>
             
             <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
