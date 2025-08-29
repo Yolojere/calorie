@@ -1041,112 +1041,102 @@ def profile():
     form = UpdateProfileForm()
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    
-    # Initialize variables with default values
+
+    # Defaults
     current_weight = None
     current_tdee = None
     current_avatar = 'default.png'
+    extra_columns_exist = False
+    role = getattr(current_user, 'role', 'user')
 
-    # Define predefined avatars for the form choices
-    predefined_avatars = ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png', 'avatar4.png','avatar5.png','avatar6.png','avatar7.png']
+    # Predefined avatars
+    predefined_avatars = ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png',
+                          'avatar4.png', 'avatar5.png', 'avatar6.png', 'avatar7.png']
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
 
     try:
-        # Check if the new columns exist in the database
+        # Check for extra columns safely
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name')
+            AND column_name IN ('full_name','main_sport','fitness_goals')
         """)
-        extra_columns_exist = bool(cursor.fetchall())
-        
-        # Build the SELECT query based on available columns
-        select_query = 'SELECT username, email, weight, tdee, avatar'
-        if extra_columns_exist:
-            select_query += ', full_name'
-        select_query += ' FROM users WHERE id = %s'
-        
-        # Get current user info
-        cursor.execute(select_query, (current_user.id,))
+        columns = [row['column_name'] for row in cursor.fetchall()]
+        extra_columns_exist = bool(columns)
+
+        # Build SELECT query dynamically
+        select_cols = ['username', 'email', 'weight', 'tdee', 'avatar'] + columns
+        cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
         user_data = cursor.fetchone()
-        
+
         if user_data:
-            current_weight = user_data['weight']
-            current_tdee = user_data['tdee']
-            current_avatar = user_data['avatar'] if user_data['avatar'] else 'default.png'
+            current_weight = user_data.get('weight')
+            current_tdee = user_data.get('tdee')
+            current_avatar = user_data.get('avatar') if user_data.get('avatar') else 'default.png'
 
+        # POST: update profile
         if form.validate_on_submit():
-            avatar_filename = current_avatar  # default to current
+            avatar_filename = current_avatar  # fallback
 
-            # Handle avatar upload
-            if form.avatar_upload.data:
+            # Handle uploaded avatar
+            if hasattr(form, 'avatar_upload') and form.avatar_upload.data:
                 file = form.avatar_upload.data
                 if file and allowed_file(file.filename):
-                    # Generate unique filename to avoid conflicts
                     timestamp = str(int(time.time()))
                     filename = secure_filename(file.filename)
                     name, ext = os.path.splitext(filename)
                     unique_filename = f"{name}_{timestamp}{ext}"
                     filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-                    
-                    # Create uploads directory if it doesn't exist
                     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                    
                     file.save(filepath)
 
-                    # Resize to 200x200
+                    # Resize
                     img = Image.open(filepath)
                     img.thumbnail((200, 200))
                     img.save(filepath)
-
                     avatar_filename = unique_filename
                 else:
                     flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
 
-            # Handle avatar choice (predefined avatars)
-            elif form.avatar_choice.data:
-                avatar_filename = form.avatar_choice.data
+            # Handle predefined avatar choice
+            elif hasattr(form, 'avatar_choice') and form.avatar_choice.data:
+                avatar_filename = form.avatar_choice.data if form.avatar_choice.data in predefined_avatars else 'default.png'
 
-            # Build the UPDATE query based on available columns
-            update_query = '''UPDATE users SET username = %s, email = %s, avatar = %s'''
+            # Build update query dynamically
+            update_query = "UPDATE users SET username = %s, email = %s, avatar = %s"
             update_params = [form.username.data, form.email.data, avatar_filename]
-            
-            # Add extra fields if they exist
-            if extra_columns_exist:
-                update_query += ', full_name = %s'
-                update_params.extend([
-                    request.form.get('full_name', ''),
-                ])
-            
-            update_query += ' WHERE id = %s'
+
+            for col in columns:
+                update_query += f", {col} = %s"
+                update_params.append(request.form.get(col, ''))
+
+            update_query += " WHERE id = %s"
             update_params.append(current_user.id)
-            
-            # Update user information
+
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
             flash('Your profile has been updated!', 'success')
             return redirect(url_for('profile'))
 
-        # GET request: pre-fill form
-        elif request.method == 'GET' and user_data:
-            form.username.data = user_data['username']
-            form.email.data = user_data['email']
-            
-            # Pre-fill extra fields if they exist
-            if extra_columns_exist:
-                form.full_name.data = user_data.get('full_name', '')
-            
-            # Set avatar choice - use default.png if none is set
-            if user_data['avatar'] and user_data['avatar'] in predefined_avatars:
-                form.avatar_choice.data = user_data['avatar']
-            else:
-                form.avatar_choice.data = 'default.png'
+        # GET: pre-fill form
+        elif user_data:
+            form.username.data = user_data.get('username', '')
+            form.email.data = user_data.get('email', '')
+
+            for col in columns:
+                if hasattr(form, col):
+                    getattr(form, col).data = user_data.get(col, '')
+
+            # Avatar choice
+            form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
 
     except psycopg2.IntegrityError:
         flash('Username or email already taken', 'danger')
     except Exception as e:
-        flash(f'An error occurred: {str(e)}', 'danger')
+        import traceback
+        print(traceback.format_exc())
+        flash(f'An unexpected error occurred.', 'danger')
     finally:
         cursor.close()
         conn.close()
@@ -1158,9 +1148,11 @@ def profile():
         current_weight=current_weight,
         current_tdee=current_tdee,
         current_avatar=current_avatar,
-        role=current_user.role,
-        extra_columns_exist=extra_columns_exist  # Pass this to template
+        role=role,
+        extra_columns_exist=extra_columns_exist,
+        predefined_avatars=predefined_avatars
     )
+
 
 
 @app.route("/reset_password", methods=['GET', 'POST'])
