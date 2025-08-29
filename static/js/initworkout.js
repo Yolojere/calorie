@@ -103,62 +103,72 @@ function setupMobileDateSelector() {
 // ===============================
 // Auto-move dropdowns to <body> with dynamic repositioning
 // ===============================
-    function isDesktop() {
-        return $(window).width() >= 992; // Bootstrap lg breakpoint
-    }
+    function positionDropdown($dropdown, $toggle) {
+    const offset = $toggle.offset();
+    const scrollTop = $(window).scrollTop();
+    const scrollLeft = $(window).scrollLeft();
 
-    function positionSettingsDropdown($dropdown, $button) {
-        const offset = $button.offset();
-        const buttonWidth = $button.outerWidth();
-        const dropdownWidth = $dropdown.outerWidth();
-
+    if ($(window).width() >= 992) { // desktop
+        // dropdown under the button
         $dropdown.css({
             position: 'absolute',
-            top: offset.top + $button.outerHeight(),
-            left: offset.left + buttonWidth - dropdownWidth,
-            zIndex: 2100
+            top: offset.top + $toggle.outerHeight(),
+            left: offset.left,
+            zIndex: 2100,
+            minWidth: $toggle.outerWidth() // match button width if you want
+        });
+    } else {
+        // mobile: keep relative inside parent
+        $dropdown.css({
+            position: '',
+            top: '',
+            left: '',
+            zIndex: ''
         });
     }
+}
 
-    $('.mobile-settings-btn').on('click', function(e) {
-        const $button = $(this);
-        const $dropdown = $button.next('.dropdown-menu');
+$('.dropdown').on('show.bs.dropdown', function() {
+    const $toggle = $(this).find('[data-bs-toggle="dropdown"]');
+    const $dropdown = $(this).find('.dropdown-menu');
 
-        if (isDesktop()) {
-            e.preventDefault(); // prevent default Bootstrap mobile behavior
-            if (!$dropdown.hasClass('show')) {
-                $dropdown.appendTo('body'); // float on desktop
-                positionSettingsDropdown($dropdown, $button);
-                $dropdown.addClass('show');
-            } else {
-                $dropdown.removeClass('show').appendTo($button.parent());
-                $dropdown.css({ top: '', left: '', position: '' });
-            }
+    // save original CSS
+    $dropdown.data('original-style', $dropdown.attr('style') || '');
+
+    if ($(window).width() >= 992) {
+        // append to body for desktop
+        $dropdown.appendTo('body');
+        positionDropdown($dropdown, $toggle);
+
+        // reposition on scroll/resize
+        $(window).on('scroll.dropdown resize.dropdown', function() {
+            if ($toggle.parent().hasClass('show')) positionDropdown($dropdown, $toggle);
+        });
+    }
+});
+
+$('.dropdown').on('hide.bs.dropdown', function() {
+    const $dropdown = $(this).find('.dropdown-menu');
+
+    // return to original parent
+    $dropdown.appendTo($(this));
+
+    // reset inline styles
+    $dropdown.attr('style', $dropdown.data('original-style'));
+
+    // remove scroll/resize handler
+    $(window).off('scroll.dropdown resize.dropdown');
+});
+
+// click outside to close
+$(document).on('click', function(e) {
+    $('.dropdown.show').each(function() {
+        const $dropdown = $(this).find('.dropdown-menu');
+        if (!$(this).is($(e.target)) && !$.contains(this, e.target)) {
+            $(this).removeClass('show');
+            $dropdown.appendTo($(this));
+            $dropdown.attr('style', $dropdown.data('original-style'));
+            $(window).off('scroll.dropdown resize.dropdown');
         }
-        // else: mobile uses default dropdown (Bootstrap handles it)
     });
-
-    // Hide dropdown when clicking outside
-    $(document).on('click', function(e) {
-        if (!isDesktop()) return; // skip on mobile
-        $('.mobile-settings-btn').each(function() {
-            const $button = $(this);
-            const $dropdown = $button.next('.dropdown-menu');
-            if ($dropdown.hasClass('show') && !$.contains($button[0], e.target) && e.target !== $button[0]) {
-                $dropdown.removeClass('show').appendTo($button.parent());
-                $dropdown.css({ top: '', left: '', position: '' });
-            }
-        });
-    });
-
-    // Reposition on window resize
-    $(window).on('resize', function() {
-        if (!isDesktop()) return;
-        $('.mobile-settings-btn').each(function() {
-            const $button = $(this);
-            const $dropdown = $button.next('.dropdown-menu');
-            if ($dropdown.hasClass('show')) {
-                positionSettingsDropdown($dropdown, $button);
-            }
-        });
-    });
+});
