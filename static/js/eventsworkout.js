@@ -20,6 +20,12 @@ function setupEventListeners() {
             saveSet($(this).attr('id') === 'comments-input-mobile');
         }
     });
+    // Click handler
+$(document).on("click", ".date-cell", function() {
+    $(".date-cell").removeClass("selected");
+    $(this).addClass("selected");
+    copyWorkoutToDate($(this).data("date"));
+});
 
     // Template handling
     $("#save-template-btn").click(saveTemplate);
@@ -91,10 +97,6 @@ function setupRirDropdowns() {
     });
 }
 
-// Reattach when workout content changes (for mobile/desktop switching)
-$(document).on('workoutContentChanged', function() {
-    attachTemplateEventHandlers();
-});
 
 function setupExerciseCompletion() {
     $(document).on('click', '.complete-exercise-icon', function(e) {
@@ -183,7 +185,6 @@ function markExerciseCompleted(exerciseId, groupName, date) {
         $exercise.find('.toggle-exercise').click();
     }
 
-    // --- AJAX call removed ---
 }
 
 
@@ -275,7 +276,7 @@ $(document).on("click", ".delete-item", function() {
     const row = $button.closest("tr");
     const setId = row.data("set-id");
     
-    if (!confirm("Are you sure you want to delete this set?")) return;
+
     
     // Disable button & show spinner
     $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
@@ -356,13 +357,93 @@ function handleSetUpdate() {
 }
 
 // Add this function to properly attach event handlers
-function attachTemplateEventHandlers() {
-    // Remove any existing handlers to prevent duplication
-    $(".template-item").off('click');
-    
-    // Attach new handlers
-    $(".template-item").on('click', function(e) {
-        e.preventDefault();
-        previewTemplate($(this).data('id'));
+$(document).on('click', '.quick-add-set', function () {
+    const $exercise = $(this).closest('.exercise');
+    const exerciseId = $exercise.data('exercise-id');
+    const date = $(".workout-date.active").data("date");
+    const muscleGroup = $exercise.data('muscle-group');
+
+    const $tbody = $exercise.find("tbody");
+    const $lastRow = $tbody.find("tr:last");
+
+    // Clone last set values
+    const reps = parseInt($lastRow.find(".set-reps").val() || 0, 10);
+    const weight = parseFloat($lastRow.find(".set-weight").val() || 0);
+    const rirText = $lastRow.find(".rir-badge").text().trim();
+    const rir = rirText === "Failure" ? "Failure" : rirText.includes("RiR") ? parseInt(rirText) : null;
+    const comments = $lastRow.find(".comment-icon").data("comment") || "";
+
+    $.post("/workout/save_set", {
+        date: date,
+        exercise_id: exerciseId,
+        reps: reps,
+        weight: weight,
+        muscle_group: muscleGroup,
+        sets_count: 1,
+        rir: rir,
+        comments: comments
+    }, function(response) {
+        if (response.success) {
+            const newSetId = response.set_ids[0];
+            const setIndex = $tbody.find(".set-row").length + 1;
+
+            const rirDisplay = `
+                <div class="rir-dropdown">
+                    <span class="rir-badge">${rir || "None"}</span>
+                    <div class="rir-options">
+                        <div class="rir-option" data-value="Failure">Failure</div>
+                        <div class="rir-option" data-value="1">1 RiR</div>
+                        <div class="rir-option" data-value="2">2 RiR</div>
+                        <div class="rir-option" data-value="3">3 RiR</div>
+                        <div class="rir-option" data-value="4">4 RiR</div>
+                        <div class="rir-option" data-value="5">5 RiR</div>
+                    </div>
+                </div>
+            `;
+
+            const commentIcon = comments
+                ? `<i class="fas fa-comment comment-icon" data-comment="${comments.replace(/"/g, '&quot;')}"></i>`
+                : `<i class="far fa-comment comment-icon" data-comment=""></i>`;
+
+            const newRow = $(`
+                <tr class="set-row" data-set-id="${newSetId}">
+                    <td class="set-number-cell">
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">${setIndex}</div>
+                            <div class="set-details">
+                                ${rirDisplay}
+                                ${commentIcon}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control set-reps set-input" value="${reps}" data-original="${reps}">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control set-weight set-input" value="${weight}" data-original="${weight}" step="0.5">
+                    </td>
+                    <td class="volume-display">${(reps * weight).toFixed(1)}</td>
+                    <td class="actions-cell">
+                        <button class="btn delete-item">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+
+            $tbody.append(newRow);
+
+            // Attach instant volume calculation for the new row
+            newRow.find(".set-reps, .set-weight").on('input', function() {
+                const $row = $(this).closest('tr');
+                const repsVal = parseFloat($row.find(".set-reps").val() || 0);
+                const weightVal = parseFloat($row.find(".set-weight").val() || 0);
+                $row.find(".volume-display").text((repsVal * weightVal).toFixed(1));
+            });
+
+        } else {
+            alert("Error: " + response.error);
+            console.error(response.error);
+        }
     });
-}
+});
