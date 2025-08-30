@@ -1249,7 +1249,7 @@ input[type=number] {
             border-color: #353535 !important;
             transform: translate(-50%, -50%);
             z-index: 10; /* ensures it’s above other elements */
-            background-color: #101010;
+            background: linear-gradient(to right, #111111, #272727, #111111);
             color: #ffffff;
             border-radius: 30px;
             padding: 2px;
@@ -1431,7 +1431,9 @@ input[type=number] {
             padding: 8px 15px !important;
             font-size: 14px !important;
         }
-        
+        .mobile-settings-btn i {
+    font-size: 20px !important;
+}
         /* ===== MEDIA QUERIES ===== */
         @media (max-width: 1400px) {
             .nutrition-grid-container {
@@ -2589,17 +2591,13 @@ input[type=number] {
             <h6>Nutrition Breakdown</h6>
         </div>
         <div class="card-body">
-            <div class="nutrition-grid-mobile">
-                <div class="grid-row-mobile">
+                <div class="grid-row-mobile w-100">
                     <div class="grid-cell-mobile grid-calories-mobile" id="mobile-calories-cell">
-                        <i class="fas fa-balance-scale"></i>
-                        <span>TODAY</span>
-                        <div class="grid-value" id="calorie-difference-mobile">{{ calorie_difference }}</div>
-                    <div class="grid-status status-loss" id="calorie-status-mobile">{{ calorie_status }}</div>
-                    </div>
-                </div>
-                <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile grid-header-mobile">
+                        <i class="fas fa-fire"></i>
+                        <span>CALORIES</span>
+                        <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
+                         </div>
+                                            <div class="grid-cell-mobile grid-header-mobile">
                         <i class="fas fa-running"></i>
                         <span>ACTIVITY</span>
                         <div class="grid-value" id="mobile-tdee">{% if current_tdee %}
@@ -2608,12 +2606,15 @@ input[type=number] {
                                 Not calculated
                             {% endif %}</div>
                     </div>
+                    </div>
                 </div>
+                            <div class="nutrition-grid-mobile">
                 <div class="grid-row-mobile">
                     <div class="grid-cell-mobile grid-calories-mobile" id="mobile-calories-cell">
-                        <i class="fas fa-fire"></i>
-                        <span>CALORIES</span>
-                        <div class="grid-value" id="mobile-calories">{{ totals.calories | round(1) }}</div>
+                        <i class="fas fa-balance-scale"></i>
+                        <span>TODAY</span>
+                        <div class="grid-value" id="calorie-difference-mobile">{{ calorie_difference }}</div>
+                    <div class="grid-status status-loss" id="calorie-status-mobile">{{ calorie_status }}</div>
                     </div>
                 </div>
                 <div class="grid-row-mobile">
@@ -2653,9 +2654,7 @@ input[type=number] {
                         <span>FIBER</span>
                         <div class="grid-value" id="mobile-fiber">{{ totals.fiber | round(1) }}g</div>
                     </div>
-                </div>
-                <div class="grid-row-mobile">
-                    <div class="grid-cell-mobile grid-salt-mobile" id="mobile-salt-cell">
+                             <div class="grid-cell-mobile grid-salt-mobile" id="mobile-salt-cell">
                         <i class="fas fa-mortar-pestle"></i>
                         <span>SALT</span>
                         <div class="grid-value" id="mobile-salt">{{ totals.salt | round(1) }}g</div>
@@ -4437,7 +4436,3 @@ function applyTemplate() {
     </script>
 </body>
 </html>
-
-
-
-
