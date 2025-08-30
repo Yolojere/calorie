@@ -31,7 +31,6 @@ $(document).ready(function() {
     setupCommentTooltips();
     // Setup exercise completion functionality
     setupExerciseCompletion();
-    attachTemplateEventHandlers();
 });
 
 // ===== INITIALIZATION FUNCTIONS =====
