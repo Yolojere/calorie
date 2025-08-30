@@ -202,6 +202,7 @@ function renderWorkoutSession(session, exercises) {
                                     <div class="complete-option" data-value="asdadasd">Finished set?</div>
                                     <div class="complete-option" data-value="yes">Yes</div>
                                     <div class="complete-option" data-value="no">No</div>
+                                     <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
                                 </div>
                             </div>
                             <div class="exercise-title">${exercise.name}</div>
@@ -392,8 +393,6 @@ function renderTemplates(templates) {
             $templateListMobile.append(item);
         });
         
-        // Reattach event handlers after populating the lists
-        attachTemplateEventHandlers();
     } else {
         const noItem = '<li><a class="dropdown-item" href="#">No templates found</a></li>';
         $templateListDesktop.append(noItem);
@@ -440,3 +439,24 @@ function populateMobileDateSelector(selectedDate) {
         $selector.append(`<option value="${d.date}" ${selected ? 'selected' : ''}>${d.formatted}</option>`);
     });
 }
+// Navigation
+let currentMonth = new Date();
+$(document).on("click", ".month-nav.prev", function() {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    renderCalendar(currentMonth);
+});
+$(document).on("click", ".month-nav.next", function() {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    renderCalendar(currentMonth);
+});
+
+// Init on modal open
+$('#copyWorkoutModal').on('shown.bs.modal', function() {
+    renderCalendar(currentMonth);
+});
+    // glow up on date selector copy button
+    $(document).on("click", ".date-option", function() {
+    $(".date-option").removeClass("active");
+    $(this).addClass("active");
+    copyWorkoutToDate($(this).data("date"));
+});
