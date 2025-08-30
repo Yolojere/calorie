@@ -379,7 +379,6 @@
         border: 1px solid #333;
         right: 0 !important;
         width: 120px;
-        position: absolute !important;
     }
 
     .dropdown-item {
@@ -909,9 +908,10 @@
         color: var(--text-primary);
     }
 
-    .mobile-toggle-content {
+    .mobile-toggle-content .dropdown{
         padding: 15px;
         background-color: var(--bg-secondary);
+        position: relative;
     }
 
     .mobile-toggle-header .toggle-arrow {
@@ -936,6 +936,7 @@
             overflow-y: auto !important;
             height: auto !important;
             min-height: 200px;
+            z-index: 1 !important;
         }
         
         /* Desktop only comment tooltip */
@@ -1166,7 +1167,6 @@
             </a>
                             <div class="nav-logo-box">
     <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
-</div>
             
             <!-- Mobile Settings Dropdown -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
@@ -1477,13 +1477,11 @@
                                     <button class="btn btn-jere dropdown-toggle w-70" type="button" id="templateDropdown" data-bs-toggle="dropdown">
                                         <i class="fas fa-clipboard-list me-1"></i> Apply Template
                                     </button>
-                                    {% if current_user_role == 'admin' %}
                                     <div class="col-12 mt-2">
                                         <button class="btn btn-jere w-70" id="save-template-btn">
                                             <i class="fas fa-save me-1"></i> Save Template
                                         </button>
                                     </div>
-                                    {% endif %}
                                     <ul class="dropdown-menu dropdown-menu-end w-70" id="template-list-desktop">
                                         <li><a class="dropdown-item" href="#">Loading templates...</a></li>
                                     </ul>
@@ -1508,14 +1506,13 @@
                     <div class="mobile-toggle-content collapse" id="extras-body">
                         <div class="extras-buttons">
                             <div class="dropdown mb-2">
-                                <button class="btn btn-jere dropdown-toggle w-100" type="button" id="templateDropdownMobile" data-bs-toggle="dropdown">
-                                    <i class="fas fa-clipboard-list me-1"></i> Apply Template
-                                </button>
-                                {% if current_user_role == 'admin' %}
+                                <button class="btn btn-jere dropdown-toggle w-100" type="button" id="templateDropdownMobile"
+                                    data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="true">
+                                <i class="fas fa-clipboard-list me-1"></i> Apply Template
+                            </button>
                                 <button class="btn btn-jere w-100" id="save-template-mobile-btn">
                                     <i class="fas fa-save me-1"></i> Save Template
                                 </button>
-                                {% endif %}
                                 <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
                                     <li><a class="dropdown-item" href="#">Loading templates...</a></li>
                                 </ul>
@@ -1672,7 +1669,17 @@
             }
         }
     });
-    
+    document.addEventListener('DOMContentLoaded', function() {
+    var dropdownEl = document.getElementById('templateDropdownMobile');
+    new bootstrap.Dropdown(dropdownEl, {
+        popperConfig: {
+            modifiers: [
+                { name: 'preventOverflow', options: { boundary: 'viewport' } },
+                { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } }
+            ]
+        }
+    });
+});
     // Get CSRF token for use in fetch requests
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
     </script>
@@ -1685,4 +1692,3 @@
 
 </body>
 </html>
-
