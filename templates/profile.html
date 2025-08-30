@@ -486,11 +486,11 @@
                 <!-- Left Section: Avatar + User Info -->
                 <div class="text-center flex-shrink-0">
                     <!-- Determine avatar folder based on whether it's a predefined avatar or uploaded -->
-                    {% if current_avatar in ['default.png', 'avatar1.png', 'avatar2.png', 'avatar3.png', 'avatar4.png', 'avatar5.png', 'avatar6.png', 'avatar7.png'] %}
-                        {% set avatar_folder = 'avatars' %}
-                    {% else %}
-                        {% set avatar_folder = 'uploads' %}
-                    {% endif %}
+                   {% if current_avatar in predefined_avatars %}
+    {% set avatar_folder = 'avatars' %}
+{% else %}
+    {% set avatar_folder = 'uploads' %}
+{% endif %}
                     
                     <!-- Main Avatar - Clickable -->
                      <div class="avatar-container" id="avatar-container">
