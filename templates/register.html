@@ -4,232 +4,260 @@
 
 {% block head %}
 <style>
-    /* === REGISTER PAGE SPECIFIC STYLES === */
-    .register-card {
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    /* === GENERAL PAGE STYLING === */
+    .container-page {
+        background-color: #1b1b1b;
+        padding: 2rem 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
     }
-    
-    .card-header {
-        background: linear-gradient(to right, #e0e0e0, #807f7f);
-        color: #000;
-        font-weight: bold;
+
+    .card {
+        background-color: #2b2b2b;
+        border: 1px solid #444;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        max-width: 500px;
+        width: 100%;
     }
-    
+
+    .card-header h3 {
+        color: white;
+        margin: 0;
+    }
+
+.form-control, .form-select {
+    background-color: #121212 !important;
+    border: 1px solid #333 !important;
+    color: #eee;
+    border-radius: 5px !important;
+    font-size: 14px !important;
+    padding: 6px 12px !important;
+    height: 36px !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Focus state */
+.form-control:focus, .form-select:focus {
+    border-color: #555 !important;
+    box-shadow: none !important; /* remove Bootstrap blue glow */
+    background-color: #181818 !important;
+    color: #eee !important;
+    outline: none !important;
+    border: 1px solid #333 !important;
+}
+
+/* Placeholder styling */
+.form-control::placeholder, .form-select::placeholder {
+    color: #ddd !important;
+    opacity: 0.6;
+}
+
+/* Autofill overrides (Chrome) */
+input.form-control:-webkit-autofill {
+    box-shadow: 0 0 0px 1000px #121212 inset !important;
+    -webkit-text-fill-color: #eee !important;
+    border-color: #333 !important;
+    color: white !important;
+}
+
+/* Remove text-muted and make it white */
+.text-muted {
+    color: #eee !important;
+}
+
+/* Optional: remove orange outline on images inside input groups */
+.input-group-text img {
+    outline: none !important;
+    border: none !important;
+}
+
+/* Optional: chain input to image for smooth rounded edges */
+.input-group {
+    border-radius: 20px;
+    overflow: hidden;
+}
+.input-group .input-group-text:first-child {
+    border-radius: 20px 0 0 20px;
+}
+.input-group .form-control {
+    border-radius: 0 10px 10px 0;
+    margin: 0;
+}
+
     .input-group-text {
-        background-color: #333 !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #555 !important;
+        background-color: #0f0f0f;
+        border-color: #3b3b3b;
+        color: white;
     }
-    
-    .form-control {
-        background-color: #333 !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #555 !important;
+
+    .btn-jere {
+        display: inline-block;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid #444;
+        border-radius: 20px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.1s ease;
     }
-    
-    .form-control::placeholder {
-        color: #aaa !important;
+
+    .btn-jere:hover, .btn-jere:focus {
+        background-color: #d4d4d4 !important;
+        color: black !important;
+        transform: scale(1.02);
     }
-    
-    /* Autofill fix for Chrome */
-    input.form-control:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px #333 inset !important;
-        -webkit-text-fill-color: #e0e0e0 !important;
-        border-color: #555 !important;
+
+    .btn-jere.active {
+        background: #858585 !important;
+        color: #000000 !important;
     }
-    
-    .btn-accent {
-        background: linear-gradient(to right, #e0e0e0, #807f7f) !important;
-        color: #000 !important;
-        font-weight: bold;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-accent:hover {
-        background: linear-gradient(to right, #e0e0e0, #e0e0e0) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-    
+
     .accent-color {
-        color: #5de997;
+        color: #ffffff;
+        text-decoration: none;
     }
-    
+    .accent-color:hover {
+        text-decoration: underline;
+    }
+
+    /* Progress bar / password strength */
     .progress {
         background-color: #333;
         height: 8px;
+        border-radius: 6px;
     }
-    
     .progress-bar {
         transition: width 0.5s ease;
+        border-radius: 6px;
     }
-    
+    .bg-weak { background-color: #b61336 !important; }
+    .bg-medium { background-color: #ffd166 !important; }
+    .bg-strong { background-color: #06d6a0 !important; }
+
     /* Security icons */
-    .fa-shield-alt, .fa-lock, .fa-user-check {
-        color: #e0e0e0;
+    .fa-2x {
+        color: white;
         transition: transform 0.3s ease;
     }
-    
-    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-check:hover {
-        transform: scale(1.2);
-    }
-    
-    /* Password strength colors */
-    .bg-weak {
-        background-color: #b61336 !important;
-    }
-    
-    .bg-medium {
-        background-color: #ffd166 !important;
-    }
-    
-    .bg-strong {
-        background-color: #06d6a0 !important;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .register-card {
-            box-shadow: none;
-        }
-    }
+    .fa-2x:hover { transform: scale(1.2); }
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-page">
-    <div class="content-section animated">
-        <div class="card register-card">
-            <div class="card-header">
-                <h3 class="text-center">Create Your Account</h3>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" action="">
-                    {{ form.hidden_tag() }}
-                    
-                    <!-- Username Field -->
-                    <div class="mb-4">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            {{ form.username(class="form-control", placeholder="Choose a username") }}
-                        </div>
-                        {% if form.username.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.username.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Email Field -->
-                    <div class="mb-4">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-envelope"></i>
-                            </span>
-                            {{ form.email(class="form-control", placeholder="Enter your email address") }}
-                        </div>
-                        {% if form.email.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.email.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Password Field -->
-                    <div class="mb-4">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
-                        </div>
-                        {% if form.password.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.password.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Confirm Password Field -->
-                    <div class="mb-4">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
-                        </div>
-                        {% if form.confirm_password.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.confirm_password.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Password Strength Indicator -->
-                    <div class="mb-4">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: 0%" id="password-strength"></div>
-                        </div>
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> Use at least 8 characters with a mix of letters, numbers & symbols
-                        </small>
-                    </div>
-                    
-                    <!-- Submit Button -->
-                    <div class="d-grid mt-4">
-                        {{ form.submit(class="btn btn-accent") }}
-                    </div>
-                    
-                    <!-- Terms Agreement -->
-                    <div class="mt-4 text-center small text-muted">
-                        <span style="color: white;">By creating an account, you agree to our </span><a href="#" class="accent-color">Terms of Service</a><span style="color: white;"> and </span> <a href="#" class="accent-color">Privacy Policy</a></p>
-                    </div>
-                </form>
-            </div>
+    <div class="card p-4">
+        <div class="card-header text-center mb-3">
+            <h3>Create Your Account</h3>
         </div>
-        
-        <!-- Login Prompt -->
-        <div class="card mt-4">
-            <div class="card-body text-center py-3">
-                <p class="mb-0">Already have an account? 
-                    <a href="{{ url_for('login') }}" class="accent-color fw-bold">
-                        <i class="fas fa-sign-in-alt me-1"></i> Sign In
-                    </a>
-                </p>
-            </div>
-        </div>
-        
-        <!-- Security Features -->
-        <div class="text-center mt-4">
-            <div class="d-flex justify-content-center">
-                <div class="me-4 text-center">
-                    <i class="fas fa-shield-alt fa-2x"></i>
-                    <p class="mt-2">Secure</p>
+        <div class="card-body">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                                <!-- Email -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        {{ form.email(class="form-control", placeholder="Enter your email address") }}
+                    </div>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="me-4 text-center">
-                    <i class="fas fa-lock fa-2x"></i>
-                    <p class="mt-2">Encrypted</p>
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        {{ form.username(class="form-control", placeholder="Choose a username") }}
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="text-center">
-                    <i class="fas fa-user-check fa-2x"></i>
-                    <p class="mt-2">Verified</p>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
+                    </div>
+                    {% if form.confirm_password.errors %}
+                        <div class="invalid-feedback d-block mt-1">
+                            {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Strength -->
+                <div class="mb-3">
+                    <div class="progress mb-2">
+                        <div class="progress-bar" role="progressbar" style="width:0%" id="password-strength"></div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i> Use at least 8 characters with a mix of letters, numbers & symbols
+                    </small>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-grid mb-3">
+                    {{ form.submit(class="btn-jere") }}
+                </div>
+
+                <!-- Terms -->
+                <div class="text-center small text-muted mt-2">
+                    <span style="color: white;">By creating an account, you agree to our </span>
+                    <a href="#" class="accent-color">Terms of Service</a> <span style="color: white;">and</span> 
+                    <a href="#" class="accent-color">Privacy Policy</a>
+                </div>
+
+                <!-- Login Prompt (moved inside card) -->
+                <div class="text-center mt-4">
+                    <p class="mb-0">Already have an account? 
+                        <a href="{{ url_for('login') }}" class="accent-color fw-bold">
+                            <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Security Features (also inside card) -->
+                <div class="text-center mt-4">
+                    <div class="d-flex justify-content-center">
+                        <div class="me-4 text-center">
+                            <i class="fas fa-shield-alt fa-2x"></i>
+                            <p class="mt-2">Secure</p>
+                        </div>
+                        <div class="me-4 text-center">
+                            <i class="fas fa-lock fa-2x"></i>
+                            <p class="mt-2">Encrypted</p>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                            <p class="mt-2">Verified</p>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -238,44 +266,27 @@
     // Password strength indicator
     document.getElementById('password').addEventListener('input', function() {
         const password = this.value;
-        const strengthBar = document.getElementById('password-strength');
+        const bar = document.getElementById('password-strength');
         let strength = 0;
-        let strengthClass = '';
-        
-        // Length check
+
         if (password.length >= 8) strength += 25;
-        
-        // Uppercase check
         if (/[A-Z]/.test(password)) strength += 25;
-        
-        // Number check
         if (/[0-9]/.test(password)) strength += 25;
-        
-        // Special character check
         if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-        
-        strengthBar.style.width = strength + '%';
-        
-        // Update color based on strength
-        if (strength < 50) {
-            strengthBar.className = 'progress-bar bg-weak';
-        } else if (strength < 75) {
-            strengthBar.className = 'progress-bar bg-medium';
-        } else {
-            strengthBar.className = 'progress-bar bg-strong';
-        }
+
+        bar.style.width = strength + '%';
+        bar.className = 'progress-bar ' + (strength < 50 ? 'bg-weak' : strength < 75 ? 'bg-medium' : 'bg-strong');
     });
-    
-    // Input focus enhancement
+
+    // Input focus enhancements
     document.querySelectorAll('.form-control').forEach(input => {
         input.addEventListener('focus', function() {
-            this.parentElement.querySelector('.input-group-text').style.borderColor = '#f08e0e';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#444';
+            this.parentElement.querySelector('.input-group-text').style.borderColor = '';
+            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '';
         });
-        
         input.addEventListener('blur', function() {
-            this.parentElement.querySelector('.input-group-text').style.borderColor = '#555';
-            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '#333';
+            this.parentElement.querySelector('.input-group-text').style.borderColor = '';
+            this.parentElement.querySelector('.input-group-text').style.backgroundColor = '';
         });
     });
 </script>
