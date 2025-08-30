@@ -70,7 +70,7 @@
             border-color: #353535 !important;
             transform: translate(-50%, -50%);
             z-index: 10; /* ensures it’s above other elements */
-            background-color: #101010;
+            background: linear-gradient(to right, #111111, #272727, #111111);
             color: #ffffff;
             border-radius: 30px;
             padding: 2px;
@@ -192,10 +192,20 @@
         }
         
         .alert-danger {
-            background-color: #3c1a1a;
-            color: #e0a0a0;
-            border-color: #5a2a2a;
-        }
+    position: fixed;        /* stays in place even when scrolling */
+    top: 50%;               /* 50% from the top of the viewport */
+    left: 50%;              /* 50% from the left of the viewport */
+    transform: translate(-50%, -50%); /* center it exactly */
+    z-index: 1050;          /* ensures it appears above most content */
+    
+    background-color: #3c1a1a;
+    color: #e0a0a0;
+    border-color: #5a2a2a;
+    padding: 1rem 1.5rem;   /* adjust padding if needed */
+    border-radius: 0.25rem; /* optional, matches Bootstrap alert */
+    min-width: 300px;       /* optional, ensures a good width */
+    text-align: center;     /* centers the text */
+}
         
         .alert-info {
             background-color: #1a3a5a;
@@ -231,6 +241,7 @@
 </head>
 <body>
     <div id="toastNotification" class="toast-notification"></div>
+    {% if request.endpoint not in ['login', 'register', 'reset_request'] %}
     <!-- Updated Navbar for layout -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
@@ -374,7 +385,7 @@
             </div>
         </div>
     </nav>
-
+ {% endif %}
     <!-- Main Content -->
     <div class="container-page">
         <!-- Flash Messages -->
@@ -421,5 +432,3 @@
     {% block scripts %}{% endblock %}
 </body>
 </html>
-
-
