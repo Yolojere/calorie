@@ -581,8 +581,16 @@ def load_user(user_id):
     cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
     user = cursor.fetchone()
     conn.close()
+
     if user:
-        return User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+        return User(
+            id=user['id'],
+            username=user['username'],
+            email=user['email'],
+            role=user['role'],
+            tdee=user.get('tdee'),        # Add TDEE
+            weight=user.get('weight')     # Add weight
+        )
     return None
 
 # Helper functions
@@ -933,25 +941,16 @@ def normalize_food_keys():
 @app.route('/')
 @login_required
 def index():
-    user_id = current_user.id
-
-    # Fetch latest weight & TDEE from DB
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT weight, tdee FROM users WHERE id = %s", (user_id,))
-    user_metrics = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    current_weight = user_metrics[0] if user_metrics and user_metrics[0] else 0
-    current_tdee = user_metrics[1] if user_metrics and user_metrics[1] else 0
+    # Use current_user directly
+    current_weight = current_user.weight or 0
+    current_tdee = current_user.tdee or 0
 
     # Get session data
-    eaten_items, current_date = get_current_session(user_id)
+    eaten_items, current_date = get_current_session(current_user.id)
     totals = calculate_totals(eaten_items)
     food_usage = get_food_usage()
     group_breakdown = calculate_group_breakdown(eaten_items)
-    
+
     # Generate dates for selector - 3 days past, today, 3 days future
     dates = []
     today = datetime.now()
@@ -961,11 +960,13 @@ def index():
         dates.append((date_str, formatted_date))
 
     current_date_formatted = format_date(current_date)
+
+    # Ensure each item has a 'key' property
     for group, group_data in group_breakdown.items():
         for item in group_data['items']:
-            # Ensure each item has a key property (as a dictionary key, not attribute)
             if 'key' not in item:
-                item['key'] = item['id']  # Use dictionary access, not attribute access
+                item['key'] = item['id']
+
     return render_template(
         'index.html',
         eaten_items=eaten_items,
@@ -975,8 +976,8 @@ def index():
         dates=dates,
         food_usage=food_usage,
         group_breakdown=group_breakdown,
-        current_tdee=current_tdee,        # latest TDEE
-        current_weight=current_weight     # latest weight
+        current_tdee=current_tdee,
+        current_weight=current_weight
     )
 
 
@@ -3192,163 +3193,28 @@ def update_comment():
 
     return jsonify({'success': True})
 
-def extract_nutrition_data(mindee_response):
-    """
-    Extract nutrition data from Mindee API response
-    with support for Finnish nutrient names and kJ conversion.
-    """
-    nutrition_data = {}
+@app.route('/get_nutrition_targets')
+@login_required
+def get_nutrition_targets():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT weight FROM users WHERE id = %s", (current_user.id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
-    # Finnish → English mapping
-    NUTRIENT_MAP = {
-        "rasva": "fat",
-        "tyydyttynyt rasva": "saturated fat",
-        "hiilihydraatit": "carbohydrate",
-        "sokerit": "sugars",
-        "proteiini": "protein",
-        "suola": "salt",
-        "kuitu": "fiber",
-        "energia": "energy"
+    user_weight = result[0] if result and result[0] else 0
+
+    targets = {
+        'proteins': user_weight * 2,
+        'fats': user_weight * 0.8,
+        'salt': 5,
+        'saturated': 20,
+        'sugar': 60,
+        'fiber': 30
     }
 
-    try:
-        predictions = mindee_response.get('document', {}).get('inference', {}).get('prediction', {})
-
-        # Product name
-        if 'product_name' in predictions:
-            nutrition_data['product_name'] = predictions['product_name'].get('value')
-
-        # Nutrients
-        nutrients = predictions.get('nutrients', [])
-        for nutrient in nutrients:
-            nutrient_name = nutrient.get('name', '').lower()
-            nutrient_value = nutrient.get('quantity')
-            nutrient_unit = nutrient.get('unit', '').lower()
-
-            if not nutrient_name or nutrient_value is None:
-                continue
-
-            # Map Finnish to English
-            nutrient_name = NUTRIENT_MAP.get(nutrient_name, nutrient_name)
-
-            # Energy: convert kJ → kcal if needed
-            if nutrient_name in ["energy", "energy kcal"]:
-                if nutrient_unit == "kj":
-                    nutrition_data['calories'] = round(nutrient_value / 4.184, 2)
-                else:
-                    nutrition_data['calories'] = nutrient_value
-
-            elif nutrient_name in ["fat", "total fat"]:
-                nutrition_data['fats'] = nutrient_value
-            elif nutrient_name == "saturated fat":
-                nutrition_data['saturated_fat'] = nutrient_value
-            elif nutrient_name in ["carbohydrate", "total carbohydrate"]:
-                nutrition_data['carbohydrates'] = nutrient_value
-            elif nutrient_name in ["sugars", "sugar"]:
-                nutrition_data['sugars'] = nutrient_value
-            elif nutrient_name in ["fiber", "dietary fiber"]:
-                nutrition_data['fiber'] = nutrient_value
-            elif nutrient_name == "protein":
-                nutrition_data['proteins'] = nutrient_value
-            elif nutrient_name in ["salt", "sodium"]:
-                if nutrient_name == "sodium":
-                    nutrition_data['salt'] = nutrient_value * 2.5  # Na → salt conversion
-                else:
-                    nutrition_data['salt'] = nutrient_value
-
-        return nutrition_data
-
-    except Exception as e:
-        print(f"Error extracting nutrition data: {e}")
-        return nutrition_data
-
-@app.route('/process_nutrition_label', methods=['POST'])
-@login_required
-def process_nutrition_label():
-    try:
-        api_key = current_app.config.get('MINDEE_API_KEY')
-        if not api_key:
-            return jsonify({'success': False, 'error': 'Mindee API key not configured in .env'})
-
-        # Choose endpoint based on sandbox flag
-        if current_app.config.get('MINDEE_USE_SANDBOX'):
-            api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict/sandbox"
-        else:
-            api_url = "https://api.mindee.net/v1/products/mindee/nutrition_facts/v1/predict"
-
-        # Check if image was uploaded
-        if 'image' not in request.files:
-            return jsonify({'success': False, 'error': 'No image uploaded'})
-
-        image_file = request.files['image']
-        image_data = image_file.read()
-        encoded_image = base64.b64encode(image_data).decode('utf-8')
-
-        headers = {
-            'Authorization': f'Token {api_key}',
-            'Content-Type': 'application/json',
-        }
-        data = {'document': encoded_image}
-
-        response = requests.post(api_url, headers=headers, json=data)
-
-        # Handle common errors
-        if response.status_code == 401:
-            return jsonify({'success': False, 'error': 'Unauthorized: Check your Mindee API key or endpoint (sandbox vs production)'})
-        elif response.status_code != 201:
-            return jsonify({'success': False, 'error': f'Mindee API error: {response.status_code} - {response.text}'})
-
-        result = response.json()
-        nutrition_data = extract_nutrition_data(result)
-
-        return jsonify({'success': True, 'data': nutrition_data})
-
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-
-def extract_nutrition_data(mindee_response):
-    """
-    Extract nutrition data from Mindee API response
-    """
-    nutrition_data = {}
-
-    try:
-        predictions = mindee_response.get('document', {}).get('inference', {}).get('prediction', {})
-
-        if 'product_name' in predictions:
-            nutrition_data['product_name'] = predictions['product_name']['value']
-
-        nutrients = predictions.get('nutrients', [])
-        for nutrient in nutrients:
-            name = nutrient.get('name', '').lower()
-            value = nutrient.get('quantity')
-            unit = nutrient.get('unit')
-
-            if name and value is not None:
-                if name in ['energy', 'energy kcal']:
-                    nutrition_data['calories'] = value
-                elif name in ['fat', 'total fat']:
-                    nutrition_data['fats'] = value
-                elif name == 'saturated fat':
-                    nutrition_data['saturated_fat'] = value
-                elif name in ['carbohydrate', 'total carbohydrate']:
-                    nutrition_data['carbohydrates'] = value
-                elif name in ['sugars', 'sugar']:
-                    nutrition_data['sugars'] = value
-                elif name in ['fiber', 'dietary fiber']:
-                    nutrition_data['fiber'] = value
-                elif name == 'protein':
-                    nutrition_data['proteins'] = value
-                elif name in ['salt', 'sodium']:
-                    nutrition_data['salt'] = value if name == 'salt' else value * 2.5
-
-        return nutrition_data
-
-    except Exception as e:
-        print(f"Error extracting nutrition data: {e}")
-        return nutrition_data
-
+    return jsonify(targets)
     
 @app.route('/foods')
 def list_foods():
