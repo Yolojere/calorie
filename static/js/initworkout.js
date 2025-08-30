@@ -105,62 +105,51 @@ function setupMobileDateSelector() {
 // ===============================
     function positionDropdown($dropdown, $toggle) {
     const offset = $toggle.offset();
-    const scrollTop = $(window).scrollTop();
-    const scrollLeft = $(window).scrollLeft();
 
-    if ($(window).width() >= 992) { // desktop
-        // dropdown under the button
-        $dropdown.css({
-            position: 'absolute',
-            top: offset.top + $toggle.outerHeight(),
-            left: offset.left,
-            zIndex: 2100,
-            minWidth: $toggle.outerWidth() // match button width if you want
-        });
-    } else {
-        // mobile: keep relative inside parent
-        $dropdown.css({
-            position: '',
-            top: '',
-            left: '',
-            zIndex: ''
-        });
-    }
+    $dropdown.css({
+        position: 'absolute',
+        top: offset.top + $toggle.outerHeight(),
+        left: offset.left,
+        zIndex: 2100,
+        minWidth: $toggle.outerWidth()
+    });
 }
 
+// Show event
 $('.dropdown').on('show.bs.dropdown', function() {
     const $toggle = $(this).find('[data-bs-toggle="dropdown"]');
     const $dropdown = $(this).find('.dropdown-menu');
 
-    // save original CSS
+    // Save original styles
     $dropdown.data('original-style', $dropdown.attr('style') || '');
 
-    if ($(window).width() >= 992) {
-        // append to body for desktop
-        $dropdown.appendTo('body');
-        positionDropdown($dropdown, $toggle);
+    // Append dropdown to body for mobile & desktop
+    $dropdown.appendTo('body');
 
-        // reposition on scroll/resize
-        $(window).on('scroll.dropdown resize.dropdown', function() {
-            if ($toggle.parent().hasClass('show')) positionDropdown($dropdown, $toggle);
-        });
-    }
+    // Position it
+    positionDropdown($dropdown, $toggle);
+
+    // Reposition on scroll/resize
+    $(window).on('scroll.dropdown resize.dropdown', function() {
+        if ($toggle.parent().hasClass('show')) positionDropdown($dropdown, $toggle);
+    });
 });
 
+// Hide event
 $('.dropdown').on('hide.bs.dropdown', function() {
     const $dropdown = $(this).find('.dropdown-menu');
 
-    // return to original parent
+    // Return to original parent
     $dropdown.appendTo($(this));
 
-    // reset inline styles
+    // Reset inline styles
     $dropdown.attr('style', $dropdown.data('original-style'));
 
-    // remove scroll/resize handler
+    // Remove scroll/resize handlers
     $(window).off('scroll.dropdown resize.dropdown');
 });
 
-// click outside to close
+// Close when clicking outside
 $(document).on('click', function(e) {
     $('.dropdown.show').each(function() {
         const $dropdown = $(this).find('.dropdown-menu');
