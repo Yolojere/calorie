@@ -22,7 +22,7 @@ function generateDateOptionsForTemplate() {
 // format date for display
 function formatDateForDisplay(dateStr) {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-GB', { 
         weekday: 'short', 
         month: 'short', 
         day: 'numeric' 
@@ -142,9 +142,9 @@ function formatDateForSelector(date) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    let dateString = date.toLocaleDateString('en-US', { 
+    let dateString = date.toLocaleDateString('en-GB', { 
         weekday: 'short', 
-        month: 'short', 
+        month: 'numeric', 
         day: 'numeric' 
     });
 
