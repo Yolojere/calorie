@@ -132,6 +132,36 @@ input.form-control:-webkit-autofill {
     .fa-2x:hover {
         transform: scale(1.2);
     }
+.form-check-input {
+    background-color: #000000;
+    border-color: #a0a0a0;
+
+}
+.form-check-input:focus {
+    background-color: #010101;
+    border-color: #a0a0a0;
+    box-shadow: none !important;
+}
+.form-check-input:checked {
+    background-color: #4ca31a;
+    border-color: #ffffff !important;
+    border: 1px solid !important;
+    box-shadow: none !important;
+    animation: pop 0.25s ease forwards;
+}
+.form-check-input:not(:checked) {
+        background-color: #000000;
+    border-color: #a0a0a0;
+    font-size: 14px;
+}
+
+/* Pop animation */
+@keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.5); }
+    100% { transform: scale(1.2); }
+}
+form-check-label
 </style>
 
 <div class="container-page">
