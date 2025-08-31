@@ -199,9 +199,9 @@ function renderWorkoutSession(session, exercises) {
                                     <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
                                 </button>
                                 <div class="complete-exercise-options">
-                                    <div class="complete-option" data-value="asdadasd">Finished set?</div>
-                                    <div class="complete-option" data-value="yes">Yes</div>
-                                    <div class="complete-option" data-value="no">No</div>
+                                    <div class="complete-option" data-value="asdadasd">Complete Exercise?</div>
+                                    <div class="complete-option" data-value="yes">✔️ Yes</div>
+                                    <div class="complete-option" data-value="no">❌ No</div>
                                      <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
                                 </div>
                             </div>
