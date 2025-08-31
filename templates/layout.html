@@ -183,12 +183,30 @@
             border-radius: 4px;
             padding: 0.75rem 1.25rem;
             margin-bottom: 1rem;
+                position: fixed;        /* stays in place even when scrolling */
+    top: 50%;               /* 50% from the top of the viewport */
+    left: 50%;              /* 50% from the left of the viewport */
+    transform: translate(-50%, -50%); /* center it exactly */
+    z-index: 1050;          /* ensures it appears above most content */
+        padding: 1rem 1.5rem;   /* adjust padding if needed */
+    border-radius: 0.25rem; /* optional, matches Bootstrap alert */
+    min-width: 300px;       /* optional, ensures a good width */
+    text-align: center;     /* centers the text */
         }
         
         .alert-success {
             background-color: #1a3c1a;
             color: #a0e0a0;
             border-color: #2a5a2a;
+                position: fixed;        /* stays in place even when scrolling */
+    top: 50%;               /* 50% from the top of the viewport */
+    left: 50%;              /* 50% from the left of the viewport */
+    transform: translate(-50%, -50%); /* center it exactly */
+    z-index: 1050;          /* ensures it appears above most content */
+        padding: 1rem 1.5rem;   /* adjust padding if needed */
+    border-radius: 0.25rem; /* optional, matches Bootstrap alert */
+    min-width: 300px;       /* optional, ensures a good width */
+    text-align: center;     /* centers the text */
         }
         
         .alert-danger {
@@ -208,15 +226,33 @@
 }
         
         .alert-info {
-            background-color: #1a3a5a;
-            color: #a0c0e0;
-            border-color: #2a5a7a;
+            background-color: #d1d1d1;
+            color: #000000;
+            border-color: #2c2c2c;
+                position: fixed;        /* stays in place even when scrolling */
+    top: 50%;               /* 50% from the top of the viewport */
+    left: 50%;              /* 50% from the left of the viewport */
+    transform: translate(-50%, -50%); /* center it exactly */
+    z-index: 1050;          /* ensures it appears above most content */
+        padding: 1rem 1.5rem;   /* adjust padding if needed */
+    border-radius: 0.25rem; /* optional, matches Bootstrap alert */
+    min-width: 300px;       /* optional, ensures a good width */
+    text-align: center;     /* centers the text */
         }
         
         .alert-warning {
             background-color: #3c3a1a;
             color: #e0d0a0;
             border-color: #5a582a;
+                position: fixed;        /* stays in place even when scrolling */
+    top: 50%;               /* 50% from the top of the viewport */
+    left: 50%;              /* 50% from the left of the viewport */
+    transform: translate(-50%, -50%); /* center it exactly */
+    z-index: 1050;          /* ensures it appears above most content */
+        padding: 1rem 1.5rem;   /* adjust padding if needed */
+    border-radius: 0.25rem; /* optional, matches Bootstrap alert */
+    min-width: 300px;       /* optional, ensures a good width */
+    text-align: center;     /* centers the text */
         }
         
         /* Responsive adjustments */
