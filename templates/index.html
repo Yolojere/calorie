@@ -219,11 +219,12 @@
         
         .group-header {
             background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.8)) !important;
-            padding: 12px 15px !important;
+            padding: 8px 12px !important;
             border-radius: 8px 8px 0 0 !important;
             margin: 8px 0 0 0 !important;
             border: none !important;
             cursor: pointer;
+            line-height: 12px !important;
             transition: all 0.3s ease;
         }
         
@@ -240,15 +241,15 @@
         
         .group-icon {
             flex-shrink: 0;
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-right: 8px;
-            font-size: 16px;
+            font-size: 12px;
             color: white;
             border: 2px solid var(--group-color);
             box-shadow: 0 3px 6px rgba(0,0,0,0.2) inset, 0 0 0 1px rgba(0,0,0,0.3);
@@ -256,17 +257,20 @@
         
         .group-title {
             font-weight: bold;
-            font-size: 16px !important;
+            font-size: 14px !important;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: white;
+            width: 200px;
             text-shadow: 0 1px 3px rgba(0,0,0,0.3);
             flex: 1;
             min-width: 0;
+        
         }
         
         .group-items {
             max-height: none !important;
+            font-size: 12px;
             flex: 1;
             overflow-anchor: none;
             overflow: visible !important;
@@ -277,6 +281,7 @@
             border-bottom: 3px solid #00000079;
             border-radius: 0 0 6px 6px;
             margin-bottom: 15px;
+            line-height: 12px;
         }
         
         .toggle-group {
@@ -299,8 +304,7 @@
         .food-item-container {
             min-width: 40% !important;
             padding-right: 8px !important;
-            display: flex;
-            align-items: center;
+            display:flex;
             flex-grow: 1;
             transition: transform 0.1s ease;
         }
@@ -313,7 +317,7 @@
             background-color: #444 !important;
             border: 2px solid #424242 !important;
             box-shadow: 0 0 0 2px #636363, 0 0 10px rgba(53, 53, 53, 0.5) !important;
-            transform: scale(0.98);
+            transform: scale(0.99);
             transition: all 0.1s ease;
             background-color: #2a2a2a !important;
         }
@@ -376,7 +380,13 @@
         .group-nutrition-container .nutrition-value-xxs:hover {
             transform: scale(1.05);
         }
-        
+        /* alerts */
+        #ean-alert {
+    background-color: #2f2f2f; /* dark background */
+    color: #fff;               /* white text */
+    border: 1px solid #a62aff; /* gold border */
+    border-radius: 20px;
+}
         /* ===== REAL-TIME BREAKDOWN ===== */
         #rt-breakdown-container {
             margin: 15px 0;
@@ -514,18 +524,18 @@
         }
         
         .delete-item i {
-            font-size: 18px !important;
+            font-size: 12px !important;
             color: white !important;
         }
         
         .edit-grams {
-            padding: 1px 14px !important;
+            padding: 1px 7px !important;
             font-size: 12px !important;
-            min-width: 55px;
-            height: 16px !important;
+            min-width: 48px;
+            height: 14px !important;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             border-radius: 4px;
             transition: all 0.2s ease;
@@ -534,20 +544,20 @@
         }
         
         .edit-grams:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         .edit-grams-input {
-            padding: 1px 8px !important;
+            padding: 1px 6px !important;
             font-size: 12px !important;
-            width: 54px !important;
-            height: 20px !important;
+            width: 45px !important;
+            height: 16px !important;
             border-radius: 2px;
             background-color: #ffffff;
             color: black !important;
             border: 1px solid #ffffff;
-            font-weight: bold !important;
+            font-weight: 500 !important;
             text-align: center;
             outline: none;
             transition: all 0.2s ease;
@@ -1709,9 +1719,21 @@ input[type=number] {
             }
             
             .food-item-container {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
+    display: flex;
+           flex-direction:row;
+    align-items: flex-start;       /* align text and badge nicely at the top */
+    justify-content: space-between; /* keep badge on the right */
+    max-width: 40%;                   /* full width of li */                     /* optional spacing between text and badge */
+}
+
+.food-item-container > div {
+    flex: 1 1 auto;     /* allow the text container to grow and shrink */
+}
+
+.food-item-container strong {
+    display: block;     /* allow wrapping */
+    word-wrap: break-word !important; /* break long words if needed */
+}
             
             .nutrition-and-actions {
                 width: 100%;
@@ -1741,7 +1763,7 @@ input[type=number] {
             
             .group-header {
                 flex-wrap: nowrap !important;
-                padding: 8px 10px !important;
+                padding: 6px 8px !important;
             }
             
             .group-title {
@@ -4159,7 +4181,15 @@ function applyTemplate() {
                 $('#grid-fiber').text(safeParse(totals.fiber) + 'g');
                 $('#grid-salt').text(safeParse(totals.salt) + 'g');
             }
-
+$('#food-search').on('keypress', function(e) {
+    if (e.which === 13) { // Enter key
+        e.preventDefault();
+        const query = $(this).val().trim();
+        if (query.length > 0) {
+            performFoodSearch(query);
+        }
+    }
+});
             function updateMobileNutrition(totals) {
             const safeParse = (value) => {
                 const num = parseFloat(value) || 0;
@@ -4438,27 +4468,58 @@ function applyTemplate() {
                     }
                 }, 100);
             }
-            
+ 
             function performFoodSearch(query) {
-                $.post('/search_foods', { query }, data => {
-                    let resultsHtml = '';
-                    if (data.length > 0) {
-                        resultsHtml = '<div class="list-group">';
-                        data.forEach(food => resultsHtml += createFoodItemHtml(food));
-                        resultsHtml += '</div>';
-                        
-                        // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
-                        setTimeout(() => {
-                            if ($('.food-item').length > 0) {
-                                $('.food-item:first').trigger('click');
-                            }
-                        }, 300);
-                    } else {
-                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
-                    }
-                    $('#search-results').html(resultsHtml);
-                });
+    $.post('/search_foods', { query }, data => {
+        let resultsHtml = '';
+
+        if (data.length > 0) {
+            resultsHtml = '<div class="list-group">';
+            data.forEach(food => resultsHtml += createFoodItemHtml(food));
+            resultsHtml += '</div>';
+
+            // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+            setTimeout(() => {
+                if ($('.food-item').length > 0) {
+                    $('.food-item:first').trigger('click');
+                }
+            }, 300);
+        } else {
+            // No results found
+            if (/^\d{13}$/.test(query)) {
+                // Special case: 13-digit EAN not found
+                resultsHtml = `
+                    <div id="ean-alert" 
+                         class="alert alert-warning alert-dismissible fade show text-center p-2 small" 
+                         role="alert">
+                        EAN <strong>${query}</strong> not found in database.<br>
+                        <button id="create-custom-food" class="btn portion-btn btn-primary mt-2">
+                            Create new food
+                        </button>
+                    </div>
+                `;
+
+                // Attach button handler *after* rendering
+                setTimeout(() => {
+                    $('#create-custom-food').off('click').on('click', () => {
+                        window.location.href = '/custom_food?ean=' + encodeURIComponent(query);
+                    });
+
+                    // Auto-close after 5s if not clicked
+                    setTimeout(() => {
+                        $('#ean-alert').alert('close');
+                    }, 5000);
+                }, 100);
+
+            } else {
+                // Generic case
+                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
             }
+        }
+
+        $('#search-results').html(resultsHtml);
+    });
+}
             
             // ===== INITIALIZE THE APP =====
             initializeApp();
