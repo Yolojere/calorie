@@ -82,8 +82,8 @@ def get_db_connection():
     Chooses local or Neon DB based on DB_ENV environment variable.
     """
     db_env = os.getenv("DB_ENV", "local").lower()  # default to local
-    if db_env == "render":
-        DATABASE_URL = os.getenv("RENDER_DB_URL")
+    if db_env == "neon":
+        DATABASE_URL = os.getenv("NEON_DB_URL")
     else:
         DATABASE_URL = os.getenv("LOCAL_DB_URL")
 
@@ -2249,9 +2249,106 @@ def workout():
 def get_current_week():
     today = datetime.today()
     start_date = today - timedelta(days=today.weekday())  # Monday
-    dates = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    week_dates = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
     current_date = today.strftime("%Y-%m-%d")
-    return jsonify(dates=dates, current_date=current_date)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    week_data = {}
+
+    try:
+        for date_str in week_dates:
+            # Fetch all sessions for that day
+            cursor.execute("""
+                SELECT ws.id, ws.focus_type, ws.name
+                FROM workout_sessions ws
+                WHERE ws.user_id = %s AND ws.date = %s
+            """, (current_user.id, date_str))
+            sessions = cursor.fetchall()
+
+            day_sessions = []
+            for session_row in sessions:
+                session_id, focus_type, name = session_row
+
+                # Fetch sets for this session
+                cursor.execute("""
+                    SELECT wset.id, wset.exercise_id, wset.reps, wset.weight, ex.name, ex.muscle_group
+                    FROM workout_sets wset
+                    JOIN exercises ex ON ex.id = wset.exercise_id
+                    WHERE wset.session_id = %s
+                """, (session_id,))
+                sets = cursor.fetchall()
+
+                exercises_data = {}
+                for s in sets:
+                    ex_id, ex_id_dup, reps, weight, ex_name, muscle_group = s
+                    if ex_id not in exercises_data:
+                        exercises_data[ex_id] = {
+                            "id": ex_id,
+                            "name": ex_name,
+                            "muscle_group": muscle_group,
+                            "sets": []
+                        }
+                    exercises_data[ex_id]["sets"].append({"reps": reps, "weight": weight})
+
+                # Build comparison data per exercise (previous session with same focus_type + exercise)
+                comparison_data = []
+                for ex_id, ex_data in exercises_data.items():
+                    cursor.execute("""
+                        SELECT ws.date, wset.reps, wset.weight
+                        FROM workout_sessions ws
+                        JOIN workout_sets wset ON wset.session_id = ws.id
+                        WHERE ws.user_id = %s
+                          AND ws.focus_type = %s
+                          AND wset.exercise_id = %s
+                          AND ws.id != %s
+                        ORDER BY ws.date DESC
+                        LIMIT 1
+                    """, (current_user.id, focus_type, ex_id, session_id))
+                    last = cursor.fetchone()
+
+                    current_sets = ex_data["sets"]
+                    total_reps = sum(s["reps"] for s in current_sets)
+                    total_volume = sum(s["reps"] * s["weight"] for s in current_sets)
+
+                    if last:
+                        last_reps = last[1]
+                        last_weight = last[2]
+                        last_volume = last_reps * last_weight
+                        comparison_data.append({
+                            "name": ex_data["name"],
+                            "lastDate": last[0].isoformat() if isinstance(last[0], datetime) else last[0],
+                            "currentSets": current_sets,
+                            "lastReps": last_reps,
+                            "lastWeight": last_weight,
+                            "lastVolume": last_volume
+                        })
+                    else:
+                        comparison_data.append({
+                            "name": ex_data["name"],
+                            "lastDate": None,
+                            "currentSets": current_sets,
+                            "lastReps": 0,
+                            "lastWeight": 0,
+                            "lastVolume": 0
+                        })
+
+                day_sessions.append({
+                    "sessionId": session_id,
+                    "focus_type": focus_type,
+                    "name": name,
+                    "exercises": list(exercises_data.values()),
+                    "comparisonData": comparison_data
+                })
+
+            week_data[date_str] = day_sessions
+
+        return jsonify(dates=week_dates, current_date=current_date, week_sessions=week_data)
+
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/workout/init_session', methods=['POST'])
 @login_required
@@ -2301,9 +2398,9 @@ def get_workout_session():
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
-        # Updated query to include new columns
+        # Fetch the session WITHOUT muscle_group
         cursor.execute(
-            "SELECT id, muscle_group, notes, is_saved, workout_type FROM workout_sessions "
+            "SELECT id, notes, is_saved, workout_type, name, focus_type FROM workout_sessions "
             "WHERE user_id = %s AND date = %s",
             (user_id, date)
         )
@@ -2317,21 +2414,21 @@ def get_workout_session():
                 'exercises': []
             })
         
-        # Now includes all needed columns
         session = {
             "id": session_data['id'],
-            "muscle_group": session_data['muscle_group'],
             "notes": session_data['notes'],
             "is_saved": session_data['is_saved'],
-            "workout_type": session_data['workout_type']
+            "workout_type": session_data['workout_type'],
+            "name": session_data['name'],
+            "focus_type": session_data['focus_type']
         }
 
         session_id = session['id']
         
-        # Get sets for this session and group by exercise - ADD NEW FIELDS
+        # Get sets for this session and group by exercise
         cursor.execute(
             "SELECT s.id, e.id AS exercise_id, e.name AS exercise_name, "
-            "e.muscle_group, s.reps, s.weight, s.volume, s.rir, s.comments "  # Added rir and comments
+            "e.muscle_group, s.reps, s.weight, s.volume, s.rir, s.comments "
             "FROM workout_sets s "
             "JOIN exercises e ON s.exercise_id = e.id "
             "WHERE session_id = %s "
@@ -2356,15 +2453,15 @@ def get_workout_session():
                 'reps': row['reps'],
                 'weight': row['weight'],
                 'volume': row['volume'],
-                'rir': row['rir'],  # NEW FIELD
-                'comments': row['comments']  # NEW FIELD
+                'rir': row['rir'],
+                'comments': row['comments']
             })
         
         conn.close()
     
         return jsonify({
             'success': True,
-            'session': dict(session_data),
+            'session': dict(session),
             'exercises': list(exercises.values())
         })
     except Exception as e:
@@ -2703,27 +2800,6 @@ def update_workout_set():
     finally:
         conn.close()
 
-@app.route('/workout/save_workout', methods=['POST'])
-@login_required
-def save_workout():
-    user_id = current_user.id
-    date = request.form.get('date')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "UPDATE workout_sessions SET is_saved = TRUE "
-            "WHERE user_id = %s AND date = %s",
-            (user_id, date)
-        )
-        conn.commit()
-        return jsonify(success=True)
-    except Exception as e:
-        return jsonify(success=False, error=str(e)), 500
-    finally:
-        conn.close()       
-
 # ===== WORKOUT TEMPLATE ROUTES =====
 @app.route('/workout/save_template', methods=['POST'])
 @admin_required  # Keep admin-only for creation
@@ -2809,20 +2885,21 @@ def get_workout_template(template_id):
             conn.close()
             return jsonify(success=False, error="Template not found"), 404
         
-        # Get template exercises
+        # Aggregate exercises: group + count sets
         cursor.execute('''
-            SELECT e.id AS exercise_id, e.name, e.muscle_group,
-                   t.reps, t.weight, t.rir, t.comments
+            SELECT e.muscle_group, e.name AS exercise, COUNT(*) AS sets
             FROM workout_template_exercises t
             JOIN exercises e ON t.exercise_id = e.id
             WHERE t.template_id = %s
+            GROUP BY e.muscle_group, e.name
+            ORDER BY e.muscle_group, e.name
         ''', (template_id,))
         exercises = [dict(row) for row in cursor.fetchall()]
         
         conn.close()
         return jsonify(
             success=True, 
-            template=dict(template), 
+            template=dict(template),
             exercises=exercises
         )
     
@@ -2897,87 +2974,61 @@ def apply_workout_template():
         if conn:
             conn.close()
 
-@app.route('/workout/copy_session', methods=['POST'])
+@app.route("/workout/copy_session", methods=["POST"])
 @login_required
-def copy_workout_session():
-    conn = None
+def copy_session():
+    source_date = request.form.get("source_date")
+    target_date = request.form.get("target_date")
+    user_id = current_user.id
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
     try:
-        source_date = request.form.get('source_date')
-        target_date = request.form.get('target_date')
-        user_id = current_user.id
-        
-        if not source_date or not target_date:
-            return jsonify(success=False, error="Missing date parameters"), 400
-            
-        if source_date == target_date:
-            return jsonify(success=False, error="Cannot copy to same date"), 400
-            
-        # Get database connection
-        conn = get_db_connection()
-        if not conn:
-            return jsonify(success=False, error="Database connection failed"), 500
-            
-        cursor = conn.cursor()
-        
-        # Get source session
+        # Fetch source session
         cursor.execute(
-            "SELECT id FROM workout_sessions "
-            "WHERE user_id = %s AND date = %s",
+            "SELECT * FROM workout_sessions WHERE user_id = %s AND date = %s",
             (user_id, source_date)
         )
         source_session = cursor.fetchone()
-        
         if not source_session:
-            return jsonify(success=False, error="No workout found for source date"), 404
-            
-        source_session_id = source_session[0]
-        
-        # Get target session (create if doesn't exist)
+            return jsonify({"success": False, "error": "Source session not found"})
+
+        # Use source muscle_group (or fallback)
+        muscle_group = source_session["muscle_group"] or "All"
+
+        # Insert new session for target date
         cursor.execute(
-            "SELECT id FROM workout_sessions "
-            "WHERE user_id = %s AND date = %s",
-            (user_id, target_date)
+            "INSERT INTO workout_sessions (user_id, date, name, focus_type, muscle_group) "
+            "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (user_id, target_date, source_session["name"], source_session["focus_type"], muscle_group)
         )
-        target_session = cursor.fetchone()
-        
-        if target_session:
-            target_session_id = target_session[0]
-        else:
-            # Get muscle group from source session
-            cursor.execute(
-                "SELECT muscle_group FROM workout_sessions "
-                "WHERE id = %s",
-                (source_session_id,)
-            )
-            muscle_group = cursor.fetchone()[0] or 'General'
-            
-            cursor.execute(
-                "INSERT INTO workout_sessions (user_id, date, muscle_group) "
-                "VALUES (%s, %s, %s) RETURNING id",
-                (user_id, target_date, muscle_group)
-            )
-            target_session_id = cursor.fetchone()[0]
-        
+        new_session_id = cursor.fetchone()["id"]
+
         # Copy sets
         cursor.execute(
-            "INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments) "
-            "SELECT %s, exercise_id, reps, weight, rir, comments "
-            "FROM workout_sets "
-            "WHERE session_id = %s",
-            (target_session_id, source_session_id)
+            "SELECT * FROM workout_sets WHERE session_id = %s",
+            (source_session["id"],)
         )
-        
+        sets = cursor.fetchall()
+        for s in sets:
+            cursor.execute(
+                "INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (new_session_id, s["exercise_id"], s["reps"], s["weight"], s["rir"], s["comments"])
+            )
+
         conn.commit()
-        return jsonify(success=True)
-        
+        cursor.close()
+        conn.close()
+
+        return jsonify({"success": True})
+
     except Exception as e:
-        if conn:
-            conn.rollback()
-        app.logger.error(f"Error copying workout session: {str(e)}")
-        return jsonify(success=False, error=str(e)), 500
-    finally:
-        if conn:
-            conn.close()
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": False, "error": str(e)})
 
 # Get all exercises endpoint
 @app.route('/workout/exercises')
@@ -3215,7 +3266,91 @@ def get_nutrition_targets():
     }
 
     return jsonify(targets)
-    
+from datetime import datetime  # ensure this import
+
+@app.route("/workout/save", methods=["POST"])
+@login_required
+def save_workout():
+    data = request.get_json()
+    focus_type = data.get("focus_type")
+    date = data.get("date")
+    exercises = data.get("exercises", [])
+
+    if not focus_type or not date:
+        return jsonify({"success": False, "error": "Focus type and date are required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Save the workout session
+        cursor.execute(
+            "INSERT INTO workout_sessions (user_id, date, name, focus_type) VALUES (%s, %s, %s, %s) RETURNING id",
+            (current_user.id, date, data.get("name", "Unnamed Workout"), focus_type)
+        )
+        session_id = cursor.fetchone()[0]
+
+        # Save sets for each exercise
+        for ex in exercises:
+            for s in ex["sets"]:
+                cursor.execute(
+                    "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) VALUES (%s, %s, %s, %s)",
+                    (session_id, ex["id"], s["reps"], s["weight"])
+                )
+
+        # Build comparison data (latest previous session per exercise + focus type)
+        comparison_data = []
+        for ex in exercises:
+            cursor.execute("""
+                SELECT ws.date, wset.reps, wset.weight
+                FROM workout_sessions ws
+                JOIN workout_sets wset ON wset.session_id = ws.id
+                WHERE ws.user_id = %s
+                  AND ws.focus_type = %s
+                  AND wset.exercise_id = %s
+                  AND ws.id != %s
+                ORDER BY ws.date DESC
+                LIMIT 1
+            """, (current_user.id, focus_type, ex["id"], session_id))
+            last = cursor.fetchone()
+
+            current_sets = ex["sets"]
+            total_reps = sum(s["reps"] for s in current_sets)
+            total_volume = sum(s["reps"] * s["weight"] for s in current_sets)
+
+            if last:
+                last_reps = last[1]
+                last_weight = last[2]
+                last_volume = last_reps * last_weight
+                comparison_data.append({
+                    "name": ex["name"],
+                    "lastDate": last[0].isoformat() if isinstance(last[0], datetime) else last[0],
+                    "currentSets": current_sets,
+                    "lastReps": last_reps,
+                    "lastWeight": last_weight,
+                    "lastVolume": last_volume
+                })
+            else:
+                comparison_data.append({
+                    "name": ex["name"],
+                    "lastDate": None,
+                    "currentSets": current_sets,
+                    "lastReps": 0,
+                    "lastWeight": 0,
+                    "lastVolume": 0
+                })
+
+        conn.commit()
+        return jsonify({"success": True, "comparisonData": comparison_data})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.route('/foods')
 def list_foods():
     cursor = get_cursor()
