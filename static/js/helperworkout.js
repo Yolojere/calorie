@@ -158,3 +158,73 @@ function formatDateForSelector(date) {
         return dateString;
     }
 }
+function collectWorkoutData() {
+  let data = {
+    date: currentSelectedDate,
+    name: $("#workout-name").val() || "Unnamed Workout",
+    exercises: []
+  };
+
+  $("#workout-session-container .exercise-item").each(function() {
+    let exerciseId = $(this).data("id");
+    let exerciseName = $(this).find(".exercise-name").text();
+    let sets = [];
+
+    $(this).find(".set-row").each(function() {
+      sets.push({
+        setNumber: $(this).data("set"),
+        reps: parseInt($(this).find(".reps-input").val()) || 0,
+        weight: parseFloat($(this).find(".weight-input").val()) || 0
+      });
+    });
+
+    data.exercises.push({
+      id: exerciseId,
+      name: exerciseName,
+      sets: sets
+    });
+  });
+
+  return data;
+}
+
+// COMPARSION LAYOUT LOADING
+function showComparisonLoading(duration = 3500, callback) {
+    // Add backdrop overlay
+    if ($("#comparison-backdrop").length === 0) {
+        $("body").append('<div id="comparison-backdrop" class="comparison-backdrop"></div>');
+    }
+    $("#comparison-backdrop").addClass("show");
+
+    $("#comparison-loading").fadeIn(200);
+    setTimeout(() => {
+        $("#comparison-loading").fadeOut(200, () => {
+            if (callback) callback();
+        });
+    }, duration);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to ensure calendar stays above everything
+    function ensureCalendarAboveAll() {
+        const calendarModal = document.getElementById('copyWorkoutModal');
+        const calendarBackdrop = document.querySelector('.modal-backdrop');
+        
+        if (calendarModal) {
+            // Set higher z-index than comparison overlay (9999)
+            calendarModal.style.zIndex = '10000';
+        }
+        
+        if (calendarBackdrop) {
+            // Set backdrop above comparison overlay too
+            calendarBackdrop.style.zIndex = '9998';
+        }
+    }
+    
+    // Run when calendar modal is shown
+    $('#copyWorkoutModal').on('shown.bs.modal', function() {
+        ensureCalendarAboveAll();
+    });
+    
+    // Also run on initial load in case modal is already open
+    ensureCalendarAboveAll();
+});
