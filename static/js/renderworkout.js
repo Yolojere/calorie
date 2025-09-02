@@ -1,4 +1,5 @@
 console.log("renderworkout.js started");
+console.log('Rendering session', currentDate, session, exercises);
 // File: render.js
 // ===== RENDERING FUNCTIONS =====
 function renderWeekDates(dates) {
@@ -75,57 +76,40 @@ function renderExerciseOptions() {
     }
 }
 
-function renderWorkoutSession(session, exercises) {
+function renderWorkoutSession(session, exercises, options = {}) {
+    const collapseGroups = options.collapseGroups || false;
     const container = $("#workout-session-container");
     container.empty();
-    
+
     if (!session || !exercises || exercises.length === 0) {
-        const message = `
-            <div class="alert alert-info">
-                No workout recorded for this day. Add your first set below!
-            </div>
-        `;
-        container.html(message);
+        container.html(`<div class="alert alert-info">No workout recorded for this day. Add your first set below!</div>`);
         return;
     }
-    
-    // Get current date for state tracking
+
     const currentDate = $(".workout-date.active").data("date");
-    
-    // Initialize state for current date if needed
-    if (!collapseState.groups[currentDate]) {
-        collapseState.groups[currentDate] = {};
-    }
-    if (!collapseState.exercises[currentDate]) {
-        collapseState.exercises[currentDate] = {};
-    }
-    
+    if (!collapseState.groups[currentDate]) collapseState.groups[currentDate] = {};
+    if (!collapseState.exercises[currentDate]) collapseState.exercises[currentDate] = {};
+
     // Group exercises by muscle group
     const groups = {};
     exercises.forEach(exercise => {
         const group = exercise.muscle_group;
         if (!groups[group]) {
-            groups[group] = {
-                exercises: [],
-                totalSets: 0,
-                totalReps: 0,
-                totalVolume: 0
-            };
+            groups[group] = { exercises: [], totalSets: 0, totalVolume: 0 };
         }
 
-        // Calculate exercise totals
-        const exerciseVolume = exercise.sets.reduce((sum, set) => sum + set.volume, 0);
-        const exerciseSets = exercise.sets.length;
-        const exerciseReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
+        // Prevent duplicate sets
+        const uniqueSets = Array.isArray(exercise.sets) ? [...exercise.sets] : [];
+        const exerciseVolume = uniqueSets.reduce((sum, set) => sum + set.volume, 0);
+        const exerciseSets = uniqueSets.length;
 
-        groups[group].exercises.push({...exercise, exerciseVolume, exerciseSets, exerciseReps});
+        groups[group].exercises.push({...exercise, sets: uniqueSets, exerciseSets, exerciseVolume});
         groups[group].totalSets += exerciseSets;
-        groups[group].totalReps += exerciseReps;
         groups[group].totalVolume += exerciseVolume;
     });
 
-    // Apply template collapse if needed
-    if (isApplyingTemplate) {
+    // If copied workout or template, collapse groups by default
+    if (collapseGroups || isCopiedWorkout || isApplyingTemplate) {
         for (const groupName in groups) {
             collapseState.groups[currentDate][groupName] = { collapsed: true };
             groups[groupName].exercises.forEach(exercise => {
@@ -133,7 +117,7 @@ function renderWorkoutSession(session, exercises) {
             });
         }
         saveCollapseState();
-        isApplyingTemplate = false;
+        isApplyingTemplate = false; // reset template flag
     }
 
     // Render session
@@ -175,13 +159,15 @@ function renderWorkoutSession(session, exercises) {
 
         // Sort exercises: completed ones last
         groupData.exercises.sort((a, b) => {
-            const aCompleted = completedExercises[currentDate] && completedExercises[currentDate][a.id];
-            const bCompleted = completedExercises[currentDate] && completedExercises[currentDate][b.id];
-            
-            if (aCompleted && !bCompleted) return 1;
-            if (!aCompleted && bCompleted) return -1;
-            return 0;
-        });
+    const aCompleted = completedExercises[currentDate] && completedExercises[currentDate][a.id];
+    const bCompleted = completedExercises[currentDate] && completedExercises[currentDate][b.id];
+
+    if (aCompleted && !bCompleted) return 1;
+    if (!aCompleted && bCompleted) return -1;
+
+    // Both completed or both not completed -> preserve creation/order
+    return (a.order || 0) - (b.order || 0);
+});
 
         // Render exercises
         groupData.exercises.forEach(exercise => {
@@ -199,9 +185,9 @@ function renderWorkoutSession(session, exercises) {
                                     <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
                                 </button>
                                 <div class="complete-exercise-options">
-                                    
-                                    <div class="complete-option" data-value="yes">✔️ Complete</div>
-                                    <div class="complete-option" data-value="no">❌ Cancel</div>
+                                    <div class="complete-option" data-value="asdadasd">Complete Exercise?</div>
+                                    <div class="complete-option" data-value="yes">✔️ Yes</div>
+                                    <div class="complete-option" data-value="no">❌ No</div>
                                      <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
                                 </div>
                             </div>
@@ -376,7 +362,39 @@ function renderWorkoutSession(session, exercises) {
     $(document).trigger('workoutContentChanged');
     $(document).trigger('workoutRendered');
 }
+function renderTemplatePreview(templateData) {
+    const grouped = {};
 
+    // Aggregate sets by muscle group + exercise
+    templateData.exercises.forEach(item => {
+        const group = item.muscle_group || "Other";
+        if (!grouped[group]) grouped[group] = {};
+
+        if (!grouped[group][item.exercise]) {
+            grouped[group][item.exercise] = 0;
+        }
+        grouped[group][item.exercise] += 1; // count sets
+    });
+
+    // Build HTML
+    let html = "";
+    Object.keys(grouped).forEach(group => {
+        html += `<div class="mb-3">
+            <h6 class="fw-bold text-primary border-bottom border-secondary pb-1">${group}</h6>
+            <ul class="list-unstyled ps-3">`;
+
+        Object.keys(grouped[group]).forEach(exercise => {
+            const sets = grouped[group][exercise];
+            html += `<li class="mb-1">
+                        <span class="fw-semibold">${exercise}</span> × ${sets}
+                     </li>`;
+        });
+
+        html += `</ul></div>`;
+    });
+
+    $("#template-preview-content").html(html);
+}
 function renderTemplates(templates) {
     const $templateListDesktop = $("#template-list-desktop");
     const $templateListMobile = $("#template-list-mobile");
@@ -428,6 +446,126 @@ function populateDateOptions() {
         `);
     }
 }
+function getComparisonStyles(ex) {
+    // Safe fallback in case currentSets not defined
+    const currentSet = ex.currentSets && ex.currentSets[0] ? ex.currentSets[0] : { reps: 0, weight: 0 };
+
+    const weightDiff = ex.lastWeight ? currentSet.weight - ex.lastWeight : 0;
+    const repsDiff = ex.lastReps ? currentSet.reps - ex.lastReps : 0;
+    const volumeDiff = ex.lastVolume ? (currentSet.reps * currentSet.weight) - ex.lastVolume : 0;
+
+    return {
+        weight: { value: currentSet.weight, diff: weightDiff, color: weightDiff > 0 ? "lime" : weightDiff < 0 ? "red" : "gray", icon: weightDiff > 0 ? "🔥" : "" },
+        reps: { value: currentSet.reps, diff: repsDiff, color: repsDiff > 0 ? "lime" : repsDiff < 0 ? "red" : "gray", icon: repsDiff > 0 ? "🔥" : "" },
+        volume: { value: currentSet.reps * currentSet.weight, diff: volumeDiff, color: volumeDiff > 0 ? "gold" : volumeDiff < 0 ? "red" : "gray", icon: volumeDiff > 0 ? "🏆" : "" }
+    };
+}
+
+function renderComparisonUI(comparison, workoutId) {
+    // Remove any previous UI
+    $('.comparison-container, #comparison-backdrop').remove();
+
+    // Add backdrop
+    $('body').append('<div id="comparison-backdrop" class="comparison-backdrop show"></div>');
+
+    // === Phase 0: Dumbbell loading ===
+    const $loading = $(`
+        <div class="comparison-container show" id="comparison-loading">
+            <div class="text-center">
+                <i class="fa-solid fa-dumbbell fa-4x mb-3 animate-spin"></i>
+                <p>Analyzing your workout...</p>
+            </div>
+        </div>
+    `);
+    $('body').append($loading);
+
+    setTimeout(() => {
+        $loading.remove();
+
+        // === Phase 1: Show exercises summary ===
+        let html = `<div class="comparison-container" id="comparison-card">`;
+        html += `<h5 class="mb-3">Performance vs Last Time</h5>`;
+
+        if (!comparison || comparison.length === 0) {
+            html += `<p>No previous data to compare yet.</p>`;
+        } else {
+            comparison.forEach((ex, exIndex) => {
+                const totalVolume = ex.currentSets.reduce((sum, s) => sum + s.volume, 0);
+                html += `
+                    <div class="comparison-exercise mb-2" data-ex="${exIndex}">
+                        <strong>${ex.name}</strong> - ${ex.currentSets.length} sets - ${totalVolume} volume
+                        <div class="exercise-sets mt-1"></div>
+                    </div>
+                `;
+            });
+        }
+
+        // Buttons
+        html += `
+            <div class="mt-3 text-center">
+                <button id="copy-to-date-btn" class="btn btn-success copy-to-date-btn" data-id="${workoutId}">Copy to Another Date</button>
+                <button class="btn btn-secondary ms-2 close-comparison-btn">Close</button>
+            </div>
+        </div>`;
+
+        $('body').append(html);
+        const $card = $('#comparison-card');
+        setTimeout(() => $card.addClass("show"), 50);
+
+        // === Phase 2: Slide in sets + reward icons ===
+        comparison.forEach((ex, exIndex) => {
+            const $exDiv = $(`.comparison-exercise[data-ex="${exIndex}"] .exercise-sets`);
+            ex.currentSets.forEach((set, setIndex) => {
+                const lastSet = ex.lastSets && ex.lastSets[setIndex] ? ex.lastSets[setIndex] : null;
+                const weightDiff = lastSet ? set.weight - lastSet.weight : 0;
+                const repsDiff = lastSet ? set.reps - lastSet.reps : 0;
+                const volumeDiff = lastSet ? set.volume - lastSet.volume : 0;
+
+                const icon = (volumeDiff > 0 ? "🏆" : (volumeDiff < 0 ? "⚡" : "")); // reward / negative
+                setTimeout(() => {
+                    $exDiv.append(`
+                        <div class="set-row">
+                            Set ${setIndex+1} - ${set.reps} reps - ${set.weight} kg - ${set.volume} vol ${icon}
+                        </div>
+                    `);
+                }, setIndex * 200 + exIndex * 300);
+            });
+        });
+
+        // === Phase 3: Final verdict ===
+        setTimeout(() => {
+            const positiveCount = comparison.reduce((sum, ex) => {
+                return sum + ex.currentSets.reduce((s, set, i) => {
+                    const lastSet = ex.lastSets && ex.lastSets[i] ? ex.lastSets[i] : null;
+                    if (!lastSet) return s;
+                    return s + ((set.volume - lastSet.volume) > 0 ? 1 : 0);
+                }, 0);
+            }, 0);
+
+            let message = "Let's recover and kill it next time";
+            if (positiveCount >= 3) message = "What was that? Insanity!";
+            else if (positiveCount === 2) message = "That was a solid one :)";
+            else if (positiveCount === 1) message = "Keep up the good work!";
+
+            $card.append(`<div class="mt-3 final-message" style="font-size:1.5rem; font-weight:bold;">${message}</div>`);
+        }, 1000 + comparison.length * 600);
+
+    }, 1500); // Dumbbell loading duration
+
+    // === Delegated events ===
+    $(document).off('click', '.close-comparison-btn, #comparison-backdrop')
+        .on('click', '.close-comparison-btn, #comparison-backdrop', () => {
+            $('.comparison-container, #comparison-backdrop').remove();
+        });
+
+    $(document).off('click', '.copy-to-date-btn')
+        .on('click', '.copy-to-date-btn', function() {
+            const targetWorkoutId = $(this).data('id');
+            console.log("Copy workout to id:", targetWorkoutId);
+            // Add copy logic here
+        });
+}
+
 
 function populateMobileDateSelector(selectedDate) {
     const $selector = $("#mobile-date-selector");
@@ -460,4 +598,3 @@ $('#copyWorkoutModal').on('shown.bs.modal', function() {
     $(this).addClass("active");
     copyWorkoutToDate($(this).data("date"));
 });
-
