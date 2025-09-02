@@ -1,12 +1,23 @@
+console.log("data-loadingworkout.js started");
 // File: data-loading.js
 // ===== DATA LOADING FUNCTIONS =====
 function loadCurrentWeek() {
     $.get("/workout/get_current_week", function(data) {
         currentSelectedDate = data.current_date;
-        renderWeekDates(data.dates);
-        // Use cached version of session loading
-        getSessionWithCache(currentSelectedDate, function(data) {
-            renderWorkoutSession(data.session, data.exercises);
+
+        // Only call renderWeekDates if the function exists
+        if (typeof renderWeekDates === "function") {
+            renderWeekDates(data.dates);  // Array from server
+        } else {
+            console.warn("renderWeekDates function not loaded yet.");
+        }
+
+        getSessionWithCache(currentSelectedDate, function(sessionData) {
+            if (typeof renderWorkoutSession === "function") {
+                renderWorkoutSession(sessionData.session, sessionData.exercises, sessionData.comparisonData);
+            } else {
+                console.warn("renderWorkoutSession function not loaded yet.");
+            }
         });
     });
 }
