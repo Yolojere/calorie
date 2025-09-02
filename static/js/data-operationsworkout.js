@@ -200,58 +200,79 @@ function saveTemplate() {
 }
 
 function previewTemplate(templateId) {
-    // Show loading state in table body
-    $("#template-preview-body").html(
-        '<tr><td colspan="4" class="text-center py-3">' +
+    $("#template-preview-content").html(
+        '<div class="text-center py-3">' +
         '<i class="fas fa-spinner fa-spin me-2"></i>Loading template...' +
-        '</td></tr>'
+        '</div>'
     );
 
-    // Set up modal content (without date selector)
-    $("#template-preview-modal-body").html(`
-        <table class="table table-dark">
-            <thead>
-                <tr>
-                    <th>Exercise</th>
-                    <th>Muscle Group</th>
-                    <th>Reps</th>
-                    <th>Weight</th>
-                </tr>
-            </thead>
-            <tbody id="template-preview-body"></tbody>
-        </table>
-    `);
-
-    // Show the modal
     $("#templatePreviewModal").modal('show');
 
-    // Use jQuery AJAX instead of fetch to ensure CSRF token is included
     $.ajax({
         url: `/workout/templates/${templateId}`,
         method: "GET",
         success: function(data) {
-            const $previewBody = $("#template-preview-body");
-            $previewBody.empty();
+            if (data.success && data.exercises.length > 0) {
+                let html = "";
+                const groups = {};
 
-            if (data.success && data.exercises && data.exercises.length > 0) {
+                // Organize exercises by muscle group
                 data.exercises.forEach(ex => {
-                    $previewBody.append(`
-                        <tr>
-                            <td>${ex.name}</td>
-                            <td>${ex.muscle_group}</td>
-                            <td>${ex.reps}</td>
-                            <td>${ex.weight} kg</td>
-                        </tr>
-                    `);
+                    if (!groups[ex.muscle_group]) groups[ex.muscle_group] = [];
+                    groups[ex.muscle_group].push(ex);
                 });
+
+                // Build collapsible HTML with custom icons
+                Object.keys(groups).forEach((group, idx) => {
+                    const groupId = `muscleGroup-${idx}`;
+                    const totalSets = groups[group].reduce((sum, ex) => sum + ex.sets, 0);
+                    const icon = getMuscleIcon(group); // Use your icons
+
+                    html += `
+                        <div class="mb-3 muscle-group-card">
+        <button class="btn btn-dark w-100 d-flex justify-content-between align-items-center muscle-group-btn"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#${groupId}"
+                aria-expanded="true"
+                aria-controls="${groupId}">
+            <span><i class="fas fa-${icon} me-2"></i>${group} (${totalSets} sets)</span>
+            <i class="fas fa-chevron-down chevron-icon"></i>
+        </button>
+        <div class="collapse show mt-2" id="${groupId}">
+            <ul class="list-unstyled ps-4 mb-0">`;
+                    groups[group].forEach(exercise => {
+                        html += `<li class="mb-1">
+                                    <span class="fw-semibold">${exercise.exercise}</span> × ${exercise.sets} sets
+                                 </li>`;
+                    });
+
+                    html += `</ul></div></div>`;
+                });
+
+                $("#template-preview-content").html(html);
+                $("#template-preview-name").text(data.template.name);
+                $("#apply-template-btn").data('template-id', templateId);
+
+                // Animate chevron rotation
+                $('.muscle-group-btn').on('click', function() {
+                    const $chevron = $(this).find('.chevron-icon');
+                    const targetId = $(this).attr('data-bs-target');
+                    const $collapseDiv = $(targetId);
+
+                    $collapseDiv.on('shown.bs.collapse', function() {
+                        $chevron.css('transform', 'rotate(180deg)');
+                    });
+                    $collapseDiv.on('hidden.bs.collapse', function() {
+                        $chevron.css('transform', 'rotate(0deg)');
+                    });
+                });
+
             } else {
-                $previewBody.append(
-                    '<tr><td colspan="4" class="text-center py-3">No exercises in this template</td></tr>'
+                $("#template-preview-content").html(
+                    '<div class="text-center py-3">No exercises in this template</div>'
                 );
             }
-
-            // Store template ID on apply button for later use
-            $("#apply-template-btn").data('template-id', templateId);
         },
         error: function(xhr, status, error) {
             alert("Error loading template: " + error);
@@ -259,6 +280,20 @@ function previewTemplate(templateId) {
         }
     });
 }
+
+// Example muscle icon mapping function
+function getMuscleIcon(muscleGroup) {
+    const icons = {
+        'Chest': 'heart',
+        'Back': 'user-shield',
+        'Legs': 'running',
+        'Shoulders': 'mountain',
+        'Arms': 'hand-fist',
+        'Core': 'apple-alt'
+    };
+    return icons[muscleGroup] || 'dumbbell';
+}
+
 
 function applyTemplate(templateId) {
     const currentDate = $(".workout-date.active").data("date");
@@ -308,48 +343,159 @@ function applyTemplate(templateId) {
 }
 
 function copyWorkoutToDate(targetDate) {
-    const sourceDate = currentSelectedDate;
-    
-    if (sourceDate === targetDate) {
-        alert("Cannot copy to the same date!");
+    if (isCopyingWorkout) {
+        console.log("Copy already in progress, please wait...");
         return;
     }
-    
-    // Show loading state
+    isCopyingWorkout = true;
+
+    const sourceDate = currentSelectedDate;
+    if (sourceDate === targetDate) {
+        alert("Cannot copy to the same date!");
+        isCopyingWorkout = false;
+        return;
+    }
+
     const $btn = $("#copy-workout-btn, #copy-workout-mobile-btn");
     const originalContent = $btn.html();
     $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Copying...');
     $btn.prop('disabled', true);
-    
+
     $.post("/workout/copy_session", {
         source_date: sourceDate,
         target_date: targetDate
-    }, function(response) {
-        $btn.html(originalContent);
-        $btn.prop('disabled', false);
-        
+    })
+    .done(function(response) {
         if (response.success) {
             alert("Workout copied successfully!");
-            // Invalidate session cache for target date since we've modified it
+
+            // Clear cache for target date to prevent duplicate sets
             const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
             if (cachedSessions[targetDate]) {
                 delete cachedSessions[targetDate];
                 setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
             }
+
+            // Render collapsed session
+            isCopiedWorkout = true;
+            getSessionWithCache(targetDate, function(data) {
+                renderWorkoutSession(data.session, data.exercises, { collapseGroups: true });
+                isCopiedWorkout = false;
+            });
+
             $("#copyWorkoutModal").modal("hide");
         } else {
             alert("Error: " + response.error);
         }
-    }).fail(function() {
+    })
+    .fail(function() {
+        alert("Network error. Please try again.");
+    })
+    .always(function() {
         $btn.html(originalContent);
         $btn.prop('disabled', false);
-        alert("Network error. Please try again.");
+        isCopyingWorkout = false;
     });
 }
 
+// Toggle focus selection buttons
+$(document).on("click", ".focus-btn", function() {
+    $(".focus-btn").removeClass("active");
+    $(this).addClass("active");
+});
+
+// Get exercises from the UI
+function getExercisesFromUI() {
+    const exercises = [];
+
+    $(".exercise").each(function() {
+        const $exercise = $(this);
+        const exId = $exercise.data("exercise-id");
+        const exName = $exercise.find(".exercise-title").text().trim();
+        const muscleGroup = $exercise.closest(".workout-group").data("group") || "Other";
+
+        const sets = [];
+        $exercise.find(".set-row").each(function() {
+            const $row = $(this);
+            const reps = parseInt($row.find(".set-reps").val()) || 0;
+            const weight = parseFloat($row.find(".set-weight").val()) || 0;
+            sets.push({ reps, weight });
+        });
+
+        exercises.push({
+            id: exId,
+            name: exName,
+            muscle_group: muscleGroup,
+            sets
+        });
+    });
+
+    return exercises;
+}
+
+// Save Workout
+$(document).on("click", "#save-workout-btn", function() {
+    const name = $("#workout-name-input").val().trim() || "Unnamed Workout";
+    const focus_type = $(".focus-btn.active").data("focus");
+    const date = currentSelectedDate;
+    const exercises = getExercisesFromUI(); // make sure this function is defined
+
+    $.ajax({
+        url: "/workout/save",
+        method: "POST",
+        contentType: "application/json", // important!
+        data: JSON.stringify({
+            name,
+            focus_type,
+            date,
+            exercises
+        }),
+        dataType: "json",
+        success: function(response) {
+            if (response.success) {
+                $("#saveWorkoutModal").modal("hide"); // close modal
+                renderComparisonUI(response.comparisonData); // show comparison UI
+            } else {
+                alert("Error saving workout: " + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            alert("An error occurred while saving the workout.");
+        }
+    });
+});
+function getExercisesFromUI() {
+    const exercises = [];
+
+    $(".exercise").each(function () {
+        const $exercise = $(this);
+        const exId = $exercise.data("exercise-id");
+        const exName = $exercise.find(".exercise-title").text().trim();
+        const muscleGroup = $exercise.closest(".workout-group").data("group") || "Other";
+
+        const sets = [];
+        $exercise.find(".set-row").each(function () {
+            const $row = $(this);
+            const reps = parseInt($row.find(".set-reps").val()) || 0;
+            const weight = parseFloat($row.find(".set-weight").val()) || 0;
+            sets.push({ reps, weight });
+        });
+
+        exercises.push({
+            id: exId,
+            name: exName,
+            muscle_group: muscleGroup,
+            sets
+        });
+    });
+
+    return exercises;
+}
 function navigateWeek(direction) {
     const days = direction === 'prev' ? -7 : 7
     currentDate.setDate(currentDate.getDate() + days);
     const weekDates = getWeekDates(currentDate);
     renderWeekDates(weekDates);
 }
+
