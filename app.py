@@ -1020,60 +1020,32 @@ def register():
             conn.close()
     
     return render_template('register.html', title='Register', form=form)
-
-
-@app.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    form = UpdateProfileForm()
-
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
     if form.validate_on_submit():
-        username = form.username.data
         email = form.email.data.lower()  # normalize to lowercase
-        full_name = form.full_name.data
-        main_sport = form.main_sport.data
-        fitness_goals = form.fitness_goals.data
-        avatar_choice = form.avatar_choice.data
 
         conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute('''
-                UPDATE users
-                SET username = %s,
-                    email = %s,
-                    full_name = %s,
-                    main_sport = %s,
-                    fitness_goals = %s,
-                    avatar_choice = %s
-                WHERE id = %s
-            ''', (username, email, full_name, main_sport, fitness_goals, avatar_choice, current_user.id))
-            conn.commit()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+        conn.close()
 
-            # update current_user object in session
-            current_user.username = username
-            current_user.email = email
-            flash('Your profile has been updated!', 'success')
-            return redirect(url_for('profile'))
+        if user and bcrypt.check_password_hash(user['password'], form.password.data):
+            user_obj = User(
+                id=user['id'],
+                username=user['username'],
+                email=user['email'],
+                role=user['role']
+            )
+            login_user(user_obj, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
 
-        except psycopg2.IntegrityError:
-            flash('That username or email is already taken.', 'danger')
-            conn.rollback()
-
-        finally:
-            cursor.close()
-            conn.close()
-
-    elif request.method == 'GET':
-        # pre-fill form with current user data
-        form.username.data = current_user.username
-        form.email.data = current_user.email
-        form.full_name.data = getattr(current_user, 'full_name', '')
-        form.main_sport.data = getattr(current_user, 'main_sport', '')
-        form.fitness_goals.data = getattr(current_user, 'fitness_goals', '')
-        form.avatar_choice.data = getattr(current_user, 'avatar_choice', 'default.png')
-
-    return render_template('profile.html', title='Profile', form=form)
+    return render_template('login.html', title='Login', form=form)
 
 
 @app.route('/debug_foods')
@@ -1100,6 +1072,116 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    form = UpdateProfileForm()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
+    current_weight = None
+    current_tdee = None
+    current_avatar = 'default.png'
+    extra_columns_exist = False
+    role = getattr(current_user, 'role', 'user')
+
+    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 16)]
+    form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
+
+    try:
+        # Check for extra columns
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('full_name','main_sport','fitness_goals')
+        """)
+        columns = [row['column_name'] for row in cursor.fetchall()]
+        extra_columns_exist = bool(columns)
+
+        select_cols = ['username', 'email', 'weight', 'tdee', 'avatar'] + columns
+        cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
+        user_data = cursor.fetchone()
+
+        if user_data:
+            current_weight = user_data.get('weight')
+            current_tdee = user_data.get('tdee')
+            current_avatar = user_data.get('avatar') or 'default.png'
+
+        if form.validate_on_submit():
+            # Handle email lowercase
+            email_lower = form.email.data.lower()
+
+            # Avatar handling
+            avatar_filename = current_avatar
+            if hasattr(form, 'avatar_upload') and form.avatar_upload.data:
+                file = form.avatar_upload.data
+                if file and allowed_file(file.filename):
+                    timestamp = str(int(time.time()))
+                    filename = secure_filename(file.filename)
+                    name, ext = os.path.splitext(filename)
+                    unique_filename = f"{name}_{timestamp}{ext}"
+                    filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+                    file.save(filepath)
+                    img = Image.open(filepath)
+                    img.thumbnail((200, 200))
+                    img.save(filepath)
+                    avatar_filename = unique_filename
+                else:
+                    flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
+            elif hasattr(form, 'avatar_choice') and form.avatar_choice.data:
+                avatar_filename = form.avatar_choice.data if form.avatar_choice.data in predefined_avatars else 'default.png'
+
+            # Build update query dynamically
+            update_query = "UPDATE users SET username = %s, email = %s, avatar = %s"
+            update_params = [form.username.data, email_lower, avatar_filename]
+
+            for col in columns:
+                update_query += f", {col} = %s"
+                update_params.append(getattr(form, col).data if hasattr(form, col) else '')
+
+            update_query += " WHERE id = %s"
+            update_params.append(current_user.id)
+
+            cursor.execute(update_query, tuple(update_params))
+            conn.commit()
+            flash('Your profile has been updated!', 'success')
+            return redirect(url_for('profile'))
+
+        elif user_data:
+            # Pre-fill form
+            form.username.data = user_data.get('username', '')
+            form.email.data = user_data.get('email', '')
+            for col in columns:
+                if hasattr(form, col):
+                    getattr(form, col).data = user_data.get(col, '')
+            form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
+
+    except psycopg2.IntegrityError:
+        flash('Username or email already taken', 'danger')
+    except Exception:
+        import traceback
+        print(traceback.format_exc())
+        flash('An unexpected error occurred.', 'danger')
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'profile.html',
+        title='Profile',
+        form=form,
+        current_weight=current_weight,
+        current_tdee=current_tdee,
+        current_avatar=current_avatar,
+        role=role,
+        extra_columns_exist=extra_columns_exist,
+        predefined_avatars=predefined_avatars
+    )
+
+
 
 
 @app.route("/reset_password", methods=['GET', 'POST'])
