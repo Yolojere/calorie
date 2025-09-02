@@ -1000,12 +1000,15 @@ def register():
     
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        email = form.email.data.lower()  # normalize to lowercase
+        username = form.username.data
+
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
                 'INSERT INTO users (username, email, password) VALUES (%s, %s, %s)',
-                (form.username.data, form.email.data, hashed_password)
+                (username, email, hashed_password)
             )
             conn.commit()
             flash('Your account has been created! You can now log in', 'success')
@@ -1018,25 +1021,60 @@ def register():
     
     return render_template('register.html', title='Register', form=form)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = LoginForm()
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    form = UpdateProfileForm()
+
     if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data.lower()  # normalize to lowercase
+        full_name = form.full_name.data
+        main_sport = form.main_sport.data
+        fitness_goals = form.fitness_goals.data
+        avatar_choice = form.avatar_choice.data
+
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute('SELECT * FROM users WHERE email = %s', (form.email.data,))
-        user = cursor.fetchone()
-        conn.close()
-        if user and bcrypt.check_password_hash(user['password'], form.password.data):
-            user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
-            login_user(user_obj, remember=form.remember.data)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
-        else:
-            flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('login.html', title='Login', form=form)
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+                UPDATE users
+                SET username = %s,
+                    email = %s,
+                    full_name = %s,
+                    main_sport = %s,
+                    fitness_goals = %s,
+                    avatar_choice = %s
+                WHERE id = %s
+            ''', (username, email, full_name, main_sport, fitness_goals, avatar_choice, current_user.id))
+            conn.commit()
+
+            # update current_user object in session
+            current_user.username = username
+            current_user.email = email
+            flash('Your profile has been updated!', 'success')
+            return redirect(url_for('profile'))
+
+        except psycopg2.IntegrityError:
+            flash('That username or email is already taken.', 'danger')
+            conn.rollback()
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    elif request.method == 'GET':
+        # pre-fill form with current user data
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+        form.full_name.data = getattr(current_user, 'full_name', '')
+        form.main_sport.data = getattr(current_user, 'main_sport', '')
+        form.fitness_goals.data = getattr(current_user, 'fitness_goals', '')
+        form.avatar_choice.data = getattr(current_user, 'avatar_choice', 'default.png')
+
+    return render_template('profile.html', title='Profile', form=form)
+
 
 @app.route('/debug_foods')
 def debug_foods():
@@ -1188,13 +1226,21 @@ def reset_request():
         return redirect(url_for('index'))
     form = RequestResetForm()
     if form.validate_on_submit():
+        email = form.email.data.lower()  # normalize to lowercase
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute('SELECT * FROM users WHERE email = %s', (form.email.data,))
+        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
         conn.close()
+
         if user:
-            user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+            user_obj = User(
+                id=user['id'],
+                username=user['username'],
+                email=user['email'],
+                role=user['role']
+            )
             if send_reset_email(user_obj):
                 flash('An email has been sent with instructions to reset your password.', 'info')
             else:
@@ -1203,6 +1249,7 @@ def reset_request():
             flash('No account found with that email.', 'warning')
         return redirect(url_for('login'))
     return render_template('reset_request.html', title='Reset Password', form=form)
+
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
@@ -1223,7 +1270,12 @@ def reset_token(token):
         flash('User not found', 'warning')
         return redirect(url_for('reset_request'))
     
-    user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
+    user_obj = User(
+        id=user['id'],
+        username=user['username'],
+        email=user['email'],
+        role=user['role']
+    )
     form = ResetPasswordForm()
     
     if form.validate_on_submit():
@@ -1239,6 +1291,7 @@ def reset_token(token):
         flash('Your password has been updated! You can now log in', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
 
 @app.route('/search_foods', methods=['POST'])
 @login_required
