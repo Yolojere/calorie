@@ -20,13 +20,6 @@ function setupEventListeners() {
             saveSet($(this).attr('id') === 'comments-input-mobile');
         }
     });
-    // Click handler
-$(document).on("click", ".date-cell", function() {
-    $(".date-cell").removeClass("selected");
-    $(this).addClass("selected");
-    copyWorkoutToDate($(this).data("date"));
-});
-
     // Template handling
     $("#save-template-btn").click(saveTemplate);
     $("#apply-template-btn").click(function() {
@@ -446,4 +439,37 @@ $(document).on('click', '.quick-add-set', function () {
             console.error(response.error);
         }
     });
+});
+$(document).on("click", "#save-template-btn", function() {
+  const workoutId = $(this).data("id");
+  $("#comparisonModal").modal("hide");
+
+  // Attach workoutId for saving
+  $("#confirm-save-template-btn").data("workout-id", workoutId);
+
+  $("#copyTemplateModal").modal("show");
+});
+
+// Confirm save template
+$(document).on("click", "#confirm-save-template-btn", function() {
+  const workoutId = $(this).data("workout-id");
+  const templateName = $("#template-name-input").val().trim() || "Untitled Template";
+
+  $.ajax({
+    url: "/workout/save_template",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ workoutId, templateName }),
+    success: function(response) {
+      $("#copyTemplateModal").modal("hide");
+      alert("Template saved successfully!");
+    },
+    error: function(err) {
+      console.error("Template save failed", err);
+    }
+  });
+});
+$(document).on("click", "#copy-to-date-btn", function() {
+  let workoutId = $(this).data("id");
+  $("#copyWorkoutModal").data("workout-id", workoutId).modal("show");
 });
