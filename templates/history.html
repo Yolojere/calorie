@@ -1133,59 +1133,72 @@
                 alert("Failed to load exercise details. Please try again.");
             });
         }
+// Safe parsing of weight/reps from strings like "64kg" or "10"
+function parseBestSet(rawSet) {
+    if (!rawSet) return null;
 
-        // Function to calculate estimated 1 rep max
-        function calculateOneRepMax(weight, reps) {
-            if (reps === 1) return weight; // Already a 1RM
-            return weight / (1.0278 - 0.0278 * reps);
-        }
+    // If it's already an object
+    if (typeof rawSet === 'object' && rawSet.weight && rawSet.reps) {
+        const weight = parseFloat(rawSet.weight);
+        const reps = parseInt(rawSet.reps);
+        if (isNaN(weight) || isNaN(reps) || reps <= 0) return null;
+        return { weight, reps };
+    }
 
-        // Function to parse best set string and extract weight and reps
-        function parseBestSet(bestSetString) {
-            if (!bestSetString) return null;
-            
-            // Match patterns like "100 kg x 5" or "100x5"
-            const pattern = /(\d+(?:\.\d+)?)\s*(?:kg\s*x\s*|x\s*)?(\d+)/i;
-            const match = bestSetString.match(pattern);
-            
-            if (match) {
-                return {
-                    weight: parseFloat(match[1]),
-                    reps: parseInt(match[2])
-                };
-            }
-            return null;
-        }
+    // If it's a string like "14x64.0kg" or "14 x 64.0kg"
+    if (typeof rawSet === 'string') {
+        const match = rawSet.match(/(\d+)\s*[xX]\s*(\d+(\.\d+)?)/);
+        if (!match) return null;
+        const reps = parseInt(match[1]);
+        const weight = parseFloat(match[2]);
+        if (isNaN(reps) || isNaN(weight) || reps <= 0) return null;
+        return { weight, reps };
+    }
+
+    return null;
+}
+       function calculateOneRepMax(weight, reps) {
+    weight = parseFloat(weight);
+    reps = parseInt(reps);
+    if (isNaN(weight) || isNaN(reps) || reps <= 0) return 0;
+
+    if (reps === 1) return weight;
+
+    const denom = 1.0278 - 0.0278 * reps;
+    if (denom <= 0) return 0; // prevent negative or zero denominator
+    return weight / denom;
+}
+
 
         // Render exercise detail (chart + session table)
         function renderExerciseDetail(data) {
-            // Show exercise name
-            $('#exercise-detail-name').text(data.name);
+    // Show exercise name
+    $('#exercise-detail-name').text(data.name);
 
-            // === Summary Cards ===
-            $('#exercise-personal-best').text((data.personal_best || 0).toFixed(1) + ' kg');
-            $('#exercise-monthly-volume').text((data.monthly_volume || 0).toFixed(1) + ' kg');
-            $('#exercise-best-set').text(data.best_set || '-');
-            
-            // Calculate and display 1RM ranking
-            const bestSetData = parseBestSet(data.best_set);
-            if (bestSetData) {
-                const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
-                $('#exercise-ranking').text(oneRepMax.toFixed(1) + ' kg');
-            } else {
-                $('#exercise-ranking').text('-');
-            }
+    // Summary cards
+    $('#exercise-personal-best').text((data.personal_best || 0).toFixed(1) + ' kg');
+    $('#exercise-monthly-volume').text((data.monthly_volume || 0).toFixed(1) + ' kg');
+    $('#exercise-best-set').text(data.best_set || '-');
 
-            // === Chart ===
-            renderExerciseChart(data.history);
+    // Calculate and display 1RM
+    const bestSetData = parseBestSet(data.best_set);
+    if (bestSetData) {
+        const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
+        $('#exercise-ranking').text(oneRepMax.toFixed(1) + ' kg');
+    } else {
+        $('#exercise-ranking').text('-');
+    }
 
-            // === Session Table ===
-            renderSessionsTable(data.history);
+    // Chart
+    renderExerciseChart(data.history);
 
-            // === Show detail view and hide exercises list ===
-            $('#exercises-list').closest('.table-responsive').hide();
-            $('#exercise-detail').show();
-        }
+    // Session table
+    renderSessionsTable(data.history);
+
+    // Show detail view and hide exercises list
+    $('#exercises-list').closest('.table-responsive').hide();
+    $('#exercise-detail').show();
+}
         
         // Render exercise chart
         function renderExerciseChart(history) {
