@@ -205,7 +205,6 @@
         
         /* ===== FOOD GROUPS ===== */
         .food-group {
-            margin-bottom: 6px;
             display: flex;
             flex-direction: column;
             min-height: auto;
@@ -280,7 +279,6 @@
             border-right: 3px solid #00000079;
             border-bottom: 3px solid #00000079;
             border-radius: 0 0 6px 6px;
-            margin-bottom: 15px;
             line-height: 12px;
         }
         
@@ -542,6 +540,9 @@
             background-color: #ffffff;
             color: black;
         }
+        .edit-grams-btn {
+    font-size: 12px !important;
+}
         
         .edit-grams:hover {
             transform: scale(1.02);
@@ -1234,8 +1235,8 @@ input[type=number] {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 45px;
-            height: 45px;
+            width: 35px;
+            height: 35px;
             
         }
 
@@ -1247,7 +1248,7 @@ input[type=number] {
         }
 
         .nav-link-box i {
-            font-size: 17px !important;
+            font-size: 14px !important;
             margin: 0 !important;
         }
         .nav-logo-box {
@@ -1256,10 +1257,9 @@ input[type=number] {
             left: 50%;
             top: 50%;
             border: solid 1px !important;
-            border-color: #353535 !important;
+            border-color: #2d2d2d !important;
             transform: translate(-50%, -50%);
-            z-index: 10; /* ensures it’s above other elements */
-            background: linear-gradient(to right, #111111, #272727, #111111);
+            background: linear-gradient(to right, #111111, #333333, #111111);
             color: #ffffff;
             border-radius: 30px;
             padding: 2px;
@@ -1269,6 +1269,7 @@ input[type=number] {
             justify-content: center;
             width: 55px;
             height: 55px;
+            z-index: 1050 !important;
               }
                 .nav-logo-box img.nav-logo {
             max-width: 100%;   /* scale the logo down */
@@ -1345,8 +1346,8 @@ input[type=number] {
             color: rgb(255, 255, 255) !important;
             border-radius: 50%;
             padding: 10px !important;
-            width: 45px;
-            height: 45px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1546,7 +1547,7 @@ input[type=number] {
                 display: flex !important;
             }
             .navbar-nav .nav-link {
-                font-size: 17px !important;
+                font-size: 14px !important;
             }
             
             #nutrition-panel {
@@ -1656,7 +1657,10 @@ input[type=number] {
                 transition: all 0.3s ease;
                 box-shadow: 0 3px 6px rgba(0,0,0,0.3);
             }
-            
+            .list-group-item {
+    padding-left: 0.1rem; /* or 0 for flush left */
+    padding-right: 0.6rem;
+}
             .mobile-tab-btn i {
                 font-size: 28px;
             }
@@ -1718,29 +1722,66 @@ input[type=number] {
                 font-size: 18px !important;
             }
             
-            .food-item-container {
+  
+  .food-item-container {
     display: flex;
-           flex-direction:row;
-    align-items: flex-start;       /* align text and badge nicely at the top */
-    justify-content: space-between; /* keep badge on the right */
-    max-width: 40%;                   /* full width of li */                     /* optional spacing between text and badge */
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0; /* important for ellipsis inside flex */
+    flex: 1 1 auto; /* allow to shrink */
+    gap: 1px;
 }
+/* Food name with ellipsis */
+.food-name {
+    flex: 1 1 auto;     /* take remaining space */
+    min-width: 0;       /* required for text-overflow in flexbox */
+}  
+.food-name strong {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 1.2;
+    max-width: 100%;
+}
+  .food-item-container > div {
+    flex: 1 !important;
+    overflow: hidden !important;
+  }
+  
+   .edit-grams {
+    flex-shrink: 0;
+    font-size: 11px;
+    padding: 2px 4px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 4px;
+}
+.edit-grams-btn {
+    font-size: 11px !important;
+    height: 11px !important;
+    width: 11px !important;
+}
+    .nutrition-values-container {
+    flex-wrap: nowrap !important;
+    display: block;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
 
-.food-item-container > div {
-    flex: 1 1 auto;     /* allow the text container to grow and shrink */
+  }   
+  .nutrition-and-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
 }
+     
 
-.food-item-container strong {
-    display: block;     /* allow wrapping */
-    word-wrap: break-word !important; /* break long words if needed */
-}
-            
-            .nutrition-and-actions {
-                width: 100%;
-                justify-content: space-between;
-                margin-top: 5px;
-            }
-            
             #date-selector {
                 font-size: 12px !important;
                 height: 36px !important;
@@ -1753,7 +1794,7 @@ input[type=number] {
             }
             
             .food-item-container strong {
-                font-size: 12px !important;
+                display: flex;
             }
             
             .group-nutrition > div:not(.nutrition-calories),
@@ -1817,11 +1858,11 @@ input[type=number] {
             }
             
             #search-results .food-name {
-                font-size: 12px !important;
+                font-size: 13px !important;
             }
             
             #search-results .calorie-badge {
-                font-size: 12px !important;
+                font-size: 13px !important;
                 padding: 3px 6px;
             }
             
@@ -1881,10 +1922,6 @@ input[type=number] {
             }
             
             #food-search {
-                font-size: 16px !important;
-            }
-            
-            .food-item {
                 font-size: 14px !important;
             }
             
@@ -2200,7 +2237,10 @@ input[type=number] {
     
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand d-md-inline" href="/" style="font-size: 16px;">Track You</a>
+             <div class="nav-logo-box">
+    <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
+</div>
+            <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
             <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, eat, repeat -
             </a>
@@ -2542,12 +2582,7 @@ input[type=number] {
                                                     <strong>{{ item.name }}</strong>
                                                 </div>
                                             </div>
-                                            <span class="edit-grams badge edit-grams-btn mx-1" 
-                                                data-id="{{ item.id }}"
-                                                data-key="{{ item.key }}">
-                                                {{ item.grams|round(1) }}g
-                                            </span>
-                                        </div>
+
                                         <div class="nutrition-and-actions">
                                             <div class="nutrition-values-container d-flex">
                                                 <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
@@ -4092,42 +4127,45 @@ function applyTemplate() {
                         `;
                         
                         groupData['items'].forEach((item, index) => {
-                            logHtml += `
-                                <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-id="${item.id}" data-key="${item.key}">
-                                    <div class="food-item-container">
-                                        <div>
-                                            <div class="d-flex align-items-center">
-                                                <strong>${item.name}</strong>
-                                            </div>
-                                        </div>
-                                        <span class="edit-grams badge edit-grams-btn mx-1" 
-                                            data-id="${item.id}" 
-                                            data-key="${item.key}">
-                                            ${item.grams.toFixed(1)}g
-                                                </span>
-                                    </div>
-                                    <div class="nutrition-and-actions">
-                                        <div class="nutrition-values-container d-flex">
-                                            <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                                                <span>${item.calories.toFixed(1)} kcal</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                                                <span>${item.proteins.toFixed(1)}g P</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                <span>${item.carbs.toFixed(1)}g C</span>
-                                            </div>
-                                            <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                                                <span>${item.fats.toFixed(1)}g F</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn delete-item" data-id="${item.id}">
-                                            <i class="fa-solid fa-circle-xmark"></i>
-                                        </button>
-                                    </div>
-                                </li>
-                            `;
-                        });
+    logHtml += `
+        <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" 
+            data-id="${item.id}" data-key="${item.key}">
+            
+            <!-- left section: grams + food name -->
+            <div class="food-item-container">
+                <span class="edit-grams badge edit-grams-btn mx-1"
+                    data-id="${item.id}" 
+                    data-key="${item.key}">
+                    ${item.grams.toFixed(1)}g
+                </span>
+                <div class="food-name">
+                    <strong>${item.name}</strong>
+                </div>
+            </div>
+
+            <!-- right section: nutrition + delete -->
+            <div class="nutrition-and-actions d-flex align-items-center">
+                <div class="nutrition-values-container d-flex">
+                    <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                        <span>${item.calories.toFixed(1)} kcal</span>
+                    </div>
+                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
+                        <span>${item.proteins.toFixed(1)}g P</span>
+                    </div>
+                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                        <span>${item.carbs.toFixed(1)}g C</span>
+                    </div>
+                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
+                        <span>${item.fats.toFixed(1)}g F</span>
+                    </div>
+                </div>
+                <button class="btn delete-item ms-2" data-id="${item.id}">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+        </li>
+    `;
+});
                         
                         logHtml += `
                                 </ul>
