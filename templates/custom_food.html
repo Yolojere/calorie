@@ -57,16 +57,45 @@
         background-color: #333;
         color: #ffffff;
     }
-    .nav-logo-box {
+ /* ===== NAV LINK BOX ===== */
+                .nav-link-box {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444 !important;
+            border-radius: 20px;
+            padding: 0;
+            margin: 0 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            
+        }
+
+        .nav-link-box:hover {
+            background-color: #f0f0f0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: black !important;
+        }
+
+        .nav-link-box i {
+            font-size: 14px !important;
+            margin: 0 !important;
+        }
+        .nav-logo-box {
             display:inline-block;
             position: absolute;
             left: 50%;
             top: 50%;
             border: solid 1px !important;
-            border-color: #353535 !important;
+            border-color: #2d2d2d !important;
             transform: translate(-50%, -50%);
-            z-index: 10; /* ensures it’s above other elements */
-            background: linear-gradient(to right, #111111, #272727, #111111);
+            background: linear-gradient(to right, #111111, #333333, #111111);
             color: #ffffff;
             border-radius: 30px;
             padding: 2px;
@@ -76,6 +105,7 @@
             justify-content: center;
             width: 55px;
             height: 55px;
+            z-index: 1050 !important;
               }
                 .nav-logo-box img.nav-logo {
             max-width: 100%;   /* scale the logo down */
@@ -131,37 +161,6 @@
     -moz-appearance: textfield;
 }
 
-/* === NAVIGATION === */
-
-    .nav-link-box {
-            display: inline-block;
-            background-color: #1b1b1b;
-            color: #ffffff;
-            border: 1px solid #444 !important;
-            border-radius: 20px;
-            padding: 15px !important;
-            margin: 0 3px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 45px;
-            height: 45px;
-            
-        }
-
-        .nav-link-box:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            color: black !important;
-        }
-
-        .nav-link-box i {
-            font-size: 17px !important;
-            margin: 0 !important;
-        }
         
         /* ===== MOBILE NAVIGATION ===== */
         .mobile-settings-btn {
@@ -170,8 +169,8 @@
             color: rgb(255, 255, 255) !important;
             border-radius: 50%;
             padding: 10px !important;
-            width: 45px;
-            height: 45px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -334,7 +333,7 @@
     <!-- Updated Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand d-md-inline" href="/" style="font-size: 16px;">Track You</a>
+            <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
             <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, eat, repeat -
             </a>
@@ -507,7 +506,7 @@
     <div class="row nutrition-row">
         <div class="col-md-6">
             <label class="form-label">EAN/Barcode (optional)</label>
-            <input type="text" name="ean" class="form-control">
+            <input type="text" id="ean-input" name="ean" class="form-control">
         </div>
     </div>
     
@@ -650,9 +649,18 @@
 });</script>
     <script>
         $(document).ready(function() {
+               const params = new URLSearchParams(window.location.search);
+    const eanFromQS = params.get('ean');
+    if (eanFromQS) {
+        // prefer id but fallback to name selector
+        const $eanInput = $('#ean-input').length ? $('#ean-input') : $('input[name="ean"]');
+        if ($eanInput.length) {
+            $eanInput.val(eanFromQS).addClass('highlight');
+            setTimeout(() => $eanInput.removeClass('highlight'), 2000);
+        } 
+    }
             let stream = null;
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
-            
             // Open camera when scan button is clicked
             $('#scanNutritionLabel').on('click', function() {
                 openCamera();
@@ -668,80 +676,8 @@
             $('#cameraModal').on('hidden.bs.modal', function() {
                 stopCamera();
             });
-            
-            // Open camera function
-            function openCamera() {
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                        .then(function(videoStream) {
-                            stream = videoStream;
-                            const video = document.getElementById('cameraVideo');
-                            video.srcObject = videoStream;
-                        })
-                        .catch(function(error) {
-                            console.error('Camera error: ', error);
-                            alert('Unable to access camera: ' + error.message);
-                        });
-                } else {
-                    alert('Your browser does not support camera access.');
-                }
-            }
-            
-            // Stop camera function
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    stream = null;
-                }
-            }
-            
-            // Capture image function
-            function captureImage() {
-                const video = document.getElementById('cameraVideo');
-                const canvas = document.getElementById('captureCanvas');
-                const context = canvas.getContext('2d');
-                
-                // Set canvas dimensions to match video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                
-                // Draw current video frame to canvas
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Show processing overlay
-                $('#scanningOverlay').removeClass('d-none');
-                
-                // Convert canvas to blob and send to server
-                canvas.toBlob(function(blob) {
-                    // Create form data
-                    const formData = new FormData();
-                    formData.append('image', blob, 'nutrition-label.jpg');
-                    
-                    // Send to server for processing
-                    $.ajax({
-                        url: '/process_nutrition_label',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            if (response.success) {
-                                // Fill form with extracted data
-                                fillFormWithNutritionData(response.data);
-                                cameraModal.hide();
-                            } else {
-                                alert('Error: ' + response.error);
-                            }
-                            $('#scanningOverlay').addClass('d-none');
-                        },
-                        error: function(xhr, status, error) {
-                            alert('Error processing image: ' + error);
-                            $('#scanningOverlay').addClass('d-none');
-                        }
-                    });
-                }, 'image/jpeg', 0.8);
-            }
-            
+  
+   
             // Fill form with extracted nutrition data
             function fillFormWithNutritionData(nutritionData) {
                 // Fill basic fields
