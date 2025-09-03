@@ -514,7 +514,7 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Calories (per 100g) (optional)</label>
-            <input type="number" name="calories" class="form-control" step="0.1" min="0">
+            <input type="number" name="calories" class="form-control" step="0.001" min="0">
         </div>
     </div>
     
@@ -522,11 +522,11 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Fats (g)*</label>
-            <input type="number" name="fats" class="form-control" step="0.1" min="0" placeholder="required" required>
+            <input type="number" name="fats" class="form-control" step="0.001" min="0" placeholder="required" required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Saturated Fats (g)</label>
-            <input type="number" name="saturated" class="form-control" step="0.1" min="0" placeholder="g">
+            <input type="number" name="saturated" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
     
@@ -534,15 +534,15 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Carbohydrates (g)*</label>
-            <input type="number" name="carbs" class="form-control" step="0.1" min="0" placeholder="required" required>
+            <input type="number" name="carbs" class="form-control" step="0.001" min="0" placeholder="required" required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Sugars (g)</label>
-            <input type="number" name="sugars" class="form-control" step="0.1" min="0" placeholder="g">
+            <input type="number" name="sugars" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
         <div class="col-md-2">
             <label class="form-label">Fiber (g)</label>
-            <input type="number" name="fiber" class="form-control" step="0.1" min="0" placeholder="g">
+            <input type="number" name="fiber" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
     
@@ -550,7 +550,7 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Proteins (g)*</label>
-            <input type="number" name="proteins" class="form-control" step="0.1" min="0" placeholder="required" required>
+            <input type="number" name="proteins" class="form-control" step="0.001" min="0" placeholder="required" required>
         </div>
     </div>
     
@@ -558,7 +558,7 @@
     <div class="row nutrition-row">
         <div class="col-md-2">
             <label class="form-label">Salt (g)</label>
-            <input type="number" name="salt" class="form-control" step="0.1" min="0" placeholder="g">
+            <input type="number" name="salt" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
    
@@ -762,32 +762,36 @@
 
     const formData = {};
 
-    $('#food-form input').each(function() {
-        const input = $(this);
-        const name = input.attr('name');
-        let value = input.val().trim();
+  $('#food-form input').each(function() {
+    const input = $(this);
+    const name = input.attr('name');
+    let value = input.val().trim();
 
-        // Skip EAN, keep as null if empty
-        if (name === 'ean') {
-            formData[name] = value || null;
-            return;
+    // Skip EAN, keep as null if empty
+    if (name === 'ean') {
+        formData[name] = value || null;
+        return;
+    }
+
+    // Required fields: carbs, fats, proteins, grams
+    if (['carbs', 'fats', 'proteins', 'grams'].includes(name)) {
+        if (value === '') {
+            showError('Carbs, fats, proteins, and base grams are required');
+            throw 'ValidationError';
         }
+    }
 
-        // Required fields: carbs, fats, proteins, grams
-        if (['carbs', 'fats', 'proteins', 'grams'].includes(name)) {
-            if (value === '') {
-                showError('Carbs, fats, proteins, and base grams are required');
-                throw 'ValidationError';
-            }
-        }
+    // For numeric fields, keep empty as empty string
+    if (input.attr('type') === 'number' && value !== '') {
+        // Convert to float, preserving tiny decimals
+        value = parseFloat(value);
+    } else if (value === '') {
+        value = null; // leave empty numeric fields as null
+    }
 
-        // For numeric inputs, default empty to 0
-        if (input.attr('type') === 'number' && value === '') {
-            value = 0;
-        }
+    formData[name] = value;
+});
 
-        formData[name] = value;
-    });
 
     // Optional fields: serving, half, entire
     const serving = $('input[name="serving"]').val();
