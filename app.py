@@ -1719,63 +1719,64 @@ def save_food_route():
         name = request.form.get('name', '').strip()
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
-        
-        # Get EAN and check if it's provided
+
         ean = request.form.get('ean') or None
-        
-        # Open connection early for EAN check
+
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Check for duplicate EAN if provided
+
+        # Check for duplicate EAN
         if ean:
             cursor.execute('SELECT key FROM foods WHERE ean = %s', (ean,))
             existing_food = cursor.fetchone()
             if existing_food:
                 return jsonify({
-                    'success': False, 
+                    'success': False,
                     'error': f'EAN {ean} already in use by food: {existing_food[0]}'
                 }), 400
 
-        # Rest of form data extraction
-        carbs = safe_float(request.form.get('carbs', 0))
-        sugars = safe_float(request.form.get('sugars', 0))
-        fiber = safe_float(request.form.get('fiber', 0))
-        proteins = safe_float(request.form.get('proteins', 0))
-        fats = safe_float(request.form.get('fats', 0))
-        saturated = safe_float(request.form.get('saturated', 0))
-        salt = safe_float(request.form.get('salt', 0))
-        
-        # Handle optional portion fields
-        serving_val = request.form.get('serving')
-        half_val = request.form.get('half')
-        entire_val = request.form.get('entire')
-        
-        serving = safe_float(serving_val, None) if serving_val else None
-        half = safe_float(half_val, None) if half_val else None
-        entire = safe_float(entire_val, None) if entire_val else None
-        
-        # Base grams handling
-        grams_val = request.form.get('grams', '100')
-        grams = safe_float(grams_val, 100, min_val=0.001)
-        
-        # Handle calories - use if provided, otherwise calculate
-        calories_input = request.form.get('calories', '').strip()
+        # Helper to parse floats or return None
+        def parse_optional_float(value):
+            try:
+                value = value.strip()
+                return float(value) if value else None
+            except (ValueError, AttributeError):
+                return None
+
+        # Nutrients
+        carbs = parse_optional_float(request.form.get('carbs'))
+        sugars = parse_optional_float(request.form.get('sugars'))
+        fiber = parse_optional_float(request.form.get('fiber'))
+        proteins = parse_optional_float(request.form.get('proteins'))
+        fats = parse_optional_float(request.form.get('fats'))
+        saturated = parse_optional_float(request.form.get('saturated'))
+        salt = parse_optional_float(request.form.get('salt'))
+
+        # Portion fields
+        serving = parse_optional_float(request.form.get('serving'))
+        half = parse_optional_float(request.form.get('half'))
+        entire = parse_optional_float(request.form.get('entire'))
+
+        # Grams (default 100)
+        grams = parse_optional_float(request.form.get('grams')) or 100
+        if grams < 0.001:
+            grams = 0.001
+
+        # Calories
+        calories_input = request.form.get('calories')
         if calories_input:
             try:
                 calories = float(calories_input)
-                # Validate that the provided calories make sense
-                calculated_calories = calculate_calories(carbs, proteins, fats)
-                # If provided calories are significantly different from calculated, use calculated
-                if abs(calories - calculated_calories) > calculated_calories * 0.5:  # 50% difference threshold
+                # optional sanity check
+                calculated_calories = calculate_calories(carbs or 0, proteins or 0, fats or 0)
+                if abs(calories - calculated_calories) > calculated_calories * 0.5:
                     calories = calculated_calories
             except ValueError:
-                calories = calculate_calories(carbs, proteins, fats)
+                calories = calculate_calories(carbs or 0, proteins or 0, fats or 0)
         else:
-            # Calculate calories if not provided
-            calories = calculate_calories(carbs, proteins, fats)
-        
-        # Generate unique key
+            calories = calculate_calories(carbs or 0, proteins or 0, fats or 0)
+
+        # Unique key
         base_key = re.sub(r'[^a-z0-9_]', '', name.lower().replace(' ', '_')) or "custom_food"
         key = base_key
         counter = 1
@@ -1785,61 +1786,30 @@ def save_food_route():
                 break
             key = f"{base_key}_{counter}"
             counter += 1
-            if counter > 100:  # Fallback for too many duplicates
+            if counter > 100:
                 key = f"custom_{uuid.uuid4().hex[:8]}"
                 break
-            
-        # Create food object
-        food_data = {
-            "key": key,
-            "name": name,
-            "carbs": carbs,
-            "sugars": sugars,
-            "fiber": fiber,
-            "proteins": proteins,
-            "fats": fats,
-            "saturated": saturated,
-            "salt": salt,
-            "calories": calories,
-            "grams": grams,
-            "half": half,
-            "entire": entire,
-            "serving": serving,
-            "ean": ean
-        }
-        
-        # Save to database
+
+        # Insert food
         cursor.execute('''
             INSERT INTO foods 
             (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
-            food_data['key'],
-            food_data['name'],
-            food_data['carbs'],
-            food_data['sugars'],
-            food_data['fiber'],
-            food_data['proteins'],
-            food_data['fats'],
-            food_data['saturated'],
-            food_data['salt'],
-            food_data['calories'],
-            food_data['grams'],
-            food_data.get('half'),
-            food_data.get('entire'),
-            food_data.get('serving'),
-            food_data.get('ean')
+            key, name, carbs, sugars, fiber, proteins, fats, saturated, salt,
+            calories, grams, half, entire, serving, ean
         ))
-        
-        # Initialize usage count
+
+        # Initialize usage
         cursor.execute('''
             INSERT INTO food_usage (food_key, count)
             VALUES (%s, 1)
             ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
         ''', (key,))
-        
+
         conn.commit()
         return jsonify({'success': True})
+
     except Exception as e:
         if conn:
             conn.rollback()
@@ -3292,6 +3262,7 @@ def save_workout():
     focus_type = data.get("focus_type")
     date = data.get("date")
     exercises = data.get("exercises", [])
+    name = data.get("name", "Unnamed Workout")
 
     if not focus_type or not date:
         return jsonify({"success": False, "error": "Focus type and date are required"}), 400
@@ -3303,7 +3274,7 @@ def save_workout():
         # Save the workout session
         cursor.execute(
             "INSERT INTO workout_sessions (user_id, date, name, focus_type) VALUES (%s, %s, %s, %s) RETURNING id",
-            (current_user.id, date, data.get("name", "Unnamed Workout"), focus_type)
+            (current_user.id, date, name, focus_type)
         )
         session_id = cursor.fetchone()[0]
 
@@ -3315,11 +3286,17 @@ def save_workout():
                     (session_id, ex["id"], s["reps"], s["weight"])
                 )
 
-        # Build comparison data (latest previous session per exercise + focus type)
-        comparison_data = []
+        # Initialize tracking structures
+        set_comparisons = []
+        personal_records = []
+        improvements = []
+        total_sets = 0
+        current_total_volume = 0
+
         for ex in exercises:
+            # Previous session for same focus_type
             cursor.execute("""
-                SELECT ws.date, wset.reps, wset.weight
+                SELECT wset.reps, wset.weight, ws.date
                 FROM workout_sessions ws
                 JOIN workout_sets wset ON wset.session_id = ws.id
                 WHERE ws.user_id = %s
@@ -3332,33 +3309,132 @@ def save_workout():
             last = cursor.fetchone()
 
             current_sets = ex["sets"]
-            total_reps = sum(s["reps"] for s in current_sets)
-            total_volume = sum(s["reps"] * s["weight"] for s in current_sets)
+            total_sets += len(current_sets)
+
+            # Current session calculations
+            heaviest_set = max(current_sets, key=lambda s: s["weight"])
+            best_set = max(current_sets, key=lambda s: s["reps"] * s["weight"])
+            total_volume_ex = sum(s["reps"] * s["weight"] for s in current_sets)
+            current_total_volume += total_volume_ex
 
             if last:
-                last_reps = last[1]
-                last_weight = last[2]
+                last_reps, last_weight, last_date = last
                 last_volume = last_reps * last_weight
-                comparison_data.append({
-                    "name": ex["name"],
-                    "lastDate": last[0].isoformat() if isinstance(last[0], datetime) else last[0],
-                    "currentSets": current_sets,
-                    "lastReps": last_reps,
-                    "lastWeight": last_weight,
-                    "lastVolume": last_volume
-                })
+
+                # PR detection
+                if best_set["reps"] * best_set["weight"] > last_volume:
+                    personal_records.append({
+                        "exercise": ex["name"],
+                        "type": "bestSet",
+                        "weight": best_set["weight"],
+                        "reps": best_set["reps"],
+                        "previousBest": {"weight": last_weight, "reps": last_reps}
+                    })
+                if heaviest_set["weight"] > last_weight:
+                    personal_records.append({
+                        "exercise": ex["name"],
+                        "type": "heaviestWeight",
+                        "weight": heaviest_set["weight"],
+                        "reps": None,
+                        "previousBest": {"weight": last_weight, "reps": last_reps}
+                    })
+
+                # Per-set comparisons
+                for idx, s in enumerate(current_sets, start=1):
+                    current_volume = s["reps"] * s["weight"]
+                    volume_change = current_volume - last_volume
+                    set_comparisons.append({
+                        "setId": f"{ex['id']}-{idx}",
+                        "exerciseId": ex["id"],
+                        "currentReps": s["reps"],
+                        "currentWeight": s["weight"],
+                        "currentVolume": current_volume,
+                        "previousReps": last_reps,
+                        "previousWeight": last_weight,
+                        "previousVolume": last_volume,
+                        "volumeChange": volume_change,
+                        "noPrevious": False,
+                        "isNew": False
+                    })
+
+                # Track improvements per exercise
+                if total_volume_ex > last_volume:
+                    improvements.append({"exercise": ex["name"], "volumeChange": total_volume_ex - last_volume})
+
             else:
-                comparison_data.append({
-                    "name": ex["name"],
-                    "lastDate": None,
-                    "currentSets": current_sets,
-                    "lastReps": 0,
-                    "lastWeight": 0,
-                    "lastVolume": 0
+                # First session of this focus type
+                for idx, s in enumerate(current_sets, start=1):
+                    current_volume = s["reps"] * s["weight"]
+                    set_comparisons.append({
+                        "setId": f"{ex['id']}-{idx}",
+                        "exerciseId": ex["id"],
+                        "currentReps": s["reps"],
+                        "currentWeight": s["weight"],
+                        "currentVolume": current_volume,
+                        "previousReps": 0,
+                        "previousWeight": 0,
+                        "previousVolume": 0,
+                        "volumeChange": current_volume,
+                        "noPrevious": True,
+                        "isNew": True
+                    })
+
+                # First session PRs (best set & heaviest)
+                personal_records.append({
+                    "exercise": ex["name"],
+                    "type": "bestSet",
+                    "weight": best_set["weight"],
+                    "reps": best_set["reps"],
+                    "previousBest": {"weight": 0, "reps": 0}
+                })
+                personal_records.append({
+                    "exercise": ex["name"],
+                    "type": "heaviestWeight",
+                    "weight": heaviest_set["weight"],
+                    "reps": None,
+                    "previousBest": {"weight": 0, "reps": 0}
                 })
 
+        # Previous session totals for volume & sets
+        cursor.execute("""
+            SELECT ws.id
+            FROM workout_sessions ws
+            WHERE ws.user_id = %s
+              AND ws.focus_type = %s
+              AND ws.id != %s
+            ORDER BY ws.date DESC
+            LIMIT 1
+        """, (current_user.id, focus_type, session_id))
+        last_session = cursor.fetchone()
+
+        last_total_volume = 0
+        last_total_sets = 0
+        if last_session:
+            last_session_id = last_session[0]
+            cursor.execute("SELECT SUM(reps * weight) FROM workout_sets WHERE session_id = %s", (last_session_id,))
+            last_total_volume = cursor.fetchone()[0] or 0
+            cursor.execute("SELECT COUNT(*) FROM workout_sets WHERE session_id = %s", (last_session_id,))
+            last_total_sets = cursor.fetchone()[0] or 0
+
+        volume_change_percent = ((current_total_volume - last_total_volume) / last_total_volume * 100) if last_total_volume else 0
+        sets_change = total_sets - last_total_sets
+
         conn.commit()
-        return jsonify({"success": True, "comparisonData": comparison_data})
+
+        return jsonify({
+            "success": True,
+            "comparisonData": {
+                "setComparisons": set_comparisons,
+                "totalSets": total_sets,
+                "setsChange": sets_change,
+                "totalVolume": current_total_volume,
+                "volumeChange": volume_change_percent
+            },
+            "achievements": {
+                "personalRecords": personal_records,
+                "improvements": improvements
+            }
+        })
 
     except Exception as e:
         conn.rollback()
@@ -3366,6 +3442,7 @@ def save_workout():
     finally:
         cursor.close()
         conn.close()
+
 
 
 @app.route('/foods')
