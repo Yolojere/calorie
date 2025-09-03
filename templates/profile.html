@@ -30,7 +30,26 @@
             font-size: 1.4rem;
             color: #e0e0e0;
         }
-        
+        /* Autofill overrides (Chrome) */
+input.form-control:-webkit-autofill {
+    box-shadow: 0 0 0px 1000px #121212 inset !important;
+    -webkit-text-fill-color: #eee !important;
+    border-color: #333 !important;
+    color: white !important;
+}
+.input-group-text img {
+    outline: none !important;
+    border: none !important;
+}
+
+/* Optional: chain input to image for smooth rounded edges */
+.input-group {
+    border-radius: 20px;
+    overflow: hidden;
+}
+.input-group .input-group-text:first-child {
+    border-radius: 20px 0 0 20px;
+}
         .form-control, .form-select {
         background-color: #121212 !important;
         border: 1px solid #333 !important;
