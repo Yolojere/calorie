@@ -432,18 +432,20 @@ function getExercisesFromUI() {
 
     return exercises;
 }
-
-// Save Workout
-$(document).on("click", "#save-workout-btn", function() {
+// Enhanced Save Workout with Analysis and PR Detection
+$(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", function() {
     const name = $("#workout-name-input").val().trim() || "Unnamed Workout";
     const focus_type = $(".focus-btn.active").data("focus");
     const date = currentSelectedDate;
-    const exercises = getExercisesFromUI(); // make sure this function is defined
-
+    const exercises = getExercisesFromUI();
+    
+    // Show analysis overlay
+    showWorkoutAnalysis();
+    
     $.ajax({
         url: "/workout/save",
         method: "POST",
-        contentType: "application/json", // important!
+        contentType: "application/json",
         data: JSON.stringify({
             name,
             focus_type,
@@ -453,49 +455,30 @@ $(document).on("click", "#save-workout-btn", function() {
         dataType: "json",
         success: function(response) {
             if (response.success) {
-                $("#saveWorkoutModal").modal("hide"); // close modal
-                renderComparisonUI(response.comparisonData); // show comparison UI
+                $("#saveWorkoutModal").modal("hide");
+                
+                // Continue analysis for 4 seconds, then show results
+                setTimeout(() => {
+                    hideWorkoutAnalysis();
+                    showWorkoutResults(response.comparisonData, response.achievements);
+                    updateSetRowsWithProgress(response.comparisonData);
+                }, 4000);
             } else {
+                hideWorkoutAnalysis();
                 alert("Error saving workout: " + response.error);
             }
         },
         error: function(xhr, status, error) {
+            hideWorkoutAnalysis();
             console.error("AJAX Error:", status, error);
             alert("An error occurred while saving the workout.");
         }
     });
 });
-function getExercisesFromUI() {
-    const exercises = [];
 
-    $(".exercise").each(function () {
-        const $exercise = $(this);
-        const exId = $exercise.data("exercise-id");
-        const exName = $exercise.find(".exercise-title").text().trim();
-        const muscleGroup = $exercise.closest(".workout-group").data("group") || "Other";
-
-        const sets = [];
-        $exercise.find(".set-row").each(function () {
-            const $row = $(this);
-            const reps = parseInt($row.find(".set-reps").val()) || 0;
-            const weight = parseFloat($row.find(".set-weight").val()) || 0;
-            sets.push({ reps, weight });
-        });
-
-        exercises.push({
-            id: exId,
-            name: exName,
-            muscle_group: muscleGroup,
-            sets
-        });
-    });
-
-    return exercises;
-}
 function navigateWeek(direction) {
     const days = direction === 'prev' ? -7 : 7
     currentDate.setDate(currentDate.getDate() + days);
     const weekDates = getWeekDates(currentDate);
     renderWeekDates(weekDates);
 }
-
