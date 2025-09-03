@@ -457,6 +457,23 @@
             })
             
         });
+        document.addEventListener("DOMContentLoaded", () => {
+    const alerts = document.querySelectorAll('.alert.fade');
+
+    alerts.forEach(alert => {
+        // Trigger fade-in
+        setTimeout(() => {
+            alert.classList.add('show');
+        }, 10); // small timeout to ensure transition works
+
+        // Auto fade-out after 4s
+        setTimeout(() => {
+            alert.classList.remove('show');
+            // Optionally remove from DOM after fade-out
+            setTimeout(() => alert.remove(), 2000); // matches fade-out duration
+        }, 3000); 
+    });
+});
         $.ajaxSetup({
     beforeSend: function(xhr, settings) {
         let token = $('meta[name="csrf-token"]').attr('content');
@@ -465,16 +482,7 @@
         }
     }
 });
-        // Auto-dismiss alerts after 5 seconds
-setTimeout(function() {
-    let alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        let bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-        bsAlert.close();
-    });
-}, 2000);
     </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
-
