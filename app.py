@@ -793,14 +793,25 @@ def calculate_totals(eaten_items):
 def get_daily_totals(day_data):
     # Handle case where day_data might be None or empty
     if not day_data:
-        return 0.0, 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         
     total_calories = sum(item['calories'] for item in day_data)
     total_proteins = sum(item['proteins'] for item in day_data)
     total_fats = sum(item['fats'] for item in day_data)
     total_carbs = sum(item['carbs'] for item in day_data)
     total_salt = sum(item.get('salt', 0.0) for item in day_data)
-    return total_calories, total_proteins, total_fats, total_carbs, total_salt
+    total_saturated = sum(item.get('saturated', 0.0) for item in day_data)
+    total_fiber = sum(item.get('fiber', 0.0) for item in day_data)
+    
+    return (
+        total_calories,
+        total_proteins,
+        total_fats,
+        total_carbs,
+        total_salt,
+        total_saturated,
+        total_fiber
+    )
 
 def format_date(date_str):
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
@@ -1827,14 +1838,13 @@ def calculate_calories(carbs, proteins, fats):
 
 def calculate_weekly_averages(session_history):
     weekly_data = {}
-    
-    # Group data by week
+
     for date_str, items in session_history.items():
         try:
             date_obj = datetime.strptime(date_str, "%Y-%m-%d")
             year, week_num, _ = date_obj.isocalendar()
             week_key = f"{year}-W{week_num:02d}"
-            
+
             if week_key not in weekly_data:
                 weekly_data[week_key] = {
                     "days": [],
@@ -1843,22 +1853,26 @@ def calculate_weekly_averages(session_history):
                     "fats": 0,
                     "carbs": 0,
                     "salt": 0,
+                    "saturated": 0,
+                    "fiber": 0,
                     "count": 0
                 }
-        
-            calories, proteins, fats, carbs, salt = get_daily_totals(items)
+
+            calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(items)
             weekly_data[week_key]["days"].append(date_str)
             weekly_data[week_key]["calories"] += calories
             weekly_data[week_key]["proteins"] += proteins
             weekly_data[week_key]["fats"] += fats
             weekly_data[week_key]["carbs"] += carbs
             weekly_data[week_key]["salt"] += salt
+            weekly_data[week_key]["saturated"] += saturated
+            weekly_data[week_key]["fiber"] += fiber
             weekly_data[week_key]["count"] += 1
+
         except Exception as e:
             app.logger.error(f"Error processing date {date_str}: {e}")
             continue
-    
-    # Calculate averages
+
     result = []
     for week_key, data in weekly_data.items():
         count = data["count"]
@@ -1871,10 +1885,11 @@ def calculate_weekly_averages(session_history):
                 "avg_proteins": data["proteins"] / count,
                 "avg_fats": data["fats"] / count,
                 "avg_carbs": data["carbs"] / count,
-                "avg_salt": data["salt"] / count
+                "avg_salt": data["salt"] / count,
+                "avg_saturated": data["saturated"] / count,
+                "avg_fiber": data["fiber"] / count
             })
-    
-    # Sort by week (newest first)
+
     result.sort(key=lambda x: x["end_date"], reverse=True)
     return result
 
@@ -1885,26 +1900,44 @@ def history():
     session_history = get_session_history(user_id)
     today = datetime.today()
     daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(-3, 4)]
-    
+
     history_data = []
+    today_str = today.strftime("%Y-%m-%d")
+
+    # Fill history_data
     for date in daily_dates:
         day_data = session_history.get(date, [])
-        calories, proteins, fats, carbs, salt = get_daily_totals(day_data)
+        calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(day_data)
         history_data.append({
             'date': format_date(date),
             'calories': calories,
             'proteins': proteins,
             'fats': fats,
             'carbs': carbs,
-            'salt': salt
-            })
-        
-    # Weekly history
+            'salt': salt,
+            'saturated': saturated,
+            'fiber': fiber
+        })
+
+    # Today’s totals
+    today_data = session_history.get(today_str, [])
+    today_calories, today_proteins, today_fats, today_carbs, today_salt, today_saturated, today_fiber = get_daily_totals(today_data)
+
+    # Weekly averages
     weekly_data = calculate_weekly_averages(session_history)
-    
-    return render_template('history.html', 
-                           history_data=history_data,
-                           weekly_data=weekly_data)
+
+    return render_template(
+        'history.html',
+        history_data=history_data,
+        weekly_data=weekly_data,
+        today_calories=today_calories,
+        today_protein=today_proteins,
+        today_fats=today_fats,
+        today_carbs=today_carbs,
+        today_salt=today_salt,
+        today_saturated=today_saturated,
+        today_fiber=today_fiber
+    )
 # food templates #
 @app.route('/save_template_food', methods=['POST'])
 @login_required
@@ -2122,35 +2155,6 @@ def debug_templates():
         if conn:
             conn.close()
 
-@app.route('/debug_food_key/<food_id>')
-@login_required
-def debug_food_key(food_id):
-    """Endpoint to check if a food key exists in the database"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute(
-            'SELECT key, name FROM foods WHERE key = %s',
-            (food_id,)
-        )
-        food = cursor.fetchone()
-        
-        if food:
-            return jsonify({
-                'success': True,
-                'food': {'key': food[0], 'name': food[1]}
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Food with key {food_id} not found'
-            })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-    finally:
-        if conn:
-            conn.close()    
 @app.route('/save_recipe', methods=['POST'])
 @login_required
 def save_recipe():
