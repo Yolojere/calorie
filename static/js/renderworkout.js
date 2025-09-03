@@ -446,125 +446,253 @@ function populateDateOptions() {
         `);
     }
 }
-function getComparisonStyles(ex) {
-    // Safe fallback in case currentSets not defined
-    const currentSet = ex.currentSets && ex.currentSets[0] ? ex.currentSets[0] : { reps: 0, weight: 0 };
 
-    const weightDiff = ex.lastWeight ? currentSet.weight - ex.lastWeight : 0;
-    const repsDiff = ex.lastReps ? currentSet.reps - ex.lastReps : 0;
-    const volumeDiff = ex.lastVolume ? (currentSet.reps * currentSet.weight) - ex.lastVolume : 0;
-
-    return {
-        weight: { value: currentSet.weight, diff: weightDiff, color: weightDiff > 0 ? "lime" : weightDiff < 0 ? "red" : "gray", icon: weightDiff > 0 ? "🔥" : "" },
-        reps: { value: currentSet.reps, diff: repsDiff, color: repsDiff > 0 ? "lime" : repsDiff < 0 ? "red" : "gray", icon: repsDiff > 0 ? "🔥" : "" },
-        volume: { value: currentSet.reps * currentSet.weight, diff: volumeDiff, color: volumeDiff > 0 ? "gold" : volumeDiff < 0 ? "red" : "gray", icon: volumeDiff > 0 ? "🏆" : "" }
-    };
-}
-
-function renderComparisonUI(comparison, workoutId) {
-    // Remove any previous UI
-    $('.comparison-container, #comparison-backdrop').remove();
-
-    // Add backdrop
-    $('body').append('<div id="comparison-backdrop" class="comparison-backdrop show"></div>');
-
-    // === Phase 0: Dumbbell loading ===
-    const $loading = $(`
-        <div class="comparison-container show" id="comparison-loading">
-            <div class="text-center">
-                <i class="fa-solid fa-dumbbell fa-4x mb-3 animate-spin"></i>
-                <p>Analyzing your workout...</p>
+// Show animated analysis overlay
+function showWorkoutAnalysis() {
+    const overlay = $(`
+        <div class="workout-analysis-overlay" id="workout-analysis">
+            <div class="analysis-content">
+                <div class="spinning-dumbbell">
+                    <i class="fas fa-dumbbell"></i>
+                </div>
+                <div class="analysis-text">Analyzing Your Workout</div>
+                <div class="analysis-subtext" id="analysis-stage">Comparing with previous sessions...</div>
+                <div class="analysis-progress">
+                    <div class="analysis-progress-bar" id="progress-bar"></div>
+                </div>
             </div>
         </div>
     `);
-    $('body').append($loading);
-
-    setTimeout(() => {
-        $loading.remove();
-
-        // === Phase 1: Show exercises summary ===
-        let html = `<div class="comparison-container" id="comparison-card">`;
-        html += `<h5 class="mb-3">Performance vs Last Time</h5>`;
-
-        if (!comparison || comparison.length === 0) {
-            html += `<p>No previous data to compare yet.</p>`;
-        } else {
-            comparison.forEach((ex, exIndex) => {
-                const totalVolume = ex.currentSets.reduce((sum, s) => sum + s.volume, 0);
-                html += `
-                    <div class="comparison-exercise mb-2" data-ex="${exIndex}">
-                        <strong>${ex.name}</strong> - ${ex.currentSets.length} sets - ${totalVolume} volume
-                        <div class="exercise-sets mt-1"></div>
-                    </div>
-                `;
-            });
+    
+    $('body').append(overlay);
+    
+    // Animate progress bar and update text
+    let progress = 0;
+    const stages = [
+        "Comparing with previous sessions...",
+        "Detecting personal records...",
+        "Calculating volume trends...",
+        "Finalizing analysis..."
+    ];
+    
+    const progressInterval = setInterval(() => {
+        progress += 25;
+        $('#progress-bar').css('width', progress + '%');
+        
+        if (progress <= 100) {
+            const stageIndex = Math.floor((progress - 1) / 25);
+            $('#analysis-stage').text(stages[stageIndex] || stages[0]);
         }
-
-        // Buttons
-        html += `
-            <div class="mt-3 text-center">
-                <button id="copy-to-date-btn" class="btn btn-success copy-to-date-btn" data-id="${workoutId}">Copy to Another Date</button>
-                <button class="btn btn-secondary ms-2 close-comparison-btn">Close</button>
-            </div>
-        </div>`;
-
-        $('body').append(html);
-        const $card = $('#comparison-card');
-        setTimeout(() => $card.addClass("show"), 50);
-
-        // === Phase 2: Slide in sets + reward icons ===
-        comparison.forEach((ex, exIndex) => {
-            const $exDiv = $(`.comparison-exercise[data-ex="${exIndex}"] .exercise-sets`);
-            ex.currentSets.forEach((set, setIndex) => {
-                const lastSet = ex.lastSets && ex.lastSets[setIndex] ? ex.lastSets[setIndex] : null;
-                const weightDiff = lastSet ? set.weight - lastSet.weight : 0;
-                const repsDiff = lastSet ? set.reps - lastSet.reps : 0;
-                const volumeDiff = lastSet ? set.volume - lastSet.volume : 0;
-
-                const icon = (volumeDiff > 0 ? "🏆" : (volumeDiff < 0 ? "⚡" : "")); // reward / negative
-                setTimeout(() => {
-                    $exDiv.append(`
-                        <div class="set-row">
-                            Set ${setIndex+1} - ${set.reps} reps - ${set.weight} kg - ${set.volume} vol ${icon}
-                        </div>
-                    `);
-                }, setIndex * 200 + exIndex * 300);
-            });
-        });
-
-        // === Phase 3: Final verdict ===
-        setTimeout(() => {
-            const positiveCount = comparison.reduce((sum, ex) => {
-                return sum + ex.currentSets.reduce((s, set, i) => {
-                    const lastSet = ex.lastSets && ex.lastSets[i] ? ex.lastSets[i] : null;
-                    if (!lastSet) return s;
-                    return s + ((set.volume - lastSet.volume) > 0 ? 1 : 0);
-                }, 0);
-            }, 0);
-
-            let message = "Let's recover and kill it next time";
-            if (positiveCount >= 3) message = "What was that? Insanity!";
-            else if (positiveCount === 2) message = "That was a solid one :)";
-            else if (positiveCount === 1) message = "Keep up the good work!";
-
-            $card.append(`<div class="mt-3 final-message" style="font-size:1.5rem; font-weight:bold;">${message}</div>`);
-        }, 1000 + comparison.length * 600);
-
-    }, 1500); // Dumbbell loading duration
-
-    // === Delegated events ===
-    $(document).off('click', '.close-comparison-btn, #comparison-backdrop')
-        .on('click', '.close-comparison-btn, #comparison-backdrop', () => {
-            $('.comparison-container, #comparison-backdrop').remove();
-        });
-
-    $(document).off('click', '.copy-to-date-btn')
-        .on('click', '.copy-to-date-btn', function() {
-            const targetWorkoutId = $(this).data('id');
-            console.log("Copy workout to id:", targetWorkoutId);
-            // Add copy logic here
-        });
+        
+        if (progress >= 100) {
+            clearInterval(progressInterval);
+        }
+    }, 1000);
 }
+
+// Hide analysis overlay
+function hideWorkoutAnalysis() {
+    $('#workout-analysis').fadeOut(300, function() {
+        $(this).remove();
+    });
+}
+
+// Show workout results with achievements and PRs
+function showWorkoutResults(comparisonData, achievements) {
+    // Handle undefined data gracefully
+    comparisonData = comparisonData || {};
+    achievements = achievements || {};
+    
+    // Calculate key metrics
+    const totalVolume = comparisonData.totalVolume || 0;
+    const volumeChange = comparisonData.volumeChange || 0;
+    const personalRecords = achievements.personalRecords || [];
+    const improvements = achievements.improvements || [];
+    
+    let resultsHTML = `
+        <div class="workout-results-modal" id="workout-results">
+            <div class="results-header">
+                <h2 class="results-title">Workout Complete! 🎉</h2>
+                <div class="results-subtitle">Here's your performance analysis</div>
+            </div>
+            <div class="results-body">
+    `;
+    
+    // Show PR celebrations if any
+    if (personalRecords.length > 0) {
+    personalRecords.forEach(pr => {
+        if (pr.type === 'bestSet') {
+            resultsHTML += `
+                <div class="pr-celebration">
+                    <div class="pr-trophy">🏆</div>
+                    <div class="pr-text">New Best Set!</div>
+                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} reps</div>
+                    <div class="pr-details">Previous best: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} reps</div>
+                </div>`;
+        } else if (pr.type === 'heaviestWeight') {
+            resultsHTML += `
+                <div class="pr-celebration">
+                    <div class="pr-trophy">🏆</div>
+                    <div class="pr-text">Heaviest Weight Ever!</div>
+                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
+                    <div class="pr-details">Previous best: ${pr.previousBest.weight}kg</div>
+                </div>`;
+        }
+    });
+}
+    
+    // Achievement cards
+    resultsHTML += `
+        <div class="achievement-grid">
+            <div class="achievement-card">
+                <div class="achievement-icon">💪</div>
+                <div class="achievement-title">Total Volume</div>
+                <div class="achievement-value">${totalVolume.toLocaleString()} kg</div>
+                <div class="achievement-change ${volumeChange > 0 ? 'improvement' : volumeChange < 0 ? 'decline' : 'neutral'}">
+                    <i class="fas fa-${volumeChange > 0 ? 'arrow-up' : volumeChange < 0 ? 'arrow-down' : 'minus'}"></i>
+                    ${Math.abs(volumeChange).toFixed(1)}% from last workout
+                </div>
+            </div>
+            
+            <div class="achievement-card">
+                <div class="achievement-icon">🎯</div>
+                <div class="achievement-title">Sets Completed</div>
+                <div class="achievement-value">${comparisonData.totalSets || 0}</div>
+                <div class="achievement-change ${comparisonData.setsChange > 0 ? 'improvement' : 'neutral'}">
+                    <i class="fas fa-${comparisonData.setsChange > 0 ? 'plus' : 'check'}"></i>
+                    ${comparisonData.setsChange > 0 ? '+' : ''}${comparisonData.setsChange || 0} from last workout
+                </div>
+            </div>
+            
+            <div class="achievement-card">
+                <div class="achievement-icon">⚡</div>
+                <div class="achievement-title">Personal Records</div>
+                <div class="achievement-value">${personalRecords.length}</div>
+                <div class="achievement-change improvement">
+                    <i class="fas fa-trophy"></i>
+                    ${personalRecords.length > 0 ? 'New records today!' : 'Keep pushing!'}
+                </div>
+            </div>
+            
+            <div class="achievement-card">
+                <div class="achievement-icon">📈</div>
+                <div class="achievement-title">Improvements</div>
+                <div class="achievement-value">${improvements.length}</div>
+                <div class="achievement-change improvement">
+                    <i class="fas fa-trending-up"></i>
+                    ${improvements.length > 0 ? 'Sets improved from last time' : 'Great effort today!'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Close button
+    resultsHTML += `
+            </div>
+            <div class="results-actions">
+                <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">Close</button>
+                <button class="btn-results btn-primary-results" onclick="shareWorkout()">Share Results</button>
+            </div>
+        </div>
+    `;
+    
+    $('body').append(resultsHTML);
+    
+    // Auto-hide after 15 seconds if user doesn't interact
+    setTimeout(() => {
+        if ($('#workout-results').is(':visible')) {
+            hideWorkoutResults();
+        }
+    }, 15000);
+}
+
+// Hide workout results
+function hideWorkoutResults() {
+    $('#workout-results').fadeOut(300, function() {
+        $(this).remove();
+    });
+}
+
+// Update set rows with progress indicators
+function updateSetRowsWithProgress(comparisonData) {
+    if (!comparisonData || !comparisonData.setComparisons) return;
+    
+    comparisonData.setComparisons.forEach(comparison => {
+        const $setRow = $(`.set-row[data-set-id="${comparison.setId}"]`);
+        if ($setRow.length === 0) return;
+        if (comparison.noPrevious) {
+        $setRow.find('.set-progress-indicator').remove();
+        const indicator = $('<div class="set-progress-indicator first-session">First session of this focus type!</div>');
+        $setRow.find('.volume-display').css('position', 'relative').append(indicator);
+        return;
+    }
+        // Add progress indicator
+        const progressClass = comparison.volumeChange > 0 ? 'progress-up' : 
+                             comparison.volumeChange < 0 ? 'progress-down' : 'progress-new';
+        const changeText = comparison.isNew ? 'NEW' : 
+                          comparison.volumeChange > 0 ? `+${comparison.volumeChange.toFixed(1)}kg` :
+                          comparison.volumeChange < 0 ? `${comparison.volumeChange.toFixed(1)}kg` : '=';
+        
+        // Remove existing indicators
+        $setRow.find('.set-progress-indicator').remove();
+        
+        // Add new indicator
+        const indicator = $(`<div class="set-progress-indicator ${progressClass}">${changeText}</div>`);
+        $setRow.find('.volume-display').css('position', 'relative').append(indicator);
+        
+        // Add row animation
+        if (comparison.volumeChange > 0) {
+            $setRow.addClass('improved');
+        } else if (comparison.volumeChange < 0) {
+            $setRow.addClass('declined');
+        }
+        
+        // Add tooltip with detailed comparison
+        $setRow.attr('title', 
+            `Previous: ${comparison.previousWeight}kg x ${comparison.previousReps} reps (${comparison.previousVolume.toFixed(1)}kg)\\n` +
+            `Current: ${comparison.currentWeight}kg x ${comparison.currentReps} reps (${comparison.currentVolume.toFixed(1)}kg)\\n` +
+            `Change: ${comparison.volumeChange > 0 ? '+' : ''}${comparison.volumeChange.toFixed(1)}kg`
+        ).tooltip();
+    });
+}
+
+// Share workout (optional feature)
+function shareWorkout() {
+    // Create a simple share text
+    const shareText = `Just completed an amazing workout! 💪\\n` +
+                     `Check out my progress on the TrackYou app!`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Workout Results',
+            text: shareText,
+            url: window.location.href
+        });
+    } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Workout results copied to clipboard!');
+        }).catch(() => {
+            alert('Share feature not supported on this device');
+        });
+    }
+    
+    hideWorkoutResults();
+}
+
+// Click outside to close results
+$(document).on('click', '.workout-results-modal', function(e) {
+    if (e.target === this) {
+        hideWorkoutResults();
+    }
+});
+
+// Escape key to close results
+$(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('#workout-results').is(':visible')) {
+        hideWorkoutResults();
+    }
+});
 
 
 function populateMobileDateSelector(selectedDate) {
