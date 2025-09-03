@@ -1,3 +1,6 @@
+<script>
+    const current_user_role = "{{ current_user_role }}";
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -245,7 +248,7 @@
         transition: all 0.1s ease;
     }
 
-    .btn-jere:hover, .btn-jere:focus {
+    .btn-jere:hover {
         background-color: #d4d4d4 !important;
         color: black !important;
         transform: scale(1.02);
@@ -267,7 +270,7 @@
         transition: all 0.1s ease;
     }
 
-    .btn-jerew:hover, .btn-jere:focus {
+    .btn-jerew:hover, .btn-jerew:focus {
         transform: scale(1.03);
         border: 2px solid #9359fe;
 
@@ -479,12 +482,21 @@
     }
 
     /* ===== DROPDOWNS & MODALS ===== */
+    /* Only affect the template dropdowns, not all menus */
+.dropdown-menu-template {
+  width: auto !important;        /* don't force 100% */
+  max-width: calc(100vw - 2rem); /* keep inside viewport */
+  overflow-x: auto; 
+  font-size: 12px !important;        
+  font-weight: 600 !important; 
+}
     .dropdown-menu {
         background-color: #1e1e1e;
         border: 1px solid #333;
         right: 0 !important;
-        width: 150px !important;
+       width: 150px !important;
         overflow-x:auto !important;
+        min-width: max-content; /* grow to fit the longest text */
     }
     
     .dropdown-item {
@@ -619,17 +631,7 @@
     height: 0px !important;
     line-height: 6px;
 }
-/* TROPHY PR */
-@keyframes bounce-glow {
-  0%   { transform: scale(1); filter: drop-shadow(0 0 0px gold); }
-  30%  { transform: scale(1.3); filter: drop-shadow(0 0 10px gold); }
-  60%  { transform: scale(1.1); filter: drop-shadow(0 0 5px gold); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 0px gold); }
-}
 
-.trophy.bounce {
-  animation: bounce-glow 0.8s ease forwards;
-}
 @keyframes pop {
     0%   { transform: scale(0.5); }
     50%  { transform: scale(1.2); }
@@ -731,24 +733,6 @@
 }
 
 
-    /* comparsion overlay */
-    @keyframes pulseGlow {
-  0% { text-shadow: 0 0 0px lime; }
-  50% { text-shadow: 0 0 15px lime; }
-  100% { text-shadow: 0 0 0px lime; }
-}
-
-@keyframes bounceIn {
-  0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); }
-}
-
-@keyframes rewardPopup {
-  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
-  60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
 
 .reward-result {
   position: fixed;
@@ -756,7 +740,7 @@
   transform: translate(-50%, -50%);
   font-size: 2rem;
   font-weight: bold;
-  color: gold;
+  color: rgb(0, 0, 0);
   text-shadow: 0 0 20px rgba(255,215,0,0.9);
   z-index: 20000;
   animation: rewardPopup 0.8s ease forwards;
@@ -1345,7 +1329,7 @@
 }
 
 .date-cell.selected {
-    background: linear-gradient(135deg, #00ffaa, #0077ff);
+    background: linear-gradient(135deg, #878787, #c4c4c4);
     color: #000;
     font-weight: 600;
     }
@@ -1353,16 +1337,12 @@
     /* Mobile footer container */
     .mobile-footer {
         background-color: #121212; /* match dark theme */
-        border-top: 1px solid #333;
-        height: 52px;              /* fixed compact height */
-        padding: 0 4px;            /* tighter side padding */
+        height: 42px;              /* fixed compact height */           /* tighter side padding */
         display: flex;
+        flex: 1;
         align-items: center;       /* vertically center buttons */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
+        position: relative;
+        z-index: 1055;
     }
 
     /* Footer buttons */
@@ -1787,7 +1767,26 @@
     color: #FFC107;
     border: 1px solid #FFC107;
 }
+.analysis-feed {
+    margin-top: 20px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    text-align: left;
+    color: #ccc;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+}
 
+.feed-item {
+    margin-bottom: 5px;
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 /* Set row enhancements */
 .set-row.improved {
     animation: improvementPulse 2s ease-in-out;
@@ -2174,33 +2173,7 @@
                             </div>
                         </div>
                         
-                        <!-- Extras section for desktop -->
-                        <div class="row mt-3 d-none d-md-block">
-                            <div class="col-12">
-                                <div class="dropdown">
-                                    <button class="btn btn-jere dropdown-toggle w-80" type="button" id="templateDropdown" data-bs-toggle="dropdown">
-                                        <i class="fas fa-clipboard-list me-1"></i> Apply Template
-                                    </button>
-                                    <div class="col-12 mt-2">
-                                        <button class="btn btn-jere w-80" id="save-template-btn">
-                                            <i class="fas fa-save me-1"></i> Save Template
-                                        </button>
-                                    </div>
-                                    <ul class="dropdown-menu dropdown-menu-end w-70" id="template-list-desktop">
-                                        <li><a class="dropdown-item" href="#">Loading templates...</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button class="btn btn-jere w-80" id="copy-workout-btn">
-                                    <i class="fas fa-copy me-1"></i> Copy Workout
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
-  Save Workout
-</button>
-                    </div>
+                        
                 </div>
                 <div id="comparison-modal" class="modal fade" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -2225,33 +2198,7 @@
     </div>
   </div>
 </div>
-                <!-- Extras section for mobile -->
-                <div class="mobile-toggle-section d-md-none mt-1">
-                    <div class="mobile-toggle-header collapsed" data-bs-toggle="collapse" data-bs-target="#extras-body" aria-expanded="false">
-                        <h5>Extras</h5>
-                        <span class="toggle-arrow"><i class="fas fa-chevron-down"></i></span>
-                    </div>
-                    
-                    <div class="mobile-toggle-content collapse" id="extras-body">
-                        <div class="extras-buttons">
-                        <div class="dropdown">
-                            <button class="btn btn-jere dropdown-toggle w-100 mb-2" type="button"
-                                id="templateDropdownMobile" data-bs-toggle="dropdown" data-bs-display="static">
-                                <i class="fas fa-clipboard-list me-1"></i> Apply Template
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
-                                <li><a class="dropdown-item" href="#">Loading templates...</a></li>
-                            </ul>
-                        </div>
-                        <button class="btn btn-jere w-100 mb-2" id="save-template-mobile-btn">
-                            <i class="fas fa-save me-1"></i> Save Template
-                        </button>
-                        <button class="btn btn-jere w-100 mb-2" id="copy-workout-mobile-btn">
-                            <i class="fas fa-copy me-1"></i> Copy Workout
-                        </button>
-                    </div>
-                    </div>
-                </div>
+                
             </div>
             
             <!-- Workout Session Container -->
@@ -2278,31 +2225,32 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Desktop Footer -->
-                    <!-- Desktop Footer - Updated buttons -->
+                     <!-- Desktop Footer -->
                     <div class="card-footer py-2 d-none d-lg-block">
                         <div class="d-flex justify-content-between gap-2 flex-wrap flex-md-nowrap">
                             <!-- Apply Template -->
-                            <button id="apply-template-footer-btn" class="btn-custom flex-fill text-center">
+                            <button id="templateDropdown" class="btn btn-jere dropdown-toggle flex-fill text-center" data-bs-toggle="dropdown">
                                 <i class="fas fa-layer-group fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline">Apply</span>
                             </button>
+                            <ul class="dropdown-menu dropdown-menu-end w-70" id="template-list-desktop">
+                                <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+                            </ul>
 
                             <!-- Save Template -->
-                            <button id="save-template-footer-btn" class="btn-custom flex-fill text-center">
+                            <button id="save-template-btn" class="btn btn-jere flex-fill text-center">
                                 <i class="fas fa-save fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline">Save</span>
                             </button>
 
                             <!-- Save Workout -->
-                            <button id="save-workout-footer-btn" class="btn-custom flex-fill text-center">
+                            <button type="button" class="btn btn-jere flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                                 <i class="fas fa-dumbbell fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline">Save W.O.</span>
                             </button>
 
                             <!-- Copy Workout -->
-                            <button id="copy-workout-footer-btn" class="btn-custom flex-fill text-center">
+                            <button id="copy-workout-btn" class="btn btn-jere flex-fill text-center">
                                 <i class="fas fa-copy fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline">Copy</span>
                             </button>
@@ -2312,35 +2260,38 @@
             </div>
         </div>
         
-        <!-- Mobile Footer - Updated buttons -->
+        <!-- Mobile Footer -->
         <div class="d-lg-none mobile-footer p-2 border-top">
-            <div class="d-flex justify-content-between gap-2">
+            <div class="d-flex justify-content-between">
                 <!-- Apply Template -->
-                <button id="apply-template-footer-btn-mobile" class="btn btn-dark flex-fill text-center">
+                <button id="templateDropdownMobile" class="btn btn-jere flex-fill text-center dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="fas fa-layer-group"></i>
                     <span class="btn-label d-block">&nbsp;Apply</span>
                 </button>
+                <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
+                    <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+                </ul>
 
                 <!-- Save Template -->
-                <button id="save-template-footer-btn-mobile" class="btn btn-dark flex-fill text-center">
+                <button id="save-template-mobile-btn" class="btn btn-jere flex-fill text-center">
                     <i class="fas fa-save"></i>
                     <span class="btn-label d-block">&nbsp;Save</span>
                 </button>
 
                 <!-- Save Workout -->
-                <button id="save-workout-footer-btn-mobile" class="btn btn-dark flex-fill text-center">
+                <button type="button" class="btn btn-jere flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                     <i class="fas fa-dumbbell"></i>
                     <span class="btn-label d-block">&nbsp;Save W.O.</span>
                 </button>
 
                 <!-- Copy Workout -->
-                <button id="copy-workout-footer-btn-mobile" class="btn btn-dark flex-fill text-center">
+                <button id="copy-workout-mobile-btn" class="btn btn-jere flex-fill text-center">
                     <i class="fas fa-copy"></i>
                     <span class="btn-label d-block">&nbsp;Copy</span>
                 </button>
             </div>
         </div>
-    </div>
+
 
     <!-- Add Exercise Modal -->
     <div class="modal fade" id="addExerciseModal" tabindex="-1" aria-hidden="true">
@@ -2565,17 +2516,28 @@ $('#copyWorkoutModal').off('shown.bs.modal').on('shown.bs.modal', function() {
             }
         }
     });
-    document.addEventListener('DOMContentLoaded', function() {
-    var dropdownEl = document.getElementById('templateDropdownMobile');
-    new bootstrap.Dropdown(dropdownEl, {
-        popperConfig: {
-            modifiers: [
-                { name: 'preventOverflow', options: { boundary: 'viewport' } },
-                { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } }
-            ]
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+  ['templateDropdown', 'templateDropdownMobile'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    new bootstrap.Dropdown(el, {
+      popperConfig: function (defaultCfg) {
+        return {
+          ...defaultCfg,
+          placement: 'top',
+          strategy: 'absolute',  // avoids clipping in scrollable/overflow parents
+          modifiers: [
+            { name: 'preventOverflow', options: { boundary: 'viewport' } },
+            { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } },
+            { name: 'computeStyles', options: { adaptive: false } }
+          ]
+        };
+      }
     });
+  });
 });
+
 
     // Get CSRF token for use in fetch requests
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
