@@ -74,20 +74,12 @@ def safe_float(value, default=0.0, min_val=0.001, max_val=10000.0):
         return num
     except ValueError:
         return default
-STACK_JWKS_URL = "https://auth.neon.tech/.well-known/jwks.json"
-def set_pg_user(conn, user_id: int):
-    """
-    Sets the current user id in the Postgres session.
-    Required for Row Level Security (RLS).
-    """
-    with conn.cursor() as cur:
-        cur.execute("SET app.current_user_id = %s;", (str(user_id),))
+
 # Database connection using Neon.tech URL
 def get_db_connection():
     """
     Returns a psycopg2 connection to the database.
     Chooses local or Neon DB based on DB_ENV environment variable.
-    Automatically sets app.current_user_id for RLS if a user is logged in.
     """
     db_env = os.getenv("DB_ENV", "local").lower()  # default to local
     if db_env == "neon":
@@ -102,25 +94,18 @@ def get_db_connection():
 
     try:
         conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = False  # keep transactions explicit
-
-        # If a user is logged in, set their ID in Postgres for RLS
-        if current_user and getattr(current_user, "is_authenticated", False):
-            with conn.cursor() as cursor:
-                cursor.execute("SET app.current_user_id = %s;", (str(current_user.id),))
-
+        conn.autocommit = True
         return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
         raise
 
+# Initialize database
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # ------------------------
     # 1. Users table
-    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -135,9 +120,8 @@ def init_db():
             weight REAL
         )
     ''')
-    conn.commit()
 
-    # Ensure tdee & weight exist
+    # Ensure columns exist (safe migration)
     cursor.execute("""
         DO $$
         BEGIN
@@ -147,6 +131,7 @@ def init_db():
             ) THEN
                 ALTER TABLE users ADD COLUMN tdee REAL;
             END IF;
+            
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.columns 
                 WHERE table_name='users' AND column_name='weight'
@@ -156,11 +141,8 @@ def init_db():
         END
         $$;
     """)
-    conn.commit()
 
-    # ------------------------
     # 2. Foods table
-    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS foods (
             key TEXT PRIMARY KEY,
@@ -180,46 +162,39 @@ def init_db():
             ean TEXT UNIQUE
         )
     ''')
-    conn.commit()
 
-    # ------------------------
     # 3. Food usage
-    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_usage (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            food_key TEXT NOT NULL REFERENCES foods(key) ON DELETE CASCADE,
-            count INTEGER DEFAULT 0
+            food_key TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            FOREIGN KEY (food_key) REFERENCES foods(key) ON DELETE CASCADE
         )
     ''')
-    conn.commit()
 
-    # ------------------------
     # 4. User sessions
-    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_sessions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL,
             date TEXT NOT NULL,
-            data TEXT NOT NULL
+            data TEXT NOT NULL,
+            PRIMARY KEY (user_id, date),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
-    conn.commit()
 
-    # ------------------------
     # 5. Food templates
-    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_templates (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             name TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (user_id, name)
+            UNIQUE (user_id, name) -- prevent duplicate names per user
         )
     ''')
+
+    # 6. Food template items
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_template_items (
             id SERIAL PRIMARY KEY,
@@ -228,24 +203,25 @@ def init_db():
             grams REAL NOT NULL
         )
     ''')
+
+    # Add index for performance
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_food_template_items_template_id
         ON food_template_items(template_id)
     ''')
-    conn.commit()
 
-    # ------------------------
-    # 6. Workout templates & exercises
-    # ------------------------
+    # 7. Workout templates
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_templates (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (created_by, name)
+            UNIQUE (created_by, name) -- prevent duplicate names per user
         )
     ''')
+
+    # 8. Workout template exercises
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_template_exercises (
             id SERIAL PRIMARY KEY,
@@ -257,55 +233,11 @@ def init_db():
             comments TEXT
         )
     ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS workout_sessions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            date TEXT NOT NULL,
-            muscle_group TEXT,
-            notes TEXT
-        )
-    ''')
-    conn.commit()
-
-    # ------------------------
-    # 7. Safe RLS policy creator
-    # ------------------------
-    def create_policy_if_column_exists(cursor, table, policy_name, column_name):
-        cursor.execute("""
-            SELECT 1 
-            FROM information_schema.columns 
-            WHERE table_name=%s AND column_name=%s
-        """, (table, column_name))
-        if cursor.fetchone():
-            cursor.execute("""
-                SELECT 1 FROM pg_policies 
-                WHERE schemaname='public' AND tablename=%s AND policyname=%s
-            """, (table, policy_name))
-            if not cursor.fetchone():
-                cursor.execute(f"""
-                    ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
-                    CREATE POLICY {policy_name}
-                    ON {table}
-                    USING ({column_name}::text = current_setting('app.current_user_id', true))
-                    WITH CHECK ({column_name}::text = current_setting('app.current_user_id', true));
-                """)
-
-    # Apply policies
-    create_policy_if_column_exists(cursor, "users", "user_is_self", "id")
-    create_policy_if_column_exists(cursor, "food_usage", "food_usage_owner", "user_id")
-    create_policy_if_column_exists(cursor, "user_sessions", "user_sessions_owner", "user_id")
-    create_policy_if_column_exists(cursor, "food_templates", "food_templates_owner", "user_id")
-    create_policy_if_column_exists(cursor, "workout_templates", "workout_templates_owner", "created_by")
-    create_policy_if_column_exists(cursor, "workout_sessions", "workout_sessions_owner", "user_id")
-    conn.commit()
-
-    # ------------------------
-    # 8. Admin user
-    # ------------------------
+ # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
-    if not cursor.fetchone():
+    admin_exists = cursor.fetchone()
+    if not admin_exists:
         admin_password = os.getenv('ADMIN_PASSWORD', 'admin_password')
         hashed_password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
         cursor.execute('''
@@ -313,24 +245,23 @@ def init_db():
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (email) DO NOTHING
         ''', ('admin', admin_email, hashed_password, 'admin'))
-    conn.commit()
-
-    # ------------------------
-    # 9. Default food
-    # ------------------------
+    
+    # Check if foods table is empty
     cursor.execute("SELECT COUNT(*) FROM foods")
     if cursor.fetchone()[0] == 0:
+        # Insert default food
         cursor.execute('''
             INSERT INTO foods 
             (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', ('broccoli','Broccoli',7,1.5,2.6,2.8,0.4,0.1,0.03,34,100,150,300,85,None))
+        ''', (
+            'broccoli',
+            'Broccoli',
+            7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
+        ))
     conn.commit()
-
     cursor.close()
     conn.close()
-
-
 
      
 def init_workout_db():
@@ -862,25 +793,14 @@ def calculate_totals(eaten_items):
 def get_daily_totals(day_data):
     # Handle case where day_data might be None or empty
     if not day_data:
-        return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0.0
         
     total_calories = sum(item['calories'] for item in day_data)
     total_proteins = sum(item['proteins'] for item in day_data)
     total_fats = sum(item['fats'] for item in day_data)
     total_carbs = sum(item['carbs'] for item in day_data)
     total_salt = sum(item.get('salt', 0.0) for item in day_data)
-    total_saturated = sum(item.get('saturated', 0.0) for item in day_data)
-    total_fiber = sum(item.get('fiber', 0.0) for item in day_data)
-    
-    return (
-        total_calories,
-        total_proteins,
-        total_fats,
-        total_carbs,
-        total_salt,
-        total_saturated,
-        total_fiber
-    )
+    return total_calories, total_proteins, total_fats, total_carbs, total_salt
 
 def format_date(date_str):
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
@@ -1106,14 +1026,13 @@ def login():
     if form.validate_on_submit():
         email = form.email.data.lower()  # normalize to lowercase
 
-        # Get DB connection (automatically sets current_user_id for RLS later)
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
+        conn.close()
 
         if user and bcrypt.check_password_hash(user['password'], form.password.data):
-            # Build user object for Flask-Login
             user_obj = User(
                 id=user['id'],
                 username=user['username'],
@@ -1121,18 +1040,12 @@ def login():
                 role=user['role']
             )
             login_user(user_obj, remember=form.remember.data)
-
-            conn.commit()
-            conn.close()
-
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
-            conn.close()
             flash('Login Unsuccessful. Please check email and password', 'danger')
 
     return render_template('login.html', title='Login', form=form)
-
 
 
 @app.route('/debug_foods')
@@ -1914,13 +1827,14 @@ def calculate_calories(carbs, proteins, fats):
 
 def calculate_weekly_averages(session_history):
     weekly_data = {}
-
+    
+    # Group data by week
     for date_str, items in session_history.items():
         try:
             date_obj = datetime.strptime(date_str, "%Y-%m-%d")
             year, week_num, _ = date_obj.isocalendar()
             week_key = f"{year}-W{week_num:02d}"
-
+            
             if week_key not in weekly_data:
                 weekly_data[week_key] = {
                     "days": [],
@@ -1929,26 +1843,22 @@ def calculate_weekly_averages(session_history):
                     "fats": 0,
                     "carbs": 0,
                     "salt": 0,
-                    "saturated": 0,
-                    "fiber": 0,
                     "count": 0
                 }
-
-            calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(items)
+        
+            calories, proteins, fats, carbs, salt = get_daily_totals(items)
             weekly_data[week_key]["days"].append(date_str)
             weekly_data[week_key]["calories"] += calories
             weekly_data[week_key]["proteins"] += proteins
             weekly_data[week_key]["fats"] += fats
             weekly_data[week_key]["carbs"] += carbs
             weekly_data[week_key]["salt"] += salt
-            weekly_data[week_key]["saturated"] += saturated
-            weekly_data[week_key]["fiber"] += fiber
             weekly_data[week_key]["count"] += 1
-
         except Exception as e:
             app.logger.error(f"Error processing date {date_str}: {e}")
             continue
-
+    
+    # Calculate averages
     result = []
     for week_key, data in weekly_data.items():
         count = data["count"]
@@ -1961,11 +1871,10 @@ def calculate_weekly_averages(session_history):
                 "avg_proteins": data["proteins"] / count,
                 "avg_fats": data["fats"] / count,
                 "avg_carbs": data["carbs"] / count,
-                "avg_salt": data["salt"] / count,
-                "avg_saturated": data["saturated"] / count,
-                "avg_fiber": data["fiber"] / count
+                "avg_salt": data["salt"] / count
             })
-
+    
+    # Sort by week (newest first)
     result.sort(key=lambda x: x["end_date"], reverse=True)
     return result
 
@@ -1976,44 +1885,26 @@ def history():
     session_history = get_session_history(user_id)
     today = datetime.today()
     daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(-3, 4)]
-
+    
     history_data = []
-    today_str = today.strftime("%Y-%m-%d")
-
-    # Fill history_data
     for date in daily_dates:
         day_data = session_history.get(date, [])
-        calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(day_data)
+        calories, proteins, fats, carbs, salt = get_daily_totals(day_data)
         history_data.append({
             'date': format_date(date),
             'calories': calories,
             'proteins': proteins,
             'fats': fats,
             'carbs': carbs,
-            'salt': salt,
-            'saturated': saturated,
-            'fiber': fiber
-        })
-
-    # Today’s totals
-    today_data = session_history.get(today_str, [])
-    today_calories, today_proteins, today_fats, today_carbs, today_salt, today_saturated, today_fiber = get_daily_totals(today_data)
-
-    # Weekly averages
+            'salt': salt
+            })
+        
+    # Weekly history
     weekly_data = calculate_weekly_averages(session_history)
-
-    return render_template(
-        'history.html',
-        history_data=history_data,
-        weekly_data=weekly_data,
-        today_calories=today_calories,
-        today_protein=today_proteins,
-        today_fats=today_fats,
-        today_carbs=today_carbs,
-        today_salt=today_salt,
-        today_saturated=today_saturated,
-        today_fiber=today_fiber
-    )
+    
+    return render_template('history.html', 
+                           history_data=history_data,
+                           weekly_data=weekly_data)
 # food templates #
 @app.route('/save_template_food', methods=['POST'])
 @login_required
@@ -2231,6 +2122,35 @@ def debug_templates():
         if conn:
             conn.close()
 
+@app.route('/debug_food_key/<food_id>')
+@login_required
+def debug_food_key(food_id):
+    """Endpoint to check if a food key exists in the database"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'SELECT key, name FROM foods WHERE key = %s',
+            (food_id,)
+        )
+        food = cursor.fetchone()
+        
+        if food:
+            return jsonify({
+                'success': True,
+                'food': {'key': food[0], 'name': food[1]}
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Food with key {food_id} not found'
+            })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    finally:
+        if conn:
+            conn.close()    
 @app.route('/save_recipe', methods=['POST'])
 @login_required
 def save_recipe():
@@ -3523,86 +3443,7 @@ def save_workout():
         cursor.close()
         conn.close()
 
-@app.route("/neon-login", methods=["POST"])
-def neon_login():
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return jsonify({"success": False, "error": "Missing token"}), 401
 
-    token = auth_header.split(" ")[1]
-
-    try:
-        # Decode Neon token (basic, for example only)
-        decoded = jwt.decode(token, options={"verify_signature": False})
-        neon_id = decoded["sub"]
-        email = decoded.get("email")
-
-        # Connect to DB
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-
-        # Upsert user
-        cur.execute("""
-            INSERT INTO users (email, neon_user_id)
-            VALUES (%s, %s)
-            ON CONFLICT (email) DO UPDATE
-            SET neon_user_id = EXCLUDED.neon_user_id
-            RETURNING id, email, neon_user_id;
-        """, (email, neon_id))
-
-        user = cur.fetchone()
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        return jsonify({"success": True, "user": user})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 401
-@app.route("/neon/callback")
-def neon_callback():
-    token = request.args.get("token")
-    if not token:
-        flash("Authentication failed", "danger")
-        return redirect(url_for("login"))
-
-    payload = jwt.decode(token, options={"verify_signature": False})
-    neon_email = payload.get("email")
-    neon_name = payload.get("name")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=DictCursor)
-
-    cursor.execute("SELECT * FROM users WHERE email = %s", (neon_email,))
-    user = cursor.fetchone()
-
-    if not user:
-        cursor.execute('''
-            INSERT INTO users (username, email, password, role)
-            VALUES (%s, %s, %s, %s)
-            RETURNING *
-        ''', (neon_name, neon_email, "", "user"))
-        user = cursor.fetchone()
-        conn.commit()
-
-    user_obj = User(
-        id=user['id'],
-        username=user['username'],
-        email=user['email'],
-        role=user['role']
-    )
-    login_user(user_obj, remember=True)
-
-    conn.close()
-
-    return redirect(url_for("index"))
-    
-@app.route("/login/neon/<provider>")
-def neon_oauth_redirect(provider):
-    # Build the Neon Auth URL
-    neon_client_id = os.getenv("NEON_CLIENT_ID")
-    redirect_uri = url_for("neon_callback", _external=True)
-    neon_url = f"https://auth.neon.tech/oauth/authorize?client_id={neon_client_id}&provider={provider}&redirect_uri={redirect_uri}&response_type=token"
-    return redirect(neon_url)
 
 @app.route('/foods')
 def list_foods():
