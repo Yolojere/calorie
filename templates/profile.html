@@ -30,26 +30,7 @@
             font-size: 1.4rem;
             color: #e0e0e0;
         }
-        /* Autofill overrides (Chrome) */
-input.form-control:-webkit-autofill {
-    box-shadow: 0 0 0px 1000px #121212 inset !important;
-    -webkit-text-fill-color: #eee !important;
-    border-color: #333 !important;
-    color: white !important;
-}
-.input-group-text img {
-    outline: none !important;
-    border: none !important;
-}
-
-/* Optional: chain input to image for smooth rounded edges */
-.input-group {
-    border-radius: 20px;
-    overflow: hidden;
-}
-.input-group .input-group-text:first-child {
-    border-radius: 20px 0 0 20px;
-}
+        
         .form-control, .form-select {
         background-color: #121212 !important;
         border: 1px solid #333 !important;
@@ -401,40 +382,6 @@ input.form-control:-webkit-autofill {
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
-    /* Icon side (left) */
-/* Base look for profile fields */
-.profile-field .input-group-text {
-    border-radius: 25px 0 0 25px !important; /* left pill */
-    background-color: #1b1b1b !important;
-    border: 1px solid #444 !important;
-    color: #fff;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.profile-field .form-control {
-    border-radius: 0 25px 25px 0 !important; /* square left, pill right */
-    background-color: #1b1b1b !important;
-    border: 1px solid #444 !important;
-    border-left: 0 !important; /* remove overlap border */
-    color: #fff;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-/* Hover effect on the entire group */
-.profile-field:hover .input-group-text,
-.profile-field:hover .form-control {
-    background-color: #3f3f3f !important;
-    transform: scale(1.02);
-}
-
-/* Active (clicked/focused) effect */
-.profile-field:active .input-group-text,
-.profile-field:active .form-control,
-.profile-field .form-control:focus {
-    background-color: #1b1b1b !important;
-    transform: scale(0.99);
-    box-shadow: 0 0 0 2px rgba(63, 63, 63, 0.5);
-}
  /* Toast notification */
     .toast-notification {
         background-color: #ffffff !important;
@@ -588,7 +535,7 @@ input.form-control:-webkit-autofill {
                             <!-- Full Name Field -->
                             <div class="form-group mb-4">
                                 <label for="full_name" class="form-label">Full Name</label>
-                                <div class="input-group profile-field">
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="full_name" name="full_name" 
                                            value="{{ form.full_name.data or '' }}" placeholder="John Doe">
@@ -598,7 +545,7 @@ input.form-control:-webkit-autofill {
                             <!-- Main Sport Field -->
                             <div class="form-group mb-4">
                                 <label for="main_sport" class="form-label">Main Sport / Activity</label>
-                                <div class="input-group profile-field">
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
                                     <input type="text" class="form-control" id="main_sport" name="main_sport" 
                                            value="{{ form.main_sport.data or '' }}" placeholder="e.g. Weightlifting, Running">
@@ -608,7 +555,7 @@ input.form-control:-webkit-autofill {
                             <!-- Fitness Goals Field -->
                             <div class="form-group mb-4">
                                 <label for="fitness_goals" class="form-label">Fitness Goals</label>
-                               <div class="input-group profile-field">
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-bullseye"></i></span>
                                     <input type="text" class="form-control" id="fitness_goals" name="fitness_goals" 
                                            value="{{ form.fitness_goals.data or '' }}" placeholder="Lose weight, Build muscle, Improve endurance">
