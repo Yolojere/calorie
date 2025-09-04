@@ -181,9 +181,7 @@ form-check-label
                     </div>
                     {% if form.email.errors %}
                         <div class="invalid-feedback d-block mt-1">
-                            {% for error in form.email.errors %}
-                                {{ error }}
-                            {% endfor %}
+                            {% for error in form.email.errors %}{{ error }}{% endfor %}
                         </div>
                     {% endif %}
                 </div>
@@ -196,9 +194,7 @@ form-check-label
                     </div>
                     {% if form.password.errors %}
                         <div class="invalid-feedback d-block mt-1">
-                            {% for error in form.password.errors %}
-                                {{ error }}
-                            {% endfor %}
+                            {% for error in form.password.errors %}{{ error }}{% endfor %}
                         </div>
                     {% endif %}
                 </div>
@@ -213,22 +209,37 @@ form-check-label
                 <div class="d-grid mb-3">
                     {{ form.submit(class="btn-jere") }}
                 </div>
-
-                <div class="text-center mb-2">
-                    <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-                        <i class="fas fa-key me-1"></i> Forgot Password?
-                    </a>
-                </div>
-
-                <div class="text-center pt-2 border-top mt-3">
-                    <p class="mb-1">Don't have an account?</p>
-                    <a href="{{ url_for('register') }}" class="accent-color fw-bold">
-                        <i class="fas fa-user-plus me-1"></i> Create Account
-                    </a>
-                </div>
             </form>
-        </div>
 
+            <div class="text-center my-3">
+                <p class="text-muted">OR</p>
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div class="d-grid gap-2 mb-3">
+                <a href="{{ url_for('neon_login', provider='google') }}" class="btn btn-outline-light btn-jere d-flex align-items-center justify-content-center">
+                    <i class="fab fa-google me-2"></i> Sign in with Google
+                </a>
+                <a href="{{ url_for('neon_login', provider='github') }}" class="btn btn-outline-light btn-jere d-flex align-items-center justify-content-center">
+                    <i class="fab fa-github me-2"></i> Sign in with GitHub
+                </a>
+            </div>
+
+            <div class="text-center pt-2 border-top mt-3">
+                <p class="mb-1">Don't have an account?</p>
+                <a href="{{ url_for('register') }}" class="accent-color fw-bold">
+                    <i class="fas fa-user-plus me-1"></i> Create Account
+                </a>
+            </div>
+
+            <div class="text-center mt-2">
+                <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
+                    <i class="fas fa-key me-1"></i> Forgot Password?
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
         <!-- Security Features -->
         <div class="text-center mt-4">
             <div class="d-flex justify-content-center">
@@ -248,4 +259,33 @@ form-check-label
         </div>
     </div>
 </div>
+<script src="https://auth.neon.tech/widget.js"></script>
+<script>
+  const neonAuth = new NeonAuth({
+    projectId: "{{ neon_project_id }}",       // pass from Flask config
+    publishableKey: "{{ neon_publishable_key }}", 
+    providers: ["google", "github", "email"] // enable socials + email/password
+  });
+
+  neonAuth.mount("#neon-auth");
+
+  neonAuth.on("auth:success", (session) => {
+    console.log("Neon user:", session.user);
+
+    // Send JWT to Flask backend for verification
+    fetch("{{ url_for('neon_login') }}", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${session.jwt}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user: session.user })
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "{{ url_for('dashboard') }}";
+        }
+      });
+  });
+  </script>
 {% endblock %}
