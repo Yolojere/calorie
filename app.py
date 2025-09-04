@@ -74,12 +74,20 @@ def safe_float(value, default=0.0, min_val=0.001, max_val=10000.0):
         return num
     except ValueError:
         return default
-
+STACK_JWKS_URL = "https://auth.neon.tech/.well-known/jwks.json"
+def set_pg_user(conn, user_id: int):
+    """
+    Sets the current user id in the Postgres session.
+    Required for Row Level Security (RLS).
+    """
+    with conn.cursor() as cur:
+        cur.execute("SET app.current_user_id = %s;", (str(user_id),))
 # Database connection using Neon.tech URL
 def get_db_connection():
     """
     Returns a psycopg2 connection to the database.
     Chooses local or Neon DB based on DB_ENV environment variable.
+    Automatically sets app.current_user_id for RLS if a user is logged in.
     """
     db_env = os.getenv("DB_ENV", "local").lower()  # default to local
     if db_env == "neon":
@@ -94,18 +102,25 @@ def get_db_connection():
 
     try:
         conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = True
+        conn.autocommit = False  # keep transactions explicit
+
+        # If a user is logged in, set their ID in Postgres for RLS
+        if current_user and getattr(current_user, "is_authenticated", False):
+            with conn.cursor() as cursor:
+                cursor.execute("SET app.current_user_id = %s;", (str(current_user.id),))
+
         return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
         raise
 
-# Initialize database
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # ------------------------
     # 1. Users table
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -120,8 +135,9 @@ def init_db():
             weight REAL
         )
     ''')
+    conn.commit()
 
-    # Ensure columns exist (safe migration)
+    # Ensure tdee & weight exist
     cursor.execute("""
         DO $$
         BEGIN
@@ -131,7 +147,6 @@ def init_db():
             ) THEN
                 ALTER TABLE users ADD COLUMN tdee REAL;
             END IF;
-            
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.columns 
                 WHERE table_name='users' AND column_name='weight'
@@ -141,8 +156,11 @@ def init_db():
         END
         $$;
     """)
+    conn.commit()
 
+    # ------------------------
     # 2. Foods table
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS foods (
             key TEXT PRIMARY KEY,
@@ -162,39 +180,46 @@ def init_db():
             ean TEXT UNIQUE
         )
     ''')
+    conn.commit()
 
+    # ------------------------
     # 3. Food usage
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_usage (
-            food_key TEXT PRIMARY KEY,
-            count INTEGER DEFAULT 0,
-            FOREIGN KEY (food_key) REFERENCES foods(key) ON DELETE CASCADE
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            food_key TEXT NOT NULL REFERENCES foods(key) ON DELETE CASCADE,
+            count INTEGER DEFAULT 0
         )
     ''')
+    conn.commit()
 
+    # ------------------------
     # 4. User sessions
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_sessions (
-            user_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             date TEXT NOT NULL,
-            data TEXT NOT NULL,
-            PRIMARY KEY (user_id, date),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            data TEXT NOT NULL
         )
     ''')
+    conn.commit()
 
+    # ------------------------
     # 5. Food templates
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_templates (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             name TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (user_id, name) -- prevent duplicate names per user
+            UNIQUE (user_id, name)
         )
     ''')
-
-    # 6. Food template items
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_template_items (
             id SERIAL PRIMARY KEY,
@@ -203,25 +228,24 @@ def init_db():
             grams REAL NOT NULL
         )
     ''')
-
-    # Add index for performance
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_food_template_items_template_id
         ON food_template_items(template_id)
     ''')
+    conn.commit()
 
-    # 7. Workout templates
+    # ------------------------
+    # 6. Workout templates & exercises
+    # ------------------------
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_templates (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (created_by, name) -- prevent duplicate names per user
+            UNIQUE (created_by, name)
         )
     ''')
-
-    # 8. Workout template exercises
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS workout_template_exercises (
             id SERIAL PRIMARY KEY,
@@ -233,11 +257,55 @@ def init_db():
             comments TEXT
         )
     ''')
- # Create admin user if not exists
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_sessions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            date TEXT NOT NULL,
+            muscle_group TEXT,
+            notes TEXT
+        )
+    ''')
+    conn.commit()
+
+    # ------------------------
+    # 7. Safe RLS policy creator
+    # ------------------------
+    def create_policy_if_column_exists(cursor, table, policy_name, column_name):
+        cursor.execute("""
+            SELECT 1 
+            FROM information_schema.columns 
+            WHERE table_name=%s AND column_name=%s
+        """, (table, column_name))
+        if cursor.fetchone():
+            cursor.execute("""
+                SELECT 1 FROM pg_policies 
+                WHERE schemaname='public' AND tablename=%s AND policyname=%s
+            """, (table, policy_name))
+            if not cursor.fetchone():
+                cursor.execute(f"""
+                    ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+                    CREATE POLICY {policy_name}
+                    ON {table}
+                    USING ({column_name}::text = current_setting('app.current_user_id', true))
+                    WITH CHECK ({column_name}::text = current_setting('app.current_user_id', true));
+                """)
+
+    # Apply policies
+    create_policy_if_column_exists(cursor, "users", "user_is_self", "id")
+    create_policy_if_column_exists(cursor, "food_usage", "food_usage_owner", "user_id")
+    create_policy_if_column_exists(cursor, "user_sessions", "user_sessions_owner", "user_id")
+    create_policy_if_column_exists(cursor, "food_templates", "food_templates_owner", "user_id")
+    create_policy_if_column_exists(cursor, "workout_templates", "workout_templates_owner", "created_by")
+    create_policy_if_column_exists(cursor, "workout_sessions", "workout_sessions_owner", "user_id")
+    conn.commit()
+
+    # ------------------------
+    # 8. Admin user
+    # ------------------------
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
-    admin_exists = cursor.fetchone()
-    if not admin_exists:
+    if not cursor.fetchone():
         admin_password = os.getenv('ADMIN_PASSWORD', 'admin_password')
         hashed_password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
         cursor.execute('''
@@ -245,23 +313,24 @@ def init_db():
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (email) DO NOTHING
         ''', ('admin', admin_email, hashed_password, 'admin'))
-    
-    # Check if foods table is empty
+    conn.commit()
+
+    # ------------------------
+    # 9. Default food
+    # ------------------------
     cursor.execute("SELECT COUNT(*) FROM foods")
     if cursor.fetchone()[0] == 0:
-        # Insert default food
         cursor.execute('''
             INSERT INTO foods 
             (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            'broccoli',
-            'Broccoli',
-            7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
-        ))
+        ''', ('broccoli','Broccoli',7,1.5,2.6,2.8,0.4,0.1,0.03,34,100,150,300,85,None))
     conn.commit()
+
     cursor.close()
     conn.close()
+
+
 
      
 def init_workout_db():
@@ -1037,13 +1106,14 @@ def login():
     if form.validate_on_submit():
         email = form.email.data.lower()  # normalize to lowercase
 
+        # Get DB connection (automatically sets current_user_id for RLS later)
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
-        conn.close()
 
         if user and bcrypt.check_password_hash(user['password'], form.password.data):
+            # Build user object for Flask-Login
             user_obj = User(
                 id=user['id'],
                 username=user['username'],
@@ -1051,12 +1121,18 @@ def login():
                 role=user['role']
             )
             login_user(user_obj, remember=form.remember.data)
+
+            conn.commit()
+            conn.close()
+
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
+            conn.close()
             flash('Login Unsuccessful. Please check email and password', 'danger')
 
     return render_template('login.html', title='Login', form=form)
+
 
 
 @app.route('/debug_foods')
@@ -3447,7 +3523,86 @@ def save_workout():
         cursor.close()
         conn.close()
 
+@app.route("/neon-login", methods=["POST"])
+def neon_login():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"success": False, "error": "Missing token"}), 401
 
+    token = auth_header.split(" ")[1]
+
+    try:
+        # Decode Neon token (basic, for example only)
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        neon_id = decoded["sub"]
+        email = decoded.get("email")
+
+        # Connect to DB
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Upsert user
+        cur.execute("""
+            INSERT INTO users (email, neon_user_id)
+            VALUES (%s, %s)
+            ON CONFLICT (email) DO UPDATE
+            SET neon_user_id = EXCLUDED.neon_user_id
+            RETURNING id, email, neon_user_id;
+        """, (email, neon_id))
+
+        user = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "user": user})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 401
+@app.route("/neon/callback")
+def neon_callback():
+    token = request.args.get("token")
+    if not token:
+        flash("Authentication failed", "danger")
+        return redirect(url_for("login"))
+
+    payload = jwt.decode(token, options={"verify_signature": False})
+    neon_email = payload.get("email")
+    neon_name = payload.get("name")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
+    cursor.execute("SELECT * FROM users WHERE email = %s", (neon_email,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.execute('''
+            INSERT INTO users (username, email, password, role)
+            VALUES (%s, %s, %s, %s)
+            RETURNING *
+        ''', (neon_name, neon_email, "", "user"))
+        user = cursor.fetchone()
+        conn.commit()
+
+    user_obj = User(
+        id=user['id'],
+        username=user['username'],
+        email=user['email'],
+        role=user['role']
+    )
+    login_user(user_obj, remember=True)
+
+    conn.close()
+
+    return redirect(url_for("index"))
+    
+@app.route("/login/neon/<provider>")
+def neon_oauth_redirect(provider):
+    # Build the Neon Auth URL
+    neon_client_id = os.getenv("NEON_CLIENT_ID")
+    redirect_uri = url_for("neon_callback", _external=True)
+    neon_url = f"https://auth.neon.tech/oauth/authorize?client_id={neon_client_id}&provider={provider}&redirect_uri={redirect_uri}&response_type=token"
+    return redirect(neon_url)
 
 @app.route('/foods')
 def list_foods():
