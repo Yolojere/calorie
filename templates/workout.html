@@ -373,6 +373,35 @@
             max-height: 100%;  /* maintain aspect ratio */
             object-fit: contain;
         }
+        .tooltip {
+  opacity: 1 !important; /* prevent Bootstrap fade weirdness */
+}
+
+/* Tooltip bubble */
+.tooltip .tooltip-inner {
+  background-color: #1b1b1b; /* match nav-link-box background */
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 10px; /* softer pill look */
+  border: 1px solid #444;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Tooltip arrow */
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #1b1b1b;
+}
     /* Muscle group card */
 .muscle-group-card {
     background-color: #1c1c1c;
@@ -490,14 +519,35 @@
   font-size: 12px !important;        
   font-weight: 600 !important; 
 }
-    .dropdown-menu {
-        background-color: #1e1e1e;
-        border: 1px solid #333;
-        right: 0 !important;
-       width: 150px !important;
-        overflow-x:auto !important;
-        min-width: max-content; /* grow to fit the longest text */
-    }
+.dropdown-menu {
+  background-color: #181818;
+  border: 1px solid #333;
+  right: 0 !important;
+  width: 150px !important;
+  max-height: 250px; /* adjust to taste */
+  overflow-y: auto;
+  overflow-x: hidden; /* keep it clean */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #444 #1a1a1a; /* scrollbar styling */
+}
+#template-list-desktop{
+    width: 300px !important;
+}
+
+/* Chrome/Edge scrollbar styling */
+.dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.dropdown-menu::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
     
     .dropdown-item {
         color: #fff;
@@ -648,31 +698,37 @@
     }
 
     .complete-exercise-options {
-        display: none;
-        position: absolute !important;
-        top: 100%;
-        left: 0;
-        min-width: 140px;
-        height: auto !important;
-        background-color: #333;
-        box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
-        border-radius: 4px;
-        border: 1px solid #ffffff !important;
-        z-index: 10000;
-    }
 
-    .complete-option {
-        color: #ffffff !important;
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        cursor: pointer;
-        text-align: left;
-        border-bottom: 1px solid #444;
-        font-size: 12px;
-        font-weight: 600;
-        transition: background 0.2s;
-    }
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+    background-color: #333;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
+    border-radius: 10px;
+    border: 1px solid #ffffff;
+    z-index: 1000;
+    overflow: hidden;
+
+}
+
+ 
+
+.complete-option {
+
+    color: #ffffff;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    text-align: left;
+    border-bottom: 1px solid #444;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.2s;
+
+}
 
 
     .complete-option:hover {
@@ -996,25 +1052,7 @@
         font-size: 16px;
     }
 
-    /* ===== TOOLTIPS ===== */
-    .tooltip-inner {
-        max-width: 250px;
-        white-space: normal;
-        word-wrap: break-word;
-        text-align: left;
-        padding: 8px 12px;
-        background-color: #333 !important;
-        color: #fff !important;
-        border: 1px solid #555 !important;
-        border-radius: 6px !important;
-    }
 
-    .tooltip.bs-tooltip-top .tooltip-arrow::before, 
-    .tooltip.bs-tooltip-bottom .tooltip-arrow::before,
-    .tooltip.bs-tooltip-start .tooltip-arrow::before, 
-    .tooltip.bs-tooltip-end .tooltip-arrow::before {
-        border-color: #555;
-    }
 
     /* ===== DROPDOWNS ===== */
     .rir-dropdown {
@@ -1030,7 +1068,7 @@
         min-width: 80px;
         box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
         z-index: 999 !important;
-        border-radius: 5px;
+        border-radius: 15px;
         overflow: visible;
         border: 1px solid #555;
         bottom: 100%;
@@ -1078,7 +1116,7 @@
         border-radius: 5px;
         padding: 8px;
         margin-bottom: 10px;
-        resize: vertical;
+        resize:vertical;
     }
 
     .comment-tooltip button {
@@ -1181,10 +1219,10 @@
         
         /* Desktop only comment tooltip */
         .comment-tooltip {
-            position: absolute;
+            position: fixed !important;
             top: 0;
             left: 0;
-            width: 250px;
+            width: 200x;
             transform: none;
         }
         
@@ -1478,6 +1516,9 @@
         right: 0 !important;
         width: 150px !important;
         overflow-x:auto !important;
+    }
+    #template-list-mobile.dropdown-menu {
+        width: 300px !important;
     }
         .group-title {
             font-size: 14px !important;
@@ -2416,10 +2457,10 @@
         
         <!-- Focus Type -->
         <div class="mb-3">
-          <label class="form-label">Focus</label>
+          <label class="form-label">Focus (comparing vs last workout of that focus)</label>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary flex-fill focus-btn" data-focus="strength">Strength</button>
-            <button type="button" class="btn btn-outline-success flex-fill focus-btn" data-focus="hypertrophy">Hypertrophy</button>
+            <button type="button" class="btn btn-jere flex-fill focus-btn" data-focus="strength">Strength</button>
+            <button type="button" class="btn btn-jere flex-fill focus-btn" data-focus="hypertrophy">Hypertrophy</button>
           </div>
         </div>
         
