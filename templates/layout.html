@@ -62,7 +62,36 @@
             height: 35px;
             
         }
+/* Tooltip container */
+.tooltip {
+  opacity: 1 !important; /* prevent Bootstrap fade weirdness */
+}
 
+/* Tooltip bubble */
+.tooltip .tooltip-inner {
+  background-color: #1b1b1b; /* match nav-link-box background */
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 10px; /* softer pill look */
+  border: 1px solid #444;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Tooltip arrow */
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #1b1b1b;
+}
         .nav-link-box:hover {
             background-color: #f0f0f0 !important;
             transform: translateY(-2px);
@@ -484,5 +513,14 @@
 });
     </script>
     {% block scripts %}{% endblock %}
+<script>
+  // Initialize tooltips globally
+  document.addEventListener("DOMContentLoaded", function () {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    )
+    tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
+  })
+</script>
 </body>
 </html>
