@@ -3296,12 +3296,7 @@
                 
                 // Add food
                 $('#add-food').click(addFoodToLog);
-                $('#grams').on('keydown', function(e) {
-                if (e.which === 13 || e.keyCode === 13) { // Enter key
-                    e.preventDefault(); // Prevent form submission
-                    $('#add-food').click();
-                }
-            });
+                $('#grams').on('keypress', handleGramsEnterKey);
                 
                 // Food groups
                 $(document).on('click', '.toggle-group', toggleFoodGroup);
@@ -3369,6 +3364,8 @@
     updateMobileNutrition(totals);
     updateCalorieDifference();
     updateNutritionProgressBars();
+    
+
     
     // Trigger session updated event for other components
     $(document).trigger('sessionUpdated');
@@ -3865,6 +3862,7 @@ function optimizedUpdateGrams(itemId, foodKey, newGrams, date, buttonElement) {
     }, response => {
         // Instead of full refresh, just update the specific item and totals
         if (response.totals) {
+            console.log("Updated totals:", response.totals);
             updateNutritionTotalsOnly(response.totals);
         }
         
@@ -4876,7 +4874,7 @@ function updateSessionDisplay(session, totals, breakdown) {
                     return num.toFixed(0);
                 };
                 
-                $('#mobile-calories').text(safeParse(totals.calories));
+                 $('#mobile-calories-value').text(safeParse(totals.calories) + ' kcal');
                 $('#mobile-proteins').text(safeParse(totals.proteins) + 'g');
                 $('#mobile-carbs').text(safeParse(totals.carbs) + 'g');
                 $('#mobile-fats').text(safeParse(totals.fats) + 'g');
