@@ -473,3 +473,63 @@ $(document).on("click", "#copy-to-date-btn", function() {
   let workoutId = $(this).data("id");
   $("#copyWorkoutModal").data("workout-id", workoutId).modal("show");
 });
+const workoutName = document.getElementById("workout-name");
+const editBtn = document.getElementById("edit-workout-name");
+const input = document.getElementById("workout-input");
+const dateSelector = document.getElementById("mobile-date-selector");
+
+// Helper: get current date key
+function getDateKey() {
+    return dateSelector?.value || new Date().toISOString().split("T")[0]; 
+    // fallback = today
+}
+
+// Load workout name for current date
+function loadWorkoutName() {
+    const key = "workoutName_" + getDateKey();
+    const savedName = localStorage.getItem(key);
+    if (savedName) {
+        workoutName.textContent = savedName;
+        input.value = savedName;
+    } else {
+        workoutName.textContent = "My Session";
+        input.value = "My Session";
+    }
+}
+
+// Save workout name for current date
+function saveEdit() {
+    const newName = input.value.trim() || "Unnamed Workout";
+    workoutName.textContent = newName;
+
+    const key = "workoutName_" + getDateKey();
+    localStorage.setItem(key, newName);
+
+    workoutName.classList.remove("d-none");
+    editBtn.classList.remove("d-none");
+    input.classList.add("d-none");
+}
+
+// Enable editing
+function enableEdit() {
+    input.value = workoutName.textContent;
+    workoutName.classList.add("d-none");
+    editBtn.classList.add("d-none");
+    input.classList.remove("d-none");
+    input.focus();
+
+    // Move cursor to end
+    const length = input.value.length;
+    input.setSelectionRange(length, length);
+}
+
+// Events
+editBtn.addEventListener("click", enableEdit);
+input.addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); });
+input.addEventListener("blur", saveEdit);
+
+// When date changes, reload workout name
+dateSelector?.addEventListener("change", loadWorkoutName);
+
+// Initial load
+loadWorkoutName();
