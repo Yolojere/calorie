@@ -56,6 +56,7 @@ function deleteSet(setId, $button) {
     
     setTimeout(() => {
         $row.remove();
+        hideEmptyWorkoutGroups();
     }, 1000);
     
     $.post("/workout/delete_set", { set_id: setId }, function(response) {
