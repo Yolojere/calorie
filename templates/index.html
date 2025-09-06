@@ -3292,11 +3292,16 @@
                 
                 // Portion controls
                 $(document).on('click', '.portion-btn', handlePortionClick);
-                $('#grams').on('input', 'keydown', handleGramsInput);
+                $('#grams').on('input', handleGramsInput);
                 
                 // Add food
                 $('#add-food').click(addFoodToLog);
-                $('#grams').on('keypress', handleGramsEnterKey);
+                $('#grams').on('keydown', function(e) {
+                if (e.which === 13 || e.keyCode === 13) { // Enter key
+                    e.preventDefault(); // Prevent form submission
+                    $('#add-food').click();
+                }
+            });
                 
                 // Food groups
                 $(document).on('click', '.toggle-group', toggleFoodGroup);
@@ -3548,7 +3553,7 @@ function hideEmptyGroups() {
         if ($items.length === 0) {
             $group.fadeOut(300, function() {
                 $(this).remove();
-                
+                $('.empty-state').remove();
                 // If no groups left, show empty state
                 if ($('.food-group').length === 0) {
                     $('#food-log').html('<div class="empty-state">No food logged yet</div>');
@@ -3556,7 +3561,7 @@ function hideEmptyGroups() {
             });
         }
     });
-}       
+}
                 function toggleAdminMode() {
                     isAdminMode = !isAdminMode;
                     $('#admin-toggle').toggle(isAdminMode);
@@ -4313,18 +4318,21 @@ function applyTemplate() {
                 updateNutritionTotalsOnly(response.totals);
             }
             
+            // Force the target group to be collapsed when applying template
+            const collapseStates = loadCollapseStates();
+            collapseStates[mealGroup] = true;
+            localStorage.setItem('mealGroupCollapseStates', JSON.stringify(collapseStates));
+            
             // Add new items to specific group instead of full refresh
             if (response.breakdown && response.breakdown[mealGroup]) {
                 const groupData = response.breakdown[mealGroup];
                 addItemsToGroup(mealGroup, groupData.items, groupData);
             }
             
-            $('#applyTemplateModal').modal('hide');
+            // ✅ Remove the empty state if items were added
+            hideEmptyGroups();
             
-            // Force the target group to be collapsed when applying template
-            const collapseStates = loadCollapseStates();
-            collapseStates[mealGroup] = true;
-            localStorage.setItem('mealGroupCollapseStates', JSON.stringify(collapseStates));
+            $('#applyTemplateModal').modal('hide');
             
         } else {
             alert('Error: ' + (response.error || 'Failed to apply template'));
@@ -4357,6 +4365,7 @@ function applyTemplate() {
     
     // Update group totals
     updateGroupTotals(groupName, groupData);
+        $('.empty-state').remove();
     
     // Apply collapse state
     const collapseStates = loadCollapseStates();
