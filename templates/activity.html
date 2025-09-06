@@ -131,7 +131,36 @@ body {
     font-size: 13px;
     border-radius: 20px;
 }
+/* Tooltip container */
+.tooltip {
+  opacity: 1 !important; /* prevent Bootstrap fade weirdness */
+}
 
+/* Tooltip bubble */
+.tooltip .tooltip-inner {
+  background-color: #1b1b1b; /* match nav-link-box background */
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 10px; /* softer pill look */
+  border: 1px solid #444;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Tooltip arrow */
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #1b1b1b;
+}
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #1b1b1b;
+}
 /* ===== DROPDOWNS & MODALS ===== */
     .dropdown-menu {
         background-color: #1e1e1e;
@@ -463,42 +492,39 @@ body {
     font-weight: 600;
 }
 
-/* Spinner */
-.spinner {
-    width: 80px;
-    height: 80px;
-    position: relative;
+/* Pulse animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.85;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+@keyframes fadePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
 }
 
-.spinner .dot {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    animation: spinner 2s infinite ease-in-out;
+.pulsing-logo {
+    width: 120px; /* adjust size as needed */
+    height: auto;
+    animation: pulse 1.8s ease-in-out infinite;
 }
-
-.spinner .dot:after {
-    content: '';
-    display: block;
-    width: 25%;
-    height: 25%;
-    background-color: #fff;
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    left: 45%;
+.loading-text,
+.analyzing-text {
+    animation: fadePulse 1.8s ease-in-out infinite;
 }
-
-.spinner .dot:nth-child(1) { animation-delay: -1.1s; }
-.spinner .dot:nth-child(2) { animation-delay: -1.0s; }
-.spinner .dot:nth-child(3) { animation-delay: -0.9s; }
-.spinner .dot .dot:nth-child(12) { animation-delay: 0s; }
-
-@keyframes spinner {
-    0%, 40%, 100% { transform: scale(0.4); }
-    20% { transform: scale(1); }
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .container-page {
@@ -524,22 +550,12 @@ body {
 
 </head>
 <body>
-    <!-- Loading Overlay -->
+        <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
+        <img src="static/images/trackyoulogo.png" 
+             alt="TrackYou Logo" 
+             class="pulsing-logo">
+
         <div class="analyzing-text">Analyzing...</div>
         <div class="loading-text">Calculating your energy expenditure</div>
     </div>
@@ -1314,6 +1330,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('walking-minutes').value = state.walkingMinutes || '';
         }
     }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  );
+  tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 });
 </script>
 </body>
