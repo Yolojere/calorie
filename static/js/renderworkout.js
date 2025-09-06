@@ -185,9 +185,8 @@ function renderWorkoutSession(session, exercises, options = {}) {
                                     <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
                                 </button>
                                 <div class="complete-exercise-options">
-                                    <div class="complete-option" data-value="asdadasd">Complete Exercise?</div>
-                                    <div class="complete-option" data-value="yes">✔️ Yes</div>
-                                    <div class="complete-option" data-value="no">❌ No</div>
+                                    <div class="complete-option" data-value="yes">✔️ Complete</div>
+                                    <div class="complete-option" data-value="no">❌ Cancel</div>
                                      <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
                                 </div>
                             </div>
@@ -603,7 +602,7 @@ function showWorkoutResults(comparisonData, achievements) {
         if ($('#workout-results').is(':visible')) {
             hideWorkoutResults();
         }
-    }, 15000);
+    }, 45000);
 }
 
 // Hide workout results
@@ -726,3 +725,52 @@ $('#copyWorkoutModal').on('shown.bs.modal', function() {
     $(this).addClass("active");
     copyWorkoutToDate($(this).data("date"));
 });
+function hideEmptyWorkoutGroups() {
+    const currentDate = $(".workout-date.active").data("date");
+    
+    // First, remove empty exercises
+    $('.exercise').each(function() {
+        const $exercise = $(this);
+        const $sets = $exercise.find('.set-row');
+        
+        if ($sets.length === 0) {
+            // Remove from collapse state
+            const exerciseId = $exercise.data('exercise-id');
+            if (collapseState.exercises[currentDate] && collapseState.exercises[currentDate][exerciseId]) {
+                delete collapseState.exercises[currentDate][exerciseId];
+            }
+            
+            $exercise.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }
+    });
+    
+    // Then, remove empty groups after exercises have been processed
+    setTimeout(() => {
+        $('.workout-group').each(function() {
+            const $group = $(this);
+            const $exercises = $group.find('.exercise');
+            
+            if ($exercises.length === 0) {
+                // Remove from collapse state
+                const groupName = $group.data('group');
+                if (collapseState.groups[currentDate] && collapseState.groups[currentDate][groupName]) {
+                    delete collapseState.groups[currentDate][groupName];
+                }
+                
+                $group.fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // If no groups left, show empty state
+                    if ($('.workout-group').length === 0) {
+                        $('#workout-session-container').html('<div class="alert alert-info">No workout recorded for this day. Add your first set below!</div>');
+                    }
+                });
+            }
+        });
+        
+        // Save the updated collapse state
+        saveCollapseState();
+    }, 350); // Slightly longer than the fadeOut duration
+}
