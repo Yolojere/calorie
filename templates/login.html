@@ -154,7 +154,39 @@ input.form-control:-webkit-autofill {
     border-color: #a0a0a0;
     font-size: 14px;
 }
+.social-login {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    align-items: center !important;
+    justify-content: center !important;
+    position:relative;
+    display: row;
+}
 
+.social-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-google {
+    background-color: #DB4437;
+    color: white;
+}
+
+.btn-github {
+    background-color: #333;
+    color: white;
+}
+
+.btn-google:hover, .btn-github:hover {
+    opacity: 0.9;
+    color: white;
+}
 /* Pop animation */
 @keyframes pop {
     0%   { transform: scale(1); }
@@ -228,24 +260,13 @@ form-check-label
                 </div>
             </form>
         </div>
-
-        <!-- Security Features -->
-        <div class="text-center mt-4">
-            <div class="d-flex justify-content-center">
-                <div class="me-4">
-                    <i class="fas fa-shield-alt fa-2x"></i>
-                    <p class="mt-2">Secure</p>
-                </div>
-                <div class="me-4">
-                    <i class="fas fa-lock fa-2x"></i>
-                    <p class="mt-2">Encrypted</p>
-                </div>
-                <div>
-                    <i class="fas fa-user-check fa-2x"></i>
-                    <p class="mt-2">Verified</p>
-                </div>
-            </div>
-        </div>
+        <div class="social-login">
+    <h3>Or sign in with</h3>
+    <div class="social-buttons">
+        <a href="{{ url_for('oauth_login', provider='google') }}" class="btn btn-google">
+            <i class="fab fa-google"></i> Google
+        </a>
     </div>
 </div>
+
 {% endblock %}
