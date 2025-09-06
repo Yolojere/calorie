@@ -29,11 +29,12 @@ from io import BytesIO
 import base64
 import requests
 from flask_wtf.csrf import CSRFProtect
+from authlib.integrations.flask_client import OAuth
 logging.basicConfig(level=logging.DEBUG)
-
 
 # Load environment variables
 load_dotenv()
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
@@ -42,6 +43,22 @@ app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['OAUTH_PROVIDERS'] = {
+    'google': {
+        'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+        'client_secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+        'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
+        'client_kwargs': {'scope': 'openid email profile'}
+    },
+    'github': {
+        'client_id': os.getenv('GITHUB_CLIENT_ID'),
+        'client_secret': os.getenv('GITHUB_CLIENT_SECRET'),
+        'authorize_url': 'https://github.com/login/oauth/authorize',
+        'access_token_url': 'https://github.com/login/oauth/access_token',
+        'userinfo_url': 'https://api.github.com/user',
+        'client_kwargs': {'scope': 'user:email'}
+    }
+}
 
 # Initialize extensions
 bcrypt = Bcrypt(app)
@@ -49,6 +66,23 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 csrf = CSRFProtect(app)
+
+# Initialize OAuth
+oauth = OAuth(app)
+# Create OAuth clients
+google = oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+github = oauth.register(
+    name='github',
+    access_token_url='https://github.com/login/oauth/access_token',
+    authorize_url='https://github.com/login/oauth/authorize',
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email'}
+)
 # Update the normalize_key function
 def normalize_key(key):
     """Normalize food key while preserving non-ASCII characters"""
@@ -120,7 +154,17 @@ def init_db():
             weight REAL
         )
     ''')
-
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS oauth_connections (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL,
+        provider_user_id TEXT NOT NULL,
+        access_token TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(provider, provider_user_id)
+    )
+''')
     # Ensure columns exist (safe migration)
     cursor.execute("""
         DO $$
@@ -440,7 +484,7 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', 
                                     validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Sign Up')
+    submit = SubmitField('Register')
 
     def validate_username(self, username):
         conn = get_db_connection()
@@ -1687,30 +1731,40 @@ def update_grams():
 
         print(f"Food name from session: {item_found['name']}")
         
-        # Use the name to lookup food details
-        food_key = item_found['key']  # Get the stored key
-        food = get_food_by_key(food_key)  # Use key instead of name
+        # Lookup food by key
+        food_key = item_found['key']
+        food = get_food_by_key(food_key)
         
         if not food:
             print(f"Food not found in database for key: '{food_key}'")
             return jsonify({'error': 'Food not found'}), 404
         
-        # Convert units to grams
-        factor = float(new_grams) / 100
+        # Convert to grams
+        factor = float(new_grams) / 100.0
         item_found['grams'] = float(new_grams)
         item_found['units'] = float(new_grams)
         item_found['unit_type'] = 'grams'
-        item_found['carbs'] = food['carbs'] * factor
-        item_found['proteins'] = food['proteins'] * factor
-        item_found['fats'] = food['fats'] * factor
-        item_found['salt'] = food.get('salt', 0.0) * factor
-        item_found['calories'] = food['calories'] * factor
+
+        # Core macros
+        item_found['carbs']      = food.get('carbs', 0.0) * factor
+        item_found['proteins']   = food.get('proteins', 0.0) * factor
+        item_found['fats']       = food.get('fats', 0.0) * factor
+        item_found['calories']   = food.get('calories', 0.0) * factor
+
+        # Extra nutrients
+        item_found['fiber']      = food.get('fiber', 0.0) * factor
+        item_found['sugars']     = food.get('sugars', 0.0) * factor
+        item_found['salt']       = food.get('salt', 0.0) * factor
+        item_found['saturated']  = food.get('saturated', 0.0) * factor
         
+        # Save session
         save_current_session(user_id, eaten_items, date)
         
+        # Recalculate totals
         totals = calculate_totals(eaten_items)
         group_breakdown = calculate_group_breakdown(eaten_items)
         current_date_formatted = format_date(current_date)
+        
         return jsonify({
             'session': eaten_items,
             'totals': totals,
@@ -3448,7 +3502,141 @@ def save_workout():
     finally:
         cursor.close()
         conn.close()
+def get_oauth_connection(provider, provider_user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute(
+        'SELECT * FROM oauth_connections WHERE provider = %s AND provider_user_id = %s',
+        (provider, provider_user_id)
+    )
+    connection = cursor.fetchone()
+    conn.close()
+    return connection
 
+def create_oauth_connection(user_id, provider, provider_user_id, access_token):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO oauth_connections (user_id, provider, provider_user_id, access_token) '
+        'VALUES (%s, %s, %s, %s) '
+        'ON CONFLICT (provider, provider_user_id) DO UPDATE SET access_token = EXCLUDED.access_token',
+        (user_id, provider, provider_user_id, access_token)
+    )
+    conn.commit()
+    conn.close()
+
+def get_user_by_oauth(provider, provider_user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute('''
+        SELECT u.* FROM users u 
+        JOIN oauth_connections oc ON u.id = oc.user_id 
+        WHERE oc.provider = %s AND oc.provider_user_id = %s
+    ''', (provider, provider_user_id))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+@app.route('/login/<provider>')
+def oauth_login(provider):
+    if provider == 'google':
+        redirect_uri = url_for('oauth_authorize', provider='google', _external=True)
+        return google.authorize_redirect(redirect_uri)
+    elif provider == 'github':
+        redirect_uri = url_for('oauth_authorize', provider='github', _external=True)
+        return github.authorize_redirect(redirect_uri)
+    else:
+        flash('Unsupported OAuth provider', 'danger')
+        return redirect(url_for('login'))
+
+@app.route('/oauth/authorize/<provider>')
+def oauth_authorize(provider):
+    try:
+        if provider == 'google':
+            token = google.authorize_access_token()
+            userinfo = google.parse_id_token(token)
+            email = userinfo['email']
+            provider_user_id = userinfo['sub']
+        elif provider == 'github':
+            token = github.authorize_access_token()
+            resp = github.get('user')
+            userinfo = resp.json()
+            email = userinfo.get('email')
+            # If email is not public, make another request to get emails
+            if not email:
+                resp = github.get('user/emails')
+                emails = resp.json()
+                email = next((e['email'] for e in emails if e['primary']), emails[0]['email'])
+            provider_user_id = str(userinfo['id'])
+        else:
+            flash('Unsupported OAuth provider', 'danger')
+            return redirect(url_for('login'))
+        
+        # Check if we already have this OAuth connection
+        existing_connection = get_oauth_connection(provider, provider_user_id)
+        
+        if existing_connection:
+            # Existing user - log them in
+            user = load_user(existing_connection['user_id'])
+            login_user(user)
+            flash(f'Successfully logged in with {provider}!', 'success')
+            return redirect(url_for('index'))
+        
+        # Check if user with this email already exists
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+        
+        if user:
+            # Link OAuth to existing account
+            create_oauth_connection(user['id'], provider, provider_user_id, token['access_token'])
+            user_obj = User(
+                id=user['id'],
+                username=user['username'],
+                email=user['email'],
+                role=user['role']
+            )
+            login_user(user_obj)
+            flash(f'{provider.capitalize()} account linked successfully!', 'success')
+            return redirect(url_for('index'))
+        else:
+            # Create new user
+            username = email.split('@')[0]
+            # Ensure username is unique
+            counter = 1
+            base_username = username
+            while True:
+                cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
+                if not cursor.fetchone():
+                    break
+                username = f"{base_username}_{counter}"
+                counter += 1
+            
+            # Create user without password
+            hashed_password = bcrypt.generate_password_hash(str(uuid.uuid4())).decode('utf-8')
+            cursor.execute(
+                'INSERT INTO users (username, email, password) VALUES (%s, %s, %s) RETURNING id',
+                (username, email, hashed_password)
+            )
+            user_id = cursor.fetchone()[0]
+            conn.commit()
+            
+            # Create OAuth connection
+            create_oauth_connection(user_id, provider, provider_user_id, token['access_token'])
+            
+            user_obj = User(
+                id=user_id,
+                username=username,
+                email=email,
+                role='user'
+            )
+            login_user(user_obj)
+            flash(f'Account created with {provider}!', 'success')
+            return redirect(url_for('index'))
+            
+    except Exception as e:
+        flash(f'OAuth login failed: {str(e)}', 'danger')
+        return redirect(url_for('login'))
 
 
 @app.route('/foods')
