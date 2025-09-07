@@ -75,8 +75,18 @@ google = oauth.register(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    api_base_url='https://openidconnect.googleapis.com/v1/',
     client_kwargs={'scope': 'openid email profile'}
 
+)
+facebook = oauth.register(
+    name='facebook',
+    client_id=os.getenv('FACEBOOK_CLIENT_ID'),
+    client_secret=os.getenv('FACEBOOK_CLIENT_SECRET'),
+    access_token_url='https://graph.facebook.com/v16.0/oauth/access_token',
+    authorize_url='https://www.facebook.com/v16.0/dialog/oauth',
+    api_base_url='https://graph.facebook.com/v16.0/',
+    client_kwargs={'scope': 'email'}  # add 'public_profile' if needed
 )
 
 github = oauth.register(
@@ -1039,8 +1049,22 @@ def index():
         current_tdee=current_tdee,
         current_weight=current_weight
     )
-
-
+@app.route("/delete-data", methods=["GET", "POST"])
+def delete_data():
+    if request.method == "POST":
+        user_id = request.form.get("user_id")  # Or however FB sends it
+        # TODO: implement deletion logic from your DB
+        # e.g., remove user account + related data
+        return jsonify({"status": "success", "message": f"Data deleted for user {user_id}"})
+    
+    # If accessed via browser, just show instructions
+    return render_template("delete_data.html")
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
 @app.route('/custom_food')
 @login_required
 def custom_food():
@@ -3558,7 +3582,8 @@ def oauth_authorize(provider):
     try:
         if provider == 'google':
             token = google.authorize_access_token()
-            userinfo = google.parse_id_token(token)
+            resp = google.get('userinfo')
+            userinfo = resp.json()
             email = userinfo['email']
             provider_user_id = userinfo['sub']
         elif provider == 'github':
@@ -3566,6 +3591,13 @@ def oauth_authorize(provider):
             resp = github.get('user')
             userinfo = resp.json()
             email = userinfo.get('email')
+        elif provider == 'facebook':
+            token = facebook.authorize_access_token()
+            resp = facebook.get('me?fields=id,name,email')
+            userinfo = resp.json()
+            
+            email = userinfo.get('email')
+            provider_user_id = userinfo['id']
             # If email is not public, make another request to get emails
             if not email:
                 resp = github.get('user/emails')
