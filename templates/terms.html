@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}Terms of Service - Nutrition Tracker{% endblock %}
+
+{% block head %}
+<style>
+.container-page {
+    background-color: #1b1b1b;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: white;
+}
+.card {
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    max-width: 800px;
+    width: 100%;
+    padding: 2rem;
+}
+h3, h4 {
+    color: #fff;
+}
+p {
+    color: #ccc;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-page">
+    <div class="card">
+        <h3>Terms of Service</h3>
+        <p>By using Nutrition Tracker, you agree to the following terms:</p>
+
+        <h4>Use of Service</h4>
+        <p>- You must be at least 13 years old to create an account.<br>
+           - You are responsible for maintaining the security of your account.<br>
+           - You agree not to misuse the service (e.g., attempting to hack, spam, or disrupt).</p>
+
+        <h4>Health Disclaimer</h4>
+        <p>Nutrition Tracker is for informational purposes only. It is not a substitute for professional medical advice. Always consult a healthcare provider before making major changes to your diet or exercise routine.</p>
+
+        <h4>Account Termination</h4>
+        <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
+
+        <h4>Limitation of Liability</h4>
+        <p>We do our best to provide a reliable service but cannot guarantee uninterrupted access. We are not liable for any losses or damages arising from your use of the service.</p>
+
+        <h4>Changes to Terms</h4>
+        <p>We may update these terms from time to time. Continued use of the service means you accept the updated terms.</p>
+    </div>
+</div>
+{% endblock %}

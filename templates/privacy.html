@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}Privacy Policy - Nutrition Tracker{% endblock %}
+
+{% block head %}
+<style>
+.container-page {
+    background-color: #1b1b1b;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: white;
+}
+.card {
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    max-width: 800px;
+    width: 100%;
+    padding: 2rem;
+}
+h3, h4 {
+    color: #fff;
+}
+p {
+    color: #ccc;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-page">
+    <div class="card">
+        <h3>Privacy Policy</h3>
+        <p>Your privacy is important to us. This policy explains what information we collect and how we use it.</p>
+
+        <h4>Information We Collect</h4>
+        <p>- Account details such as username, email, and optional profile information.<br>
+           - Data you provide, such as logged meals, nutrition details, and preferences.<br>
+           - OAuth login information from providers like Google, GitHub, or Facebook (email and profile ID only).</p>
+
+        <h4>How We Use Your Data</h4>
+        <p>- To provide and improve the Nutrition Tracker service.<br>
+           - To allow you to log in and access your account securely.<br>
+           - To communicate essential updates (never spam).</p>
+
+        <h4>Data Sharing</h4>
+        <p>We do not sell your personal data. We only share information with trusted third parties when required for authentication (OAuth providers) or by law.</p>
+
+        <h4>Data Security</h4>
+        <p>We use encryption and secure practices to protect your data. However, no system is 100% secure, so please use a strong password and keep it safe.</p>
+
+        <h4>Your Rights</h4>
+        <p>You may request to access or delete your data by contacting us.</p>
+
+        <h4>Contact</h4>
+        <p>If you have questions, contact us at <a href="mailto:support@trackyou.onrender.com" class="accent-color">support@trackyou.onrender.com</a>.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Delete Your Data - Nutrition Tracker{% endblock %}
+
+{% block head %}
+<style>
+.container-page {
+    background-color: #1b1b1b;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: white;
+}
+.card {
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    max-width: 700px;
+    width: 100%;
+    padding: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-page">
+    <div class="card">
+        <h3>Request Data Deletion</h3>
+        <p>
+            You can request deletion of your account and associated data at any time.
+            Please contact us at 
+            <a href="mailto:support@trackyou.onrender.com" class="accent-color">support@trackyou.onrender.com</a> 
+            with the email linked to your account, or use the deletion option inside the app if available.
+        </p>
+        <p>
+            For Facebook login users, you may also request deletion via this page as required by Facebook’s policy.
+        </p>
+    </div>
+</div>
+{% endblock %}
