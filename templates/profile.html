@@ -410,6 +410,13 @@ input.form-control:-webkit-autofill {
     color: #fff;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
+.profile-field .input-group-text i {
+    font-size: 1.2rem;       /* adjust to match dumbbell/bullseye icons */
+    width: 1.5rem;           /* ensures square container if needed */
+    text-align: center;
+    display: inline-block;
+}
+
 
 .profile-field .form-control {
     border-radius: 0 25px 25px 0 !important; /* square left, pill right */
@@ -419,7 +426,11 @@ input.form-control:-webkit-autofill {
     color: #fff;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
+.profile-field .input-group-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 /* Hover effect on the entire group */
 .profile-field:hover .input-group-text,
 .profile-field:hover .form-control {
