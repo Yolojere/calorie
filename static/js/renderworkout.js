@@ -5,13 +5,20 @@ console.log('Rendering session', currentDate, session, exercises);
 function renderWeekDates(dates) {
     const container = $("#week-dates-container");
     container.empty();
-    
+
+    const todayISO = new Date().toISOString().split('T')[0]; // today in UTC
+
     dates.forEach(date => {
-        const dateObj = new Date(date);
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-        const dayNumber = dateObj.getDate();
-        const isToday = date === new Date().toISOString().split('T')[0];
-        
+        // Force UTC parsing to avoid local timezone shifts
+        const dateObj = new Date(date + 'T00:00Z'); 
+
+        // Use en-GB locale for weekday names (Mon, Tue...)
+        const dayName = dateObj.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' });
+        const dayNumber = dateObj.getUTCDate();
+
+        // Compare ISO strings to mark today
+        const isToday = date === todayISO;
+
         const dateElement = `
             <div class="workout-date btn btn-outline-secondary mx-1 ${isToday ? 'active' : ''}" 
                  data-date="${date}">
@@ -21,21 +28,23 @@ function renderWeekDates(dates) {
         `;
         container.append(dateElement);
     });
-    
+
     // Add click event to dates
     $(".workout-date").click(function() {
         $(".workout-date").removeClass("active");
         $(this).addClass("active");
-        currentSelectedDate = $(this).data("date");
+        const selectedDate = $(this).data("date");
+
         // Use cached version of session loading
-        getSessionWithCache($(this).data("date"), function(data) {
+        getSessionWithCache(selectedDate, function(data) {
             renderWorkoutSession(data.session, data.exercises);
         });
     });
-    
+
     // Update week display
-    const start = new Date(dates[0]);
-    const end = new Date(dates[6]);
+    const start = new Date(dates[0] + 'T00:00Z');
+    const end = new Date(dates[6] + 'T00:00Z');
+
     const weekDisplay = `Week ${getWeekNumber(start)}: ${formatDate(start)} - ${formatDate(end)}`;
     $("#week-display").text(weekDisplay);
 }
@@ -94,52 +103,42 @@ function renderWorkoutSession(session, exercises, options = {}) {
     const groups = {};
     exercises.forEach(exercise => {
         const group = exercise.muscle_group;
-        if (!groups[group]) {
-            groups[group] = { exercises: [], totalSets: 0, totalVolume: 0 };
-        }
+        if (!groups[group]) groups[group] = { exercises: [], totalSets: 0, totalVolume: 0 };
 
-        // Prevent duplicate sets
         const uniqueSets = Array.isArray(exercise.sets) ? [...exercise.sets] : [];
         const exerciseVolume = uniqueSets.reduce((sum, set) => sum + set.volume, 0);
         const exerciseSets = uniqueSets.length;
 
-        groups[group].exercises.push({...exercise, sets: uniqueSets, exerciseSets, exerciseVolume});
+        groups[group].exercises.push({ ...exercise, sets: uniqueSets, exerciseSets, exerciseVolume });
         groups[group].totalSets += exerciseSets;
         groups[group].totalVolume += exerciseVolume;
     });
 
-    // If copied workout or template, collapse groups by default
-    if (collapseGroups || isCopiedWorkout || isApplyingTemplate) {
+    // Collapse groups/exercises if copy/template or collapseGroups option
+    if (collapseGroups || isApplyingTemplate) {
         for (const groupName in groups) {
             collapseState.groups[currentDate][groupName] = { collapsed: true };
-            groups[groupName].exercises.forEach(exercise => {
-                collapseState.exercises[currentDate][exercise.id] = true;
-            });
+            groups[groupName].exercises.forEach(ex => collapseState.exercises[currentDate][ex.id] = true);
         }
         saveCollapseState();
-        isApplyingTemplate = false; // reset template flag
+        isApplyingTemplate = false;
     }
 
-    // Render session
+    // Render HTML
     let sessionHTML = '';
 
     for (const groupName in groups) {
-        // Ensure group state exists
-        if (!collapseState.groups[currentDate][groupName]) {
-            collapseState.groups[currentDate][groupName] = { collapsed: false };
-        }
-
         const groupData = groups[groupName];
-        const groupState = collapseState.groups[currentDate][groupName];
-        const groupCollapsed = groupState.collapsed;
+
+        // Ensure collapse state exists
+        if (!collapseState.groups[currentDate][groupName]) collapseState.groups[currentDate][groupName] = { collapsed: false };
+        const groupCollapsed = collapseState.groups[currentDate][groupName].collapsed;
 
         let groupBlock = `
-            <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
+            <div class="workout-group" data-group="${groupName}">
                 <div class="group-header">
                     <div class="d-flex align-items-center">
-                        <div class="group-icon">
-                            <i class="fas fa-${getMuscleIcon(groupName)}"></i>
-                        </div>
+                        <div class="group-icon"><i class="fas fa-${getMuscleIcon(groupName)}"></i></div>
                         <span class="group-title">${groupName}</span>
                     </div>
                     <div class="d-flex align-items-center">
@@ -154,26 +153,23 @@ function renderWorkoutSession(session, exercises, options = {}) {
                         </div>
                     </div>
                 </div>
-                <div class="group-items" style="${groupCollapsed ? 'display: none;' : ''}">
+                <div class="group-items" style="${groupCollapsed ? 'display:none;' : ''}">
         `;
 
-        // Sort exercises: completed ones last
+        // Sort exercises: completed last
         groupData.exercises.sort((a, b) => {
-    const aCompleted = completedExercises[currentDate] && completedExercises[currentDate][a.id];
-    const bCompleted = completedExercises[currentDate] && completedExercises[currentDate][b.id];
+            const aDone = completedExercises[currentDate]?.[a.id];
+            const bDone = completedExercises[currentDate]?.[b.id];
+            if (aDone && !bDone) return 1;
+            if (!aDone && bDone) return -1;
+            return (a.order || 0) - (b.order || 0);
+        });
 
-    if (aCompleted && !bCompleted) return 1;
-    if (!aCompleted && bCompleted) return -1;
-
-    // Both completed or both not completed -> preserve creation/order
-    return (a.order || 0) - (b.order || 0);
-});
-
-        // Render exercises
+        // Exercises
         groupData.exercises.forEach(exercise => {
             const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
             const expandedClass = exerciseCollapsed ? '' : 'expanded';
-            const isCompleted = completedExercises[currentDate] && completedExercises[currentDate][exercise.id];
+            const isCompleted = completedExercises[currentDate]?.[exercise.id] || false;
             const completedClass = isCompleted ? 'completed' : '';
 
             groupBlock += `
@@ -187,7 +183,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
                                 <div class="complete-exercise-options">
                                     <div class="complete-option" data-value="yes">✔️ Complete</div>
                                     <div class="complete-option" data-value="no">❌ Cancel</div>
-                                     <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
+                                    <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
                                 </div>
                             </div>
                             <div class="exercise-title">${exercise.name}</div>
@@ -201,131 +197,68 @@ function renderWorkoutSession(session, exercises, options = {}) {
                             </button>
                         </div>
                     </div>
-                    <div class="exercise-sets" style="${exerciseCollapsed ? 'display: none;' : ''}">
+                    <div class="exercise-sets" style="${exerciseCollapsed ? 'display:none;' : ''}">
                         <table class="workout-table">
                             <thead>
                                 <tr>
-                                    <th class="text-center">Set</th>
-                                    <th class="text-center">Reps</th>
-                                    <th class="text-center">Weight</th>
-                                    <th class="text-center">Volume</th>
-                                    <th class="text-center">Actions</th>
+                                    <th>Set</th><th>Reps</th><th>Weight</th><th>Volume</th><th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
             `;
 
             exercise.sets.forEach((set, index) => {
-                let rirDisplay = '';
-                if (set.rir !== null && set.rir !== undefined && set.rir !== "") {
-                    let rirText = (set.rir === -1 || set.rir === "Failure" || set.rir === 0) ? 'Failure' : `${set.rir} RiR`;
-                    rirDisplay = `
-                        <div class="rir-dropdown">
-                            <span class="rir-badge">${rirText}</span>
-                            <div class="rir-options">
-                                <div class="rir-option" data-value="Failure">Failure</div>
-                                <div class="rir-option" data-value="1">1 RiR</div>
-                                <div class="rir-option" data-value="2">2 RiR</div>
-                                <div class="rir-option" data-value="3">3 RiR</div>
-                                <div class="rir-option" data-value="4">4 RiR</div>
-                                <div class="rir-option" data-value="5">5 RiR</div>
-                            </div>
+                const rirText = (set.rir === -1 || set.rir === 0 || set.rir === "Failure") ? 'Failure' : `${set.rir} RiR`;
+                const rirDisplay = `
+                    <div class="rir-dropdown">
+                        <span class="rir-badge">${set.rir != null ? rirText : 'None'}</span>
+                        <div class="rir-options">
+                            <div class="rir-option" data-value="Failure">Failure</div>
+                            <div class="rir-option" data-value="1">1 RiR</div>
+                            <div class="rir-option" data-value="2">2 RiR</div>
+                            <div class="rir-option" data-value="3">3 RiR</div>
+                            <div class="rir-option" data-value="4">4 RiR</div>
+                            <div class="rir-option" data-value="5">5 RiR</div>
                         </div>
-                    `;
-                } else {
-                    // If no RiR is set, show "None" and allow setting it
-                    rirDisplay = `
-                        <div class="rir-dropdown">
-                            <span class="rir-badge">None</span>
-                            <div class="rir-options">
-                                <div class="rir-option" data-value="Failure">Failure</div>
-                                <div class="rir-option" data-value="1">1 RiR</div>
-                                <div class="rir-option" data-value="2">2 RiR</div>
-                                <div class="rir-option" data-value="3">3 RiR</div>
-                                <div class="rir-option" data-value="4">4 RiR</div>
-                                <div class="rir-option" data-value="5">5 RiR</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
+                    </div>
+                `;
                 const commentIcon = set.comments ? 
                     `<i class="fas fa-comment comment-icon" data-comment="${set.comments.replace(/"/g, '&quot;')}"></i>` :
                     `<i class="far fa-comment comment-icon" data-comment=""></i>`;
 
                 groupBlock += `
                     <tr class="set-row" data-set-id="${set.id}">
-                        <td class="set-number-cell">
-                            <div class="d-flex align-items-center">
-                                <div class="me-2">${index + 1}</div>
-                                <div class="set-details">
-                                    ${rirDisplay}
-                                    ${commentIcon}
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control set-reps set-input" 
-                                value="${set.reps}" data-original="${set.reps}">
-                        </td>
-                        <td>
-                            <input type="number" class="form-control set-weight set-input" 
-                                value="${set.weight}" data-original="${set.weight}" step="0.5">
-                        </td>
+                        <td><div>${index+1}${rirDisplay}${commentIcon}</div></td>
+                        <td><input type="number" class="form-control set-reps set-input" value="${set.reps}" data-original="${set.reps}"></td>
+                        <td><input type="number" class="form-control set-weight set-input" value="${set.weight}" data-original="${set.weight}" step="0.5"></td>
                         <td class="volume-display">${set.volume.toFixed(1)}</td>
-                        <td class="actions-cell">
-                            <button class="btn delete-item">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
+                        <td><button class="btn delete-item"><i class="fas fa-trash"></i></button></td>
                     </tr>
                 `;
             });
 
-            groupBlock += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            groupBlock += `</tbody></table></div></div>`;
         });
 
-        groupBlock += `
-                </div>
-            </div>
-        `;
-
+        groupBlock += `</div></div>`;
         sessionHTML += groupBlock;
     }
 
     container.html(sessionHTML);
+
+    // Init helpers
     initTooltips();
     setTimeout(initTooltips, 100);
-    
-    // Setup the RiR dropdowns and comment tooltips
     setupRirDropdowns();
     setupCommentTooltips();
     setupExerciseCompletion();
 
-    // Apply initial expanded class
-    $(".exercise").each(function() {
-        const exerciseId = $(this).data("exercise-id");
-        const currentDate = $(".workout-date.active").data("date");
-        const isCollapsed = collapseState.exercises[currentDate]?.[exerciseId] || false;
-        const header = $(this).find(".exercise-header");
-        if (!isCollapsed) {
-            header.addClass("expanded");
-        }
-    });
-
     // Group toggle
-    $(".toggle-group").click(function() {
-        const groupHeader = $(this).closest(".group-header");
-        const groupContainer = groupHeader.closest(".workout-group");
-        const groupItems = groupContainer.find(".group-items");
+    $(".toggle-group").off("click").on("click", function() {
+        const $group = $(this).closest(".workout-group");
+        const groupName = $group.data("group");
+        const groupItems = $group.find(".group-items");
         const isExpanded = groupItems.is(":visible");
-        const groupName = groupContainer.data("group");
-        const currentDate = $(".workout-date.active").data("date");
 
         groupItems.toggle(!isExpanded);
         $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
@@ -336,28 +269,21 @@ function renderWorkoutSession(session, exercises, options = {}) {
     });
 
     // Exercise toggle
-    $(".toggle-exercise").click(function() {
-        const exerciseHeader = $(this).closest(".exercise-header");
-        const exerciseContainer = exerciseHeader.closest(".exercise");
-        const exerciseId = exerciseContainer.data("exercise-id");
-        const exerciseSets = exerciseContainer.find(".exercise-sets");
+    $(".toggle-exercise").off("click").on("click", function() {
+        const $exercise = $(this).closest(".exercise");
+        const exerciseId = $exercise.data("exercise-id");
+        const exerciseSets = $exercise.find(".exercise-sets");
         const isExpanded = exerciseSets.is(":visible");
-        const currentDate = $(".workout-date.active").data("date");
 
         exerciseSets.toggle(!isExpanded);
         $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
         $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
-
-        if (isExpanded) {
-            exerciseHeader.removeClass("expanded");
-        } else {
-            exerciseHeader.addClass("expanded");
-        }
+        $exercise.find(".exercise-header").toggleClass("expanded", !isExpanded);
 
         collapseState.exercises[currentDate][exerciseId] = isExpanded;
         saveCollapseState();
     });
-    
+
     $(document).trigger('workoutContentChanged');
     $(document).trigger('workoutRendered');
 }
@@ -420,22 +346,35 @@ function renderTemplates(templates) {
 function populateDateOptions() {
     const container = $("#date-selection-container");
     container.empty();
-    
-    const today = new Date();
-    const currentDate = new Date(currentSelectedDate);
-    
+
+    const todayUTC = new Date(Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate()
+    ));
+
+    const currentDateUTC = currentSelectedDate 
+        ? new Date(currentSelectedDate + 'T00:00Z')
+        : todayUTC;
+
     for (let i = 0; i < 7; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() + i);
-        const dateString = date.toISOString().split('T')[0];
-        const formattedDate = date.toLocaleDateString('en-US', { 
+        // add days in UTC
+        const date = new Date(Date.UTC(
+            todayUTC.getUTCFullYear(),
+            todayUTC.getUTCMonth(),
+            todayUTC.getUTCDate() + i
+        ));
+
+        const dateString = `${date.getUTCFullYear()}-${pad2(date.getUTCMonth()+1)}-${pad2(date.getUTCDate())}`;
+
+        const formattedDate = date.toLocaleDateString('fi-FI', { 
             weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
+            day: 'numeric', 
+            month: 'short' 
         });
-        
-        const isCurrent = dateString === currentDate.toISOString().split('T')[0];
-        
+
+        const isCurrent = dateString === `${currentDateUTC.getUTCFullYear()}-${pad2(currentDateUTC.getUTCMonth()+1)}-${pad2(currentDateUTC.getUTCDate())}`;
+
         container.append(`
             <div class="date-option btn btn-dark m-1 border-secondary ${isCurrent ? 'disabled' : ''}"
                  data-date="${dateString}"
@@ -445,6 +384,9 @@ function populateDateOptions() {
         `);
     }
 }
+
+// Helper
+function pad2(n){ return String(n).padStart(2,'0'); }
 
 // Show animated analysis overlay
 function showWorkoutAnalysis() {
