@@ -322,6 +322,7 @@
                 background-color: #2a2a2a !important;
             }
             
+            
             .nutrition-and-actions {
                 display: flex;
                 align-items: center;
@@ -477,6 +478,13 @@
             }
             
             /* ===== BUTTONS ===== */
+            #search-results .calorie-badge {
+                align-items:center;
+                display: block;
+                justify-content: flex-end;
+                overflow: hidden;
+                flex-direction: row;
+            }
             #clear-search {
                 background-color: #121212;
                 color: #ffffff !important;
@@ -1603,6 +1611,7 @@
                 border-radius: 10px;
                 overflow: hidden;
                 margin-top: 5px;
+                height: 12px;
             }
 
             .progress-bar-fill {
@@ -1616,10 +1625,11 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 11px;
+            font-weight: 600;
             color: #fff;
             white-space: nowrap;
+            color: #000000 !important;
         }
         
         .progress-proteins .progress-icon {
@@ -1958,8 +1968,15 @@
         text-overflow: ellipsis;
         font-size: 12px;
         line-height: 1.2;
-        max-width: 100%;
+        max-width: 99% !important;
     }
+.food-name strong:hover {
+    white-space: normal;
+    text-overflow: unset;
+    overflow: visible;
+    z-index: 10;
+    position: relative;
+}
     .food-item-container > div {
         flex: 1 !important;
         overflow: hidden !important;
@@ -2007,9 +2024,7 @@
                     width: 100%;
                 }
                 
-                .food-item-container strong {
-                    display: flex;
-                }
+
                 
                 .group-nutrition > div:not(.nutrition-calories),
                 .nutrition-values-container > div:not(.nutrition-calories) {
@@ -2051,9 +2066,6 @@
                     display: none;
                 }
                 
-                #food-search {
-                    padding-right: 90px !important;
-                }
                 
                 #clear-search {
                     position: absolute;
@@ -2071,13 +2083,22 @@
                     font-size: 16px;
                 }
                 
-                #search-results .food-name {
-                    font-size: 13px !important;
-                }
+  #search-results .food-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px; /* Minimum touch target size */
+    padding: 8px 10px;
+    gap: 8px;
+  }
+                
                 
                 #search-results .calorie-badge {
                     font-size: 13px !important;
                     padding: 3px 6px;
+                    min-width: 90px;
+                    align-items: end;
+                    display: block;
                 }
                 
                 #search-results .list-group-item {
@@ -2139,10 +2160,6 @@
                 
                 #food-search {
                     font-size: 14px !important;
-                }
-                
-                .calorie-badge {
-                    font-size: 13px !important;
                 }
                 
                 #rt-breakdown-container .rtb-value {
@@ -5049,7 +5066,7 @@ function updateSessionDisplay(session, totals, breakdown) {
             const caloriesPercent = totalCalories > 0 ? (macroCalories / totalCalories) * 100 : 0;
 
             // For carbs, we just display % calories
-            const displayText = `${caloriesPercent.toFixed(0)}% ${m.grams.toFixed(0)}g` +
+            const displayText = `${m.grams.toFixed(0)}g` +
                 (m.target > 0 ? ` / ${m.target.toFixed(0)}g` : '');
 
             progressHtml += createProgressBarHtml(
@@ -5090,7 +5107,9 @@ function createProgressBarHtml(id, icon, label, current, target, cssClass, displ
                     <span class="progress-values">${displayText || `${current.toFixed(1)} / ${target.toFixed(1)}`}</span>
                 </div>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: ${percentage}%"></div>
+                    <div class="progress-bar-fill" style="width: ${percentage}%">
+                        <span class="percentage-text">${percentage.toFixed(0)}%</span>
+                    </div>
                 </div>
             </div>
         </div>
