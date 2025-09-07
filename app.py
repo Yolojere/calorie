@@ -216,10 +216,10 @@ def init_db():
             salt REAL,
             calories REAL NOT NULL,
             grams REAL,
-            half REAL,
             entire REAL,
             serving REAL,
-            ean TEXT UNIQUE
+            ean TEXT UNIQUE,
+            owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE       
         )
     ''')
 
@@ -227,7 +227,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_usage (
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            food_key TEXT PRIMARY KEY,
+            food_key TEXT NOT NULL REFERENCES foods(key) ON DELETE CASCADE,
             count INTEGER DEFAULT 0,
             PRIMARY KEY (user_id, food_key)
         )
@@ -1349,41 +1349,53 @@ def search_foods():
     query = request.form.get('query', '').strip()
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    
+
+    # Base WHERE clause for visibility
+    if current_user.role == 'admin':
+        visibility_clause = "TRUE"  # admin sees all
+        params_visibility = []
+    else:
+        visibility_clause = "(f.owner_id IS NULL OR f.owner_id = %s)"
+        params_visibility = [current_user.id]
+
     if not query:
-        cursor.execute('''
+        sql = f'''
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
+            WHERE {visibility_clause}
             ORDER BY usage DESC, name ASC
             LIMIT 15
-        ''')
+        '''
+        cursor.execute(sql, params_visibility)
     else:
-        cursor.execute('''
+        sql = f'''
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
-            WHERE LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s
+            WHERE {visibility_clause} AND 
+                  (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
             ORDER BY 
                 CASE 
-                    WHEN LOWER(f.name) LIKE %s THEN 0   -- starts with query
-                    WHEN LOWER(f.name) LIKE %s THEN 1   -- contains query
+                    WHEN LOWER(f.name) LIKE %s THEN 0
+                    WHEN LOWER(f.name) LIKE %s THEN 1
                     ELSE 2
                 END,
                 usage DESC,
                 name ASC
             LIMIT 15
-        ''', (
+        '''
+        cursor.execute(sql, params_visibility + [
             f'{query.lower()}%',   # starts with
             f'%{query.lower()}%',  # contains
             query,                 # EAN match
             f'{query.lower()}%',   # for ORDER BY startswith
             f'%{query.lower()}%',  # for ORDER BY contains
-        ))
-    
+        ])
+
     foods = cursor.fetchall()
     conn.close()
-    
+
     results = []
     for food in foods:
         results.append({
@@ -1396,8 +1408,9 @@ def search_foods():
             'usage': food['usage'],
             'ean': food['ean']
         })
-    
+
     return jsonify(results)
+
 
 @app.route('/get_food_details', methods=['POST'])
 @login_required
@@ -1407,37 +1420,38 @@ def get_food_details():
         unit_type = request.form.get('unit_type')
         units = request.form.get('units')
         
-        # Use the standard normalize_key function
+        # Normalize key
         normalized_key = normalize_key(food_id)
-        
         print(f"\n=== /get_food_details REQUEST ===")
         print(f"Raw food_id: '{food_id}'")
         print(f"Normalized key: '{normalized_key}'")
-        
-        food = get_food_by_key(normalized_key)
+
+        # Fetch food from DB with visibility check
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+
+        if current_user.role == 'admin':
+            cursor.execute('SELECT * FROM foods WHERE key = %s', (normalized_key,))
+        else:
+            cursor.execute('''
+                SELECT * FROM foods
+                WHERE key = %s AND (owner_id IS NULL OR owner_id = %s)
+            ''', (normalized_key, current_user.id))
+
+        food = cursor.fetchone()
+        conn.close()
+
         if not food:
-            # Get all keys only when needed
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('SELECT key FROM foods')
-            all_keys = [row[0] for row in cursor.fetchall()]
-            conn.close()
-            
-            print(f"❌ Food not found: '{normalized_key}'")
-            return jsonify({
-                'error': 'Food not found',
-                'requested_key': food_id,
-                'normalized_key': normalized_key,
-                'all_keys_in_db': all_keys  # Fixed variable name
-            }), 404 
-        
+            print(f"❌ Food not found or not visible: '{normalized_key}'")
+            return jsonify({'error': 'Food not found or not accessible'}), 404
+
         # Default to grams if no units provided
         if not units or float(units) <= 0:
             units = 100
             unit_type = 'grams'
         else:
             units = float(units)
-        
+
         # Convert units to grams
         grams = units  # Default to grams
         if unit_type == 'half' and food.get('half') is not None:
@@ -1448,35 +1462,36 @@ def get_food_details():
             grams = units * food['serving']
         else:
             unit_type = 'grams'
-        
+
         factor = grams / 100
         carbs = food['carbs'] * factor
         proteins = food['proteins'] * factor
         fats = food['fats'] * factor
         salt = food.get('salt', 0.0) * factor
         calories = food['calories'] * factor
-        
+
         print(f"✅ Found food: {food['name']}")
         print(f"Calculated nutrition for {grams}g:")
         print(f"- Calories: {calories}")
         print(f"- Carbs: {carbs}")
         print(f"- Proteins: {proteins}")
         print(f"- Fats: {fats}")
-        
+
         return jsonify({
-        "success": True,
-        "name": food["name"],
-        "units": units,
-        "unit_type": unit_type,
-        "calories": calories,
-        "proteins": proteins,
-        "carbs": carbs,
-        "fats": fats,
-        "salt": salt,
-        "serving_size": food.get("serving"),
-        "half_size": food.get("half"),
-        "entire_size": food.get("entire")
-    })
+            "success": True,
+            "name": food["name"],
+            "units": units,
+            "unit_type": unit_type,
+            "calories": calories,
+            "proteins": proteins,
+            "carbs": carbs,
+            "fats": fats,
+            "salt": salt,
+            "serving_size": food.get("serving"),
+            "half_size": food.get("half"),
+            "entire_size": food.get("entire")
+        })
+
     except Exception as e:
         print(f"🔥 Error in get_food_details: {str(e)}")
         import traceback
@@ -1820,6 +1835,23 @@ def update_grams():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+    
+def get_visible_foods(user):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if user.role == 'admin':
+            # Admin sees all foods
+            cursor.execute('SELECT * FROM foods')
+        else:
+            # Regular user sees global + their own foods
+            cursor.execute('''
+                SELECT * FROM foods
+                WHERE owner_id IS NULL OR owner_id = %s
+            ''', (user.id,))
+        return cursor.fetchall()
+    finally:
+        conn.close()    
 
 @app.route('/save_food', methods=['POST'])
 @login_required
@@ -1836,7 +1868,7 @@ def save_food_route():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check for duplicate EAN
+        # Check for duplicate EAN globally
         if ean:
             cursor.execute('SELECT key FROM foods WHERE ean = %s', (ean,))
             existing_food = cursor.fetchone()
@@ -1846,11 +1878,10 @@ def save_food_route():
                     'error': f'EAN {ean} already in use by food: {existing_food[0]}'
                 }), 400
 
-        # Helper to parse floats or return None
+        # Helper to parse floats
         def parse_optional_float(value):
             try:
-                value = value.strip()
-                return float(value) if value else None
+                return float(value.strip()) if value else None
             except (ValueError, AttributeError):
                 return None
 
@@ -1878,7 +1909,6 @@ def save_food_route():
         if calories_input:
             try:
                 calories = float(calories_input)
-                # optional sanity check
                 calculated_calories = calculate_calories(carbs or 0, proteins or 0, fats or 0)
                 if abs(calories - calculated_calories) > calculated_calories * 0.5:
                     calories = calculated_calories
@@ -1901,22 +1931,26 @@ def save_food_route():
                 key = f"custom_{uuid.uuid4().hex[:8]}"
                 break
 
+        # Determine owner: admin foods are global, others are private
+        owner_id = None if current_user.role == 'admin' else current_user.id
+
         # Insert food
         cursor.execute('''
-            INSERT INTO foods 
-            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO foods
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean, owner_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             key, name, carbs, sugars, fiber, proteins, fats, saturated, salt,
-            calories, grams, half, entire, serving, ean
+            calories, grams, half, entire, serving, ean, owner_id
         ))
 
-        # Initialize usage
+        # Initialize usage per user
         cursor.execute('''
-            INSERT INTO food_usage (food_key, count)
-            VALUES (%s, 1)
-            ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
-        ''', (key,))
+            INSERT INTO food_usage (user_id, food_key, count)
+            VALUES (%s, %s, 1)
+            ON CONFLICT (user_id, food_key)
+            DO UPDATE SET count = food_usage.count + 1
+        ''', (current_user.id, key))
 
         conn.commit()
         return jsonify({'success': True})
@@ -1928,6 +1962,9 @@ def save_food_route():
     finally:
         if conn:
             conn.close()
+
+
+
 
 def calculate_calories(carbs, proteins, fats):
     """
