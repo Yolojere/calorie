@@ -1536,7 +1536,7 @@ def log_food():
         save_current_session(user_id, eaten_items, date)
 
         # Update food usage
-        increment_food_usage(food['key'])
+        increment_food_usage(user_id, food['key'])
 
         # Return updated session, totals and breakdown
         totals = calculate_totals(eaten_items)
