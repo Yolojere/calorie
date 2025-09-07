@@ -135,10 +135,12 @@ function renderWorkoutSession(session, exercises, options = {}) {
         const groupCollapsed = collapseState.groups[currentDate][groupName].collapsed;
 
         let groupBlock = `
-            <div class="workout-group" data-group="${groupName}">
+            <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
                 <div class="group-header">
                     <div class="d-flex align-items-center">
-                        <div class="group-icon"><i class="fas fa-${getMuscleIcon(groupName)}"></i></div>
+                        <div class="group-icon">
+                            <i class="fas fa-${getMuscleIcon(groupName)}"></i>
+                        </div>
                         <span class="group-title">${groupName}</span>
                     </div>
                     <div class="d-flex align-items-center">
@@ -153,7 +155,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
                         </div>
                     </div>
                 </div>
-                <div class="group-items" style="${groupCollapsed ? 'display:none;' : ''}">
+                <div class="group-items" style="${groupCollapsed ? 'display: none;' : ''}">
         `;
 
         // Sort exercises: completed last
