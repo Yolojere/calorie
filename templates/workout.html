@@ -2071,9 +2071,11 @@
                                     <select id="exercise-select-mobile" class="form-select">
                                         <!-- Populated by JavaScript -->
                                     </select>
+                                    {% if current_user.role == 'admin' %}
                                     <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
                                         <i class="fas fa-plus"></i>
                                     </button>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-4">
@@ -2156,9 +2158,11 @@
                                     <select id="exercise-select" class="form-select">
                                         <!-- Populated by JavaScript -->
                                     </select>
+                                    {% if current_user.role == 'admin' %}
                                     <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
                                         <i class="fas fa-plus"></i>
                                     </button>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-2">
