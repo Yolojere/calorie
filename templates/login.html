@@ -183,9 +183,20 @@ input.form-control:-webkit-autofill {
     color: white;
 }
 
+.btn-facebook {
+    background-color: #5166c2cb;
+    color: white;
+}
+.btn-facebook:hover{
+    opacity: 0.9;
+    color: rgb(0, 0, 0);
+    background-color: #253dd3;
+}
+
 .btn-google:hover, .btn-github:hover {
     opacity: 0.9;
-    color: white;
+    color: rgb(0, 0, 0);
+    background-color: #ff0000;
 }
 /* Pop animation */
 @keyframes pop {
@@ -263,9 +274,15 @@ form-check-label
         <div class="social-login">
     <h3>Or sign in with</h3>
     <div class="social-buttons">
+        <!-- Google -->
         <a href="{{ url_for('oauth_login', provider='google') }}" class="btn btn-google">
             <i class="fab fa-google"></i> Google
         </a>
+
+        <!-- comment out until working facebook auth --!>
+      <!--  <a href="{{ url_for('oauth_login', provider='facebook') }}" class="btn btn-facebook">
+            <i class="fab fa-facebook-f"></i> Facebook 
+        </a> --!> 
     </div>
 </div>
 
