@@ -370,18 +370,16 @@ function copyWorkoutToDate(targetDate) {
         if (response.success) {
             alert("Workout copied successfully!");
 
-            // Clear cache for target date to prevent duplicate sets
+            // Clear cache for target date
             const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
             if (cachedSessions[targetDate]) {
                 delete cachedSessions[targetDate];
                 setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
             }
 
-            // Render collapsed session
-            isCopiedWorkout = true;
+            // Render copied workout **collapsed**
             getSessionWithCache(targetDate, function(data) {
                 renderWorkoutSession(data.session, data.exercises, { collapseGroups: true });
-                isCopiedWorkout = false;
             });
 
             $("#copyWorkoutModal").modal("hide");
