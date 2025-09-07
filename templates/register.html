@@ -227,8 +227,9 @@ input.form-control:-webkit-autofill {
                 <!-- Terms -->
                 <div class="text-center small text-muted mt-2">
                     <span style="color: white;">By creating an account, you agree to our </span>
-                    <a href="#" class="accent-color">Terms of Service</a> <span style="color: white;">and</span> 
-                    <a href="#" class="accent-color">Privacy Policy</a>
+                    <a href="{{ url_for('terms') }}" class="accent-color">Terms of Service</a>
+                    <span style="color: white;">and</span>
+                    <a href="{{ url_for('privacy') }}" class="accent-color">Privacy Policy</a>
                 </div>
 
                 <!-- Login Prompt (moved inside card) -->
