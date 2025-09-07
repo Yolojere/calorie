@@ -169,6 +169,7 @@ def init_db():
             weight REAL
         )
     ''')
+    # 1.5. OAauth
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS oauth_connections (
         id SERIAL PRIMARY KEY,
@@ -225,9 +226,10 @@ def init_db():
     # 3. Food usage
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS food_usage (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             food_key TEXT PRIMARY KEY,
             count INTEGER DEFAULT 0,
-            FOREIGN KEY (food_key) REFERENCES foods(key) ON DELETE CASCADE
+            PRIMARY KEY (user_id, food_key)
         )
     ''')
 
@@ -745,24 +747,24 @@ def save_food(food_data):
     finally:
         conn.close()
 
-def get_food_usage():
+def get_food_usage(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    cursor.execute('SELECT food_key, count FROM food_usage')
+    cursor.execute('SELECT food_key, count FROM food_usage WHERE user_id = %s', (user_id,))
     usage = cursor.fetchall()
     conn.close()
     return {row['food_key']: row['count'] for row in usage}
 
-def increment_food_usage(food_key):
+def increment_food_usage(user_id, food_key):
     normalized_key = normalize_key(food_key)
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            INSERT INTO food_usage (food_key, count)
-            VALUES (%s, 1)
-            ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + 1
-        ''', (normalized_key,))
+            INSERT INTO food_usage (user_id, food_key, count)
+            VALUES (%s, %s, 1)
+            ON CONFLICT (user_id, food_key) DO UPDATE SET count = food_usage.count + 1
+        ''', (user_id, normalized_key))
         conn.commit()
     finally:
         conn.close()
@@ -1018,7 +1020,7 @@ def index():
     # Get session data
     eaten_items, current_date = get_current_session(current_user.id)
     totals = calculate_totals(eaten_items)
-    food_usage = get_food_usage()
+    food_usage = get_food_usage(current_user.id)
     group_breakdown = calculate_group_breakdown(eaten_items)
 
     # Generate dates for selector - 3 days past, today, 3 days future
