@@ -1363,10 +1363,23 @@ def search_foods():
             SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key
-            WHERE LOWER(f.name) LIKE %s OR f.ean = %s
-            ORDER BY usage DESC, name ASC
+            WHERE LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(f.name) LIKE %s THEN 0   -- starts with query
+                    WHEN LOWER(f.name) LIKE %s THEN 1   -- contains query
+                    ELSE 2
+                END,
+                usage DESC,
+                name ASC
             LIMIT 15
-        ''', (f'%{query.lower()}%', query))
+        ''', (
+            f'{query.lower()}%',   # starts with
+            f'%{query.lower()}%',  # contains
+            query,                 # EAN match
+            f'{query.lower()}%',   # for ORDER BY startswith
+            f'%{query.lower()}%',  # for ORDER BY contains
+        ))
     
     foods = cursor.fetchall()
     conn.close()
