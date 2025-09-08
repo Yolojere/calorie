@@ -13,6 +13,7 @@ $(document).ready(function() {
     });
     setupEventListeners();
     initTooltips();
+    setupExerciseCompletion();
     // Use cached version of templates loading
     getTemplatesWithCache();
     setupMobileDateSelector();
