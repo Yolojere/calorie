@@ -94,8 +94,12 @@ function setupRirDropdowns() {
 
 
 function setupExerciseCompletion() {
-    $(document).on('click', '.complete-exercise-icon', function(e) {
-        e.stopPropagation();
+    // Prevent double-binding
+    $(document).off('click.complete touchstart.complete');
+
+    // Dropdown toggle
+    $(document).on('click.complete touchstart.complete', '.complete-exercise-icon', function(e) {
+        e.stopPropagation(); // just stop bubbling
 
         const $dropdown = $(this).siblings('.complete-exercise-options');
 
@@ -121,41 +125,51 @@ function setupExerciseCompletion() {
         const spaceAbove = iconOffset - containerTop;
 
         if (spaceBelow >= dropdownHeight) {
-            // Enough space below
             $dropdown.css({ top: '100%', bottom: 'auto' });
         } else if (spaceAbove >= dropdownHeight) {
-            // Enough space above
             $dropdown.css({ top: 'auto', bottom: '100%' });
         } else {
-            // Not enough space either side: prefer below, shrink if needed
-            $dropdown.css({ top: '100%', bottom: 'auto', maxHeight: spaceBelow, overflowY: 'auto' });
+            $dropdown.css({ 
+                top: '100%', 
+                bottom: 'auto', 
+                maxHeight: spaceBelow, 
+                overflowY: 'auto' 
+            });
         }
     });
 
     // Complete option selection
-    $(document).on('click', '.complete-option', function(e) {
+    $(document).on('click.complete touchstart.complete', '.complete-option', function(e) {
         e.stopPropagation();
+
         const value = $(this).data('value');
         const exerciseId = $(this).closest('.exercise').data('exercise-id');
         const groupName = $(this).closest('.workout-group').data('group');
         const date = $(".workout-date.active").data("date");
 
-        // Update completed state
         if (value === 'yes') {
             markExerciseCompleted(exerciseId, groupName, date);
         } else {
             markExerciseNotCompleted(exerciseId, groupName, date);
         }
 
-        // Hide dropdown
         $(this).closest('.complete-exercise-options').hide();
     });
 
     // Clicking outside closes all dropdowns
-    $(document).on('click', function() {
+    $(document).on('click.complete touchstart.complete', function() {
         $('.complete-exercise-options').hide();
     });
 }
+
+// Handle resume from background / tab focus
+document.addEventListener("visibilitychange", function() {
+    if (!document.hidden) {
+        $('.complete-exercise-options').hide(); // reset dropdowns
+        setupExerciseCompletion();              // rebind handlers
+    }
+});
+
 
 function markExerciseCompleted(exerciseId, groupName, date) {
     // Store completed state
