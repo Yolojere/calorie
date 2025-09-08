@@ -362,13 +362,28 @@ function copyWorkoutToDate(targetDate) {
     $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Copying...');
     $btn.prop('disabled', true);
 
+        getSessionWithCache(targetDate, function(data) {
+        if (data.session && data.exercises && data.exercises.length > 0) {
+            if (!confirm("This date already has a workout. Overwrite it?")) {
+                hideLoadingOverlay();
+                $btn.html(originalContent);
+                $btn.prop('disabled', false);
+                isCopyingWorkout = false;
+                return;
+            }
+        }
+
+    // Show a loading overlay for better UX
+    showLoadingOverlay("Copying workout...");
+    
+
     $.post("/workout/copy_session", {
         source_date: sourceDate,
         target_date: targetDate
     })
     .done(function(response) {
         if (response.success) {
-            alert("Workout copied successfully!");
+            showSuccessMessage("Workout copied successfully!");
 
             // Clear cache for target date
             const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
@@ -384,17 +399,57 @@ function copyWorkoutToDate(targetDate) {
 
             $("#copyWorkoutModal").modal("hide");
         } else {
-            alert("Error: " + response.error);
+            showErrorMessage("Error: " + response.error);
         }
     })
-    .fail(function() {
-        alert("Network error. Please try again.");
+    .fail(function(xhr, status, error) {
+        showErrorMessage("Network error. Please try again.");
+        console.error("Copy workout error:", status, error);
     })
     .always(function() {
+        hideLoadingOverlay();
         $btn.html(originalContent);
         $btn.prop('disabled', false);
         isCopyingWorkout = false;
+        });
     });
+}
+
+// Helper functions for user feedback
+function showLoadingOverlay(message) {
+    $('body').append(`
+        <div id="loading-overlay" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        ">
+            <div class="text-center">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p class="mt-2">${message}</p>
+            </div>
+        </div>
+    `);
+}
+
+function hideLoadingOverlay() {
+    $('#loading-overlay').remove();
+}
+
+function showSuccessMessage(message) {
+    // You can use a toast notification library or custom implementation
+    alert(message); // Replace with a better notification system
+}
+
+function showErrorMessage(message) {
+    alert(message); // Replace with a better notification system
 }
 
 // Toggle focus selection buttons
