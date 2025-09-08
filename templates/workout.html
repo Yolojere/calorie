@@ -2562,30 +2562,6 @@ $('#copyWorkoutModal').off('shown.bs.modal').on('shown.bs.modal', function() {
     window.renderCalendar(window.calendarState.currentMonth);
 });
 
-// ---- EVENTS (delegated so they work across re-renders)
-$(document).on("click", ".date-cell", function(){
-  $(".date-cell").removeClass("selected");
-  $(this).addClass("selected");
-  // call your existing function
-  if (typeof copyWorkoutToDate === 'function') {
-    copyWorkoutToDate($(this).data("date"));
-  }
-});
-
-// Month navigation
-$(document).off("click", ".month-nav.prev").on("click", ".month-nav.prev", function() {
-  window.calendarState.currentMonth.setMonth(window.calendarState.currentMonth.getMonth() - 1);
-  window.renderCalendar(window.calendarState.currentMonth);
-});
-$(document).off("click", ".month-nav.next").on("click", ".month-nav.next", function() {
-  window.calendarState.currentMonth.setMonth(window.calendarState.currentMonth.getMonth() + 1);
-  window.renderCalendar(window.calendarState.currentMonth);
-});
-
-// Init when modal is shown
-$('#copyWorkoutModal').off('shown.bs.modal').on('shown.bs.modal', function() {
-  window.renderCalendar(window.calendarState.currentMonth);
-});
 
 </script>
     <script src="{{ url_for('static', filename='js/cacheworkout.js') }}"></script>    
