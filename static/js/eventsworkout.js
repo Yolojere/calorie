@@ -35,6 +35,8 @@ function setupEventListeners() {
 
     // Copy workout
     $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
+        let activeDate = $(".workout-date.active").data("date") || $("#mobile-date-selector").val();
+        if (activeDate) currentSelectedDate = activeDate; 
         populateDateOptions();
         $("#copyWorkoutModal").modal("show");
     });
@@ -511,25 +513,44 @@ function saveEdit() {
 }
 
 // Enable editing
-function enableEdit() {
-    input.value = workoutName.textContent;
-    workoutName.classList.add("d-none");
-    editBtn.classList.add("d-none");
-    input.classList.remove("d-none");
-    input.focus();
+
+// function enableEdit() {
+   // isEditing = true;
+   // input.value = workoutName.textContent;
+    //workoutName.classList.add("d-none");
+   // editBtn.classList.add("d-none");
+   // input.classList.remove("d-none");
+   // input.focus();
 
     // Move cursor to end
-    const length = input.value.length;
-    input.setSelectionRange(length, length);
-}
+  //  const length = input.value.length;
+   // input.setSelectionRange(length, length);
+//}
+
+//function saveEdit() {
+   // if (!isEditing) return; // prevent double-save
+   // isEditing = false;
+
+    //const newName = input.value.trim();
+   // workoutName.textContent = newName || workoutName.textContent; // fallback if empty
+
+    //workoutName.classList.remove("d-none");
+   // editBtn.classList.remove("d-none");
+   // input.classList.add("d-none");
+
+    // Optionally save to server
+    // saveWorkoutName(newName);
+//}
 
 // Events
-editBtn.addEventListener("click", enableEdit);
-input.addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); });
-input.addEventListener("blur", saveEdit);
+//editBtn.addEventListener("click", enableEdit);
+//input.addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); });
+//input.addEventListener("blur", saveEdit);
 
-// When date changes, reload workout name
-dateSelector?.addEventListener("change", loadWorkoutName);
+// Only reload workout name if **not currently editing**
+//dateSelector?.addEventListener("change", () => {
+    //if (!isEditing) loadWorkoutName();
+//});
 
 // Initial load
-loadWorkoutName();
+//loadWorkoutName();
