@@ -13,7 +13,6 @@ $(document).ready(function() {
     });
     setupEventListeners();
     initTooltips();
-    setupExerciseCompletion();
     // Use cached version of templates loading
     getTemplatesWithCache();
     setupMobileDateSelector();
@@ -33,6 +32,14 @@ $(document).ready(function() {
     // Setup exercise completion functionality
     setupExerciseCompletion();
 });
+// Initialize calendar state
+    window.calendarState = {
+        currentMonth: new Date(),
+        selectedDate: null
+    };
+    
+    // Set up calendar event handlers
+    setupCalendarEvents();
 
 // ===== INITIALIZATION FUNCTIONS =====
 function loadCollapseState() {
