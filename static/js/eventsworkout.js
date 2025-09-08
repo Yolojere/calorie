@@ -95,28 +95,26 @@ function setupRirDropdowns() {
 
 function setupExerciseCompletion() {
     // Prevent double-binding
-    $(document).off('click.complete touchstart.complete');
+    $(document).off('.complete');
 
     // Dropdown toggle
-    $(document).on('click.complete touchstart.complete', '.complete-exercise-icon', function(e) {
-        e.stopPropagation(); // just stop bubbling
+    $(document).on('click.complete', '.complete-exercise-icon', function(e) {
+        e.stopPropagation(); // only stop bubbling, don't preventDefault
 
         const $dropdown = $(this).siblings('.complete-exercise-options');
 
-        // Hide all other dropdowns
+        // Hide other dropdowns
         $('.complete-exercise-options').not($dropdown).hide();
 
         // Toggle this dropdown
         $dropdown.toggle();
 
-        if (!$dropdown.is(':visible')) return; // skip if just hidden
+        if (!$dropdown.is(':visible')) return;
 
-        // Get container boundaries
-        const $container = $(this).closest('.card, .grid-panel'); // adjust if needed
+        // Position dropdown (your existing logic)
+        const $container = $(this).closest('.card, .grid-panel');
         const containerTop = $container.offset().top;
-        const containerBottom = $container.offset().top + $container.outerHeight();
-
-        // Position dropdown
+        const containerBottom = containerTop + $container.outerHeight();
         const iconOffset = $(this).offset().top;
         const iconHeight = $(this).outerHeight();
         const dropdownHeight = $dropdown.outerHeight();
@@ -129,35 +127,26 @@ function setupExerciseCompletion() {
         } else if (spaceAbove >= dropdownHeight) {
             $dropdown.css({ top: 'auto', bottom: '100%' });
         } else {
-            $dropdown.css({ 
-                top: '100%', 
-                bottom: 'auto', 
-                maxHeight: spaceBelow, 
-                overflowY: 'auto' 
-            });
+            $dropdown.css({ top: '100%', bottom: 'auto', maxHeight: spaceBelow, overflowY: 'auto' });
         }
     });
 
-    // Complete option selection
-    $(document).on('click.complete touchstart.complete', '.complete-option', function(e) {
+    // Option selection
+    $(document).on('click.complete', '.complete-option', function(e) {
         e.stopPropagation();
-
         const value = $(this).data('value');
         const exerciseId = $(this).closest('.exercise').data('exercise-id');
         const groupName = $(this).closest('.workout-group').data('group');
         const date = $(".workout-date.active").data("date");
 
-        if (value === 'yes') {
-            markExerciseCompleted(exerciseId, groupName, date);
-        } else {
-            markExerciseNotCompleted(exerciseId, groupName, date);
-        }
+        if (value === 'yes') markExerciseCompleted(exerciseId, groupName, date);
+        else markExerciseNotCompleted(exerciseId, groupName, date);
 
         $(this).closest('.complete-exercise-options').hide();
     });
 
-    // Clicking outside closes all dropdowns
-    $(document).on('click.complete touchstart.complete', function() {
+    // Clicking outside closes dropdowns
+    $(document).on('click.complete', function() {
         $('.complete-exercise-options').hide();
     });
 }
