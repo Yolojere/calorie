@@ -515,14 +515,19 @@ function saveEdit() {
     input.classList.add("d-none");
 }
 function setupCalendarEvents() {
+    // Remove any existing event handlers to prevent duplicates
+    $(document).off("click", ".month-nav.prev");
+    $(document).off("click", ".month-nav.next");
+    $(document).off("click", ".date-cell");
+    
     // Setup event handlers for calendar navigation
-    $(document).off("click", ".month-nav.prev").on("click", ".month-nav.prev", function() {
+    $(document).on("click", ".month-nav.prev", function() {
         const cm = window.calendarState.currentMonth;
         window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() - 1, 1));
         window.renderCalendar(window.calendarState.currentMonth);
     });
 
-    $(document).off("click", ".month-nav.next").on("click", ".month-nav.next", function() {
+    $(document).on("click", ".month-nav.next", function() {
         const cm = window.calendarState.currentMonth;
         window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() + 1, 1));
         window.renderCalendar(window.calendarState.currentMonth);
@@ -535,7 +540,7 @@ function setupCalendarEvents() {
         const date = $(this).data("date");
         window.calendarState.selectedDate = date;
 
-        // call your existing function
+        // Call your existing function
         if (typeof copyWorkoutToDate === 'function') {
             copyWorkoutToDate(date);
         }
