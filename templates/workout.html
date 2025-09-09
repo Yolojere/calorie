@@ -1379,10 +1379,11 @@
         background-color: #121212; /* match dark theme */
         height: 42px;              /* fixed compact height */           /* tighter side padding */
         display: flex;
-        flex: 1;
+        flex: 1 1;
         align-items: center;       /* vertically center buttons */
         position: relative;
         z-index: 1055;
+        justify-content: space-between;
     }
 
     /* Footer buttons */
@@ -1390,15 +1391,15 @@
         background-color: #1b1b1b !important;
         color: #ffffff !important;
         border: 1px solid #444 !important;
-        border-radius: 10px;       /* slightly rounded */
+        border-radius: 15px;       /* slightly rounded */
         padding: 2px;              /* super tight padding */
         font-size: 11px;           /* compact labels */
         font-weight: 600;
         line-height: 1.1;
         min-width: 0;
         height: 27px; 
-        width: 90px;             /* fits inside footer */
-        flex: 1;                   /* all buttons equal width */
+        width: 105px;             /* fits inside footer */
+        flex: 1 1;                   /* all buttons equal width */
         display: flex;
         flex-direction: row;    /* icon above text */
         align-items: center;
@@ -2284,12 +2285,6 @@
                                 <li><a class="dropdown-item" href="#">Loading templates...</a></li>
                             </ul>
 
-                            <!-- Save Template -->
-                            <!-- <button id="save-template-btn" class="btn btn-jere flex-fill text-center">
-                                <i class="fas fa-save fa-lg"></i>
-                                <span class="btn-label d-block d-md-inline">Save</span>
-                            </button> -->
-
                             <!-- Save Workout -->
                             <button type="button" class="btn btn-jere flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                                 <i class="fas fa-dumbbell fa-lg"></i>
@@ -2308,7 +2303,7 @@
         </div>
         
         <!-- Mobile Footer -->
-        <div class="d-lg-none mobile-footer p-2 border-top">
+        <div class="d-lg-none mobile-footer p-2">
             <div class="d-flex justify-content-between">
                 <!-- Apply Template -->
                 <button id="templateDropdownMobile" class="btn btn-jere flex-fill text-center dropdown-toggle" data-bs-toggle="dropdown">
@@ -2319,14 +2314,8 @@
                     <li><a class="dropdown-item" href="#">Loading templates...</a></li>
                 </ul>
 
-                <!-- Save Template -->
-               <!-- <button id="save-template-mobile-btn" class="btn btn-jere flex-fill text-center">
-                    <i class="fas fa-save"></i>
-                    <span class="btn-label d-block">&nbsp;Save</span>
-                </button> -->
-
                 <!-- Save Workout -->
-                <button type="button" class="btn btn-jere flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
+                <button type="button" class="btn btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                     <i class="fas fa-dumbbell"></i>
                     <span class="btn-label d-block">&nbsp;Save W.O.</span>
                 </button>
@@ -2483,7 +2472,13 @@
         <textarea placeholder="Add your comment here..." rows="3"></textarea>
         <button id="save-comment-btn">Save Comment</button>
     </div>
-    
+
+                           {% if current_user.role == 'admin' %}
+<button id="save-template-btn" class="btn btn-jere flex-fill text-center">
+    <i class="fas fa-save fa-lg"></i>
+    <span class="btn-label d-block d-md-inline">Save</span>
+</button>
+{% endif %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -2498,29 +2493,37 @@ function pad2(n){ return String(n).padStart(2,'0'); }
 function ymd(y,m,d){ return `${y}-${pad2(m)}-${pad2(d)}`; } // YYYY-MM-DD
 
 // ---- RENDER
-window.renderCalendar = function(date = window.calendarState.currentMonth){
+window.renderCalendar = function(date = window.calendarState.currentMonth) {
     const month = date.getUTCMonth();
-    const year  = date.getUTCFullYear();
+    const year = date.getUTCFullYear();
     const first = new Date(Date.UTC(year, month, 1));
-    const last  = new Date(Date.UTC(year, month + 1, 0));
+    const last = new Date(Date.UTC(year, month + 1, 0));
 
     const $grid = $(".calendar-grid");
+    
     // Display month in local language (Finnish)
-    $("#calendar-month").text(first.toLocaleString('fi-FI', { month:'long', year:'numeric' }));
+    $("#calendar-month").text(first.toLocaleString('fi-FI', { month: 'long', year: 'numeric' }));
 
-    // Clear old date cells (keep headers)
-    $grid.find(".date-cell").remove();
-
-    // Fill empty slots before first day (Sun=0..Sat=6)
-    for (let i = 0; i < first.getUTCDay(); i++) $grid.append('<div></div>');
+    // FIXED: Clear ALL content and rebuild from scratch
+    $grid.empty();
+    
+    // FIXED: Always add weekday headers first
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    weekdays.forEach(day => {
+        $grid.append(`<div class="day-name">${day}</div>`);
+    });
 
     const today = new Date();
-    const todayStr = ymd(today.getUTCFullYear(), today.getUTCMonth()+1, today.getUTCDate());
+    const todayStr = ymd(today.getUTCFullYear(), today.getUTCMonth() + 1, today.getUTCDate());
+
+    // Fill empty slots before first day (Sun=0..Sat=6)
+    for (let i = 0; i < first.getUTCDay(); i++) {
+        $grid.append('<div></div>'); // Empty cell
+    }
 
     // Add days
     for (let d = 1; d <= last.getUTCDate(); d++) {
         const fullDate = ymd(year, month + 1, d);
-
         const isToday = fullDate === todayStr;
         const isSelected = fullDate === window.calendarState.selectedDate;
 
