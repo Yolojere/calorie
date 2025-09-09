@@ -2530,37 +2530,7 @@ window.renderCalendar = function(date = window.calendarState.currentMonth){
     }
 };
 
-// ---- DATE CELL CLICK
-$(document).on("click", ".date-cell", function(){
-    $(".date-cell").removeClass("selected");
-    $(this).addClass("selected");
-    const date = $(this).data("date");
-    window.calendarState.selectedDate = date;
 
-    // call your existing function
-    if (typeof copyWorkoutToDate === 'function') {
-        copyWorkoutToDate(date);
-    }
-});
-
-// ---- MONTH NAVIGATION
-$(document).off("click", ".month-nav.prev").on("click", ".month-nav.prev", function() {
-    const cm = window.calendarState.currentMonth;
-    window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() - 1, 1));
-    window.renderCalendar(window.calendarState.currentMonth);
-});
-
-$(document).off("click", ".month-nav.next").on("click", ".month-nav.next", function() {
-    const cm = window.calendarState.currentMonth;
-    window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() + 1, 1));
-    window.renderCalendar(window.calendarState.currentMonth);
-});
-
-// ---- MODAL INIT
-$('#copyWorkoutModal').off('shown.bs.modal').on('shown.bs.modal', function() {
-    // always render currentMonth, keep selected date highlighted
-    window.renderCalendar(window.calendarState.currentMonth);
-});
 
 
 </script>
