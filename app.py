@@ -2956,10 +2956,10 @@ def save_workout_template():
         # Get session exercises
         cursor.execute(
             "SELECT exercise_id, reps, weight, rir, comments "
-            "FROM workout_sets WHERE session_id = ("
+            "FROM workout_sets WHERE session_id IN ("
             "SELECT id FROM workout_sessions "
-            "WHERE user_id = %s AND date = %s"
-            ")",
+            "WHERE user_id = %s AND date = %s)"
+            ,
             (user_id, date_obj)
         )
         sets = cursor.fetchall()
