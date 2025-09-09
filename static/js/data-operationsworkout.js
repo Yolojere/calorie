@@ -162,31 +162,32 @@ function updateComment(setId, comment) {
 function saveTemplate() {
     const templateName = prompt("Enter a name for this template:");
     if (!templateName) return;
-    
+
     const $btn = $("#save-template-btn");
     const originalContent = $btn.html();
     $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
     $btn.prop('disabled', true);
-    
+
     const currentDate = $(".workout-date.active").data("date");
-    
-    // Use jQuery AJAX instead of fetch to ensure CSRF token is included
+
+    // Get CSRF token from meta tag
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
     $.ajax({
         url: "/workout/save_template",
         method: "POST",
         data: {
             name: templateName,
-            date: currentDate
+            date: currentDate,
+            csrf_token: csrfToken  // <-- Include CSRF
         },
         success: function(data) {
             $btn.html(originalContent);
             $btn.prop('disabled', false);
-            
+
             if (data.success) {
                 alert("Template saved successfully!");
-                // Invalidate templates cache since we've added a new template
                 invalidateCache(CACHE_KEYS.TEMPLATES);
-                // Use cached version of templates loading
                 getTemplatesWithCache();
             } else {
                 alert("Error: " + data.error);
@@ -195,7 +196,7 @@ function saveTemplate() {
         error: function(xhr, status, error) {
             $btn.html(originalContent);
             $btn.prop('disabled', false);
-            alert("Error: " + error);
+            alert("Error: " + (xhr.responseJSON?.error || error));
         }
     });
 }
