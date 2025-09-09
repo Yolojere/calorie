@@ -1,4 +1,5 @@
 console.log("cacheworkout.js loaded");
+
 // ===== CACHING IMPLEMENTATION =====
 const CACHE_KEYS = {
     EXERCISES: 'cached_exercises',
@@ -10,8 +11,8 @@ const CACHE_KEYS = {
 // Cache expiration times (in milliseconds)
 const CACHE_EXPIRATION = {
     EXERCISES: 24 * 60 * 60 * 1000, // 24 hours
-    SESSIONS: 60 * 60 * 1000, // 1 hour
-    TEMPLATES: 24 * 60 * 60 * 1000 // 24 hours
+    SESSIONS: 60 * 60 * 1000,       // 1 hour
+    TEMPLATES: 24 * 60 * 60 * 1000  // 24 hours
 };
 
 // Initialize cache
@@ -35,14 +36,14 @@ function getCachedData(key, expirationTime) {
     try {
         const timestamps = JSON.parse(localStorage.getItem(CACHE_KEYS.TIMESTAMPS) || '{}');
         const cachedData = localStorage.getItem(key);
-        
+
         if (!cachedData) return null;
-        
+
         // Check if cache has expired
         if (timestamps[key] && (Date.now() - timestamps[key] > expirationTime)) {
             return null; // Cache expired
         }
-        
+
         return JSON.parse(cachedData);
     } catch (e) {
         console.error('Error reading cache:', e);
@@ -54,7 +55,7 @@ function getCachedData(key, expirationTime) {
 function setCachedData(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
-        
+
         // Update timestamp
         const timestamps = JSON.parse(localStorage.getItem(CACHE_KEYS.TIMESTAMPS) || '{}');
         timestamps[key] = Date.now();
@@ -70,6 +71,7 @@ function invalidateCache(key) {
         const timestamps = JSON.parse(localStorage.getItem(CACHE_KEYS.TIMESTAMPS) || '{}');
         delete timestamps[key];
         localStorage.setItem(CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
+        localStorage.removeItem(key);
     } catch (e) {
         console.error('Error invalidating cache:', e);
     }
@@ -79,6 +81,11 @@ function invalidateCache(key) {
 function invalidateAllCache() {
     try {
         localStorage.setItem(CACHE_KEYS.TIMESTAMPS, JSON.stringify({}));
+        Object.values(CACHE_KEYS).forEach(key => {
+            if (key !== CACHE_KEYS.TIMESTAMPS) {
+                localStorage.removeItem(key);
+            }
+        });
     } catch (e) {
         console.error('Error invalidating cache:', e);
     }
@@ -87,33 +94,33 @@ function invalidateAllCache() {
 // Get session from cache or server
 function getSessionWithCache(date, callback) {
     const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-    
-    if (cachedSessions[date]) {
-        console.log('Using cached session data for', date);
-        callback(cachedSessions[date]);
-        
-        // Still fetch from server in background to ensure freshness
+
+    if (cachedSessions[date] && cachedSessions[date].timestamp) {
+        const isDataFresh = (Date.now() - cachedSessions[date].timestamp) < CACHE_EXPIRATION.SESSIONS;
+        if (isDataFresh) {
+            console.log('Using cached session data for', date);
+            callback(cachedSessions[date]);
+        }
+
+        // Still fetch from server in background
         setTimeout(() => {
-            $.post("/workout/get_session", { date: date }, function(data) {
-                // Update cache with fresh data
+            $.post("/workout/get_session", { date: date }, function (data) {
                 const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
                 updatedSessions[date] = data;
                 setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
-                
-                // If we're still viewing this date, update the UI
-                if (date === currentSelectedDate) {
+
+                if (typeof currentSelectedDate !== "undefined" && date === currentSelectedDate) {
                     renderWorkoutSession(data.session, data.exercises);
                 }
             });
         }, 1000);
     } else {
         // Not in cache, fetch from server
-        $.post("/workout/get_session", { date: date }, function(data) {
-            // Cache the result
-            const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-            cachedSessions[date] = data;
-            setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-            
+        $.post("/workout/get_session", { date: date }, function (data) {
+            const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+            updatedSessions[date] = data;
+            setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
+
             callback(data);
         });
     }
@@ -122,25 +129,23 @@ function getSessionWithCache(date, callback) {
 // Get exercises from cache or server
 function getExercisesWithCache(callback) {
     const cachedExercises = getCachedData(CACHE_KEYS.EXERCISES, CACHE_EXPIRATION.EXERCISES);
-    
+
     if (cachedExercises && cachedExercises.length > 0) {
         console.log('Using cached exercises');
-        exercises = cachedExercises;
+        window.exercises = cachedExercises;
         callback();
-        
-        // Still fetch from server in background to ensure freshness
+
         setTimeout(() => {
-            $.get("/workout/get_exercises", function(data) {
-                exercises = data.exercises;
-                setCachedData(CACHE_KEYS.EXERCISES, exercises);
+            $.get("/workout/get_exercises", function (data) {
+                window.exercises = data.exercises;
+                setCachedData(CACHE_KEYS.EXERCISES, window.exercises);
                 renderExerciseOptions();
             });
         }, 1000);
     } else {
-        // Not in cache, fetch from server
-        $.get("/workout/get_exercises", function(data) {
-            exercises = data.exercises;
-            setCachedData(CACHE_KEYS.EXERCISES, exercises);
+        $.get("/workout/get_exercises", function (data) {
+            window.exercises = data.exercises;
+            setCachedData(CACHE_KEYS.EXERCISES, window.exercises);
             callback();
         });
     }
@@ -149,24 +154,22 @@ function getExercisesWithCache(callback) {
 // Get templates from cache or server
 function getTemplatesWithCache() {
     const cachedTemplates = getCachedData(CACHE_KEYS.TEMPLATES, CACHE_EXPIRATION.TEMPLATES);
-    
+
     if (cachedTemplates && cachedTemplates.length > 0) {
         console.log('Using cached templates');
         renderTemplates(cachedTemplates);
-        
-        // Still fetch from server in background to ensure freshness
+
         setTimeout(() => {
-            $.get("/workout/templates", function(data) {
+            $.get("/workout/templates", function (data) {
                 setCachedData(CACHE_KEYS.TEMPLATES, data.templates || []);
             });
         }, 1000);
     } else {
-        // Not in cache, fetch from server
-        $.get("/workout/templates", function(data) {
+        $.get("/workout/templates", function (data) {
             const templates = data.templates || [];
             setCachedData(CACHE_KEYS.TEMPLATES, templates);
             renderTemplates(templates);
-        }).fail(function() {
+        }).fail(function () {
             const errorItem = '<li><a class="dropdown-item" href="#">Error loading templates</a></li>';
             $("#template-list-desktop").html(errorItem);
             $("#template-list-mobile").html(errorItem);
@@ -179,4 +182,19 @@ function updateSessionCache(date, data) {
     const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
     cachedSessions[date] = data;
     setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
+}
+
+// Cleanup stale cache entries
+function cleanupStaleCache() {
+    const timestamps = JSON.parse(localStorage.getItem(CACHE_KEYS.TIMESTAMPS) || '{}');
+    const now = Date.now();
+
+    Object.keys(timestamps).forEach(key => {
+        if (now - timestamps[key] > CACHE_EXPIRATION.SESSIONS * 2) {
+            localStorage.removeItem(key);
+            delete timestamps[key];
+        }
+    });
+
+    localStorage.setItem(CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
 }
