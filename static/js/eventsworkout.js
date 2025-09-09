@@ -514,7 +514,33 @@ function saveEdit() {
     editBtn.classList.remove("d-none");
     input.classList.add("d-none");
 }
+function setupCalendarEvents() {
+    // Setup event handlers for calendar navigation
+    $(document).off("click", ".month-nav.prev").on("click", ".month-nav.prev", function() {
+        const cm = window.calendarState.currentMonth;
+        window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() - 1, 1));
+        window.renderCalendar(window.calendarState.currentMonth);
+    });
 
+    $(document).off("click", ".month-nav.next").on("click", ".month-nav.next", function() {
+        const cm = window.calendarState.currentMonth;
+        window.calendarState.currentMonth = new Date(Date.UTC(cm.getUTCFullYear(), cm.getUTCMonth() + 1, 1));
+        window.renderCalendar(window.calendarState.currentMonth);
+    });
+    
+    // Date cell click handler
+    $(document).on("click", ".date-cell", function(){
+        $(".date-cell").removeClass("selected");
+        $(this).addClass("selected");
+        const date = $(this).data("date");
+        window.calendarState.selectedDate = date;
+
+        // call your existing function
+        if (typeof copyWorkoutToDate === 'function') {
+            copyWorkoutToDate(date);
+        }
+    });
+}
 // Enable editing
 
 // function enableEdit() {
