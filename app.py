@@ -43,6 +43,8 @@ app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config["SERVER_NAME"] = "trackyou.fi"       # Canonical domain
+app.config["PREFERRED_URL_SCHEME"] = "https"    # Force https for url_for(_external=True)
 app.config['OAUTH_PROVIDERS'] = {
     'google': {
         'client_id': os.getenv('GOOGLE_CLIENT_ID'),
@@ -3108,7 +3110,9 @@ def copy_session():
     source_date = request.form.get("source_date")
     target_date = request.form.get("target_date")
     user_id = current_user.id
-
+    # Add debug logging
+    print(f"Copying workout from {source_date} to {target_date} for user {user_id}")
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
@@ -3617,6 +3621,17 @@ def get_user_by_oauth(provider, provider_user_id):
     user = cursor.fetchone()
     conn.close()
     return user
+@app.before_request
+def enforce_canonical_domain():
+    # Redirect http -> https or www -> trackyou.fi
+    url = request.url
+    if request.host != "trackyou.fi" or request.scheme != "https":
+        # Preserve path and query string
+        new_url = f"https://trackyou.fi{request.full_path}"
+        return redirect(new_url, code=301)
+
+
+# === OAUTH LOGIN ROUTE ===
 @app.route('/login/<provider>')
 def oauth_login(provider):
     if provider == 'google':
@@ -3625,83 +3640,82 @@ def oauth_login(provider):
     elif provider == 'github':
         redirect_uri = url_for('oauth_authorize', provider='github', _external=True)
         return github.authorize_redirect(redirect_uri)
+    elif provider == 'facebook':
+        redirect_uri = url_for('oauth_authorize', provider='facebook', _external=True)
+        return facebook.authorize_redirect(redirect_uri)
     else:
         flash('Unsupported OAuth provider', 'danger')
         return redirect(url_for('login'))
 
+
+# === OAUTH AUTHORIZE ROUTE ===
 @app.route('/oauth/authorize/<provider>')
 def oauth_authorize(provider):
     try:
+        # ===== Google =====
         if provider == 'google':
             token = google.authorize_access_token()
             resp = google.get('userinfo')
             userinfo = resp.json()
             email = userinfo['email']
             provider_user_id = userinfo['sub']
+
+        # ===== GitHub =====
         elif provider == 'github':
             token = github.authorize_access_token()
             resp = github.get('user')
             userinfo = resp.json()
             email = userinfo.get('email')
+            provider_user_id = str(userinfo['id'])
+
+        # ===== Facebook =====
         elif provider == 'facebook':
             token = facebook.authorize_access_token()
             resp = facebook.get('me?fields=id,name,email')
             userinfo = resp.json()
-            
             email = userinfo.get('email')
-            provider_user_id = userinfo['id']
-            # If email is not public, make another request to get emails
+            provider_user_id = str(userinfo['id'])
             if not email:
+                # fallback to GitHub-style email fetch if needed
                 resp = github.get('user/emails')
                 emails = resp.json()
                 email = next((e['email'] for e in emails if e['primary']), emails[0]['email'])
-            provider_user_id = str(userinfo['id'])
         else:
             flash('Unsupported OAuth provider', 'danger')
             return redirect(url_for('login'))
-        
-        # Check if we already have this OAuth connection
+
+        # ===== Check existing OAuth connection =====
         existing_connection = get_oauth_connection(provider, provider_user_id)
-        
         if existing_connection:
-            # Existing user - log them in
             user = load_user(existing_connection['user_id'])
             login_user(user)
             flash(f'Successfully logged in with {provider}!', 'success')
             return redirect(url_for('index'))
-        
-        # Check if user with this email already exists
+
+        # ===== Check existing email =====
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
-        
+
         if user:
-            # Link OAuth to existing account
             create_oauth_connection(user['id'], provider, provider_user_id, token['access_token'])
-            user_obj = User(
-                id=user['id'],
-                username=user['username'],
-                email=user['email'],
-                role=user['role']
-            )
+            user_obj = User(id=user['id'], username=user['username'], email=user['email'], role=user['role'])
             login_user(user_obj)
             flash(f'{provider.capitalize()} account linked successfully!', 'success')
             return redirect(url_for('index'))
         else:
-            # Create new user
+            # ===== Create new user =====
             username = email.split('@')[0]
-            # Ensure username is unique
-            counter = 1
             base_username = username
+            counter = 1
             while True:
                 cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
                 if not cursor.fetchone():
                     break
                 username = f"{base_username}_{counter}"
                 counter += 1
-            
-            # Create user without password
+
             hashed_password = bcrypt.generate_password_hash(str(uuid.uuid4())).decode('utf-8')
             cursor.execute(
                 'INSERT INTO users (username, email, password) VALUES (%s, %s, %s) RETURNING id',
@@ -3709,24 +3723,16 @@ def oauth_authorize(provider):
             )
             user_id = cursor.fetchone()[0]
             conn.commit()
-            
-            # Create OAuth connection
+
             create_oauth_connection(user_id, provider, provider_user_id, token['access_token'])
-            
-            user_obj = User(
-                id=user_id,
-                username=username,
-                email=email,
-                role='user'
-            )
+            user_obj = User(id=user_id, username=username, email=email, role='user')
             login_user(user_obj)
             flash(f'Account created with {provider}!', 'success')
             return redirect(url_for('index'))
-            
+
     except Exception as e:
         flash(f'OAuth login failed: {str(e)}', 'danger')
         return redirect(url_for('login'))
-
 
 @app.route('/foods')
 def list_foods():
