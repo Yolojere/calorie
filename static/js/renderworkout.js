@@ -1,5 +1,3 @@
-console.log("renderworkout.js started");
-console.log('Rendering session', currentDate, session, exercises);
 // File: render.js
 // ===== RENDERING FUNCTIONS =====
 function renderWeekDates(dates) {
@@ -661,7 +659,16 @@ $(document).on("click", ".month-nav.next", function() {
 
 // Init on modal open
 $('#copyWorkoutModal').on('shown.bs.modal', function() {
-    renderCalendar(currentMonth);
+    // FIXED: Always ensure we have a valid current month
+    const today = new Date();
+    if (!window.calendarState.currentMonth) {
+        window.calendarState.currentMonth = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
+    }
+    
+    // FIXED: Force render the calendar immediately
+    setTimeout(() => {
+        window.renderCalendar(window.calendarState.currentMonth);
+    }, 100); // Small delay to ensure modal is fully rendered
 });
     // glow up on date selector copy button
     $(document).on("click", ".date-option", function() {
