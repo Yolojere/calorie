@@ -133,7 +133,11 @@ function generateDateOptions(centerDate) {
     }
     return dates;
 }
-
+function ymd(y,m,d){ 
+    // Ensure proper UTC date handling
+    const date = new Date(Date.UTC(y, m-1, d));
+    return date.toISOString().split('T')[0];
+}
 function formatDateForSelector(date) {
     const today = new Date();
     today.setHours(0,0,0,0);
