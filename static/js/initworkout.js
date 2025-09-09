@@ -34,7 +34,7 @@ $(document).ready(function() {
 });
 // Initialize calendar state
     window.calendarState = {
-        currentMonth: new Date(),
+        currentMonth: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
         selectedDate: null
     };
     
@@ -87,7 +87,20 @@ function initTooltips() {
         }
     });
 }
-
+function initCalendar() {
+    // Set up calendar event handlers if not already set
+    setupCalendarEvents();
+    
+    // FIXED: Always render with current state, ensure it shows dates initially
+    if (window.calendarState.currentMonth) {
+        window.renderCalendar(window.calendarState.currentMonth);
+    } else {
+        // If no state, initialize to current month
+        const today = new Date();
+        window.calendarState.currentMonth = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
+        window.renderCalendar(window.calendarState.currentMonth);
+    }
+}
 function setupMobileDateSelector() {
     // Initialize with today
     populateMobileDateSelector(currentSelectedDate);
