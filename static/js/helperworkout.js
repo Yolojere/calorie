@@ -232,3 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Also run on initial load in case modal is already open
     ensureCalendarAboveAll();
 });
+$('#saveWorkoutModal').on('show.bs.modal', function(){
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    const key = getWorkoutNameKey(date);
+    const autosuggest = localStorage.getItem(key) || "My Session";
+    $("#workout-name-input").val(autosuggest);
+});
