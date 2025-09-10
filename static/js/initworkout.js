@@ -9,9 +9,12 @@ $(document).ready(function() {
     loadCurrentWeek();
     // Use cached version of exercises loading
     getExercisesWithCache(function() {
+        // Ensure exercises are loaded before rendering options
+        console.log("Exercises loaded:", window.exercises.length);
         renderExerciseOptions();
+        // Setup event listeners after exercises are loaded
+        setupEventListeners();
     });
-    setupEventListeners();
     initTooltips();
     // Use cached version of templates loading
     getTemplatesWithCache();
