@@ -47,41 +47,132 @@ function renderWeekDates(dates) {
     $("#week-display").text(weekDisplay);
 }
 
-function renderExerciseOptions() {
-    const muscleGroup = $("#muscle-group-select").val();
-    const select = $("#exercise-select");
-    const currentExercise = select.val();
-    
-    const muscleGroupMobile = $("#muscle-group-select-mobile").val();
-    const selectMobile = $("#exercise-select-mobile");
-    const currentExerciseMobile = selectMobile.val();
-    
-    // Clear both selects
-    select.empty();
-    selectMobile.empty();
-    
-    // Filter exercises by muscle group and populate both selects
-    exercises
-        .filter(ex => ex.muscle_group === muscleGroup)
-        .forEach(exercise => {
-            select.append(`<option value="${exercise.id}">${exercise.name}</option>`);
-        });
-        
-    exercises
-        .filter(ex => ex.muscle_group === muscleGroupMobile)
-        .forEach(exercise => {
-            selectMobile.append(`<option value="${exercise.id}">${exercise.name}</option>`);
-        });
-    
-    // Restore previous selections if they still exist
-    if (currentExercise && select.find(`option[value="${currentExercise}"]`).length) {
-        select.val(currentExercise);
-    }
-    
-    if (currentExerciseMobile && selectMobile.find(`option[value="${currentExerciseMobile}"]`).length) {
-        selectMobile.val(currentExerciseMobile);
-    }
+function _escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/[&<>"'`=\/]/g, ch => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
+    })[ch]);
 }
+
+// Robust renderer for both <select> and <input>+<datalist> patterns.
+// It will attempt to refresh common select plugins (safe guards included).
+function renderExerciseOptions() {
+  const exList = Array.isArray(window.exercises) ? window.exercises : [];
+  console.log('renderExerciseOptions() — exercises length:', exList.length);
+
+  const mgEl = $('#muscle-group-select');
+  const mgMobileEl = $('#muscle-group-select-mobile');
+
+  const muscleGroup = (mgEl.val() || '').toLowerCase().trim();
+  const muscleGroupMobile = (mgMobileEl.val() || '').toLowerCase().trim();
+
+  // Targets we support (some projects use a <select>, some use <input> + <datalist>)
+  const select = $('#exercise-select');                 // desktop <select>
+  const selectMobile = $('#exercise-select-mobile');    // mobile <select>
+  const input = $('#exercise-input');                   // possible input element
+  const datalist = $('#exercise-datalist');            // possible <datalist>
+
+  if (!select.length && !selectMobile.length && !input.length && !datalist.length) {
+    console.warn('renderExerciseOptions: no #exercise-select/#exercise-select-mobile/#exercise-input/#exercise-datalist found in DOM');
+    return;
+  }
+
+  // filter function: if muscle group empty or 'all' => show all
+  const matchesGroup = (ex, mg) => {
+    if (!mg || mg === 'all') return true;
+    return ((ex.muscle_group || '').toLowerCase().trim() === mg);
+  };
+
+  const desktopExercises = exList.filter(ex => matchesGroup(ex, muscleGroup));
+  const mobileExercises = exList.filter(ex => matchesGroup(ex, muscleGroupMobile));
+
+  // Helper to refresh plugin UIs (guarded so it doesn't throw if plugin not present)
+  const tryRefresh = (jq) => {
+    try {
+      if (!jq || !jq.length) return;
+      // bootstrap-select
+      if (typeof $.fn.selectpicker !== 'undefined') {
+        jq.selectpicker && jq.selectpicker('refresh');
+      }
+      // select2
+      if (jq.hasClass && jq.hasClass('select2-hidden-accessible')) {
+        jq.trigger && jq.trigger('change.select2');
+      }
+      // Tom Select (vanilla: element.tomselect exists)
+      if (jq[0] && jq[0].tomselect) {
+        jq[0].tomselect.refresh && jq[0].tomselect.refresh();
+      }
+    } catch (e) {
+      console.debug('refresh plugin failed (ignored):', e);
+    }
+  };
+
+  // Populate <select> for desktop
+  if (select.length) {
+    const prev = select.val();
+    select.empty();
+    select.append('<option value="">Select Exercise</option>');
+    desktopExercises.forEach(ex => {
+      select.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(ex.name)}</option>`);
+    });
+    if (prev && select.find(`option[value="${_escapeHtml(prev)}"]`).length) {
+      select.val(prev);
+    }
+    tryRefresh(select);
+    console.log('renderExerciseOptions: desktop options added:', desktopExercises.length);
+  }
+
+  // Populate <select> for mobile
+  if (selectMobile.length) {
+    const prevM = selectMobile.val();
+    selectMobile.empty();
+    selectMobile.append('<option value="">Select Exercise</option>');
+    mobileExercises.forEach(ex => {
+      selectMobile.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(ex.name)}</option>`);
+    });
+    if (prevM && selectMobile.find(`option[value="${_escapeHtml(prevM)}"]`).length) {
+      selectMobile.val(prevM);
+    }
+    tryRefresh(selectMobile);
+    console.log('renderExerciseOptions: mobile options added:', mobileExercises.length);
+  }
+
+  // Populate datalist (input + datalist pattern)
+  if (datalist.length) {
+    datalist.empty();
+    // datalist option uses the exercise name as value (inputs read option.value)
+    desktopExercises.forEach(ex => {
+      datalist.append(`<option value="${_escapeHtml(ex.name)}" data-id="${_escapeHtml(ex.id)}"></option>`);
+    });
+    console.log('renderExerciseOptions: datalist options added:', desktopExercises.length);
+  }
+
+  // If using an input and datalist - optionally you can add an event listener
+  // that fills a hidden input with the selected exercise id by matching the datalist option.
+  if (input.length && datalist.length && !input.data('exercise-listener')) {
+    input.on('input', function () {
+      const v = $(this).val();
+      // find datalist option with value === v
+      const opt = datalist.find(`option[value="${_escapeHtml(v)}"]`);
+      const foundId = opt.length ? opt.attr('data-id') : '';
+      // store id somewhere useful (example hidden field #exercise-id)
+      $('#exercise-id').val(foundId || '');
+    });
+    input.data('exercise-listener', true);
+  }
+
+  // If nothing matched, help debugging:
+  if ((select.length && select.find('option').length <= 1) && (datalist.length && datalist.find('option').length === 0)) {
+    console.info('renderExerciseOptions: zero options after filtering — showing counts for debugging:');
+    console.info('muscleGroup (selected):', muscleGroup, 'muscleGroupMobile:', muscleGroupMobile);
+    console.info('all muscle groups present in exercises:', Array.from(new Set(exList.map(e=> (e.muscle_group||'').toLowerCase().trim()))));
+  }
+}
+
+// Hook muscle-group selects so switching group re-renders options
+$(document).ready(function () {
+  $('#muscle-group-select, #muscle-group-select-mobile').on('change', renderExerciseOptions);
+});
 
 function renderWorkoutSession(session, exercises, options = {}) {
     const collapseGroups = options.collapseGroups || false;
