@@ -519,6 +519,8 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
                     showWorkoutResults(response.comparisonData, response.achievements);
                     updateSetRowsWithProgress(response.comparisonData);
                 }, 4000);
+                    const date = currentSelectedDate;
+                    localStorage.removeItem(getWorkoutNameKey(date));
             } else {
                 hideWorkoutAnalysis();
                 alert("Error saving workout: " + response.error);
