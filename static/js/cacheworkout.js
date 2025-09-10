@@ -128,29 +128,42 @@ function getSessionWithCache(date, callback) {
 
 // Get exercises from cache or server
 function getExercisesWithCache(callback) {
+    console.log("Fetching exercises...");
+
     const cachedExercises = getCachedData(CACHE_KEYS.EXERCISES, CACHE_EXPIRATION.EXERCISES);
 
     if (cachedExercises && cachedExercises.length > 0) {
-        console.log('Using cached exercises');
+        console.log('Using cached exercises:', cachedExercises);
         window.exercises = cachedExercises;
-        callback();
 
-        setTimeout(() => {
-            $.get("/workout/get_exercises", function (data) {
+        // ✅ render after data is set
+        renderExerciseOptions();
+
+        if (typeof callback === "function") callback();
+
+    } else {
+        console.log('No cached exercises, fetching from server');
+
+        $.get("/workout/exercises", function (data) {
+            console.log('Server response:', data);
+
+            if (data.exercises && data.exercises.length > 0) {
                 window.exercises = data.exercises;
                 setCachedData(CACHE_KEYS.EXERCISES, window.exercises);
+
+                // ✅ render after fetching
                 renderExerciseOptions();
-            });
-        }, 1000);
-    } else {
-        $.get("/workout/get_exercises", function (data) {
-            window.exercises = data.exercises;
-            setCachedData(CACHE_KEYS.EXERCISES, window.exercises);
-            callback();
+
+                if (typeof callback === "function") callback();
+            } else {
+                console.error('No exercises in response');
+            }
+
+        }).fail(function(xhr, status, error) {
+            console.error('Failed to fetch exercises:', status, error, xhr.responseText);
         });
     }
 }
-
 // Get templates from cache or server
 function getTemplatesWithCache() {
     const cachedTemplates = getCachedData(CACHE_KEYS.TEMPLATES, CACHE_EXPIRATION.TEMPLATES);
