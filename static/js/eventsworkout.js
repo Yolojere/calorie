@@ -385,9 +385,19 @@ $(document).on('click', '.quick-add-set', function () {
             const newSetId = response.set_ids[0];
             const setIndex = $tbody.find(".set-row").length + 1;
 
+    // Proper RiR badge text
+    let rirDisplayText;
+    if (rir === "Failure") {
+        rirDisplayText = "Failure";
+    } else if (rir !== null) {
+        rirDisplayText = rir + " RiR";
+    } else {
+        rirDisplayText = "None";
+    }
+
             const rirDisplay = `
                 <div class="rir-dropdown">
-                    <span class="rir-badge">${rir || "None"}</span>
+                    <span class="rir-badge">${rirDisplayText}</span>
                     <div class="rir-options">
                         <div class="rir-option" data-value="Failure">Failure</div>
                         <div class="rir-option" data-value="1">1 RiR</div>
@@ -405,14 +415,13 @@ $(document).on('click', '.quick-add-set', function () {
 
             const newRow = $(`
                 <tr class="set-row" data-set-id="${newSetId}">
-                    <td class="set-number-cell">
-                        <div class="d-flex align-items-center">
-                            <div class="me-2">${setIndex}</div>
-                            <div class="set-details">
-                                ${rirDisplay}
-                                ${commentIcon}
-                            </div>
-                        </div>
+                    <td>
+    <div>
+        ${setIndex}
+        ${rirDisplay}
+        ${commentIcon}
+    </div>
+
                     </td>
                     <td>
                         <input type="number" class="form-control set-reps set-input" value="${reps}" data-original="${reps}">
