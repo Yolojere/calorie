@@ -236,22 +236,25 @@
     }
 
     /* ===== BUTTONS & CONTROLS ===== */
-.workout-name-input {
-    background-color: #1b1b1b !important;
-    border: 1px solid var(--border-color) !important;
-    color: #ffffff !important;
-    border-radius: 6px !important;
-    font-size: 12px !important;
-    padding: 2px 8px !important;
-    height: auto !important;
-    text-align: center !important;
-}
-
-.workout-name-input:focus {
-    border-color: #555 !important;
-    background-color: #181818 !important;
-    outline: none !important;
-}
+    .btn-jerez {
+        display: inline-block;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.1s ease;
+        text-align: center;
+    }
+    .btn-jerez:hover {
+        background-color: #d0d0d0;
+        color: #000;
+    }
+    .btn-jerez:focus {
+        background-color: #1a1a1a;
+    }
     .btn-jere {
         display: inline-block;
         background-color: #1b1b1b;
@@ -296,7 +299,44 @@
         background: #1b1b1b !important;
         color: #ffffff !important;
     }
+    .btn-jerey {
+        display: inline-block;
+        font-size: 10px !important;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid #9359fe;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.1s ease;
+        padding: 2px;              /* super tight padding */
+        font-size: 16px !important;           /* compact labels */
+        font-weight: 600;
+        min-width: 0;
+        height: 40px; 
+        width: 105px;             /* fits inside footer */
+        flex: 1 1;                   /* all buttons equal width */
+        display: flex;
+        flex-direction: row;    /* icon above text */
+        align-items: center;
+        justify-content: center;
+        gap: 1px;                  /* tiny gap between icon + text */
+        margin: 0 2px;             /* spacing between buttons */
+    }
+    .btn-jerey i {
+        color: #00ffaa;
+    }
 
+    .btn-jerey:hover, .btn-jerew:focus {
+        transform: scale(1.03);
+        border: 2px solid #9359fe;
+        background-color: #9359fe;
+
+    }
+
+    .btn-jerey.active {
+        background: #1b1b1b !important;
+        color: #ffffff !important;
+    }
     /* Footer buttons */
     .btn-custom {
         background-color: #1b1b1b;
@@ -496,7 +536,6 @@
     }
 
     .delete-item {
-        display: block;
         margin: 0;
         line-height: 1;
         background: rgba(255, 255, 255, 0.1) !important;
@@ -505,7 +544,8 @@
         padding: 0;
         width: 24px;
         height: 24px;
-        display: flex;
+        display: table-row;
+        position: relative;
         align-items: center !important;
         justify-content: center !important;
         font-size: 14px;
@@ -662,7 +702,6 @@
     .workout-table th:nth-child(3), .workout-table td:nth-child(3) { width: 20%; }
     .workout-table th:nth-child(4), .workout-table td:nth-child(4) { width: 25%; }
     .workout-table th:nth-child(5), .workout-table td:nth-child(5) { width: 10%; }
-
     /* Complete exercise dropdown styles */
     .complete-exercise-dropdown {
         position: relative;
@@ -1030,10 +1069,11 @@
     }
 
     .actions-cell {
-        display: flex !important;
-        position: absolute !important;
+        display: block !important;
+        position: relative !important;
         align-items: center;
         justify-content: center;
+        text-align: center;
         padding: 0 !important;
         background-color: var(--bg-tertiary) !important;
     }
@@ -1408,7 +1448,7 @@
         background-color: #1b1b1b !important;
         color: #ffffff !important;
         border: 1px solid #444 !important;
-        border-radius: 15px;       /* slightly rounded */
+        border-radius: 10px;       /* slightly rounded */
         padding: 2px;              /* super tight padding */
         font-size: 11px;           /* compact labels */
         font-weight: 600;
@@ -1445,6 +1485,30 @@
     }
 
     @media (max-width: 768px) {
+        .btn-jerey {
+        display: inline-block;
+        font-size: 10px !important;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid #9359fe;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.1s ease;
+        padding: 2px;              /* super tight padding */
+        font-size: 11px;           /* compact labels */
+        font-weight: 600;
+        line-height: 1.1;
+        min-width: 0;
+        height: 27px; 
+        width: 105px;             /* fits inside footer */
+        flex: 1 1;                   /* all buttons equal width */
+        display: flex;
+        flex-direction: row;    /* icon above text */
+        align-items: center;
+        justify-content: center;
+        gap: 1px;                  /* tiny gap between icon + text */
+        margin: 0 2px;             /* spacing between buttons */
+    }
         .workout-container {
             padding-bottom: 70px;
         }
@@ -1796,6 +1860,31 @@
 .neutral {
     color: #FFC107;
 }
+.workout-name-input {
+    background-color: #1b1b1b !important;
+    border: 1px solid var(--border-color) !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    padding: 2px 8px !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+    cursor: text !important;
+}
+
+.workout-name-input:hover {
+    background-color: #2a2a2a !important;
+    border-color: #666 !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.workout-name-input:focus {
+    border-color: #888 !important;
+    background-color: #333 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(108, 192, 213, 0.3) !important;
+}
+
 
 /* Progress Indicators for Set Rows */
 .set-progress-indicator {
@@ -2280,14 +2369,15 @@
                             </select>
                         </div>
                     </div>
-<span class="workout-name-display btn btn-jere btn-outline-primary" 
-      style="font-size:12px; margin-left:2px; padding:2px 8px; border-radius:6px;">
-</span>
+                    <span class="workout-name-display btn-jerez btn-outline-primary" 
+                        style="font-size:12px; margin-left:2px; padding:2px 8px; border-radius:6px;">
+                    </span>
 
-<input type="text" 
-       class="workout-name-input btn-jere d-none" 
-       maxlength="60">
-</div>
+                    <input type="text" 
+                        class="workout-name-input d-none" 
+                        maxlength="60">
+                    </div>
+
 
                     <!-- Card Body -->
                     <div class="card-body p-0">
@@ -2311,7 +2401,7 @@
                             </ul>
 
                             <!-- Save Workout -->
-                            <button type="button" class="btn btn-jere flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
+                            <button type="button" class="btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                                 <i class="fas fa-dumbbell fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline">Save W.O.</span>
                             </button>
@@ -2340,7 +2430,7 @@
                 </ul>
 
                 <!-- Save Workout -->
-                <button type="button" class="btn btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
+                <button type="button" class="btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                     <i class="fas fa-dumbbell"></i>
                     <span class="btn-label d-block">&nbsp;Save W.O.</span>
                 </button>
@@ -2505,6 +2595,7 @@
 </button>
 {% endif %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
 // ---- GLOBAL STATE
@@ -2610,6 +2701,5 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
 <script src="{{ url_for('static', filename='js/renderworkout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/eventsworkout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/initworkout.js') }}"></script>
-
 </body>
 </html>
