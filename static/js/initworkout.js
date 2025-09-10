@@ -181,3 +181,42 @@ $(document).on('click', function(e) {
         }
     });
 });
+// Initialization
+function getWorkoutNameKey(date) {
+    return "workoutName_" + date;
+}
+
+// Render workout name in header
+function renderWorkoutName(date) {
+    const name = localStorage.getItem(getWorkoutNameKey(date)) || "My Session";
+    $(".workout-name-display").text(name).show();
+    $(".workout-name-input").val(name).hide();
+}
+
+// Editable name, inline!
+$(document).on("click", ".workout-name-display", function() {
+    $(this).hide();
+    $(".workout-name-input").val($(this).text()).removeClass("d-none").show().focus().select();
+});
+$(document).on("blur", ".workout-name-input", saveEditWorkoutName);
+$(document).on("keydown", ".workout-name-input", function(e){
+    if(e.key === "Enter") $(this).blur();
+});
+function saveEditWorkoutName() {
+    const $input = $(".workout-name-input");
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    let val = $input.val().trim() || "My Session";
+    localStorage.setItem(getWorkoutNameKey(date), val);
+    $(".workout-name-display").text(val).show();
+    $input.hide();
+}
+
+// On workout date change or page load
+$(document).on("workoutContentChanged", function() {
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    renderWorkoutName(date);
+});
+$(document).ready(function(){
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    renderWorkoutName(date);
+});
