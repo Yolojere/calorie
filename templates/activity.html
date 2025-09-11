@@ -234,31 +234,40 @@ body {
             font-size: 14px !important;
             margin: 0 !important;
         }
-        .nav-logo-box {
-            display:inline-block;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            border: solid 1px !important;
-            border-color: #2d2d2d !important;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(to right, #111111, #333333, #111111);
-            color: #ffffff;
-            border-radius: 30px;
-            padding: 2px;
-            margin: 0 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 55px;
-            height: 55px;
-            z-index: 1050 !important;
-              }
+             .nav-logo-box {
+                display:inline-block;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 50px;
+                padding: 2px;
+                margin: 0 3px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 55px;
+                height: 55px;
+                z-index: 1050 !important;
+                }
                 .nav-logo-box img.nav-logo {
             max-width: 100%;   /* scale the logo down */
             max-height: 100%;  /* maintain aspect ratio */
             object-fit: contain;
         }
+        .btn-beta {
+                display: inline-block;
+                background-color: #8b34f6;
+                color: #ffffff;
+                border: 1px solid #000000 !important;
+                border-radius: 30px;
+                text-align: center;
+                padding: 2px 20px;
+                font-size: 12px;
+                font-weight: bold;
+                box-shadow: 0px 1px 5px rgb(179, 179, 180);
+                cursor:auto !important;
+            }
         
         /* ===== MOBILE NAVIGATION ===== */
         .mobile-settings-btn {
@@ -561,15 +570,18 @@ body {
     </div>
 
     <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-black">
-        <div class="container">
-            <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
-            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
-                - Track, eat, repeat -
-            </a>
-                            <div class="nav-logo-box">
-    <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
-</div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+            <div class="container">
+                <div class="nav-logo-box">
+                    <a href="/">
+        <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
+                </a>
+    </div>
+                <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
+                <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
+                    - Track, eat, repeat -
+                </a>
+                <button class="btn-beta">BETA</button>
             
             <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
@@ -1268,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearFormFields() {
         document.getElementById('age').value = '';
         document.getElementById('height').value = '';
-        document.getElementById('sleep-hours').value = '';
+        document.getElementById('sleep-hours').value = '8';
         document.getElementById('sleep-minutes').value = '';
         document.getElementById('intense-hours').value = '';
         document.getElementById('intense-minutes').value = '';
