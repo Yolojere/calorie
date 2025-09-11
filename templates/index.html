@@ -2697,7 +2697,7 @@
                         <div class="row mb-3 g-2">
             <div class="col-7 position-relative">
                 <input type="number" id="grams" class="form-control bg-secondary text-light" 
-                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself">
+                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
                 <span class="input-unit">Grams</span>
                             </div>
                             <div class="col-5">
@@ -3269,7 +3269,6 @@
                 // Add food
                 $('#add-food').click(addFoodToLog);
                 $('#grams').on('keypress', handleGramsEnterKey);
-                $('#grams').on('keydown', handleGramsEnterKey);
                 // Food groups
                 $(document).on('click', '.toggle-group', toggleFoodGroup);
                 $(document).on('dblclick', '.group-header', toggleFoodGroup);
