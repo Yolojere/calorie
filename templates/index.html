@@ -1003,56 +1003,6 @@
             .calorie-negative {
                 color: #00ff00;        }
             
-            /* ===== MOBILE NUTRITION GRID ===== */
-            .nutrition-grid-mobile {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                width: 100%;
-            }
-            
-            .grid-row-mobile {
-                display: flex;
-                gap: 12px;
-                width: 100%;
-            }
-            
-            .grid-cell-mobile {
-                flex: 1;
-                border-radius: 12px;
-                padding: 18px 12px;
-                text-align: center;
-                min-height: 100px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-                transition: all 0.3s ease;
-            }
-            
-            .grid-cell-mobile:active {
-                transform: scale(0.98);
-            }
-            
-            .grid-cell-mobile div {
-                font-size: 16px;
-                font-weight: bold;
-                margin-bottom: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }
-            
-            .grid-cell-mobile .grid-value {
-                font-size: 12px !important;
-                font-weight: bold;
-            }
-            
-            .grid-header-mobile {
-                background: linear-gradient(135deg, #494949, #080808);
-                color: white !important;
-            }
             
         /* ===== TOGGLE GRID BUTTON ===== */
             #toggle-grid-btn {
@@ -3273,25 +3223,16 @@
                     $('#toggle-grid-btn').addClass('active');
                     updateGridVisibility();
                 }
-                // CSRF TOKEN //
-                $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                    let token = $('meta[name="csrf-token"]').attr('content');
-                    if (token) {
-                        xhr.setRequestHeader("X-CSRFToken", token);
-                    }
-                }
-            });
-            // Update when nutrition data changes
-    $(document).on('sessionUpdated', function() {
-        updateNutritionProgressBars();
-    });
+                    // Update when nutrition data changes
+                $(document).on('sessionUpdated', function() {
+                    updateNutritionProgressBars();
+                });
 
-    // Initial update
-    $(document).ready(function() {
-        setTimeout(updateNutritionProgressBars, 1000);
-    });
-                // ===== EVENT HANDLERS =====
+                // Initial update
+                $(document).ready(function() {
+                    setTimeout(updateNutritionProgressBars, 1000);
+                });
+                        // ===== EVENT HANDLERS =====
                 $('#date-selector').val(currentSelectedDate);
                 initializeApp();
                 setTimeout(() => {
@@ -3377,23 +3318,23 @@
                         updateRealTimeBreakdownFromForm();
                     }
                 }
-                function updateNutritionTotalsOnly(totals) {
-    // Update nutrition grids without full DOM refresh
-    updateNutritionGrid(totals);
-    updateMobileNutrition(totals);
-    updateCalorieDifference();
-    updateNutritionProgressBars();
-    
+                    function updateNutritionTotalsOnly(totals) {
+                // Update nutrition grids without full DOM refresh
+                    updateNutritionGrid(totals);
+                    updateMobileNutrition(totals);
+                    updateCalorieDifference();
+                    updateNutritionProgressBars();
+                    
 
-    
-    // Trigger session updated event for other components
-    $(document).trigger('sessionUpdated');
-}
+                    
+                    // Trigger session updated event for other components
+                    $(document).trigger('sessionUpdated');
+                }
 
-function updateItemInDOM(itemData) {
-    // Update a specific item's display in the DOM
-    const itemElement = $(`.list-group-item[data-id="${itemData.id}"]`);
-    if (itemElement.length) {
+    function updateItemInDOM(itemData) {
+        // Update a specific item's display in the DOM
+        const itemElement = $(`.list-group-item[data-id="${itemData.id}"]`);
+        if (itemElement.length) {
         // Update grams display
         itemElement.find('.edit-grams, .edit-grams-btn').text(`${parseFloat(itemData.grams).toFixed(1)}g`);
         
@@ -3787,8 +3728,9 @@ function addFoodToLog() {
 }
                 
                 function handleGramsEnterKey(e) {
-                    if (e.which === 13) { // Enter key
-                        $('#add-food').click();
+                if (e.which === 13) { // Enter key
+                    e.preventDefault(); // Prevent default form submission or next field focus
+                    $('#add-food').click();
                     }
                 }
                 
