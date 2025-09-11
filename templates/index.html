@@ -479,9 +479,9 @@
             
             /* ===== BUTTONS ===== */
             .highlight-temp {
-            background-color: #555 !important;
-            transition: background-color 0.5s;
-        }
+            background-color: #666 !important; /* slightly lighter than your bg-secondary */
+            transition: background-color 0.1s ease-in-out;
+            }
             .btn-beta {
                 display: inline-block;
                 background-color: #8b34f6;
@@ -3268,6 +3268,7 @@
                 
                 // Portion controls
                 $(document).on('click', '.portion-btn', handlePortionClick);
+                $('#grams').on('input', handleGramsInput);
                 
                 // Add food
                 $('#add-food').click(addFoodToLog);
@@ -3647,7 +3648,7 @@ function hideEmptyGroups() {
         });
     });
                 
-                function handlePortionClick(e) {
+function handlePortionClick(e) {
     e.stopPropagation();
 
     // Reset all OTHER buttons except this one
@@ -3684,6 +3685,12 @@ function hideEmptyGroups() {
     updateRealTimeBreakdownFromForm();
     $(this).addClass('active');
 }
+
+                
+                function handleGramsInput() {
+                    resetPortionButtons();
+                    updateRealTimeBreakdownFromForm();
+                }
                 
 // Modified addFoodToLog function
 function addFoodToLog() {
@@ -3747,7 +3754,6 @@ function addFoodToLog() {
                 if (e.which === 13) { // Enter key
                     e.preventDefault(); // Prevent default form submission or next field focus
                     $('#add-food').click();
-                    $('#add-food').focus();
                     }
                 }
                 
