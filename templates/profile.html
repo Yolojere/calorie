@@ -645,7 +645,7 @@ input.form-control:-webkit-autofill {
     <div class="avatar-modal" id="avatarModal">
         <div class="avatar-modal-content">
             <h4 class="text-center mb-3">Choose Your Avatar</h4>
-            <p class="text-center text-secondary mb-4">Select from our options or upload your own image</p>
+            <p class="text-center text-secondary mb-4">Select from our options</p>
             
             <div class="avatar-options">
                 {% for value, label in form.avatar_choice.choices %}
@@ -659,10 +659,10 @@ input.form-control:-webkit-autofill {
                 {% endfor %}
             </div>
             
-            <label for="avatar_upload_input" class="upload-btn">
+          <!-- <label for="avatar_upload_input" class="upload-btn">
                 <i class="fas fa-upload me-2"></i> Upload Your Own Image
             </label>
-            <small class="d-block text-secondary mb-3">Max file size: 2MB (JPG, PNG)</small>
+            <small class="d-block text-secondary mb-3">Max file size: 2MB (JPG, PNG)</small> -->
             
             <div class="modal-buttons">
                 <button type="button" class="btn btn-outline-secondary" id="cancelAvatar">Cancel</button>
