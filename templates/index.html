@@ -3269,7 +3269,7 @@
                 // Add food
                 $('#add-food').click(addFoodToLog);
                 $('#grams').on('keypress', handleGramsEnterKey);
-                $('#grams-input').on('keydown', handleGramsEnterKey);
+                $('#grams').on('keydown', handleGramsEnterKey);
                 // Food groups
                 $(document).on('click', '.toggle-group', toggleFoodGroup);
                 $(document).on('dblclick', '.group-header', toggleFoodGroup);
@@ -3743,6 +3743,7 @@ function addFoodToLog() {
                 if (e.which === 13) { // Enter key
                     e.preventDefault(); // Prevent default form submission or next field focus
                     $('#add-food').click();
+                    $('#add-food').focus();
                     }
                 }
                 
