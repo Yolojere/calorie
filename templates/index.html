@@ -478,6 +478,10 @@
             }
             
             /* ===== BUTTONS ===== */
+            .highlight-temp {
+            background-color: #555 !important;
+            transition: background-color 0.5s;
+        }
             .btn-beta {
                 display: inline-block;
                 background-color: #8b34f6;
@@ -2697,7 +2701,7 @@
                         <div class="row mb-3 g-2">
             <div class="col-7 position-relative">
                 <input type="number" id="grams" class="form-control bg-secondary text-light" 
-                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself">
                 <span class="input-unit">Grams</span>
                             </div>
                             <div class="col-5">
@@ -3264,7 +3268,6 @@
                 
                 // Portion controls
                 $(document).on('click', '.portion-btn', handlePortionClick);
-                $('#grams').on('input', handleGramsInput);
                 
                 // Add food
                 $('#add-food').click(addFoodToLog);
@@ -3645,40 +3648,42 @@ function hideEmptyGroups() {
     });
                 
                 function handlePortionClick(e) {
-                    e.stopPropagation();
-                    
-                    // Reset all OTHER buttons but not this one
-                    $('.portion-btn').not(this).each(function() {
-                        const baseSize = parseFloat($(this).data('portion-size'));
-                        const portionType = $(this).data('portion-type');
-                        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
-                        $(this).text(`${label} (${baseSize}g)`);
-                        $(this).data('multiple', 0);
-                        $(this).removeClass('active');
-                    });
+    e.stopPropagation();
 
-                    let multiple = parseInt($(this).data('multiple')) || 0;
-                    const baseSize = parseFloat($(this).data('portion-size'));
-                    const portionType = $(this).data('portion-type');
-                    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+    // Reset all OTHER buttons except this one
+    $('.portion-btn').not(this).each(function() {
+        const baseSize = parseFloat($(this).data('portion-size'));
+        const portionType = $(this).data('portion-type');
+        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+        $(this).text(`${label} (${baseSize}g)`);
+        $(this).data('multiple', 0);
+        $(this).removeClass('active');
+    });
 
-                    // Increment multiple (first click = 1)
-                    multiple++;
+    let multiple = parseInt($(this).data('multiple')) || 0;
+    const baseSize = parseFloat($(this).data('portion-size'));
+    const portionType = $(this).data('portion-type');
+    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
 
-                    const totalGrams = baseSize * multiple;
+    // Increment multiple (first click = 1)
+    multiple++;
 
-                    $(this).text(`${multiple} ${label} (${totalGrams}g)`);
-                    $(this).data('multiple', multiple);
+    const totalGrams = baseSize * multiple;
 
-                    $('#grams').val(totalGrams).trigger('focus');
-                    updateRealTimeBreakdownFromForm();
-                    $(this).addClass('active');
-                }
-                
-                function handleGramsInput() {
-                    resetPortionButtons();
-                    updateRealTimeBreakdownFromForm();
-                }
+    $(this).text(`${multiple} ${label} (${totalGrams}g)`);
+    $(this).data('multiple', multiple);
+
+    // Update grams input WITHOUT focusing it
+    const $gramsInput = $('#grams');
+    $gramsInput.val(totalGrams);
+
+    // Temporary highlight to show value changed
+    $gramsInput.addClass('highlight-temp');
+    setTimeout(() => $gramsInput.removeClass('highlight-temp'), 500);
+
+    updateRealTimeBreakdownFromForm();
+    $(this).addClass('active');
+}
                 
 // Modified addFoodToLog function
 function addFoodToLog() {
