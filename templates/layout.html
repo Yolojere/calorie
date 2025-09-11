@@ -214,7 +214,7 @@
             padding: 0.75rem 1.25rem;
             margin-bottom: 1rem;
                 position: fixed;        /* stays in place even when scrolling */
-    top: 50%;               /* 50% from the top of the viewport */
+    top: 10%;                /* 50% from the top of the viewport */
     left: 50%;              /* 50% from the left of the viewport */
     transform: translate(-50%, -50%); /* center it exactly */
     z-index: 1050;          /* ensures it appears above most content */
@@ -229,7 +229,7 @@
             color: #a0e0a0;
             border-color: #2a5a2a;
                 position: fixed;        /* stays in place even when scrolling */
-    top: 50%;               /* 50% from the top of the viewport */
+    top: 10%;                /* 50% from the top of the viewport */
     left: 50%;              /* 50% from the left of the viewport */
     transform: translate(-50%, -50%); /* center it exactly */
     z-index: 1050;          /* ensures it appears above most content */
@@ -241,7 +241,7 @@
         
         .alert-danger {
     position: fixed;        /* stays in place even when scrolling */
-    top: 50%;               /* 50% from the top of the viewport */
+    top: 10%;                /* 50% from the top of the viewport */
     left: 50%;              /* 50% from the left of the viewport */
     transform: translate(-50%, -50%); /* center it exactly */
     z-index: 1050;          /* ensures it appears above most content */
@@ -260,7 +260,7 @@
             color: #000000;
             border-color: #2c2c2c;
                 position: fixed;        /* stays in place even when scrolling */
-    top: 50%;               /* 50% from the top of the viewport */
+    top: 10%;               /* 50% from the top of the viewport */
     left: 50%;              /* 50% from the left of the viewport */
     transform: translate(-50%, -50%); /* center it exactly */
     z-index: 1050;          /* ensures it appears above most content */
@@ -500,7 +500,7 @@
             alert.classList.remove('show');
             // Optionally remove from DOM after fade-out
             setTimeout(() => alert.remove(), 2000); // matches fade-out duration
-        }, 3000); 
+        }, 2000); 
     });
 });
         $.ajaxSetup({
