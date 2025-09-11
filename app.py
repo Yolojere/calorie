@@ -2501,32 +2501,6 @@ def init_workout_session():
     finally:
         conn.close()
 
-@app.route('/workout/get_exercises')
-def get_exercises():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute("SELECT id, name, muscle_group, description FROM exercises ORDER BY name")
-        exercises = cursor.fetchall()
-        
-        # Convert to list of dictionaries
-        exercise_list = []
-        for exercise in exercises:
-            exercise_list.append({
-                'id': exercise[0],
-                'name': exercise[1],
-                'muscle_group': exercise[2],
-                'description': exercise[3]
-            })
-        
-        return jsonify(exercises=exercise_list)
-    
-    except Exception as e:
-        app.logger.error(f"Error fetching exercises: {str(e)}")
-        return jsonify(error="Failed to fetch exercises"), 500
-    finally:
-        conn.close()
 
 @app.route('/workout/get_session', methods=['POST'])
 @login_required
