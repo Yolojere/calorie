@@ -3154,27 +3154,26 @@ def copy_session():
 # Get all exercises endpoint
 @app.route('/workout/exercises')
 @login_required
-def get_exercises_list():  # Changed function name
+def get_exercises_list():
     user_id = current_user.id
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
-        # Simplified query to avoid complex subqueries
+        # Get ALL exercises with optional user stats using LEFT JOIN
         cursor.execute('''
             SELECT 
                 e.id,
                 e.name,
                 e.muscle_group,
-                MAX(ws.weight) AS personal_best,
+                COALESCE(MAX(ws.weight), 0) AS personal_best,
                 MAX(s.date) AS last_performed,
-                SUM(ws.volume) AS total_volume
-            FROM workout_sets ws
-            JOIN workout_sessions s ON ws.session_id = s.id
-            JOIN exercises e ON ws.exercise_id = e.id
-            WHERE s.user_id = %s
-            GROUP BY e.id
+                COALESCE(SUM(ws.volume), 0) AS total_volume
+            FROM exercises e
+            LEFT JOIN workout_sets ws ON e.id = ws.exercise_id
+            LEFT JOIN workout_sessions s ON ws.session_id = s.id AND s.user_id = %s
+            GROUP BY e.id, e.name, e.muscle_group
             ORDER BY e.name
         ''', (user_id,))
         
@@ -3187,8 +3186,7 @@ def get_exercises_list():  # Changed function name
                 'personal_best': float(row['personal_best'] or 0),
                 'last_performed': row['last_performed'].strftime('%Y-%m-%d') if row['last_performed'] else None,
                 'total_volume': float(row['total_volume'] or 0),
-                # Volume trend will be calculated client-side
-                'volume_trend': 0  
+                'volume_trend': 0  # Calculate client-side if needed
             })
         
         return jsonify(exercises=exercises)
