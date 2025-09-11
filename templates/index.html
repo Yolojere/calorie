@@ -478,6 +478,19 @@
             }
             
             /* ===== BUTTONS ===== */
+            .btn-beta {
+                display: inline-block;
+                background-color: #8b34f6;
+                color: #ffffff;
+                border: 1px solid #000000 !important;
+                border-radius: 30px;
+                text-align: center;
+                padding: 2px 20px;
+                font-size: 12px;
+                font-weight: bold;
+                box-shadow: 0px 1px 5px rgb(179, 179, 180);
+                cursor:auto !important;
+            }
             #search-results .calorie-badge {
                 align-items:center;
                 display: block;
@@ -1216,12 +1229,8 @@
                 position: absolute;
                 left: 50%;
                 top: 50%;
-                border: solid 1px !important;
-                border-color: #2d2d2d !important;
                 transform: translate(-50%, -50%);
-                background: linear-gradient(to right, #111111, #333333, #111111);
-                color: #ffffff;
-                border-radius: 30px;
+                border-radius: 50px;
                 padding: 2px;
                 margin: 0 3px;
                 display: flex;
@@ -2439,12 +2448,15 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
             <div class="container">
                 <div class="nav-logo-box">
+                    <a href="/">
         <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
+                </a>
     </div>
                 <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
                 <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                     - Track, eat, repeat -
                 </a>
+                <button class="btn-beta">BETA</button>
                 <!-- Mobile Settings Dropdown (right-aligned) -->
                 <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                     <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -3257,7 +3269,7 @@
                 // Add food
                 $('#add-food').click(addFoodToLog);
                 $('#grams').on('keypress', handleGramsEnterKey);
-                
+                $('#grams-input').on('keydown', handleGramsEnterKey);
                 // Food groups
                 $(document).on('click', '.toggle-group', toggleFoodGroup);
                 $(document).on('dblclick', '.group-header', toggleFoodGroup);
