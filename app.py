@@ -655,6 +655,28 @@ def load_user(user_id):
     return None
 
 # Helper functions
+def format_date_finnish(date_str):
+    """Format date with Finnish day names"""
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        today = datetime.now().date()
+        
+        weekdays_fi = [
+            "Maanantai", "Tiistai", "Keskiviikko", "Torstai", 
+            "Perjantai", "Lauantai", "Sunnuntai"
+        ]
+        
+        if date_obj.date() == today:
+            return "Tänään"
+        elif date_obj.date() == today - timedelta(days=1):
+            return "Eilen"
+        elif date_obj.date() == today + timedelta(days=1):
+            return "Huomenna"
+        else:
+            weekday_fi = weekdays_fi[date_obj.weekday()]
+            return f"{weekday_fi} {date_obj.strftime('%d.%m')}"
+    except:
+        return date_str
 def calculate_calories(carbs, proteins, fats):
     return carbs * 4 + proteins * 4 + fats * 9
 
@@ -965,6 +987,7 @@ def calculate_calorie_status(calorie_difference):
             'class': 'status-loss',
             'display': f"{abs_diff:.0f}"
         }
+    
 # Initialize database and migrate data
 init_db()
 migrate_json_to_db()
@@ -1028,7 +1051,7 @@ def index():
     today = datetime.now()
     for i in range(-3, 4):
         date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
-        formatted_date = format_date(date_str)
+        formatted_date = format_date_finnish(date_str)
         dates.append((date_str, formatted_date))
 
     current_date_formatted = format_date(current_date)
