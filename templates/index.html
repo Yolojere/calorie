@@ -2474,49 +2474,49 @@
                             <a class="dropdown-item" 
                             href="/"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Koti</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Harjoitukset</span>
                             </a>
                             </li>
                             <li>
                                         <a class="dropdown-item" 
                             href="/history"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">Historia</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('activity') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Aktiivisuus</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="/custom_food"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Lisää Ruoka</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
                             style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                             </a>
                         </li>
                         
@@ -2577,14 +2577,14 @@
                                     <a class="dropdown-item" 
                                     href="{{ url_for('profile') }}"
                                     style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" 
                                     href="{{ url_for('logout') }}"
                                     style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                                     </a>
                                 </li>
                             </ul>
@@ -2614,7 +2614,7 @@
                 <div class="activity-grid">
                     <div class="grid-cell grid-activity">
                         <i class="fas fa-running"></i>
-                        <span data-i18n="activity">Activity</span>
+                        <span data-i18n="activity">Aktiivisuus</span>
                         <div class="grid-value" id="tdee-value">{% if current_tdee %}
                                     {{ current_tdee|round(0) }} kcal
                                 {% else %}
@@ -2623,7 +2623,7 @@
                     </div>
                     <div class="grid-cell grid-today">
                         <i class="fas fa-balance-scale"></i>
-                        <span data-i18n="today">Today</span>
+                        <span data-i18n="today">Tänään</span>
                         <div class="calorie-diff" id="calorie-difference">{{ calorie_difference }}</div>
                         <div class="grid-status status-loss" id="calorie-status">{{ calorie_status }}</div>
                     </div>
@@ -2633,7 +2633,7 @@
         <div class="grid-panel top-panel mobile-panel active" id="add-food-panel">
             <div class="card bg-dark h-100">
                 <div class="card-header bg-black text-light">
-                        <h6 data-i18n="add_food">Add Food</h6>
+                        <h6 data-i18n="add_food">Lisää Ruoka</h6>
                     </div>
                 <div class="card-body">
                     <div class="input-group mb-3 position-relative">
@@ -2660,28 +2660,28 @@
                 <i class="fas fa-fire icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-calories" class="rtb-value">0 Cal</span>
-                    <span class="rtb-label" data-i18n="calories">Calories</span>
+                    <span class="rtb-label" data-i18n="calories">Kalorit</span>
                 </div>
             </div>
         <div class="rtb-yay" style="background: linear-gradient(to right, #b989f0, #b989f0, #835fac);">
                 <i class="fas fa-drumstick-bite icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-proteins" class="rtb-value">0g</span>
-                    <span class="rtb-label" data-i18n="proteins">Protein</span>
+                    <span class="rtb-label" data-i18n="proteins">Proteiini</span>
                 </div>
             </div>
             <div class="rtb-yay" style="background: linear-gradient(to right, #6dc0d5, #6dc0d5, #3f7481);">
                 <i class="fas fa-bread-slice icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-carbs" class="rtb-value">0g</span>
-                    <span class="rtb-label" data-i18n="carbs">Carbs</span>
+                    <span class="rtb-label" data-i18n="carbs">Hiilari</span>
                 </div>
             </div>
         <div class="rtb-yay" style="background: linear-gradient(to right, #ff9e6d, #ff9e6d, #8f5639);">
                 <i class="fas fa-oil-can icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-fats" class="rtb-value">0g</span>
-                    <span class="rtb-label" data-i18n="fats">Fats</span>
+                    <span class="rtb-label" data-i18n="fats">Rasva</span>
                 </div>
             </div>
     </div>
@@ -2707,11 +2707,11 @@
                             </div>
                             <div class="col-5">
                                 <select id="meal-group" class="form-select bg-secondary text-light">
-                                    <option data-i18n="breakfast"value="breakfast">Breakfast</option>
-                                    <option data-i18n="lunch"value="lunch">Lunch</option>
-                                    <option data-i18n="dinner"value="dinner">Dinner</option>
-                                    <option data-i18n="snack"value="snack">Snack</option>
-                                    <option data-i18n="other"value="other">Other</option>
+                                    <option data-i18n="breakfast"value="breakfast">Aamiainen</option>
+                                    <option data-i18n="lunch"value="lunch">Lounas</option>
+                                    <option data-i18n="dinner"value="dinner">Päivällinen</option>
+                                    <option data-i18n="snack"value="snack">Välipala</option>
+                                    <option data-i18n="other"value="other">Muu</option>
                                 </select>
                             </div>
                         </div>
@@ -2721,7 +2721,7 @@
                             <button id="add-food" class="btn w-100" 
                                     style="background-color: #c0bfbf; color: black; padding: 10px; font-size: 18px;">
                                     <i class="fa-solid fa-circle-plus"></i>
-                                <span data-i18n="add_food">Add Food</span>
+                                <span data-i18n="add_food">Lisää Ruoka</span>
                             </button>
                         </div>
                     </div>
@@ -2845,7 +2845,7 @@
                         <!-- Apply template -->
                         <button id="apply-template-btn" class="btn-custom flex-fill text-center">
                             <i class="fas fa-layer-group fa-lg"></i>
-                            <span class="btn-label d-block d-md-inline" data-i18n="confirm">Confirm</span>
+                            <span class="btn-label d-block d-md-inline" data-i18n="apply">Apply</span>
                         </button>
 
                         <!-- Clear button -->
@@ -2874,7 +2874,7 @@
                         <!-- Apply template -->
                         <button id="apply-template-btn-mobile" class="btn btn-dark flex-fill text-center">
                             <i class="fas fa-layer-group"></i>
-                            <span class="btn-label d-block" data-i18n="confirm">&nbsp;Confirm</span>
+                            <span class="btn-label d-block" data-i18n="apply">&nbsp;Apply</span>
                         </button>
 
                         <!-- Clear button -->
@@ -3079,7 +3079,7 @@
                         <video id="camera-video" style="width:100%; height:auto;"></video>
                         <!-- Scanner overlay -->
                         <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                            <div class="scanning-text" data-i18n="position_barcode_in_the_scan_area">POSITION BARCODE IN THE SCAN AREA</div>
+                            <div class="scanning-text"><span data-i18n="position_barcode_in_the_scan_area">Laita viivakoodi skannaus alueelle</span></div>
                             <div class="scan-guide"></div>
                             <div class="scan-line"></div>
                             <div id="scanned-result" class="scanned-result"></div>
@@ -3090,10 +3090,10 @@
                     <div class="mt-3 text-center d-flex flex-wrap justify-content-center" 
                         style="z-index: 1000; position: relative; width: 100%;">
                         <button id="toggle-camera" class="btn btn-sm me-2" style="background: #333; color: white;">
-                            <i class="fas fa-sync-alt" data-i18n="Vaihda kamera"></i> Switch Camera
+                            <i class="fas fa-sync-alt"></i><span data-i18n="Vaihda kamera">vaihda kamera</span>
                         </button>
                         <button id="resume-scan" class="btn btn-sm" style="background: #333; color: white;">
-                            <i class="fas fa-redo" data-i18n="Jatka skannausta"></i> Resume Scan
+                            <i class="fas fa-redo"></i><span data-i18n="Jatka skannausta">Jatka skannausta</span>
                         </button>
                     </div>
                 </div>
@@ -4524,7 +4524,7 @@ function createItemHtml(item) {
                 function prepareCameraModal() {
                     // Recreate overlay elements
                     $('#scanner-overlay').html(`
-                        <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
+                        <div class="scanning-text"><span data-i18n="position_barcode_in_the_scan_area">Laita viivakoodi skannaus alueelle</span></div>
                         <div class="scan-guide"></div>
                         <div class="scan-line"></div>
                         <div id="scanned-result" class="scanned-result"></div>
