@@ -4,7 +4,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nutrition Tracker</title>
+        <title>TrackYou foods</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
         <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
@@ -15,6 +15,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://cdnjs.cloudflare.com">
         <script src="https://unpkg.com/@zxing/library@latest"></script>
+        <script src="/static/js/translations.js"></script>
         <style>
             /* ===== BASE STYLES ===== */
             body {
@@ -362,7 +363,7 @@
                 font-weight: bold !important;
             }
             
-            .nutrition-value-xxs[style*="background-color: #b61336"] {
+            .nutrition-value-xxs{
                 background: var(--group-color) !important;
                 color: #000 !important;
             }
@@ -2473,49 +2474,49 @@
                             <a class="dropdown-item" 
                             href="/"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i>Home
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i>Workouts
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
                             </a>
                             </li>
                             <li>
                                         <a class="dropdown-item" 
                             href="/history"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i>History
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('activity') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i>Activity
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="/custom_food"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
                             style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i>Profile
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
                             </a>
                         </li>
                         
@@ -2527,31 +2528,31 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <a class="nav-link home-link nav-link-box" href="/" 
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
                                 <i class="fa-solid fa-house-chimney-window"></i>
                             </a>
                             <li class="nav-item">
         <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
+        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts">
             <i class="fa-solid fa-dumbbell"></i>
         </a>
     </li>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link add-link nav-link-box" href="/custom_food"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food">
                                 <i class="fa-solid fa-file-circle-plus"></i>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link history-link nav-link-box" href="/history"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history">
                                 <i class="fa-solid fa-chart-pie"></i>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link nav-link-box" href="/activity"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity">
                                 <i class="fas fa-fire"></i>
                             </a>
                         </li>
@@ -2564,7 +2565,7 @@
                             role="button" 
                             data-bs-toggle="dropdown" 
                             aria-expanded="false"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings"
                             style="position: relative;">
                                 <i class="bi bi-wrench-adjustable"></i>
                             </a>
@@ -2576,14 +2577,14 @@
                                     <a class="dropdown-item" 
                                     href="{{ url_for('profile') }}"
                                     style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i>Profile
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" 
                                     href="{{ url_for('logout') }}"
                                     style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
                                     </a>
                                 </li>
                             </ul>
@@ -2613,7 +2614,7 @@
                 <div class="activity-grid">
                     <div class="grid-cell grid-activity">
                         <i class="fas fa-running"></i>
-                        <span>Activity</span>
+                        <span data-i18n="activity">Activity</span>
                         <div class="grid-value" id="tdee-value">{% if current_tdee %}
                                     {{ current_tdee|round(0) }} kcal
                                 {% else %}
@@ -2622,7 +2623,7 @@
                     </div>
                     <div class="grid-cell grid-today">
                         <i class="fas fa-balance-scale"></i>
-                        <span>Today</span>
+                        <span data-i18n="today">Today</span>
                         <div class="calorie-diff" id="calorie-difference">{{ calorie_difference }}</div>
                         <div class="grid-status status-loss" id="calorie-status">{{ calorie_status }}</div>
                     </div>
@@ -2632,11 +2633,11 @@
         <div class="grid-panel top-panel mobile-panel active" id="add-food-panel">
             <div class="card bg-dark h-100">
                 <div class="card-header bg-black text-light">
-                        <h6>Add Food</h6>
+                        <h6 data-i18n="add_food">Add Food</h6>
                     </div>
                 <div class="card-body">
                     <div class="input-group mb-3 position-relative">
-        <input type="text" id="food-search" class="form-control bg-secondary text-light" placeholder="Search food or scan EAN...">
+        <input type="text" id="food-search" class="form-control bg-secondary text-light" placeholder="Search food..." data-i18n="search_food_placeholder">
         <div class="position-absolute" style="right: 50px; top: 50%; transform: translateY(-50%); z-index: 10;">
             <button id="scan-ean" class="btn p-1 scan-ean-btn" type="button" 
             style="background-color: #111111; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
@@ -2659,28 +2660,28 @@
                 <i class="fas fa-fire icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-calories" class="rtb-value">0 Cal</span>
-                    <span class="rtb-label">Calories</span>
+                    <span class="rtb-label" data-i18n="calories">Calories</span>
                 </div>
             </div>
         <div class="rtb-yay" style="background: linear-gradient(to right, #b989f0, #b989f0, #835fac);">
                 <i class="fas fa-drumstick-bite icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-proteins" class="rtb-value">0g</span>
-                    <span class="rtb-label">Protein</span>
+                    <span class="rtb-label" data-i18n="proteins">Protein</span>
                 </div>
             </div>
             <div class="rtb-yay" style="background: linear-gradient(to right, #6dc0d5, #6dc0d5, #3f7481);">
                 <i class="fas fa-bread-slice icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-carbs" class="rtb-value">0g</span>
-                    <span class="rtb-label">Carbs</span>
+                    <span class="rtb-label" data-i18n="carbs">Carbs</span>
                 </div>
             </div>
         <div class="rtb-yay" style="background: linear-gradient(to right, #ff9e6d, #ff9e6d, #8f5639);">
                 <i class="fas fa-oil-can icon-bg"></i>
                 <div class="rtb-text-container">
                     <span id="rt-fats" class="rtb-value">0g</span>
-                    <span class="rtb-label">Fats</span>
+                    <span class="rtb-label" data-i18n="fats">Fats</span>
                 </div>
             </div>
     </div>
@@ -2701,16 +2702,16 @@
                         <div class="row mb-3 g-2">
             <div class="col-7 position-relative">
                 <input type="number" id="grams" class="form-control bg-secondary text-light" 
-                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself">
-                <span class="input-unit">Grams</span>
+                    value="100" min="0.1" step="0.1" placeholder="Insert Yourself" data-i18n="insert_yourself">
+                <span class="input-unit" data-i18n="grams">Grams</span>
                             </div>
                             <div class="col-5">
                                 <select id="meal-group" class="form-select bg-secondary text-light">
-                                    <option value="breakfast">Breakfast</option>
-                                    <option value="lunch">Lunch</option>
-                                    <option value="dinner">Dinner</option>
-                                    <option value="snack">Snack</option>
-                                    <option value="other">Other</option>
+                                    <option data-i18n="breakfast"value="breakfast">Breakfast</option>
+                                    <option data-i18n="lunch"value="lunch">Lunch</option>
+                                    <option data-i18n="dinner"value="dinner">Dinner</option>
+                                    <option data-i18n="snack"value="snack">Snack</option>
+                                    <option data-i18n="other"value="other">Other</option>
                                 </select>
                             </div>
                         </div>
@@ -2720,7 +2721,7 @@
                             <button id="add-food" class="btn w-100" 
                                     style="background-color: #c0bfbf; color: black; padding: 10px; font-size: 18px;">
                                     <i class="fa-solid fa-circle-plus"></i>
-                                Add Food
+                                <span data-i18n="add_food">Add Food</span>
                             </button>
                         </div>
                     </div>
@@ -2732,7 +2733,7 @@
                 <div class="card bg-dark h-100 d-flex flex-column">
                     <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <h7>Food Log</h7>
+                            <h7 data-i18n="food_log">Food Log</h7>
                             <!-- Toggle Grid Button -->
                             <button id="toggle-grid-btn" class="btn active ms-3 p-1">
                                 <i class="bi bi-file-bar-graph"></i>
@@ -2770,16 +2771,16 @@
                                         </div>
                                         <div class="group-nutrition-container">
                                             <div class="group-nutrition">
-                                                <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
+                                                <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories">
                                                     <span>{{ group_data['calories']|round(1) }} kcal</span>
                                                 </div>
-                                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
+                                                <div class="nutrition-value-xxs d-inline-block m-1">
                                                     <span>{{ group_data['proteins']|round(1) }}g P</span>
                                                 </div>
-                                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <div class="nutrition-value-xxs d-inline-block m-1">
                                                     <span>{{ group_data['carbs']|round(1) }}g C</span>
                                                 </div>
-                                                <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
+                                                <div class="nutrition-value-xxs d-inline-block m-1">
                                                     <span>{{ group_data['fats']|round(1) }}g F</span>
                                                 </div>
                                             </div>
@@ -2821,7 +2822,7 @@
                                 </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="empty-state">No food logged yet</div>
+                                <div class="empty-state" data-i18n="no_food_message">No food logged yet</div>
                             {% endif %}
                         </div>
                     </div>
@@ -2832,25 +2833,25 @@
                         <!-- Move button -->
                         <button id="move-items" class="btn-custom flex-fill text-center">
                             <i class="fa-solid fa-copy fa-lg"></i>
-                            <span class="btn-label d-block d-md-inline">Move</span>
+                            <span class="btn-label d-block d-md-inline" data-i18n="move">Move</span>
                         </button>
 
                         <!-- Save template -->
                         <button id="save-template-btn" class="btn-custom flex-fill text-center" disabled>
                             <i class="fas fa-save fa-lg"></i>
-                            <span class="btn-label d-block d-md-inline">Save</span>
+                            <span class="btn-label d-block d-md-inline" data-i18n="save">Save</span>
                         </button>
 
                         <!-- Apply template -->
                         <button id="apply-template-btn" class="btn-custom flex-fill text-center">
                             <i class="fas fa-layer-group fa-lg"></i>
-                            <span class="btn-label d-block d-md-inline">Apply</span>
+                            <span class="btn-label d-block d-md-inline" data-i18n="confirm">Confirm</span>
                         </button>
 
                         <!-- Clear button -->
                         <button id="clear-session" class="btn-custom flex-fill text-center">
                             <i class="fas fa-trash fa-lg"></i>
-                            <span class="btn-label d-block d-md-inline">Clear</span>
+                            <span class="btn-label d-block d-md-inline" data-i18n="clear">Clear</span>
                         </button>
                     </div>
                 </div>
@@ -2861,25 +2862,25 @@
                         <!-- Move button -->
                         <button id="move-items-mobile" class="btn btn-dark flex-fill text-center">
                             <i class="fa-solid fa-copy"></i>
-                            <span class="btn-label d-block">&nbsp;Move</span>
+                            <span class="btn-label d-block" data-i18n="move">&nbsp;Move</span>
                         </button>
 
                         <!-- Save template -->
                         <button id="save-template-btn-mobile" class="btn btn-dark flex-fill text-center" disabled>
                             <i class="fas fa-save"></i>
-                            <span class="btn-label d-block">&nbsp;Save</span>
+                            <span class="btn-label d-block" data-i18n="save">&nbsp;Save</span>
                         </button>
 
                         <!-- Apply template -->
                         <button id="apply-template-btn-mobile" class="btn btn-dark flex-fill text-center">
                             <i class="fas fa-layer-group"></i>
-                            <span class="btn-label d-block">&nbsp;Apply</span>
+                            <span class="btn-label d-block" data-i18n="confirm">&nbsp;Confirm</span>
                         </button>
 
                         <!-- Clear button -->
                         <button id="clear-session-mobile" class="btn btn-dark flex-fill text-center">
                             <i class="fas fa-trash"></i>
-                            <span class="btn-label d-block">&nbsp;Clear</span>
+                            <span class="btn-label d-block" data-i18n="clear">&nbsp;Clear</span>
                         </button>
                     </div>
                 </div>
@@ -2890,20 +2891,20 @@
         <div class="combined-card">
             <div class="card-section">
                 <i class="fas fa-running"></i>
-                <div class="label">Activity</div>
+                <div class="label" data-i18n="activity">Activity</div>
                 <div class="value" id="mobile-activity-value">
                     {% if current_tdee %}{{ current_tdee|round(0) }} kcal{% else %}Not calculated{% endif %}
                 </div>
             </div>
             <div class="card-section today-section">
                 <i class="fas fa-balance-scale"></i>
-                <div class="label">Today</div>
+                <div class="label" data-i18n="today">Today</div>
                 <div class="today-value" id="mobile-today-value">{{ calorie_difference }}</div>
                 <div id="mobile-status-text" class="status-text {{ status_class }}">{{ calorie_status }}</div>
             </div>
             <div class="card-section">
                 <i class="fas fa-fire"></i>
-                <div class="label">Calories</div>
+                <div class="label" data-i18n="calories">Calories</div>
                 <div class="value" id="mobile-calories-value">{{ totals.calories | round(0) }} kcal</div>
             </div>
         </div>
@@ -2921,46 +2922,46 @@
         <div class="nutrition-grid" style="height: 100%;">
             <div class="grid-cell grid-header">
                 <i class="fas fa-calculator"></i>
-                <span>Totals</span>
+                <span data-i18n="totals">Totals</span>
             </div>
             <div class="grid-cell grid-calories">
                 <i class="fas fa-fire"></i>
-                <span>Calories</span>
+                <span data-i18n="calories">Calories</span>
                 <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
             </div>
             <div class="grid-cell grid-proteins">
                 <i class="fas fa-drumstick-bite"></i>
-                <span>Proteins</span>
+                <span data-i18n="proteins">Proteins</span>
                 <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-carbs">
                 <i class="fas fa-bread-slice"></i>
-                <span>Carbs</span>
+                <span data-i18n="carbs">Carbs</span>
                 <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-fats">
                 <i class="fas fa-oil-can"></i>
-                <span>Fats</span>
+                <span data-i18n="fats">Fats</span>
                 <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-saturated">
                 <i class="fas fa-bacon"></i>
-                <span>Saturated</span>
+                <span data-i18n="saturated">Saturated</span>
                 <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-sugars">
                 <i class="fas fa-candy-cane"></i>
-                <span>Sugars</span>
+                <span data-i18n="sugars">Sugars</span>
                 <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-fiber">
                 <i class="fas fa-apple-alt"></i>
-                <span>Fiber</span>
+                <span data-i18n="fiber">Fiber</span>
                 <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-salt">
                 <i class="fas fa-mortar-pestle"></i>
-                <span>Salt</span>
+                <span data-i18n="salt">Salt</span>
                 <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
             </div>
         </div>
@@ -2994,12 +2995,12 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Move or Copy Items</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" data-i18n="move_or_copy_items">Move or Copy Items</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Date</label>
+                        <label class="form-label" data-i18n="select_date">Select Date</label>
                         <select id="target-date" class="form-select bg-secondary text-light">
                             {% for date_str, formatted in dates %}
                                 <option value="{{ date_str }}" {% if date_str == current_date %}selected{% endif %}>{{ formatted }}</option>
@@ -3007,26 +3008,26 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select Meal Group</label>
+                        <label class="form-label" data-i18n="select_meal_group">Select Meal Group</label>
                         <select id="target-group" class="form-select bg-secondary text-light">
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="dinner">Dinner</option>
-                            <option value="snack">Snack</option>
-                            <option value="other">Other</option>
+                            <option data-i18n="breakfast" value="breakfast">Breakfast</option>
+                            <option data-i18n="lunch" value="lunch">Lunch</option>
+                            <option data-i18n="dinner" value="dinner">Dinner</option>
+                            <option data-i18n="snack" value="snack">Snack</option>
+                            <option data-i18n="other" value="other">Other</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Action</label>
+                        <label class="form-label" data-i18n="action">Action</label>
                         <div class="btn-group w-100" role="group">
-                            <button type="button" id="action-move" class="btn btn-secondary">Move</button>
-                            <button type="button" id="action-copy" class="btn btn-light">Copy</button>
+                            <button type="button" id="action-move" class="btn btn-secondary" data-i18n="move">Move</button>
+                            <button type="button" id="action-copy" class="btn btn-light" data-i18n="copy">Copy</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
-    <button type="button" id="confirm-action" class="btn modal-btn">Confirm</button>
+                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+    <button type="button" id="confirm-action" class="btn modal-btn" data-i18n="confirm">Confirm</button>
                 </div>
             </div>
         </div>
@@ -3065,7 +3066,7 @@
         <div class="modal-dialog modal-lg"> <!-- Added modal-dialog -->
             <div class="modal-content bg-dark"> <!-- Added modal-content -->
                 <div class="modal-header bg-black">
-                    <h5 class="modal-title">Scan Barcode</h5>
+                    <h5 class="modal-title" data-i18n="scan_barcode">Scan Barcode</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body d-flex flex-column align-items-center justify-content-center">
@@ -3078,7 +3079,7 @@
                         <video id="camera-video" style="width:100%; height:auto;"></video>
                         <!-- Scanner overlay -->
                         <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                            <div class="scanning-text">POSITION BARCODE IN THE SCAN AREA</div>
+                            <div class="scanning-text" data-i18n="position_barcode_in_the_scan_area">POSITION BARCODE IN THE SCAN AREA</div>
                             <div class="scan-guide"></div>
                             <div class="scan-line"></div>
                             <div id="scanned-result" class="scanned-result"></div>
@@ -3089,15 +3090,15 @@
                     <div class="mt-3 text-center d-flex flex-wrap justify-content-center" 
                         style="z-index: 1000; position: relative; width: 100%;">
                         <button id="toggle-camera" class="btn btn-sm me-2" style="background: #333; color: white;">
-                            <i class="fas fa-sync-alt"></i> Switch Camera
+                            <i class="fas fa-sync-alt" data-i18n="Vaihda kamera"></i> Switch Camera
                         </button>
                         <button id="resume-scan" class="btn btn-sm" style="background: #333; color: white;">
-                            <i class="fas fa-redo"></i> Resume Scan
+                            <i class="fas fa-redo" data-i18n="Jatka skannausta"></i> Resume Scan
                         </button>
                     </div>
                 </div>
                 <div class="modal-footer bg-black">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="close">Close</button>
                 </div>
             </div>
         </div>
@@ -3106,18 +3107,18 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Save Food Template</h5>
+                    <h5 class="modal-title" data-i18n="save_food_template">Save Food Template</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Template Name</label>
-                        <input type="text" id="template-name" class="form-control bg-secondary text-light" placeholder="Enter template name">
+                        <label class="form-label" data-i18n="template_name">Template Name</label>
+                        <input type="text" id="template-name" class="form-control bg-secondary text-light" data-i18n="enter_template_name" placeholder="Enter template name">
                     </div>
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-save-template" class="btn modal-btn">Save</button>
+                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" id="confirm-save-template" class="btn modal-btn" data-i18n="save">Save</button>
                 </div>
             </div>
         </div>
@@ -3127,30 +3128,30 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark">
                 <div class="modal-header bg-black py-1">
-                    <h5 class="modal-title">Apply Food Template</h5>
+                    <h5 class="modal-title" data-i18n="apply_food_template">Apply Food Template</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Template</label>
+                        <label class="form-label" data-i18n="select_template">Select Template</label>
                         <select id="template-select" class="form-select bg-secondary text-light">
                             <!-- Templates will be loaded here -->
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select Meal Group</label>
+                        <label class="form-label" data-i18n="select_meal_group">Select Meal Group</label>
                         <select id="template-meal-group" class="form-select bg-secondary text-light">
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="dinner">Dinner</option>
-                            <option value="snack">Snack</option>
-                            <option value="other">Other</option>
+                            <option value="breakfast" data-i18n="breakfast">Breakfast</option>
+                            <option value="lunch" data-i18n="lunch">Lunch</option>
+                            <option value="dinner" data-i18n="dinner">Dinner</option>
+                            <option value="snack" data-i18n="snack">Snack</option>
+                            <option value="other" data-i18n="other">Other</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer bg-black py-1">
-                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-apply-template" class="btn modal-btn">Apply</button>
+                    <button type="button" class="btn modal-btn" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" id="confirm-apply-template" class="btn modal-btn" data-i18n="confirm">Confirm</button>
                 </div>
             </div>
         </div>
@@ -3221,8 +3222,30 @@
                     loadTopFoods();
                     positionNutritionGrid();
                     initPortionControls();
+
                     
-                    // Mobile button linking
+                    // If we have a current food, update portion buttons
+                    if (currentFood) {
+                        updatePortionButtons(currentFood);
+                    }
+                    
+                    // Also update when language is changed
+                function changeLanguage(lang) {
+                localStorage.setItem("lang", lang);
+                currentLang = lang;
+                applyTranslations();
+                
+                // Refresh portion buttons if we have a current food
+                if (typeof currentFood !== 'undefined' && currentFood) {
+                    updatePortionButtons(currentFood);
+                }
+                
+                // Update progress bars if visible
+                if ($('#nutrition-panel').hasClass('active')) {
+                    updateNutritionProgressBars();
+                }
+            }
+                                        // Mobile button linking
                     $('#move-items-mobile').click(() => $('#move-items').click());
                     $('#apply-template-btn-mobile').click(() => $('#apply-template-btn').click());
                     $('#clear-session-mobile').click(() => $('#clear-session').click());
@@ -3339,27 +3362,33 @@
                     updateMobileNutrition(totals);
                     updateCalorieDifference();
                     updateNutritionProgressBars();
+                    applyTranslations();
+                    updateNutritionAbbreviations();
                     
 
                     
                     // Trigger session updated event for other components
                     $(document).trigger('sessionUpdated');
                 }
-
-    function updateItemInDOM(itemData) {
-        // Update a specific item's display in the DOM
-        const itemElement = $(`.list-group-item[data-id="${itemData.id}"]`);
-        if (itemElement.length) {
+           function updateItemInDOM(itemData) {
+    const itemElement = $(`.list-group-item[data-id="${itemData.id}"]`);
+    if (itemElement.length) {
         // Update grams display
-        itemElement.find('.edit-grams, .edit-grams-btn').text(`${parseFloat(itemData.grams).toFixed(1)}g`);
-        
+        itemElement.find('.edit-grams, .edit-grams-btn')
+            .text(`${parseFloat(itemData.grams).toFixed(1)}${t("grams")}`);
+
         // Update nutrition values
-        itemElement.find('.nutrition-calories span').text(`${itemData.calories.toFixed(1)} kcal`);
-        itemElement.find('.nutrition-value-xxs:contains("P") span').text(`${itemData.proteins.toFixed(1)}g P`);
-        itemElement.find('.nutrition-value-xxs:contains("C") span').text(`${itemData.carbs.toFixed(1)}g C`);
-        itemElement.find('.nutrition-value-xxs:contains("F") span').text(`${itemData.fats.toFixed(1)}g F`);
+        itemElement.find('.nutrition-calories span')
+            .text(`${itemData.calories.toFixed(1)} ${t("kcal")}`);
+        itemElement.find('.nutrition-value-xxs:contains("P") span, .nutrition-value-xxs:contains("p") span')
+            .text(`${itemData.proteins.toFixed(1)}${t("grams")} ${t("p")}`);
+        itemElement.find('.nutrition-value-xxs:contains("C") span, .nutrition-value-xxs:contains("HH") span')
+            .text(`${itemData.carbs.toFixed(1)}${t("grams")} ${t("c")}`);
+        itemElement.find('.nutrition-value-xxs:contains("F") span, .nutrition-value-xxs:contains("R") span')
+            .text(`${itemData.fats.toFixed(1)}${t("grams")} ${t("f")}`);
     }
 }
+
 
 function removeItemFromDOM(itemId) {
     const itemElement = $(`.list-group-item[data-id="${itemId}"]`);
@@ -3382,16 +3411,20 @@ function removeItemFromDOM(itemId) {
 }
 
 function updateGroupTotals(groupName, groupData) {
-    // Update group header nutrition display
     const groupElement = $(`.food-group[data-group="${groupName}"]`);
     if (groupElement.length) {
         const groupNutrition = groupElement.find('.group-nutrition');
-        groupNutrition.find('.nutrition-calories span').text(`${groupData.calories.toFixed(1)} kcal`);
-        groupNutrition.find('.nutrition-value-xxs:contains("P") span').text(`${groupData.proteins.toFixed(1)}g P`);
-        groupNutrition.find('.nutrition-value-xxs:contains("C") span').text(`${groupData.carbs.toFixed(1)}g C`);
-        groupNutrition.find('.nutrition-value-xxs:contains("F") span').text(`${groupData.fats.toFixed(1)}g F`);
+        groupNutrition.find('.nutrition-calories span')
+            .text(`${groupData.calories.toFixed(1)} ${t("kcal")}`);
+        groupNutrition.find('.nutrition-value-xxs:contains("P") span, .nutrition-value-xxs:contains("p") span')
+            .text(`${groupData.proteins.toFixed(1)}${t("grams")} ${t("p")}`);
+        groupNutrition.find('.nutrition-value-xxs:contains("C") span, .nutrition-value-xxs:contains("HH") span')
+            .text(`${groupData.carbs.toFixed(1)}${t("grams")} ${t("c")}`);
+        groupNutrition.find('.nutrition-value-xxs:contains("F") span, .nutrition-value-xxs:contains("R") span')
+            .text(`${groupData.fats.toFixed(1)}${t("grams")} ${t("f")}`);
     }
 }
+
 
 function calculateItemNutrition(foodData, grams) {
     // Calculate nutrition for a specific amount
@@ -3409,27 +3442,39 @@ function calculateItemNutrition(foodData, grams) {
 }
 
 function recalculateGroupTotalsFromDOM(groupName) {
-    // Recalculate group totals from DOM elements
-    const groupElement = $(`.food-group[data-group="${groupName}"]`);
-    let totals = { calories: 0, proteins: 0, carbs: 0, fats: 0 };
-    
-    groupElement.find('.list-group-item').each(function() {
-        if (!$(this).hasClass('empty-state')) {
-            const calories = parseFloat($(this).find('.nutrition-calories span').text().replace(' kcal', '')) || 0;
-            const proteins = parseFloat($(this).find('.nutrition-value-xxs:contains("P") span').text().replace('g P', '')) || 0;
-            const carbs = parseFloat($(this).find('.nutrition-value-xxs:contains("C") span').text().replace('g C', '')) || 0;
-            const fats = parseFloat($(this).find('.nutrition-value-xxs:contains("F") span').text().replace('g F', '')) || 0;
-            
-            totals.calories += calories;
-            totals.proteins += proteins;
-            totals.carbs += carbs;
-            totals.fats += fats;
-        }
-    });
-    
-    updateGroupTotals(groupName, totals);
-    return totals;
+  const groupElement = $(`.food-group[data-group="${groupName}"]`);
+  let totals = { calories: 0, proteins: 0, carbs: 0, fats: 0 };
+
+  groupElement.find('.list-group-item').each(function() {
+    if (!$(this).hasClass('empty-state')) {
+      const calories = parseFloat(
+        $(this).find('.nutrition-calories span').text()
+          .replace(` ${t("kcal")}`, '')
+      ) || 0;
+      const proteins = parseFloat(
+        $(this).find('.nutrition-value-xxs:contains("P") span').text()
+          .replace(`${t("grams")} ${t("P")}`, '')
+      ) || 0;
+      const carbs = parseFloat(
+        $(this).find('.nutrition-value-xxs:contains("C") span').text()
+          .replace(`${t("grams")} ${t("C")}`, '')
+      ) || 0;
+      const fats = parseFloat(
+        $(this).find('.nutrition-value-xxs:contains("F") span').text()
+          .replace(`${t("grams")} ${t("F")}`, '')
+      ) || 0;
+
+      totals.calories += calories;
+      totals.proteins += proteins;
+      totals.carbs += carbs;
+      totals.fats += fats;
+    }
+  });
+
+  updateGroupTotals(groupName, totals);
+  return totals;
 }
+
 
 function recalculateAllTotalsFromDOM() {
     // Recalculate all totals from DOM
@@ -3518,22 +3563,24 @@ function expandTargetGroup(groupName) {
 }
 
 function hideEmptyGroups() {
-    $('.food-group').each(function() {
-        const $group = $(this);
-        const $items = $group.find('.list-group-item:not(.empty-state)');
-        
-        if ($items.length === 0) {
-            $group.fadeOut(300, function() {
-                $(this).remove();
-                $('.empty-state').remove();
-                // If no groups left, show empty state
-                if ($('.food-group').length === 0) {
-                    $('#food-log').html('<div class="empty-state">No food logged yet</div>');
-                }
-            });
+  $('.food-group').each(function() {
+    const $group = $(this);
+    const $items = $group.find('.list-group-item:not(.empty-state)');
+
+    if ($items.length === 0) {
+      $group.fadeOut(300, function() {
+        $(this).remove();
+        $('.empty-state').remove();
+        if ($('.food-group').length === 0) {
+          $('#food-log').html(`<div class="empty-state">${t("no_food_message")}</div>`);
         }
-    });
+      });
+    }
+  });
 }
+                function addEmptyState() {
+                $('#food-log').html(`<div class="empty-state">${t("no_food_message")}</div>`);
+            }
                 function toggleAdminMode() {
                     isAdminMode = !isAdminMode;
                     $('#admin-toggle').toggle(isAdminMode);
@@ -3650,13 +3697,13 @@ function hideEmptyGroups() {
                 
 function handlePortionClick(e) {
     e.stopPropagation();
-
+    
     // Reset all OTHER buttons except this one
     $('.portion-btn').not(this).each(function() {
         const baseSize = parseFloat($(this).data('portion-size'));
         const portionType = $(this).data('portion-type');
-        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
-        $(this).text(`${label} (${baseSize}g)`);
+        const label = t(portionType); // Use translation function
+        $(this).text(`${label} (${baseSize}${t("grams")})`);
         $(this).data('multiple', 0);
         $(this).removeClass('active');
     });
@@ -3664,14 +3711,14 @@ function handlePortionClick(e) {
     let multiple = parseInt($(this).data('multiple')) || 0;
     const baseSize = parseFloat($(this).data('portion-size'));
     const portionType = $(this).data('portion-type');
-    const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
+    const label = t(portionType); // Use translation function
 
     // Increment multiple (first click = 1)
     multiple++;
 
     const totalGrams = baseSize * multiple;
 
-    $(this).text(`${multiple} ${label} (${totalGrams}g)`);
+    $(this).text(`${multiple} ${label} (${totalGrams}${t("grams")})`);
     $(this).data('multiple', multiple);
 
     // Update grams input WITHOUT focusing it
@@ -3706,7 +3753,7 @@ function addFoodToLog() {
     // Show loading state
     const $button = $(this);
     const originalText = $button.html();
-    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+    $button.prop('disabled', true).html(`<i class="fas fa-spinner fa-spin"></i> ${t('adding')}`);
     
     $.post('/log_food', {
         food_id: foodId,
@@ -3728,6 +3775,8 @@ function addFoodToLog() {
             
             // Update calorie difference
             updateCalorieDifference();
+            applyTranslations();
+            updateNutritionAbbreviations();
             
             // Reset form
             resetFoodForm();
@@ -3741,6 +3790,8 @@ function addFoodToLog() {
             updateSessionDisplay(response.session, response.totals, response.breakdown);
             updateCalorieDifference();
             resetFoodForm();
+            applyTranslations();
+            updateNutritionAbbreviations();
         }
     }).fail(error => {
         console.error('Error adding food:', error);
@@ -3964,11 +4015,13 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
 }
                 
                 function clearSession() {
-                    if (!confirm('Are you sure you want to clear all items?')) return;
+                    if (!confirm(t("confirm_clear_session"))) return;
                     
                     $.post('/clear_session', {}, response => {
                         updateSessionDisplay(response.session, response.totals, response.breakdown);
                         updateCalorieDifference();
+                        applyTranslations();
+                        updateNutritionAbbreviations();
                     });
                 }
                 
@@ -3991,6 +4044,8 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
                             if (response.session && response.totals && response.breakdown) {
                                 updateSessionDisplay(response.session, response.totals, response.breakdown);
                                 updateCalorieDifference();
+                                applyTranslations();
+                                updateNutritionAbbreviations();
                                 if (response.current_date_formatted) {
                                     $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
                                 }
@@ -4078,6 +4133,8 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
         // Update totals only
         if (response.totals) {
             updateNutritionTotalsOnly(response.totals);
+            applyTranslations();
+            updateNutritionAbbreviations();
         }
         
         // Handle DOM updates based on action type
@@ -4285,7 +4342,8 @@ function applyTemplate() {
     
     const applyBtn = $('#confirm-apply-template');
     const originalText = applyBtn.html();
-    applyBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span> Applying...');
+    applyBtn.html(`<span class="spinner-border spinner-border-sm" role="status"></span> ${t('applying')}`);
+
     
     $.post(APPLY_TEMPLATE_URL, {
         template_id: templateId,
@@ -4298,6 +4356,8 @@ function applyTemplate() {
             // Update totals only
             if (response.totals) {
                 updateNutritionTotalsOnly(response.totals);
+                applyTranslations();
+                 updateNutritionAbbreviations();
             }
             
             // Force the target group to be collapsed when applying template
@@ -4317,12 +4377,12 @@ function applyTemplate() {
             $('#applyTemplateModal').modal('hide');
             
         } else {
-            alert('Error: ' + (response.error || 'Failed to apply template'));
+            alert(t('error_apply_template' + (response.error || 'failed_to_apply_template')));
         }
     }).fail((xhr, status, error) => {
         applyBtn.html(originalText);
         console.error('Template application error:', error);
-        alert('Failed to apply template. Please try again.');
+        alert(t('failed_to_apply_template_retry'));
     });
 }
  function addItemsToGroup(groupName, newItems, groupData) {
@@ -4366,7 +4426,7 @@ function createGroupElement(groupName, groupData) {
         snack: 'fas fa-apple-alt',
         other: 'fas fa-question'
     };
-    
+
     return $(`
         <div class="food-group ${groupName}" data-group="${groupName}">
             <div class="group-header d-flex justify-content-between align-items-center">
@@ -4374,21 +4434,21 @@ function createGroupElement(groupName, groupData) {
                     <div class="group-icon">
                         <i class="${icons[groupName] || 'fas fa-question'}"></i>
                     </div>
-                    <span class="group-title">${groupName.toUpperCase()}</span>
+                    <span class="group-title">${t(groupName)}</span>
                 </div>
                 <div class="group-nutrition-container">
                     <div class="group-nutrition">
-                        <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                            <span>${groupData.calories.toFixed(1)} kcal</span>
+                        <div class="nutrition-value-xxs d-inline-block m-1 nutrition-calories">
+                            <span>${groupData.calories.toFixed(1)} ${t("kcal")}</span>
                         </div>
-                        <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336; color: black;">
-                            <span>${groupData.proteins.toFixed(1)}g P</span>
+                        <div class="nutrition-value-xxs d-inline-block m-1">
+                            <span>${groupData.proteins.toFixed(1)}${t("grams")} ${t("p")}</span>
                         </div>
-                        <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                            <span>${groupData.carbs.toFixed(1)}g C</span>
+                        <div class="nutrition-value-xxs d-inline-block m-1">
+                            <span>${groupData.carbs.toFixed(1)}${t("grams")} ${t("c")}</span>
                         </div>
-                        <div class="nutrition-value-xxs d-inline-block m-1" style="background-color: #b61336;color: black;">
-                            <span>${groupData.fats.toFixed(1)}g F</span>
+                        <div class="nutrition-value-xxs d-inline-block m-1">
+                            <span>${groupData.fats.toFixed(1)}${t("grams")} ${t("f")}</span>
                         </div>
                     </div>
                     <button class="btn btn-sm toggle-group ms-1">−</button>
@@ -4399,37 +4459,36 @@ function createGroupElement(groupName, groupData) {
     `);
 }
 
+
 function createItemHtml(item) {
     return $(`
         <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" 
             data-id="${item.id}" data-key="${item.key}">
             
-            <!-- left section: grams + food name -->
             <div class="food-item-container">
                 <span class="edit-grams badge edit-grams-btn mx-1"
                     data-id="${item.id}" 
                     data-key="${item.key}">
-                    ${item.grams.toFixed(1)}g
+                    ${item.grams.toFixed(1)}${t("grams")}
                 </span>
                 <div class="food-name">
                     <strong>${item.name}</strong>
                 </div>
             </div>
 
-            <!-- right section: nutrition + delete -->
             <div class="nutrition-and-actions d-flex align-items-center">
                 <div class="nutrition-values-container d-flex">
-                    <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories" style="background-color: #ffffff;color: black;">
-                        <span>${item.calories.toFixed(1)} kcal</span>
+                    <div class="nutrition-value-xxs d-inline-block mx-1 nutrition-calories">
+                        <span>${item.calories.toFixed(1)} ${t("kcal")}</span>
                     </div>
-                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336; color: black;">
-                        <span>${item.proteins.toFixed(1)}g P</span>
+                    <div class="nutrition-value-xxs d-inline-block mx-1">
+                        <span>${item.proteins.toFixed(1)}${t("grams")} ${t("p")}</span>
                     </div>
-                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                        <span>${item.carbs.toFixed(1)}g C</span>
+                    <div class="nutrition-value-xxs d-inline-block mx-1">
+                        <span>${item.carbs.toFixed(1)}${t("grams")} ${t("c")}</span>
                     </div>
-                    <div class="nutrition-value-xxs d-inline-block mx-1" style="background-color: #b61336;color: black;">
-                        <span>${item.fats.toFixed(1)}g F</span>
+                    <div class="nutrition-value-xxs d-inline-block mx-1">
+                        <span>${item.fats.toFixed(1)}${t("grams")} ${t("f")}</span>
                     </div>
                 </div>
                 <button class="btn delete-item ms-2" data-id="${item.id}">
@@ -4438,7 +4497,8 @@ function createItemHtml(item) {
             </div>
         </li>
     `);
-}               
+}
+   
                 function showCameraModal() {
                     cameraModal.show();
                 }
@@ -4539,29 +4599,30 @@ function createItemHtml(item) {
                 }
                 
                 function updatePortionButtons(food) {
-                    const container = $('#portion-buttons');
-                    container.empty();
-                    
-                    const portionTypes = [
-                        { type: 'serving', label: 'Serving', size: food.serving_size },
-                        { type: 'half', label: 'Half', size: food.half_size },
-                        { type: 'entire', label: 'Entire', size: food.entire_size }
-                    ];
-                    
-                    portionTypes.forEach(portion => {
-                        if (portion.size) {
-                            const button = $(`
-                                <button type="button" class="btn portion-btn" 
-                                        data-portion-type="${portion.type}" 
-                                        data-portion-size="${portion.size}"
-                                        data-multiple="0">
-                                    ${portion.label} (${portion.size}g)
-                                </button>
-                            `);
-                            container.append(button);
-                        }
-                    });
-                }
+    const container = $('#portion-buttons');
+    container.empty();
+
+    const portionTypes = [
+        { type: 'serving', size: food.serving_size },
+        { type: 'half', size: food.half_size },
+        { type: 'entire', size: food.entire_size }
+    ];
+
+    portionTypes.forEach(portion => {
+        if (portion.size) {
+            const button = $(`
+                <button type="button" class="btn portion-btn" 
+                        data-portion-type="${portion.type}" 
+                        data-portion-size="${portion.size}"
+                        data-multiple="0">
+                ${t(portion.type)} (${portion.size}${t("grams")})
+                </button>
+            `);
+            container.append(button);
+        }
+    });
+}
+
                 
                 function initPortionControls() {
                     // Document click handler to reset portion buttons
@@ -4583,21 +4644,21 @@ function createItemHtml(item) {
                 }
                 
                 function resetPortionButtons() {
-                    $('.portion-btn').each(function() {
-                        const baseSize = parseFloat($(this).data('portion-size'));
-                        const portionType = $(this).data('portion-type');
-                        const label = portionType.charAt(0).toUpperCase() + portionType.slice(1);
-                        $(this).text(`${label} (${baseSize}g)`);
-                        $(this).data('multiple', 0);
-                        $(this).removeClass('active');
-                    });
-                
-                                if (!$('#grams').is(':focus')) {
-                    setTimeout(() => {
-                        $('#grams').trigger('focus').trigger('select');
-                            }, 50);
-                        }
-                    }
+    $('.portion-btn').each(function() {
+        const baseSize = parseFloat($(this).data('portion-size'));
+        const portionType = $(this).data('portion-type');
+        const label = t(portionType); // Use translation function
+        $(this).text(`${label} (${baseSize}${t("grams")})`);
+        $(this).data('multiple', 0);
+        $(this).removeClass('active');
+    });
+
+    if (!$('#grams').is(':focus')) {
+        setTimeout(() => {
+            $('#grams').trigger('focus').trigger('select');
+        }, 50);
+    }
+}
                             
                         
                 function initGramsInputReset() {
@@ -4718,6 +4779,8 @@ function updateSessionDisplay(session, totals, breakdown) {
     updateNutritionGrid(totals);
     updateMobileNutrition(totals);
     updateCalorieDifference();
+    applyTranslations();
+    updateNutritionAbbreviations();
     
     // Load saved collapse states
     const collapseStates = loadCollapseStates();
@@ -4741,7 +4804,7 @@ function updateSessionDisplay(session, totals, breakdown) {
                                 group === 'snack' ? '<i class="fas fa-apple-alt"></i>' : 
                                 '<i class="fas fa-question"></i>'}
                             </div>
-                            <span class="group-title">${group.toUpperCase()}</span>
+                            <span class="group-title" data-i18n="${group}">${t(group)}</span>
                         </div>
                         <div class="group-nutrition-container">
                             <div class="group-nutrition">
@@ -4813,17 +4876,12 @@ function updateSessionDisplay(session, totals, breakdown) {
     }
     
     if (logHtml === '') {
-        logHtml = '<div class="empty-state">No food logged yet</div>';
+        logHtml = '<div class="empty-state" data-i18n="no_food_message">No food logged yet</div>';
     }
     
     $('#food-log').html(logHtml);
 }
-
-
-
-
-
-                
+              
                 function updateNutritionGrid(totals) {
                     const safeParse = (value) => {
                         const num = parseFloat(value) || 0;
@@ -4869,40 +4927,34 @@ function updateSessionDisplay(session, totals, breakdown) {
             }
                                     
                 function updateCalorieDifference() {
-                    const tdee = {% if current_tdee %}{{ current_tdee }}{% else %}0{% endif %};
-                    const loggedCalories = parseFloat($('#grid-calories').text()) || 0;
-                    const difference = tdee - loggedCalories;
-                    const absDiff = Math.abs(difference);
+                const tdee = {% if current_tdee %}{{ current_tdee }}{% else %}0{% endif %};
+                const loggedCalories = parseFloat($('#grid-calories').text()) || 0;
+                const difference = tdee - loggedCalories;
+                const absDiff = Math.abs(difference);
 
-                    // Update the calorie difference display
-                    $('#calorie-difference').text(absDiff.toFixed(0));
-                    $('#calorie-difference-mobile').text(absDiff.toFixed(0));
+                let statusKey, statusClass;
+                if (absDiff <= 50) {
+                    statusKey = "maintaining";
+                    statusClass = "status-maintain";
+                } else if (difference > 0) {
+                    statusKey = "calories_left";
+                    statusClass = "status-loss";
+                } else {
+                    statusKey = "calories_over";
+                    statusClass = "status-gain";
+                }
 
-                    // Determine status and set appropriate class
-                    let status, statusClass;
-                    if (absDiff <= 50) {
-                        status = "maintaining";
-                        statusClass = "status-maintain";
-                    } else if (difference > 0) {
-                        status = "calories left";
-                        statusClass = "status-loss";
-                    } else {
-                        status = "calories over";
-                        statusClass = "status-gain";
-                    }
-
-            // Update the desktop activity grid
-            $('#calorie-difference').text(absDiff.toFixed(0));
-            $('#calorie-status').text(status)
-                .removeClass('status-maintain status-loss status-gain')
-                .addClass(statusClass);
-
-            // Update the mobile nutrition panel
-            $('#mobile-today-value').text(absDiff.toFixed(0));
-            $('#mobile-status-text').text(status)
-                .removeClass('status-maintain status-loss status-gain')
-                .addClass(statusClass);
+                const translatedStatus = t(statusKey);
+                $('#calorie-difference').text(absDiff.toFixed(0));
+                $('#calorie-status').text(translatedStatus)
+                    .removeClass('status-maintain status-loss status-gain')
+                    .addClass(statusClass);
+                $('#mobile-today-value').text(absDiff.toFixed(0));
+                $('#mobile-status-text').text(translatedStatus)
+                    .removeClass('status-maintain status-loss status-gain')
+                    .addClass(statusClass);
         }
+
                 
                 function resetFoodForm() {
                     $('#food-search').val('');
@@ -4936,13 +4988,13 @@ function updateSessionDisplay(session, totals, breakdown) {
             function loadTemplates() {
                 // Show loading state
                 const select = $('#template-select');
-                select.html('<option value="">Loading templates...</option>');
+                select.html(`<option value="">${t('loading_templates')}</option>`);
                 
                 $.get('/get_templates_food', templates => {
                     select.empty();
                     
                     if (templates.length === 0) {
-                        select.append('<option value="">No templates available</option>');
+                        select.append(t('<option value="">no_template_available</option>'));
                         $('#confirm-apply-template').prop('disabled', true);
                     } else {
                         templates.forEach(template => {
@@ -4951,7 +5003,7 @@ function updateSessionDisplay(session, totals, breakdown) {
                         $('#confirm-apply-template').prop('disabled', false);
                     }
                 }).fail(() => {
-                    select.html('<option value="">Error loading templates</option>');
+                    select.html(t('<option value="">error_loading_template</option>'));
                 });
             }
                 
@@ -5058,10 +5110,13 @@ function updateSessionDisplay(session, totals, breakdown) {
 }
 
 // Updated createProgressBarHtml with custom displayText
-function createProgressBarHtml(id, icon, label, current, target, cssClass, displayText) {
+function createProgressBarHtml(id, icon, labelKey, current, target, cssClass, displayText) {
     current = current || 0;
     target = target || 0;
     const percentage = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+
+    // Use translation function for label
+    const translatedLabel = t(labelKey.toLowerCase() + '_upper') || labelKey;
 
     return `
         <div class="progress-item ${cssClass}">
@@ -5070,7 +5125,7 @@ function createProgressBarHtml(id, icon, label, current, target, cssClass, displ
             </div>
             <div class="progress-details">
                 <div class="progress-info">
-                    <span class="progress-label">${label}</span>
+                    <span class="progress-label">${translatedLabel}</span>
                     <span class="progress-values">${displayText || `${current.toFixed(1)} / ${target.toFixed(1)}`}</span>
                 </div>
                 <div class="progress-bar-bg">
@@ -5088,14 +5143,28 @@ $('.mobile-tab-btn[data-panel="nutrition-panel"]').click(updateNutritionProgress
 $(document).on('sessionUpdated', function() {
     if ($('#nutrition-panel').hasClass('active')) {
         updateNutritionProgressBars();
+        applyTranslations();
+        updateNutritionAbbreviations();
     }
 });
 
                 function initializeIcons() {
-                    if (window.FontAwesome) {
-                        FontAwesome.dom.i2svg();
-                    }
+                if (window.FontAwesome) {
+                    FontAwesome.dom.i2svg({
+                        callback: function() {
+                            console.log('Icons refreshed');
+                        }
+                        
+                    });
                 }
+                
+                // Ensure icons are properly rendered
+                setTimeout(() => {
+                    if (window.FontAwesome) {
+                        FontAwesome.dom.watch();
+                    }
+                }, 100);
+            }
                 
                 function startCamera() {
                     scanningActive = true;
