@@ -520,14 +520,14 @@
             <div class="col-md-10">
                 <div class="card">
                     <div class="card-header bg-black text-light">
-                        <h4 class="mb-0">Add Custom Food</h4>
+                        <h4 class="mb-0" data-i18n="add_custom_food">Add Custom Food</h4>
                     </div>
                     <div class="card-body">
                         <!-- Scan Nutrition Label Button -->
                         <div class="row nutrition-row">
                             <div class="col-md-6">
                                 <button id="scanNutritionLabel" class="btn scan-btn">
-                                    <i class="fa-solid fa-camera me-2"></i>Scan Label (Incoming)
+                                    <i class="fa-solid fa-camera me-2" data-i18n="scan_label"></i>Scan Label (Incoming)
                                 </button>
                             </div>
                         </div>
@@ -537,7 +537,7 @@
     <!-- Row 1: Food Name -->
     <div class="row nutrition-row">
         <div class="col-md-8">
-            <label class="form-label">Food Name*</label>
+            <label class="form-label" data-i18n="food_name">Food Name*</label>
             <input type="text" name="name" class="form-control" required minlength="1">
         </div>
     </div>
@@ -545,7 +545,7 @@
     <!-- Row 2: EAN -->
     <div class="row nutrition-row">
         <div class="col-md-6">
-            <label class="form-label">EAN/Barcode</label>
+            <label class="form-label" data-i18n="ean_barcode">EAN/Barcode</label>
             <input type="text" id="ean-input" name="ean" class="form-control">
         </div>
     </div>
@@ -553,19 +553,19 @@
     <!-- Row 3: Calories -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Calories (per 100g) (optional)</label>
-            <input type="number" name="calories" class="form-control" step="0.001" min="0">
+            <label class="form-label" data-i18n="calories_per">Calories (per 100g)</label>
+            <input type="number" name="calories" class="form-control" step="0.001" min="0" data-i18n="not_required" placeholder="not required">
         </div>
     </div>
     
     <!-- Row 4: Fats, Saturated Fat -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Fats (g)*</label>
-            <input type="number" name="fats" class="form-control" step="0.001" min="0" placeholder="required" required>
+            <label class="form-label" data-i18n="fats_g">Fats (g)*</label>
+            <input type="number" name="fats" class="form-control" step="0.001" min="0" data-i18n="required" placeholder="required" required>
         </div>
         <div class="col-md-2">
-            <label class="form-label">Saturated Fats (g)</label>
+            <label class="form-label" data-i18n="saturated_g">Saturated Fats (g)</label>
             <input type="number" name="saturated" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
@@ -573,15 +573,15 @@
     <!-- Row 5: Carbs, Sugars, Fiber -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Carbohydrates (g)*</label>
-            <input type="number" name="carbs" class="form-control" step="0.001" min="0" placeholder="required" required>
+            <label class="form-label" data-i18n="carbs_g">Carbohydrates (g)*</label>
+            <input type="number" name="carbs" class="form-control" step="0.001" min="0" data-i18n="required" placeholder="required" required>
         </div>
         <div class="col-md-2">
-            <label class="form-label">Sugars (g)</label>
+            <label class="form-label" data-i18n="sugars_g">Sugars (g)</label>
             <input type="number" name="sugars" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Fiber (g)</label>
+            <label class="form-label" data-i18n="fiber_g">Fiber (g)</label>
             <input type="number" name="fiber" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
@@ -589,15 +589,15 @@
     <!-- Row 6: Proteins -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Proteins (g)*</label>
-            <input type="number" name="proteins" class="form-control" step="0.001" min="0" placeholder="required" required>
+            <label class="form-label" data-i18n="proteins_g">Proteins (g)*</label>
+            <input type="number" name="proteins" class="form-control" step="0.001" min="0" data-i18n="required" placeholder="required" required>
         </div>
     </div>
     
     <!-- Row 7: Salt -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Salt (g)</label>
+            <label class="form-label" data-i18n="salt_g">Salt (g)</label>
             <input type="number" name="salt" class="form-control" step="0.001" min="0" placeholder="g">
         </div>
     </div>
@@ -605,15 +605,15 @@
     <!-- Row 8: Serving Sizes -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Serving Size (g)</label>
-            <input type="number" name="serving" class="form-control" step="0.1" min="0" placeholder="1 piece/serving">
+            <label class="form-label" data-i18n="serving_g">Serving Size (g)</label>
+            <input type="number" name="serving" class="form-control" step="0.1" min="0" data-i18n="serving" placeholder="1 piece/serving">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Half Package (g)</label>
+            <label class="form-label" data-i18n="half_g">Half Package (g)</label>
             <input type="number" name="half" class="form-control" step="0.1" min="0">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Entire Package (g)</label>
+            <label class="form-label" data-i18n="entire_g">Entire Package (g)</label>
             <input type="number" name="entire" class="form-control" step="0.1" min="0">
         </div>
     </div>
@@ -621,7 +621,7 @@
     <!-- Row 9: Base Grams -->
     <div class="row nutrition-row">
         <div class="col-md-2">
-            <label class="form-label">Per (grams)*</label>
+            <label class="form-label" data-i18n="per_grams">Per (grams)*</label>
             <input type="number" name="grams" class="form-control" step="0.1" min="0" value="100" required>
         </div>
     </div>
@@ -630,11 +630,11 @@
     <div class="row nutrition-row">
         <div class="col-md-6">
             <div class="alert alert-success d-none" id="success-message">
-                Food added successfully!
+               <span data-i18n="food_success"> Food added successfully! </span>
             </div>
             <div class="alert alert-danger d-none" id="error-message"></div>
             <!-- Changed button type to submit -->
-            <button type="submit" class="btn w-100 save-food-btn">
+            <button type="submit" class="btn w-100 save-food-btn" data-i18n="save_food">
   <i class="fa-solid fa-circle-plus me-2"></i>
   Save Food
 </button>
