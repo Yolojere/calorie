@@ -51,6 +51,10 @@ const translations = {
     totals: "Totals",
     totals: "Yhteenveto",
     no_food_message: "no food logged yet",
+    ean_not_found: "EAN",
+    in_data_base: "not found in database",
+    create_new_food: "Create New Food",
+    no_results_found: "No results found",
 
     // Days
     monday: "Monday",
@@ -191,8 +195,8 @@ const translations = {
     clear: "Tyhjennä",
     food_log: "Ruokapäiväkirja",
     serving: "kpl/annos",
-    half: "Puoli Pakettia",
-    entire: "Koko Paketti",
+    half: "Puoli Pakkaus",
+    entire: "Koko Pakkaus",
     OTHER: "MUU",
     breakfast: "Aamiainen",
     lunch: "Lounas",
@@ -205,6 +209,10 @@ const translations = {
     SNACK: "VÄLIPALA",
     OTHER: "MUU",
     totals: "Yhteenveto",
+    ean_not_found: "Viivakoodia",
+    in_data_base: "ei löydetty tietokannasta",
+    create_new_food: "Luo Uusi Ruoka",
+    no_results_found: "Ei tuloksia",
 
     // Days
     monday: "Maanantai",
@@ -380,9 +388,6 @@ function applyTranslations() {
 
     // Fix meal group translations
     updateMealGroupTranslations();
-    
-    // Fix navbar icons
-    initializeIcons();
     
     // Update nutrition abbreviations
     updateNutritionAbbreviations();
