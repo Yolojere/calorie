@@ -667,11 +667,11 @@ def format_date_finnish(date_str):
         ]
         
         if date_obj.date() == today:
-            return "Tänään"
+            return f"Tänään {date_obj.strftime('%d.%m')}"
         elif date_obj.date() == today - timedelta(days=1):
-            return "Eilen"
+            return f"Eilen {date_obj.strftime('%d.%m')}"
         elif date_obj.date() == today + timedelta(days=1):
-            return "Huomenna"
+            return f"Huomenna {date_obj.strftime('%d.%m')}"
         else:
             weekday_fi = weekdays_fi[date_obj.weekday()]
             return f"{weekday_fi} {date_obj.strftime('%d.%m')}"
