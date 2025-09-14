@@ -480,9 +480,284 @@ input.form-control:-webkit-autofill {
     .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
         transform: scale(1.15);
     }
+    /* SOCIALS */
+    .socials-container {
+    margin-bottom: 1.5rem;
+}
 
+/* Container for social pills - initially empty */
+.social-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    min-height: 32px; /* Maintain space even when empty */
+}
+
+/* Individual social pill styling */
+.social-pill {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+    border: 1px solid #444;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-pill:hover {
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.social-pill a {
+    display: flex;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.social-pill a:hover {
+    color: inherit;
+}
+
+.social-pill i {
+    margin-right: 6px;
+    font-size: 14px;
+    width: 16px;
+    text-align: center;
+}
+
+/* Platform-specific colors */
+.social-pill[data-platform="instagram"] { border-left: 3px solid #E4405F; }
+.social-pill[data-platform="tiktok"] { border-left: 3px solid #FF0050; }
+.social-pill[data-platform="spotify"] { border-left: 3px solid #1DB954; }
+.social-pill[data-platform="strava"] { border-left: 3px solid #FC4C02; }
+.social-pill[data-platform="facebook"] { border-left: 3px solid #1877F2; }
+.social-pill[data-platform="twitter"] { border-left: 3px solid #1DA1F2; }
+
+/* Delete button styling */
+.social-pill .delete-btn {
+    background: rgba(255, 59, 59, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 4px;
+}
+
+.social-pill .delete-btn:hover {
+    background: rgba(255, 59, 59, 1);
+    transform: scale(1.1);
+}
+
+/* Add social button */
+.add-social-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #2a2a2a;
+    border: 2px dashed #555;
+    border-radius: 50%;
+    color: #ccc;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.add-social-btn:hover {
+    background: #3a3a3a;
+    border-color: #777;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+/* Social platform dropdown */
+.social-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    z-index: 1000;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.social-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.social-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 8px;
+    margin: 4px;
+}
+
+.social-option:hover {
+    background: #2a2a2a;
+}
+
+.social-option i {
+    margin-right: 12px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Social handle input modal */
+.social-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.social-modal-content {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+.social-modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+}
+
+.social-modal-header i {
+    font-size: 24px;
+    margin-right: 12px;
+    color: #fff;
+}
+
+.social-modal-header h5 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+}
+
+.social-modal-body {
+    margin-bottom: 20px;
+}
+
+.social-modal-body input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #121212;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.social-modal-body input:focus {
+    outline: none;
+    border-color: #666;
+    box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
+}
+
+.social-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Empty state message */
+.socials-empty-state {
+    color: #888;
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .social-dropdown {
+        right: 0;
+        left: auto;
+        min-width: 140px;
+    }
+    
+    .social-modal-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+    
+    .social-modal-footer {
+        flex-direction: column;
+    }
+    
+    .social-modal-footer .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
     /* Responsive */
     @media (max-width: 768px) {
+        .social-dropdown {
+    position:absolute;
+    display:block;
+    top: 100%;
+    left: 0;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    z-index: 1000;
+    width: min-content;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
             .avatar-modal {
         align-items: flex-start; /* align to top */
         padding-top: 40px;       /* optional spacing from top */
@@ -542,7 +817,7 @@ input.form-control:-webkit-autofill {
 <div class="container py-4">
     <div class="card">
         <div class="card-header">
-            <h3 class="text-center">Your Account Profile</h3>
+            <h3 class="text-center" data-i18n="account_profile">Your Account Profile</h3>
         </div>
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row gap-4">
@@ -572,7 +847,7 @@ input.form-control:-webkit-autofill {
                     <h2 class="account-heading">{{ current_user.username }}</h2>
                     <p class="text-secondary mb-1">{{ current_user.email }}</p>
                     <p class="text-info mb-0">
-                        <i class="fas fa-user-shield me-1"></i> Account Type: {{ role|capitalize }}
+                        <i class="fas fa-user-shield me-1"></i> <span data-i18n="account_type">Account Type</span>: {{ role|capitalize }}
                     </p>
                 </div>
 
@@ -582,7 +857,7 @@ input.form-control:-webkit-autofill {
                         {{ form.hidden_tag() }}
 
                         <div class="mb-3">
-                            {{ form.username.label(class="form-label") }}
+                            {{ form.username.label(class="form-label", data_i18n="username") }}
                             {{ form.username(class="form-control bg-dark text-light") }}
                         </div>
 
@@ -593,38 +868,71 @@ input.form-control:-webkit-autofill {
 
                         {% if extra_columns_exist %}
                             <legend class="border-bottom mb-4">
-                                <i class="fas fa-user me-2"></i>General Information
+                                <i class="fas fa-user me-2"></i><span data-i18n="general_info">General Information</span>
                             </legend>
 
                             <!-- Full Name Field -->
                             <div class="form-group mb-4">
-                                <label for="full_name" class="form-label">Full Name</label>
+                                <label for="full_name" class="form-label" data-i18n="full_name">Full Name</label>
                                 <div class="input-group profile-field">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="full_name" name="full_name" 
-                                           value="{{ form.full_name.data or '' }}" placeholder="John Doe">
+                                           value="{{ form.full_name.data or '' }}" placeholder="e.g. Arnold Swarzenegger">
                                 </div>
                             </div>
 
                             <!-- Main Sport Field -->
                             <div class="form-group mb-4">
-                                <label for="main_sport" class="form-label">Main Sport / Activity</label>
+                                <label for="main_sport" class="form-label" data-i18n="main_sport">Main Sport / Activity</label>
                                 <div class="input-group profile-field">
                                     <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
                                     <input type="text" class="form-control" id="main_sport" name="main_sport" 
-                                           value="{{ form.main_sport.data or '' }}" placeholder="e.g. Weightlifting, Running">
+                                           value="{{ form.main_sport.data or '' }}" placeholder="e.g. Puntti, Juoksu, Pyörä jne..">
                                 </div>
                             </div>
-
-                            <!-- Fitness Goals Field -->
-                            <div class="form-group mb-4">
-                                <label for="fitness_goals" class="form-label">Fitness Goals</label>
-                               <div class="input-group profile-field">
-                                    <span class="input-group-text"><i class="fas fa-bullseye"></i></span>
-                                    <input type="text" class="form-control" id="fitness_goals" name="fitness_goals" 
-                                           value="{{ form.fitness_goals.data or '' }}" placeholder="Lose weight, Build muscle, Improve endurance">
-                                </div>
-                            </div>
+                                <!-- Social Media Section -->
+                               <div class="form-group mb-4 socials-container">
+    <label class="form-label">Social Media</label>
+    
+    <!-- Container for social media pills - starts empty -->
+    <div class="social-pills-container" id="social-pills-container">
+        <!-- Pills will be dynamically inserted here by JavaScript -->
+    </div>
+    
+    <!-- Add social button and dropdown -->
+    <div class="position-relative">
+        <button type="button" class="add-social-btn" id="add-social-btn" title="Add social media">+</button>
+        <div class="social-dropdown" id="social-dropdown">
+            <div class="social-option" data-platform="instagram">
+                <i class="fa-brands fa-instagram"></i>
+                <span>Instagram</span>
+            </div>
+            <div class="social-option" data-platform="tiktok">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>TikTok</span>
+            </div>
+            <div class="social-option" data-platform="spotify">
+                <i class="fa-brands fa-spotify"></i>
+                <span>Spotify</span>
+            </div>
+            <div class="social-option" data-platform="strava">
+                <i class="fa-solid fa-person-running"></i>
+                <span>Strava</span>
+            </div>
+            <div class="social-option" data-platform="facebook">
+                <i class="fa-brands fa-facebook"></i>
+                <span>Facebook</span>
+            </div>
+            <div class="social-option" data-platform="twitter">
+                <i class="fa-brands fa-twitter"></i>
+                <span>Twitter</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden input to store socials data as JSON -->
+    <input type="hidden" id="socials-data" name="socials" value='{{ form.socials.data or "[]" }}'>
+</div>
                         {% endif %}
 
                         <!-- Hidden avatar selection fields -->
@@ -632,20 +940,36 @@ input.form-control:-webkit-autofill {
                         <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
 
                    <button type="submit" class="btn btn-primary" id="submit-button">
-                            <span id="submit-text">Update Profile</span>
-                            <span id="submit-spinner" class="d-none"><span class="spinner"></span> Updating...</span>
+                            <span id="submit-text" data-i18n="update_profile">Update Profile</span>
+                            <span id="submit-spinner" class="d-none"><span class="spinner"></span data-i18n="updating"> Päivittää...</span>
                         </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
+    <!-- Social Media Handle Input Modal -->
+    <div class="social-modal" id="social-modal">
+        <div class="social-modal-content">
+            <div class="social-modal-header">
+                <i id="modal-platform-icon" class="fa-brands fa-question"></i>
+                <h5 id="modal-platform-name">Platform</h5>
+            </div>
+            <div class="social-modal-body">
+                <input type="text" id="social-handle-input" placeholder="Enter your handle" autocomplete="off">
+                <small class="text-muted d-block mt-2">Enter your username without @ symbol</small>
+            </div>
+            <div class="social-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-social-handle">Save</button>
+            </div>
+        </div>
+    </div>
     <!-- Avatar Selection Modal -->
     <div class="avatar-modal" id="avatarModal">
         <div class="avatar-modal-content">
-            <h4 class="text-center mb-3">Choose Your Avatar</h4>
-            <p class="text-center text-secondary mb-4">Select from our options</p>
+            <h4 class="text-center mb-3" data-i18n="choose_avatar">Choose Your Avatar</h4>
+            <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Select from our options</p>
             
             <div class="avatar-options">
                 {% for value, label in form.avatar_choice.choices %}
@@ -665,8 +989,8 @@ input.form-control:-webkit-autofill {
             <small class="d-block text-secondary mb-3">Max file size: 2MB (JPG, PNG)</small> -->
             
             <div class="modal-buttons">
-                <button type="button" class="btn btn-outline-secondary" id="cancelAvatar">Cancel</button>
-                <button type="button" class="btn btn-primary" id="updateAvatar">Change Avatar</button>
+                <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Change Avatar</button>
             </div>
         </div>
     </div>
@@ -674,7 +998,7 @@ input.form-control:-webkit-autofill {
     <!-- Health Metrics Section -->
     <div class="health-metrics">
         <legend class="border-bottom mb-4">
-            <i class="fas fa-heartbeat me-2"></i>Health Metrics
+            <i class="fas fa-heartbeat me-2" ></i><span data-i18n="health_metrics">Health Metrics</span>
         </legend>
         
         <div class="row">
@@ -684,15 +1008,15 @@ input.form-control:-webkit-autofill {
                     <div class="metric-icon">
                         <i class="fas fa-weight-scale"></i>
                     </div>
-                    <div class="metric-label">Current Weight</div>
+                    <div class="metric-label" data-i18n="current_weight">Current Weight</div>
                     <div class="metric-value">
                         {% if current_weight %}
                             {{ current_weight|round(1) }} kg
                         {% else %}
-                            Not set
+                            <span data-i18n="not_set">Not set</span>
                         {% endif %}
                     </div>
-                    <small class="metric-label">Last updated from activity calculator</small>
+                    <small class="metric-label" data-i18n="last_updated">Last updated from activity calculator</small>
                 </div>
             </div>
             
@@ -702,7 +1026,7 @@ input.form-control:-webkit-autofill {
                     <div class="metric-icon">
                         <i class="fas fa-fire"></i>
                     </div>
-                    <div class="metric-label">Daily Energy Expenditure</div>
+                    <div class="metric-label" data-i18n="daily_energy">Daily Energy Expenditure</div>
                     <div class="metric-value">
                         {% if current_tdee %}
                             {{ current_tdee|round(0) }} kcal
@@ -710,14 +1034,14 @@ input.form-control:-webkit-autofill {
                             Not calculated
                         {% endif %}
                     </div>
-                    <small class="metric-label">Based on your activity level</small>
+                    <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
                 </div>
             </div>
         </div>
         
         <div class="text-center mt-3">
             <a href="/activity" class="btn btn">
-                <i class="fas fa-calculator me-1"></i> Update Metrics
+                <i class="fas fa-calculator me-1"></i> <span data-i18n="update_metrics">Update Metrics</span>
             </a>
         </div>
     </div>
@@ -725,7 +1049,7 @@ input.form-control:-webkit-autofill {
     <!-- Password Reset Link -->
     <div class="border-top pt-3 mt-4 text-center">
         <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-            <i class="fas fa-key me-1"></i> Request Password Reset
+            <i class="fas fa-key me-1"></i> <span data-i18n="request_password_reset">Request Password Reset</span>
         </a>
     </div>
     
@@ -734,15 +1058,15 @@ input.form-control:-webkit-autofill {
         <div class="d-flex justify-content-center">
             <div class="me-4 text-center">
                 <i class="fas fa-shield-alt fa-2x"></i>
-                <p class="mt-2">Secure</p>
+                <p class="mt-2" data-i18n="secure">Secure</p>
             </div>
             <div class="me-4 text-center">
                 <i class="fas fa-lock fa-2x"></i>
-                <p class="mt-2">Encrypted</p>
+                <p class="mt-2" data-i18n="encrypted">Encrypted</p>
             </div>
             <div class="text-center">
                 <i class="fas fa-user-shield fa-2x"></i>
-                <p class="mt-2">Protected</p>
+                <p class="mt-2" data-i18n="protected">Protected</p>
             </div>
         </div>
     </div>
@@ -764,10 +1088,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
 
+
     // Initial avatar state
     let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
     let uploadedAvatarFile = null;
-
     // Helper to show toast safely
     function showToast(message, isError = false) {
     let toast = document.getElementById('toastNotification');
@@ -917,6 +1241,316 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+// Social platform data with Font Awesome icons
+    const platformData = {
+        instagram: {
+            name: 'Instagram',
+            baseUrl: 'https://instagram.com/',
+            icon: 'fa-brands fa-instagram',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._]{1,30}$/
+        },
+        tiktok: {
+            name: 'TikTok',
+            baseUrl: 'https://tiktok.com/@',
+            icon: 'fa-brands fa-tiktok',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._]{1,24}$/
+        },
+        spotify: {
+            name: 'Spotify',
+            baseUrl: 'https://open.spotify.com/user/',
+            icon: 'fa-brands fa-spotify',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._-]{1,30}$/
+        },
+        strava: {
+            name: 'Strava',
+            baseUrl: 'https://strava.com/athletes/',
+            icon: 'fa-solid fa-person-running',
+            placeholder: 'athlete_id',
+            validation: /^[0-9]{1,15}$/
+        },
+        facebook: {
+            name: 'Facebook',
+            baseUrl: 'https://facebook.com/',
+            icon: 'fa-brands fa-facebook',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9.]{1,50}$/
+        },
+        twitter: {
+            name: 'Twitter',
+            baseUrl: 'https://twitter.com/',
+            icon: 'fa-brands fa-twitter',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9_]{1,15}$/
+        }
+    };
+    // DOM Elements
+    const addSocialBtn = document.getElementById('add-social-btn');
+    const socialDropdown = document.getElementById('social-dropdown');
+    const socialModal = document.getElementById('social-modal');
+    const modalPlatformIcon = document.getElementById('modal-platform-icon');
+    const modalPlatformName = document.getElementById('modal-platform-name');
+    const socialHandleInput = document.getElementById('social-handle-input');
+    const saveSocialHandle = document.getElementById('save-social-handle');
+    const cancelSocialHandle = document.getElementById('cancel-social-handle');
+    const socialPillsContainer = document.getElementById('social-pills-container');
+    const socialsDataInput = document.getElementById('socials-data');
+
+    // Social media data
+    let socialsData = [];
+    let currentPlatform = null;
+
+   // Initialize socials from hidden input
+    function initializeSocials() {
+        try {
+            const rawData = socialsDataInput.value || '[]';
+            socialsData = JSON.parse(rawData);
+            
+            // Only render pills if there's actual data
+            if (socialsData.length > 0) {
+                renderSocialPills();
+            }
+        } catch (e) {
+            console.error('Error parsing socials data:', e);
+            socialsData = [];
+        }
+    }
+
+    // Toggle dropdown visibility
+    function toggleDropdown(e) {
+        e.stopPropagation();
+        socialDropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    function closeDropdown(e) {
+        if (!addSocialBtn.contains(e.target) && !socialDropdown.contains(e.target)) {
+            socialDropdown.classList.remove('show');
+        }
+    }
+
+    // Open modal for platform selection
+    function openPlatformModal(platform) {
+        currentPlatform = platform;
+        const platformInfo = platformData[platform];
+
+        // Set modal content
+        modalPlatformIcon.className = platformInfo.icon;
+        modalPlatformName.textContent = `Add ${platformInfo.name}`;
+        
+        // Clear and focus input
+        socialHandleInput.value = '';
+        socialHandleInput.placeholder = `Enter your ${platformInfo.placeholder}`;
+        
+        // Show modal
+        socialModal.style.display = 'flex';
+        socialDropdown.classList.remove('show');
+        
+        // Focus input after modal animation
+        setTimeout(() => socialHandleInput.focus(), 100);
+    }
+
+    // Close modal
+    function closeModal() {
+        socialModal.style.display = 'none';
+        currentPlatform = null;
+    }
+
+    // Validate handle input
+    function validateHandle(platform, handle) {
+        const platformInfo = platformData[platform];
+        if (!platformInfo.validation.test(handle)) {
+            return false;
+        }
+        
+        // Check for duplicates
+        return !socialsData.some(social => 
+            social.platform === platform && social.handle.toLowerCase() === handle.toLowerCase()
+        );
+    }
+
+    // Save social handle
+    function handleSaveSocial() {
+        const handle = socialHandleInput.value.trim();
+        
+        if (!handle || !currentPlatform) {
+            showToast('Please enter a valid handle', true);
+            return;
+        }
+
+        if (!validateHandle(currentPlatform, handle)) {
+            showToast('Invalid handle or already exists', true);
+            return;
+        }
+
+        // Add to socials data
+        socialsData.push({ 
+            platform: currentPlatform, 
+            handle: handle 
+        });
+
+        // Update hidden input
+        socialsDataInput.value = JSON.stringify(socialsData);
+        
+        // Re-render pills
+        renderSocialPills();
+        
+        // Close modal
+        closeModal();
+        
+        // Show success message
+        showToast(`${platformData[currentPlatform].name} added successfully!`);
+    }
+
+    // Render social pills
+    function renderSocialPills() {
+        // Clear container
+        socialPillsContainer.innerHTML = '';
+
+        // If no socials, don't show anything (clean empty state)
+        if (socialsData.length === 0) {
+            return;
+        }
+
+        // Create pills for each social
+        socialsData.forEach((social, index) => {
+            const { platform, handle } = social;
+            const platformInfo = platformData[platform];
+            
+            if (!platformInfo) return; // Skip invalid platforms
+
+            // Create pill container
+            const pill = document.createElement('div');
+            pill.className = 'social-pill';
+            pill.setAttribute('data-platform', platform);
+
+            // Create clickable link
+            const link = document.createElement('a');
+            link.href = platformInfo.baseUrl + handle;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.title = `Visit ${handle} on ${platformInfo.name}`;
+
+            // Create icon
+            const icon = document.createElement('i');
+            icon.className = platformInfo.icon;
+
+            // Create handle text
+            const handleSpan = document.createElement('span');
+            handleSpan.textContent = `@${handle}`;
+
+            // Assemble link
+            link.appendChild(icon);
+            link.appendChild(handleSpan);
+
+            // Create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.type = 'button';
+            deleteBtn.title = 'Remove this social link';
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteSocial(index);
+            });
+
+            // Assemble pill
+            pill.appendChild(link);
+            pill.appendChild(deleteBtn);
+
+            // Add to container
+            socialPillsContainer.appendChild(pill);
+        });
+    }
+
+    // Delete a social entry
+    function deleteSocial(index) {
+        if (index >= 0 && index < socialsData.length) {
+            const deletedSocial = socialsData[index];
+            socialsData.splice(index, 1);
+            socialsDataInput.value = JSON.stringify(socialsData);
+            renderSocialPills();
+            showToast(`${platformData[deletedSocial.platform].name} removed`);
+        }
+    }
+
+    // Enhanced toast function
+    function showToast(message, isError = false) {
+        let toast = document.getElementById('toastNotification');
+
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toastNotification';
+            toast.className = 'toast-notification';
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+        toast.className = 'toast-notification' + (isError ? ' error' : '');
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Event Listeners
+    if (addSocialBtn) {
+        addSocialBtn.addEventListener('click', toggleDropdown);
+    }
+
+    document.addEventListener('click', closeDropdown);
+
+    // Platform selection
+    const socialOptions = document.querySelectorAll('.social-option');
+    socialOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const platform = this.getAttribute('data-platform');
+            openPlatformModal(platform);
+        });
+    });
+
+    // Modal controls
+    if (saveSocialHandle) {
+        saveSocialHandle.addEventListener('click', saveSocialHandle);
+    }
+
+    if (cancelSocialHandle) {
+        cancelSocialHandle.addEventListener('click', closeModal);
+    }
+
+    // Handle Enter key in input
+    if (socialHandleInput) {
+        socialHandleInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSaveSocial();
+            }
+        });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && socialModal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
+    // Close modal when clicking outside
+    if (socialModal) {
+        socialModal.addEventListener('click', function(e) {
+            if (e.target === socialModal) {
+                closeModal();
+            }
+        });
+    }
+
+    // Initialize on page load
+    initializeSocials();
+
 </script>
 
 {% endblock %}
