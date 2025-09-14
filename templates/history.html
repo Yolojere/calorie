@@ -4,11 +4,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition & Workout History</title>
+    <title data-i18n="nutrition_workout_history">TrackYou History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="/static/js/translationshistory.js"></script>
+
     <style>
         /* === MAIN STYLES === */
         body {
@@ -24,8 +26,59 @@
             border-color: #444;
         }
         
-  /* ===== NAV LINK BOX ===== */
-                .nav-link-box {
+        /* === NEW BUTTON STYLES === */
+        .btn-jere {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+
+        .btn-jere:hover {
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .btn-jere.active {
+            background: #858585 !important;
+            color: #000000 !important;
+        }
+        
+        /* Make tabs use the new button style */
+        .nav-tabs .nav-link {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.1s ease;
+            margin-right: 5px;
+            margin-bottom: 10px;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #858585 !important;
+            color: #000000 !important;
+        }
+
+        /* ===== NAV LINK BOX ===== */
+        .nav-link-box {
             display: inline-block;
             background-color: #1b1b1b;
             color: #ffffff;
@@ -40,7 +93,6 @@
             justify-content: center;
             width: 35px;
             height: 35px;
-            
         }
 
         .nav-link-box:hover {
@@ -54,40 +106,44 @@
             font-size: 14px !important;
             margin: 0 !important;
         }
-             .nav-logo-box {
-                display:inline-block;
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                border-radius: 50px;
-                padding: 2px;
-                margin: 0 3px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 55px;
-                height: 55px;
-                z-index: 1050 !important;
-                }
-                .nav-logo-box img.nav-logo {
-            max-width: 100%;   /* scale the logo down */
-            max-height: 100%;  /* maintain aspect ratio */
+        
+        .nav-logo-box {
+            display:inline-block;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50px;
+            padding: 2px;
+            margin: 0 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 55px;
+            height: 55px;
+            z-index: 1050 !important;
+        }
+        
+        .nav-logo-box img.nav-logo {
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
         }
+        
         .btn-beta {
-                display: inline-block;
-                background-color: #8b34f6;
-                color: #ffffff;
-                border: 1px solid #000000 !important;
-                border-radius: 30px;
-                text-align: center;
-                padding: 2px 20px;
-                font-size: 12px;
-                font-weight: bold;
-                box-shadow: 0px 1px 5px rgb(179, 179, 180);
-                cursor:auto !important;
-            }
+            display: inline-block;
+            background-color: #8b34f6;
+            color: #ffffff;
+            border: 1px solid #000000 !important;
+            border-radius: 30px;
+            text-align: center;
+            padding: 2px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0px 1px 5px rgb(179, 179, 180);
+            cursor:auto !important;
+        }
+        
         /* ===== MOBILE NAVIGATION ===== */
         .mobile-settings-btn {
             display: inline-block;
@@ -103,7 +159,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
             margin-left: 10px
-                }
+        }
         
         .mobile-settings-btn:hover {
             background-color: #f0f0f0 !important;
@@ -173,126 +229,69 @@
             color: #e0e0e0;
         }
 
-        /* Tab styles */
+        /* Tab styles - UPDATED with new button style */
         .nav-tabs {
-            border-bottom: 2px solid #444;
+            border-bottom: none;
             padding: 0 15px;
             margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .nav-tabs .nav-link {
-            font-size: 16px;
-            padding: 12px 25px;
-            color: white;
-            background-color: #222;
-            border: 1px solid #444;
-            margin-right: 8px;
-            border-radius: 10px 10px 0 0;
-            transition: all 0.3s;
-        }
-
-        .nav-tabs .nav-link:hover {
-            background-color: #333;
-            color: #fff;
-            transform: translateY(-2px);
-        }
-
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(to right, #ffffff, #b1b0b0);
-            color: #000;
-            font-weight: bold;
-            border-bottom: 2px solid #d3d3d3;
-        }
-
-        .workout-tab {
-            background: linear-gradient(to right, #4a4a4a, #222);
-            color: #ffd166 !important;
-        }
-
-        .workout-tab.active {
-            background: linear-gradient(to right, #ffd166, #ff9e6d) !important;
-            color: #000 !important;
-        }
-
-        .exercise-tab {
-            background: linear-gradient(to right, #4a4a4a, #222);
-            color: #c1a0f6 !important;
-        }
-
-        .exercise-tab.active {
-            background: linear-gradient(to right, #8e57e6, #7614f6) !important;
-            color: #000 !important;
-        }
         /* Tooltip container */
-.tooltip {
-  opacity: 1 !important; /* prevent Bootstrap fade weirdness */
-}
+        .tooltip {
+            opacity: 1 !important; /* prevent Bootstrap fade weirdness */
+        }
 
-/* Tooltip bubble */
-.tooltip .tooltip-inner {
-  background-color: #1b1b1b; /* match nav-link-box background */
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 6px 10px;
-  border-radius: 10px; /* softer pill look */
-  border: 1px solid #444;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
+        /* Tooltip bubble */
+        .tooltip .tooltip-inner {
+            background-color: #1b1b1b; /* match nav-link-box background */
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 10px; /* softer pill look */
+            border: 1px solid #444;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
 
-/* Tooltip arrow */
-.tooltip.bs-tooltip-top .tooltip-arrow::before {
-  border-top-color: #1b1b1b;
-}
-.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-  border-bottom-color: #1b1b1b;
-}
-.tooltip.bs-tooltip-start .tooltip-arrow::before {
-  border-left-color: #1b1b1b;
-}
-.tooltip.bs-tooltip-end .tooltip-arrow::before {
-  border-right-color: #1b1b1b;
-}
+        /* Tooltip arrow */
+        .tooltip.bs-tooltip-top .tooltip-arrow::before {
+            border-top-color: #1b1b1b;
+        }
+        
+        .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+            border-bottom-color: #1b1b1b;
+        }
+        
+        .tooltip.bs-tooltip-start .tooltip-arrow::before {
+            border-left-color: #1b1b1b;
+        }
+        
+        .tooltip.bs-tooltip-end .tooltip-arrow::before {
+            border-right-color: #1b1b1b;
+        }
+        
         /* ===== DROPDOWNS & MODALS ===== */
-    .dropdown-menu {
-        background-color: #1e1e1e;
-        border: 1px solid #333;
-        right: 0 !important;
-        width: 120px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        position: absolute;
-    }
+        .dropdown-menu {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            right: 0 !important;
+            width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: absolute;
+        }
 
-    .dropdown-item {
-        color: #fff;
-    }
+        .dropdown-item {
+            color: #fff;
+        }
 
-    .dropdown-item:hover {
-        background-color: #333;
-        color: #ffffff;
-    }
-             .nav-logo-box {
-                display:inline-block;
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                border-radius: 50px;
-                padding: 2px;
-                margin: 0 3px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 55px;
-                height: 55px;
-                z-index: 1050 !important;
-                }
-                .nav-logo-box img.nav-logo {
-            max-width: 100%;   /* scale the logo down */
-            max-height: 100%;  /* maintain aspect ratio */
-            object-fit: contain;
+        .dropdown-item:hover {
+            background-color: #333;
+            color: #ffffff;
         }
 
         /* Table styles - UPDATED WITH BLACK BACKGROUND AND WHITE TEXT */
@@ -300,6 +299,9 @@
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 20px;
+            width: 100%;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
         .table-custom {
@@ -308,6 +310,7 @@
             border-collapse: separate;
             border-spacing: 0;
             background-color: #060606; /* Added black background */
+            min-width: 600px; /* Ensure table has minimum width */
         }
 
         .table-custom th {
@@ -320,6 +323,7 @@
             top: 0;
             z-index: 10;
             color: #ffffff; /* Added white text */
+            white-space: nowrap;
         }
 
         .table-custom td {
@@ -328,6 +332,7 @@
             border-bottom: 1px solid #333;
             background-color: #1b1b1b; /* Added black background */
             color: #ffffff; /* Added white text */
+            white-space: nowrap;
         }
 
         .table-custom tbody tr {
@@ -352,6 +357,7 @@
             color: #ffffff; /* Added white text */
             padding: 15px;
             border-radius: 0 0 10px 10px;
+            overflow-x: auto; /* Enable horizontal scrolling */
         }
 
         /* Summary cards */
@@ -380,24 +386,28 @@
             color: #b1b0b0;
         }
 
-        /* Button styles */
+        /* Button styles - REPLACED with btn-jere */
         .btn-custom {
-            background: linear-gradient(to right, #333, #222);
-            color: #e0e0e0;
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
             border: 1px solid #444;
             border-radius: 20px;
-            padding: 8px 20px;
-            transition: all 0.3s ease;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.1s ease;
         }
 
         .btn-custom:hover {
-            background: linear-gradient(to right, #444, #333);
-            color: #fff;
-            transform: translateY(-2px);
+            background-color: #d4d4d4 !important;
+            color: black !important;
+            transform: scale(1.02);
         }
 
-        .btn-outline-warning {
-            border-radius: 20px;
+        .btn-custom.active {
+            background: #858585 !important;
+            color: #000000 !important;
         }
 
         /* Stats highlights */
@@ -418,18 +428,72 @@
             font-size: 14px;
             color: #b1b0b0;
         }
+        
         .text-muted {
             color: white !important;
         }
-        /* Responsive adjustments */
+        
+        /* Progress bars */
+        .progress {
+            height: 8px;
+            background-color: #2a2a2a;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .progress-bar-protein {
+            background-color: #06d6a0;
+        }
+
+        .progress-bar-carbs {
+            background-color: #118ab2;
+        }
+
+        .progress-bar-fats {
+            background-color: #ef476f;
+        }
+
+        .progress-bar-salt {
+            background-color: #ffd166;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
+            .history-container {
+                overflow-x: hidden; /* Prevent horizontal scroll on container */
+                width: 100%;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                width: 100%;
+            }
+            
+            .table-custom {
+                min-width: 700px; /* Ensure table is wide enough to scroll */
+            }
+            
             .page-title {
                 font-size: 22px;
             }
             
             .nav-tabs .nav-link {
-                font-size: 14px;
-                padding: 10px 15px;
+                font-size: 12px;
+                padding: 8px 12px;
             }
             
             .table-custom th, 
@@ -440,6 +504,23 @@
             
             .summary-value {
                 font-size: 20px;
+            }
+            
+            /* Make summary cards more compact on mobile */
+            .summary-card {
+                padding: 15px 10px;
+            }
+            
+            /* Adjust tab layout for mobile */
+            .nav-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+            
+            .nav-tabs .nav-link {
+                white-space: nowrap;
+                flex-shrink: 0;
             }
         }
 
@@ -483,60 +564,22 @@
             color: #ffd166;
             font-weight: bold;
         }
-
-        /* Nutrition progress bars */
-        .progress {
-            height: 8px;
-            background-color: #2a2a2a;
-            border-radius: 4px;
-            margin-top: 5px;
-        }
-
-        .progress-bar-protein {
-            background-color: #06d6a0;
-        }
-
-        .progress-bar-carbs {
-            background-color: #118ab2;
-        }
-
-        .progress-bar-fats {
-            background-color: #ef476f;
-        }
-
-        .progress-bar-salt {
-            background-color: #ffd166;
-        }
-
-        /* Empty state styling */
-        .empty-state {
-            padding: 40px 20px;
-            text-align: center;
-            color: #888;
-        }
-
-        .empty-state i {
-            font-size: 50px;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-            <div class="container">
-                <div class="nav-logo-box">
-                    <a href="/">
-        <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
+        <div class="container">
+            <div class="nav-logo-box">
+                <a href="/">
+                    <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
                 </a>
-    </div>
-                <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
-                <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
-                    - Track, eat, repeat -
-                </a>
-                <button class="btn-beta">BETA</button>
-            
+            </div>
+            <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
+                - Track, analyze, repeat -
+            </a>
+            <button class="btn-beta">BETA</button>
             <!-- Mobile Settings Dropdown (right-aligned) -->
             <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                 <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -544,57 +587,56 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" 
                     aria-labelledby="navbarDropdownMobile"
-                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto;">
+                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 10;">
                     <li>
                         <a class="dropdown-item" 
-                           href="/"
-                           style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fa-solid fa-house-chimney-window me-2"></i>Home
+                        href="/"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
                         </a>
-                     </li>
-                        <li>
+                    </li>
+                    <li>
                         <a class="dropdown-item" 
                         href="{{ url_for('workout') }}"
                         style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-dumbbell me-2"></i>Workouts
-                        </a>
-                        </li>
-                        <li>
-                                    <a class="dropdown-item" 
-                           href="/history"
-                           style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-chart-pie me-2"></i>History
-                        </a>
-                    </li>
-                         <li>
-                        <a class="dropdown-item" 
-                           href="{{ url_for('activity') }}"
-                           style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-fire me-2"></i>Activity
+                            <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="/custom_food"
-                           style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-file-circle-plus me-2"></i>Add Food
+                        href="/history"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="{{ url_for('profile') }}"
-                           style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                            <i class="fas fa-user-circle me-2"></i>Profile
+                        href="{{ url_for('activity') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" 
-                           href="{{ url_for('logout') }}"
-                           style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        href="/custom_food"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
                         </a>
                     </li>
-                    
+                    <li>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('profile') }}"
+                        style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                            <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('logout') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
             
@@ -603,31 +645,31 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link home-link nav-link-box" href="/" 
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
                             <i class="fa-solid fa-house-chimney-window"></i>
                         </a>
-                        <li class="nav-item">
-    <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts">
-        <i class="fa-solid fa-dumbbell"></i>
-    </a>
-</li>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link add-link nav-link-box" href="/custom_food"
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food">
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food">
                             <i class="fa-solid fa-file-circle-plus"></i>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link history-link nav-link-box" href="/history"
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history">
                             <i class="fa-solid fa-chart-pie"></i>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-box" href="/activity"
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity">
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity">
                             <i class="fas fa-fire"></i>
                         </a>
                     </li>
@@ -635,13 +677,13 @@
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle nav-link-box" 
-                           href="#" 
-                           id="navbarDropdownDesktop" 
-                           role="button" 
-                           data-bs-toggle="dropdown" 
-                           aria-expanded="false"
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings"
-                           style="position: relative;">
+                        href="#" 
+                        id="navbarDropdownDesktop" 
+                        role="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings"
+                        style="position: relative;">
                             <i class="bi bi-wrench-adjustable"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" 
@@ -650,16 +692,16 @@
                             
                             <li>
                                 <a class="dropdown-item" 
-                                   href="{{ url_for('profile') }}"
-                                   style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                    <i class="fas fa-user-circle me-2"></i>Profile
+                                href="{{ url_for('profile') }}"
+                                style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                    <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" 
-                                   href="{{ url_for('logout') }}"
-                                   style="color: #e0e0e0; padding: 8px 15px;">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                href="{{ url_for('logout') }}"
+                                style="color: #e0e0e0; padding: 8px 15px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
                                 </a>
                             </li>
                         </ul>
@@ -673,8 +715,8 @@
     <div class="history-container">
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-title">Nutrition & Workout History</h1>
-            <p class="page-subtitle">Track your progress and analyze your performance over time</p>
+            <h1 class="page-title" data-i18n="nutrition_workout_history">Nutrition & Workout History</h1>
+            <p class="page-subtitle" data-i18n="history_subtitle">Track your progress and analyze your performance over time</p>
         </div>
 
         <!-- Summary Stats Row -->
@@ -682,18 +724,17 @@
             <div class="col-md-3 col-6 mb-3">
                 <div class="summary-card">
                     <div class="summary-value text-warning">
-    {{ today_calories | round(0) }}
-</div>
-<div class="summary-label">Today's Calories</div>
-
+                        {{ today_calories | round(0) }}
+                    </div>
+                    <div class="summary-label" data-i18n="today_calories">Today's Calories</div>
                 </div>
             </div>
             <div class="col-md-3 col-6 mb-3">
                 <div class="summary-card">
                     <div class="summary-value text-info">
-    {{ today_protein | round(0) }}g
-</div>
-<div class="summary-label">Today's Protein</div>
+                        {{ today_protein | round(0) }}g
+                    </div>
+                    <div class="summary-label" data-i18n="today_protein">Today's Protein</div>
                 </div>
             </div>
             <div class="col-md-3 col-6 mb-3">
@@ -701,7 +742,7 @@
                     <div class="summary-value text-success">
                         {% if weekly_data %}{{ weekly_data[0].avg_calories | round(0) }}{% else %}0{% endif %}
                     </div>
-                    <div class="summary-label">Weekly Avg Calories</div>
+                    <div class="summary-label" data-i18n="weekly_avg_calories">Weekly Avg Calories</div>
                 </div>
             </div>
             <div class="col-md-3 col-6 mb-3">
@@ -709,7 +750,7 @@
                     <div class="summary-value text-primary">
                         7
                     </div>
-                    <div class="summary-label">Workouts This Week</div>
+                    <div class="summary-label" data-i18n="workouts_this_week">Workouts This Week</div>
                 </div>
             </div>
         </div>
@@ -717,24 +758,24 @@
         <!-- Main Content Card -->
         <div class="history-card">
             <div class="card-header-custom">
-                <i class="fas fa-chart-line me-2"></i>Progress Tracking
+                <i class="fas fa-chart-line me-2"></i><span data-i18n="progress_tracking">Progress Tracking</span>
             </div>
             <div class="card-body">
                 <ul class="nav nav-tabs" id="historyTabs" role="tablist">
                     <!-- Updated tab names as requested -->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="nutrition-tab" data-bs-toggle="tab" data-bs-target="#nutrition" type="button" role="tab">
-                            <i class="fas fa-utensils me-1"></i> Nutrition
+                        <button class="nav-link active btn-jere" id="nutrition-tab" data-bs-toggle="tab" data-bs-target="#nutrition" type="button" role="tab">
+                             <i class="fas fa-utensils me-1"></i> <span data-i18n="nutrition">Nutrition</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link workout-tab" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">
-                            <i class="fas fa-dumbbell me-1"></i> Workouts
+                        <button class="nav-link btn-jere" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">
+                            <i class="fas fa-dumbbell me-1"></i> <span data-i18n="workouts">Workouts</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link exercise-tab" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab">
-                            <i class="fas fa-running me-1"></i> Exercises
+                        <button class="nav-link btn-jere" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab">
+                            <i class="fas fa-running me-1"></i> <span data-i18n="exercises">Exercises</span>
                         </button>
                     </li>
                 </ul>
@@ -744,13 +785,13 @@
                     <div class="tab-pane fade show active" id="nutrition" role="tabpanel">
                         <ul class="nav nav-tabs" id="nutritionSubTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="daily-nutrition-tab" data-bs-toggle="tab" data-bs-target="#daily-nutrition" type="button" role="tab">
-                                    <i class="fas fa-calendar-day me-1"></i> Daily
+                                <button class="nav-link active btn-jere" id="daily-nutrition-tab" data-bs-toggle="tab" data-bs-target="#daily-nutrition" type="button" role="tab">
+                                    <i class="fas fa-calendar-day me-1"></i> <span data-i18n="daily">Daily</span>
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="weekly-nutrition-tab" data-bs-toggle="tab" data-bs-target="#weekly-nutrition" type="button" role="tab">
-                                    <i class="fas fa-calendar-week me-1"></i> Weekly
+                                <button class="nav-link btn-jere" id="weekly-nutrition-tab" data-bs-toggle="tab" data-bs-target="#weekly-nutrition" type="button" role="tab">
+                                     <i class="fas fa-calendar-week me-1"></i> <span data-i18n="weekly">Weekly</span>
                                 </button>
                             </li>
                         </ul>
@@ -763,12 +804,12 @@
                                     <table class="table table-custom table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
-                                                <th>Calories</th>
-                                                <th>Protein (g)</th>
-                                                <th>Carbs (g)</th>
-                                                <th>Fats (g)</th>
-                                                <th>Salt (g)</th>
+                                                <th data-i18n="date">Date</th>
+                                                <th data-i18n="calories">Calories</th>
+                                                <th data-i18n="protein_g">Protein (g)</th>
+                                                <th data-i18n="carbs_g">Carbs (g)</th>
+                                                <th data-i18n="fats_g">Fats (g)</th>
+                                                <th data-i18n="salt_g">Salt (g)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -808,9 +849,9 @@
                                 {% else %}
                                 <div class="empty-state">
                                     <i class="fas fa-utensils"></i>
-                                    <h4>No nutrition data available</h4>
-                                    <p>Start tracking your meals to see your daily nutrition history</p>
-                                    <a href="/custom_food" class="btn btn-custom mt-2">Add Food</a>
+                                    <h4 data-i18n="no_nutrition_data">No nutrition data available</h4>
+                                    <p data-i18n="start_tracking_nutrition">Start tracking your meals to see your daily nutrition history</p>
+                                    <a href="/custom_food" class="btn-jere mt-2" data-i18n="add_food">Add Food</a>
                                 </div>
                                 {% endif %}
                             </div>
@@ -822,12 +863,12 @@
                                     <table class="table table-custom table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Week</th>
-                                                <th>Avg Calories</th>
-                                                <th>Avg Protein (g)</th>
-                                                <th>Avg Carbs (g)</th>
-                                                <th>Avg Fats (g)</th>
-                                                <th>Avg Salt (g)</th>
+                                                <th data-i18n="week">Week</th>
+                                                <th data-i18n="avg_calories">Avg Calories</th>
+                                                <th data-i18n="avg_protein_g">Avg Protein (g)</th>
+                                                <th data-i18n="avg_carbs_g">Avg Carbs (g)</th>
+                                                <th data-i18n="avg_fats_g">Avg Fats (g)</th>
+                                                <th data-i18n="avg_salt_g">Avg Salt (g)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -850,75 +891,34 @@
                                 {% else %}
                                 <div class="empty-state">
                                     <i class="fas fa-chart-bar"></i>
-                                    <h4>No weekly data available</h4>
-                                    <p>Keep tracking your meals to see weekly nutrition trends</p>
+                                    <h4 data-i18n="no_weekly_data">No weekly data available</h4>
+                                    <p data-i18n="keep_tracking_weekly">Keep tracking your meals to see weekly nutrition trends</p>
                                 </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Weekly Nutrition Tab -->
-                    <div class="tab-pane fade" id="weekly" role="tabpanel">
-                        {% if weekly_data and weekly_data|length > 0 %}
-                        <div class="table-container">
-                            <table class="table table-custom table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Week</th>
-                                        <th>Avg Calories</th>
-                                        <th>Avg Protein (g)</th>
-                                        <th>Avg Carbs (g)</th>
-                                        <th>Avg Fats (g)</th>
-                                        <th>Avg Salt (g)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for week in weekly_data %}
-                                    <tr>
-                                        <td>
-                                            <span class="week-range">{{ week.week }}</span><br>
-                                            <small>{{ week.start_date }} to {{ week.end_date }}</small>
-                                        </td>
-                                        <td>{{ week.avg_calories | round(1) }}</td>
-                                        <td>{{ week.avg_proteins | round(1) }}</td>
-                                        <td>{{ week.avg_carbs | round(1) }}</td>
-                                        <td>{{ week.avg_fats | round(1) }}</td>
-                                        <td>{{ week.avg_salt | round(1) }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-chart-bar"></i>
-                            <h4>No weekly data available</h4>
-                            <p>Keep tracking your meals to see weekly nutrition trends</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
+                           
                     <!-- Workout History Tab -->
                     <div class="tab-pane fade" id="workouts" role="tabpanel">
                         <div class="p-3">
                             <!-- Sub-tabs for Daily / Weekly / Monthly -->
                             <ul class="nav nav-tabs workout-subtabs" id="workoutHistoryTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="daily-workout-tab" data-bs-toggle="tab" data-bs-target="#daily-workout" type="button" role="tab">Daily</button>
+                                    <button class="nav-link active btn-jere" id="daily-workout-tab" data-bs-toggle="tab" data-bs-target="#daily-workout" type="button" role="tab" data-i18n="daily">Daily</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="weekly-workout-tab" data-bs-toggle="tab" data-bs-target="#weekly-workout" type="button" role="tab">Weekly</button>
+                                    <button class="nav-link btn-jere" id="weekly-workout-tab" data-bs-toggle="tab" data-bs-target="#weekly-workout" type="button" role="tab" data-i18n="weekly">Weekly</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="monthly-workout-tab" data-bs-toggle="tab" data-bs-target="#monthly-workout" type="button" role="tab">Monthly</button>
+                                    <button class="nav-link btn-jere" id="monthly-workout-tab" data-bs-toggle="tab" data-bs-target="#monthly-workout" type="button" role="tab" data-i18n="monthly">Monthly</button>
                                 </li>
                             </ul>
 
                             <!-- Expand / Collapse buttons -->
                             <div class="my-3">
-                                <button id="expand-all" class="btn btn-sm btn-outline-warning me-2">Expand All</button>
-                                <button id="collapse-all" class="btn btn-sm btn-outline-warning">Collapse All</button>
+                                <button id="expand-all" class="btn-jere me-2" data-i18n="expand_all">Expand All</button>
+                                <button id="collapse-all" class="btn-jere" data-i18n="collapse_all">Collapse All</button>
                             </div>
 
                             <!-- Tab content -->
@@ -929,12 +929,12 @@
                                         <table class="table table-custom">
                                             <thead>
                                                 <tr>
-                                                    <th>Date / Period</th>
-                                                    <th class="text-end">Sessions</th>
-                                                    <th>Muscle Group</th>
-                                                    <th class="text-end">Sets</th>
-                                                    <th class="text-end">Total Reps</th>
-                                                    <th class="text-end">Volume (kg)</th>
+                                                    <th data-i18n="date_period">Date / Period</th>
+                                                    <th class="text-end" data-i18n="sessions">Sessions</th>
+                                                    <th data-i18n="muscle_group">Muscle Group</th>
+                                                    <th class="text-end" data-i18n="sets">Sets</th>
+                                                    <th class="text-end" data-i18n="total_reps">Total Reps</th>
+                                                    <th class="text-end" data-i18n="volume_kg">Volume (kg)</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="daily-workout-history"></tbody>
@@ -992,14 +992,14 @@
                                         <span class="input-group-text bg-dark text-light border-secondary">
                                             <i class="fas fa-search"></i>
                                         </span>
-                                        <input type="text" id="exercise-search" class="form-control bg-dark text-light border-secondary" placeholder="Search exercises...">
+                                        <input type="text" id="exercise-search" class="form-control bg-dark text-light border-secondary" placeholder="Search exercises..." data-i18n="search_exercises_placeholder">
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-end">
                                     <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-warning active" data-sort="name">Name</button>
-                                        <button class="btn btn-sm btn-outline-warning" data-sort="pb">Personal Best</button>
-                                        <button class="btn btn-sm btn-outline-warning" data-sort="recent">Most Recent</button>
+                                        <button class="btn-jere active" data-sort="name" data-i18n="name">Name</button>
+                                        <button class="btn-jere" data-sort="pb" data-i18n="personal_best">Personal Best</button>
+                                        <button class="btn-jere" data-sort="recent" data-i18n="most_recent">Most Recent</button>
                                     </div>
                                 </div>
                             </div>
@@ -1008,11 +1008,11 @@
                                 <table class="table table-custom table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Exercise</th>
-                                            <th class="text-end">Personal Best</th>
-                                            <th class="text-end">Last Performed</th>
-                                            <th class="text-end">Total Volume</th>
-                                            <th class="text-end">Trend</th>
+                                            <th data-i18n="exercise">Exercise</th>
+                                           <th class="text-end" data-i18n="personal_best">Personal Best</th>
+                                            <th class="text-end" data-i18n="last_performed">Last Performed</th>
+                                            <th class="text-end" data-i18n="total_volume">Total Volume</th>
+                                            <th class="text-end" data-i18n="trend">Trend</th>
                                         </tr>
                                     </thead>
                                     <tbody id="exercises-list">
@@ -1025,8 +1025,8 @@
                             <div id="exercise-detail" class="mt-4" style="display: none;">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h4 id="exercise-detail-name" class="mb-0"></h4>
-                                    <button id="back-to-list" class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-arrow-left me-1"></i> Back to List
+                                    <button id="back-to-list" class="btn-jere">
+                                        <i class="fas fa-arrow-left me-1"></i> <span data-i18n="back_to_list">Back to List</span>
                                     </button>
                                 </div>
 
@@ -1036,28 +1036,28 @@
                                     <div class="col-md-3 mb-3">
                                         <div class="summary-card">
                                             <div class="summary-value text-primary" id="exercise-monthly-volume">0 kg</div>
-                                            <div class="summary-label">MONTHLY VOLUME</div>
+                                           <div class="summary-label" data-i18n="monthly_volume">MONTHLY VOLUME</div>
                                         </div>
                                     </div>
                                     <!-- Personal Best Card -->
                                     <div class="col-md-3 mb-3">
                                         <div class="summary-card">
                                             <div class="summary-value text-warning" id="exercise-personal-best">0 kg</div>
-                                            <div class="summary-label">PERSONAL BEST</div>
+                                            <div class="summary-label" data-i18n="personal_best">PERSONAL BEST</div>
                                         </div>
                                     </div>
                                     <!-- Best Set Card -->
                                     <div class="col-md-3 mb-3">
                                         <div class="summary-card">
                                             <div class="summary-value text-info" id="exercise-best-set">-</div>
-                                            <div class="summary-label">BEST SET</div>
+                                         <div class="summary-label" data-i18n="best_set">BEST SET</div>
                                         </div>
                                     </div>
                                     <!-- Ranking Card with 1RM -->
                                     <div class="col-md-3 mb-3">
                                         <div class="summary-card">
                                             <div class="summary-value text-success" id="exercise-ranking">-</div>
-                                            <div class="summary-label">ESTIMATED 1 RM</div>
+                                          <div class="summary-label" data-i18n="estimated_1rm">ESTIMATED 1 RM</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1068,15 +1068,15 @@
                                 </div>
 
                                 <!-- Session History -->
-                                <h5 class="mb-3">Session History</h5>
+                                <h5 class="mb-3" data-i18n="session_history">Session History</h5>
                                 <div class="table-responsive">
                                     <table class="table table-custom">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
-                                                <th class="text-end">Sets</th>
-                                                <th class="text-end">Best Set</th>
-                                                <th class="text-end">Volume</th>
+                                               <th data-i18n="date">Date</th>
+                                             <th class="text-end" data-i18n="sets">Sets</th>
+                                         <th class="text-end" data-i18n="best_set">Best Set</th>
+                                          <th class="text-end" data-i18n="volume">Volume</th>
                                             </tr>
                                         </thead>
                                         <tbody id="exercise-sessions">
@@ -1090,7 +1090,7 @@
                 </div>
             </div>
         </div>
-
+    </div>
 
     <!-- JS dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1111,10 +1111,11 @@
                 }
             }
         });
-          // Initialize workout history when Workouts tab is activated
-    $('#workouts-tab').on('shown.bs.tab', function() {
-        loadWorkoutHistory('daily');
-    });
+        
+        // Initialize workout history when Workouts tab is activated
+        $('#workouts-tab').on('shown.bs.tab', function() {
+            loadWorkoutHistory('daily');
+        });
         
         // Initialize exercises tab
         $('#exercises-tab').on('shown.bs.tab', function() {
@@ -1230,72 +1231,73 @@
                 alert("Failed to load exercise details. Please try again.");
             });
         }
-// Safe parsing of weight/reps from strings like "64kg" or "10"
-function parseBestSet(rawSet) {
-    if (!rawSet) return null;
 
-    // If it's already an object
-    if (typeof rawSet === 'object' && rawSet.weight && rawSet.reps) {
-        const weight = parseFloat(rawSet.weight);
-        const reps = parseInt(rawSet.reps);
-        if (isNaN(weight) || isNaN(reps) || reps <= 0) return null;
-        return { weight, reps };
-    }
+        // Safe parsing of weight/reps from strings like "64kg" or "10"
+        function parseBestSet(rawSet) {
+            if (!rawSet) return null;
 
-    // If it's a string like "14x64.0kg" or "14 x 64.0kg"
-    if (typeof rawSet === 'string') {
-        const match = rawSet.match(/(\d+)\s*[xX]\s*(\d+(\.\d+)?)/);
-        if (!match) return null;
-        const reps = parseInt(match[1]);
-        const weight = parseFloat(match[2]);
-        if (isNaN(reps) || isNaN(weight) || reps <= 0) return null;
-        return { weight, reps };
-    }
+            // If already object
+            if (typeof rawSet === 'object' && rawSet.weight && rawSet.reps) {
+                const weight = parseFloat(rawSet.weight);
+                const reps = parseInt(rawSet.reps);
+                if (isNaN(weight) || isNaN(reps) || reps <= 0) return null;
+                return { weight, reps };
+            }
 
-    return null;
-}
-       function calculateOneRepMax(weight, reps) {
-    weight = parseFloat(weight);
-    reps = parseInt(reps);
-    if (isNaN(weight) || isNaN(reps) || reps <= 0) return 0;
+            if (typeof rawSet === 'string') {
+                // Match formats like "180kg × 5" or "180kg x 5"
+                const match = rawSet.match(/(\d+(\.\d+)?)\s*kg\s*[×x]\s*(\d+)/i);
+                if (!match) return null;
+                const weight = parseFloat(match[1]);
+                const reps = parseInt(match[3]);
+                if (isNaN(weight) || isNaN(reps) || reps <= 0) return null;
+                return { weight, reps };
+            }
 
-    if (reps === 1) return weight;
+            return null;
+        }
+        
+        function calculateOneRepMax(weight, reps) {
+            weight = parseFloat(weight);
+            reps = parseInt(reps);
+            if (isNaN(weight) || isNaN(reps) || reps <= 0) return 0;
 
-    const denom = 1.0278 - 0.0278 * reps;
-    if (denom <= 0) return 0; // prevent negative or zero denominator
-    return weight / denom;
-}
+            if (reps === 1) return weight;
 
+            const denom = 1.0278 - 0.0278 * reps;
+            if (denom <= 0) return 0; // prevent negative or zero denominator
+            return weight / denom;
+        }
 
         // Render exercise detail (chart + session table)
         function renderExerciseDetail(data) {
-    // Show exercise name
-    $('#exercise-detail-name').text(data.name);
+            // Show exercise name
+            $('#exercise-detail-name').text(data.name);
 
-    // Summary cards
-    $('#exercise-personal-best').text((data.personal_best || 0).toFixed(1) + ' kg');
-    $('#exercise-monthly-volume').text((data.monthly_volume || 0).toFixed(1) + ' kg');
-    $('#exercise-best-set').text(data.best_set || '-');
+            // Summary cards
+            $('#exercise-personal-best').text((data.personal_best || 0).toFixed(1) + ' kg');
+            $('#exercise-monthly-volume').text((data.monthly_volume || 0).toFixed(1) + ' kg');
+            $('#exercise-best-set').text(data.best_set || '-');
 
-    // Calculate and display 1RM
-    const bestSetData = parseBestSet(data.best_set);
-    if (bestSetData) {
-        const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
-        $('#exercise-ranking').text(oneRepMax.toFixed(1) + ' kg');
-    } else {
-        $('#exercise-ranking').text('-');
-    }
+            // Calculate and display 1RM
+            const bestSetData = parseBestSet(data.best_set);
+            if (bestSetData) {
+                const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
+                $('#exercise-ranking').text(oneRepMax.toFixed(1) + ' kg');
+            } else {
+                $('#exercise-ranking').text('-');
+            }
 
-    // Chart
-    renderExerciseChart(data.history);
+            // Chart
+            renderExerciseChart(data.history);
 
-    // Session table
-    renderSessionsTable(data.history);
+            // Session table
+            renderSessionsTable(data.history);
 
-    // Show detail view and hide exercises list
-    $('#exercises-list').closest('.table-responsive').hide();
-    $('#exercise-detail').show();
-}
+            // Show detail view and hide exercises list
+            $('#exercises-list').closest('.table-responsive').hide();
+            $('#exercise-detail').show();
+        }
         
         // Render exercise chart
         function renderExerciseChart(history) {
@@ -1450,8 +1452,10 @@ function parseBestSet(rawSet) {
             const period = $(this).attr('id').split('-')[0];
             loadWorkoutHistory(period);
         });
+        
         $('#expand-all').click(() => $('.muscle-row').removeClass('d-none'));
         $('#collapse-all').click(() => $('.muscle-row').addClass('d-none'));
+        
         $(document).on('click', '.period-row', function() {
             const wasCollapsed = $(this).hasClass('collapsed');
             $(this).toggleClass('collapsed', !wasCollapsed);
@@ -1473,64 +1477,63 @@ function parseBestSet(rawSet) {
                     </tr>`);
             });
         }
-    });
-    
+        
+        // Render workout history
+        function renderWorkoutHistory(history, period) {
+            const container = $("#" + period + "-workout-history");
+            container.empty();
 
-    // Render workout history
-    function renderWorkoutHistory(history, period) {
-        const container = $("#" + period + "-workout-history");
-        container.empty();
+            if (!history || history.length === 0) {
+                container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
+                return;
+            }
 
-        if (!history || history.length === 0) {
-            container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
-            return;
+            history.forEach(item => {
+                let periodLabel = '';
+                let periodRow = '';
+                let muscleRows = '';
+
+                if (period === 'daily') {
+                    periodLabel = new Date(item.date).toLocaleDateString('en-GB', { weekday:'short', month:'numeric', day:'numeric' });
+                    periodRow = `<tr class="period-row collapsed align-middle" style="cursor:pointer;">
+                                    <td><strong>${periodLabel}</strong></td>
+                                    <td class="text-end">${item.sessions_count || 0}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="text-end">${item.total_sets || 0}</td>
+                                    <td class="text-end">${item.total_reps || 0}</td>
+                                    <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+                                </tr>`;
+                } else {
+                    const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
+                    if (period === 'weekly') {
+                        const weekEnd = new Date(startDate); weekEnd.setDate(weekEnd.getDate() + 6);
+                        periodLabel = `${startDate.toLocaleDateString('en-GB',{month:'short',day:'numeric'})} - ${weekEnd.toLocaleDateString('en-GB',{month:'short',day:'numeric'})}`;
+                    } else periodLabel = startDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+
+                    periodRow = `<tr class="period-row align-middle" style="cursor:pointer;">
+                                    <td><strong>${periodLabel}</strong></td>
+                                    <td class="text-end">${item.sessions_count || 0}</td>
+                                    <td>&nbsp;</td>
+                                    <td class="text-end">${item.total_sets || 0}</td>
+                                    <td class="text-end">${item.total_reps || 0}</td>
+                                    <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+                                </tr>`;
+                }
+
+                for (const [muscle, stats] of Object.entries(item.muscles || {})) {
+                    muscleRows += `<tr class="muscle-row d-none">
+                                    <td></td><td></td><td>${muscle}</td>
+                                    <td class="text-end">${stats.total_sets || 0}</td>
+                                    <td class="text-end">${stats.total_reps || 0}</td>
+                                    <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
+                                </tr>`;
+                }
+
+                container.append(periodRow + muscleRows);
+            });
         }
-
-        history.forEach(item => {
-            let periodLabel = '';
-            let periodRow = '';
-            let muscleRows = '';
-
-            if (period === 'daily') {
-                periodLabel = new Date(item.date).toLocaleDateString('en-GB', { weekday:'short', month:'numeric', day:'numeric' });
-                periodRow = `<tr class="period-row collapsed align-middle" style="cursor:pointer;">
-                                <td><strong>${periodLabel}</strong></td>
-                                <td class="text-end">${item.sessions_count || 0}</td>
-                                <td>&nbsp;</td>
-                                <td class="text-end">${item.total_sets || 0}</td>
-                                <td class="text-end">${item.total_reps || 0}</td>
-                                <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                            </tr>`;
-            } else {
-                const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
-                if (period === 'weekly') {
-                    const weekEnd = new Date(startDate); weekEnd.setDate(weekEnd.getDate() + 6);
-                    periodLabel = `${startDate.toLocaleDateString('en-GB',{month:'short',day:'numeric'})} - ${weekEnd.toLocaleDateString('en-GB',{month:'short',day:'numeric'})}`;
-                } else periodLabel = startDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-
-                periodRow = `<tr class="period-row align-middle" style="cursor:pointer;">
-                                <td><strong>${periodLabel}</strong></td>
-                                <td class="text-end">${item.sessions_count || 0}</td>
-                                <td>&nbsp;</td>
-                                <td class="text-end">${item.total_sets || 0}</td>
-                                <td class="text-end">${item.total_reps || 0}</td>
-                                <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                            </tr>`;
-            }
-
-            for (const [muscle, stats] of Object.entries(item.muscles || {})) {
-                muscleRows += `<tr class="muscle-row d-none">
-                                <td></td><td></td><td>${muscle}</td>
-                                <td class="text-end">${stats.total_sets || 0}</td>
-                                <td class="text-end">${stats.total_reps || 0}</td>
-                                <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
-                            </tr>`;
-            }
-
-            container.append(periodRow + muscleRows);
-        });
-    }
-    // Function to update progress bars with targets from server
+        
+        // Function to update progress bars with targets from server
         function updateProgressBarsWithTargets() {
             $.get('/get_nutrition_targets', function(targets) {
                 // Update protein progress bars
@@ -1600,16 +1603,17 @@ function parseBestSet(rawSet) {
         $('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
             updateProgressBarsWithTargets();
         });
-    
+    });
     </script>
-<script>
-  // Initialize tooltips globally
-  document.addEventListener("DOMContentLoaded", function () {
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    )
-    tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
-  })
-</script>
+    
+    <script>
+        // Initialize tooltips globally
+        document.addEventListener("DOMContentLoaded", function () {
+            const tooltipTriggerList = [].slice.call(
+                document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            )
+            tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
+        })
+    </script>
 </body>
 </html>
