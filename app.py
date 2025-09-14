@@ -218,6 +218,7 @@ def init_db():
             grams REAL,
             entire REAL,
             serving REAL,
+            bigserving REAL,
             ean TEXT UNIQUE,
             owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE       
         )
@@ -313,8 +314,8 @@ def init_db():
         # Insert default food
         cursor.execute('''
             INSERT INTO foods 
-            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, bigserving, ean)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             'broccoli',
             'Broccoli',
@@ -394,106 +395,6 @@ def init_workout_db():
     conn.close()
     print("[INIT] Workout database initialized safely.")
 
-    
-
-# Migrate JSON data to database
-def migrate_json_to_db():
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    FOOD_FILE = os.path.join(BASE_DIR, 'data', 'foods.json')
-    USAGE_FILE = os.path.join(BASE_DIR, 'data', 'food_usage.json')
-    
-    # Migrate foods
-    foods = {}
-    if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
-        try:
-            with open(FOOD_FILE, 'r') as f:
-                foods = json.load(f)
-        except json.JSONDecodeError:
-            print(f"Invalid JSON in {FOOD_FILE}, skipping migration")
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    for key, food in foods.items():
-        normalized_key = normalize_key(key)
-        # Handle EAN field - convert list to string if needed
-        ean = food.get('ean')
-        if isinstance(ean, list):
-            ean = ', '.join(ean) if ean else None
-        
-        try:
-            cursor.execute('''
-                INSERT INTO foods 
-                (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (key) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    carbs = EXCLUDED.carbs,
-                    sugars = EXCLUDED.sugars,
-                    fiber = EXCLUDED.fiber,
-                    proteins = EXCLUDED.proteins,
-                    fats = EXCLUDED.fats,
-                    saturated = EXCLUDED.saturated,
-                    salt = EXCLUDED.salt,
-                    calories = EXCLUDED.calories,
-                    grams = EXCLUDED.grams,
-                    half = EXCLUDED.half,
-                    entire = EXCLUDED.entire,
-                    serving = EXCLUDED.serving,
-                    ean = EXCLUDED.ean
-            ''', (
-                key,
-                food['name'],
-                safe_float(food['carbs']),  # Use safe_float
-                safe_float(food.get('sugars')),  # Use safe_float
-                safe_float(food.get('fiber')),  # Use safe_float
-                safe_float(food['proteins']),  # Use safe_float
-                safe_float(food['fats']),  # Use safe_float
-                safe_float(food.get('saturated')),  # Use safe_float
-                safe_float(food.get('salt')),  # Use safe_float
-                safe_float(food['calories']),  # Use safe_float
-                safe_float(food['grams'], 100),  # Use safe_float with default 100
-                safe_float(food.get('half'), None),  # Allow None for optional fields
-                safe_float(food.get('entire'), None),  # Allow None for optional fields
-                safe_float(food.get('serving'), None),  # Allow None for optional fields
-                ean
-            ))
-        except Exception as e:
-            print(f"Error inserting food {key}: {e}")
-    
-    conn.commit()
-    
-    # Backup if we successfully processed the file
-    if os.path.exists(FOOD_FILE) and os.path.getsize(FOOD_FILE) > 0:
-        os.rename(FOOD_FILE, FOOD_FILE + ".bak")
-    
-    # Migrate food_usage
-    usage = {}
-    if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
-        try:
-            with open(USAGE_FILE, 'r') as f:
-                usage = json.load(f)
-        except json.JSONDecodeError:
-            print(f"Invalid JSON in {USAGE_FILE}, skipping migration")
-    
-    for key, count in usage.items():
-        try:
-            cursor.execute('''
-                INSERT INTO food_usage (food_key, count)
-                VALUES (%s, %s)
-                ON CONFLICT (food_key) DO UPDATE SET count = food_usage.count + %s
-            ''', (key, count, count))
-        except Exception as e:
-            print(f"Error inserting usage for {key}: {e}")
-            
-        
-    conn.commit()
-    conn.close()
-    
-    # Backup if we successfully processed the file
-    if os.path.exists(USAGE_FILE) and os.path.getsize(USAGE_FILE) > 0:
-        os.rename(USAGE_FILE, USAGE_FILE + ".bak")
-
 # Forms (unchanged)
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
@@ -540,7 +441,7 @@ class UpdateProfileForm(FlaskForm):
     # Optional fields - safe to access even if DB column doesn't exist
     full_name = StringField('Full Name')
     main_sport = StringField('Main Sport / Activity')
-    fitness_goals = StringField('Fitness Goals')
+    socials = StringField('(@) Socials')
 
     # Avatar fields
     avatar_choice = RadioField("Choose Avatar", choices=[], default="default.png")
@@ -731,8 +632,8 @@ def save_food(food_data):
     try:
         cursor.execute('''
             INSERT INTO foods 
-            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, bigserving, ean)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (key) DO UPDATE SET
                 name = EXCLUDED.name,
                 carbs = EXCLUDED.carbs,
@@ -747,6 +648,7 @@ def save_food(food_data):
                 half = EXCLUDED.half,
                 entire = EXCLUDED.entire,
                 serving = EXCLUDED.serving,
+                bigserving = EXCLUDED.bigserving,
                 ean = EXCLUDED.ean
         ''', (
             food_data['key'],
@@ -763,6 +665,7 @@ def save_food(food_data):
             food_data.get('half'),
             food_data.get('entire'),
             food_data.get('serving'),
+            food_data.get('bigserving'),
             food_data.get('ean')
         ))
         conn.commit()
@@ -990,7 +893,6 @@ def calculate_calorie_status(calorie_difference):
     
 # Initialize database and migrate data
 init_db()
-migrate_json_to_db()
 update_food_keys_normalization()
 
 
@@ -1182,6 +1084,8 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+import json
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -1204,7 +1108,7 @@ def profile():
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name','main_sport','fitness_goals')
+            AND column_name IN ('full_name','main_sport','socials')
         """)
         columns = [row['column_name'] for row in cursor.fetchall()]
         extra_columns_exist = bool(columns)
@@ -1248,8 +1152,18 @@ def profile():
             update_params = [form.username.data, email_lower, avatar_filename]
 
             for col in columns:
-                update_query += f", {col} = %s"
-                update_params.append(getattr(form, col).data if hasattr(form, col) else '')
+                if col == "socials":
+                    # Parse socials JSON safely
+                    socials_json = request.form.get("socials", "[]")
+                    try:
+                        socials_data = json.loads(socials_json)
+                    except json.JSONDecodeError:
+                        socials_data = []
+                    update_query += ", socials = %s"
+                    update_params.append(json.dumps(socials_data))  # always store as JSON string
+                else:
+                    update_query += f", {col} = %s"
+                    update_params.append(getattr(form, col).data if hasattr(form, col) else '')
 
             update_query += " WHERE id = %s"
             update_params.append(current_user.id)
@@ -1264,7 +1178,10 @@ def profile():
             form.username.data = user_data.get('username', '')
             form.email.data = user_data.get('email', '')
             for col in columns:
-                if hasattr(form, col):
+                if col == "socials":
+                    # Preload socials JSON into hidden input
+                    form.socials.data = user_data.get('socials') or "[]"
+                elif hasattr(form, col):
                     getattr(form, col).data = user_data.get(col, '')
             form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
 
@@ -1289,6 +1206,7 @@ def profile():
         extra_columns_exist=extra_columns_exist,
         predefined_avatars=predefined_avatars
     )
+
 
 
 
@@ -1365,7 +1283,27 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
-
+@app.route('/get_favourite_grams', methods=['POST'])
+@login_required
+def get_favourite_grams():
+    try:
+        food_id = request.form.get('food_id')
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT last_grams FROM user_food_preferences 
+            WHERE user_id = %s AND food_id = %s
+        ''', (current_user.id, food_id))
+        result = cursor.fetchone()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'last_grams': result[0] if result else None   # ✅ use index
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    
 @app.route('/search_foods', methods=['POST'])
 @login_required
 def search_foods():
@@ -1428,6 +1366,7 @@ def search_foods():
             'serving_size': food['serving'],
             'half_size': food['half'],
             'entire_size': food['entire'],
+            'bigserving_size': food['bigserving'],
             'usage': food['usage'],
             'ean': food['ean']
         })
@@ -1483,6 +1422,8 @@ def get_food_details():
             grams = units * food['entire']
         elif unit_type == 'serving' and food.get('serving') is not None:
             grams = units * food['serving']
+        elif unit_type == 'bigserving' and food.get('bigserving') is not None:
+            grams = units * food['bigserving']
         else:
             unit_type = 'grams'
 
@@ -1512,7 +1453,8 @@ def get_food_details():
             "salt": salt,
             "serving_size": food.get("serving"),
             "half_size": food.get("half"),
-            "entire_size": food.get("entire")
+            "entire_size": food.get("entire"),
+            "bigserving_size": food.get("bigserving")
         })
 
     except Exception as e:
@@ -1533,6 +1475,18 @@ def log_food():
         meal_group = request.form.get('meal_group')
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
 
+                # Store the last used grams for this food
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO user_food_preferences (user_id, food_id, last_grams)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id, food_id) 
+            DO UPDATE SET last_grams = EXCLUDED.last_grams
+        ''', (current_user.id, food_id, units))
+        conn.commit()
+        conn.close()
+
         print(f"Logging food: original='{food_id}', normalized='{normalized_key}'")
         
         food = get_food_by_key(normalized_key)
@@ -1549,6 +1503,8 @@ def log_food():
             grams = units * food['entire']
         elif unit_type == 'serving' and food.get('serving') is not None:
             grams = units * food['serving']
+        elif unit_type == 'bigserving' and food.get('bigserving') is not None:
+            grams = units * food['bigserving']       
         else:
             grams = units
             unit_type = 'grams'
@@ -1879,6 +1835,7 @@ def get_visible_foods(user):
 @app.route('/save_food', methods=['POST'])
 @login_required
 def save_food_route():
+    print("Received form data:", request.form.to_dict())
     conn = None
     try:
         # Extract form data
@@ -1921,7 +1878,7 @@ def save_food_route():
         serving = parse_optional_float(request.form.get('serving'))
         half = parse_optional_float(request.form.get('half'))
         entire = parse_optional_float(request.form.get('entire'))
-
+        bigserving = parse_optional_float(request.form.get('bigserving'))
         # Grams (default 100)
         grams = parse_optional_float(request.form.get('grams')) or 100
         if grams < 0.001:
@@ -1960,11 +1917,11 @@ def save_food_route():
         # Insert food
         cursor.execute('''
             INSERT INTO foods
-            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, ean, owner_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (key, name, carbs, sugars, fiber, proteins, fats, saturated, salt, calories, grams, half, entire, serving, bigserving, ean, owner_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             key, name, carbs, sugars, fiber, proteins, fats, saturated, salt,
-            calories, grams, half, entire, serving, ean, owner_id
+            calories, grams, half, entire, serving, bigserving, ean, owner_id
         ))
 
         # Initialize usage per user
@@ -2012,6 +1969,7 @@ def calculate_weekly_averages(session_history):
                     "proteins": 0,
                     "fats": 0,
                     "carbs": 0,
+
                     "salt": 0,
                     "saturated": 0,
                     "fiber": 0,
@@ -3242,7 +3200,7 @@ def get_exercise_history(exercise_id):
                 s.date,
                 COUNT(ws.id) AS sets,
                 MAX(ws.weight) AS best_weight,
-                MAX(ws.weight || 'x' || ws.reps || 'kg') AS best_set,
+                MAX(ws.weight || 'kg × ' || ws.reps) AS best_set,
                 SUM(ws.volume) AS volume
             FROM workout_sets ws
             JOIN workout_sessions s ON ws.session_id = s.id
@@ -3295,7 +3253,7 @@ def get_exercise_history(exercise_id):
             LIMIT 1
         ''', (user_id, exercise_id))
         best_set_row = cursor.fetchone()
-        best_set = f"{best_set_row['reps']}x{best_set_row['weight']}kg" if best_set_row else '-'
+        best_set = f"{best_set_row['weight']}kg × {best_set_row['reps']}" if best_set_row else '-'
         
         return jsonify({
             'name': exercise['name'],
@@ -3759,10 +3717,6 @@ if __name__ == '__main__':
         print("[INIT] Initializing workout database...")
         init_workout_db()  # now safe: users table exists
         print("[INIT] Workout database initialized.")
-
-        print("[INIT] Migrating JSON food data (if any)...")
-        migrate_json_to_db()
-        print("[INIT] JSON migration complete.")
 
         print("[INIT] Updating food keys normalization...")
         update_food_keys_normalization()
