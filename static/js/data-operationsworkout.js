@@ -230,6 +230,8 @@ function previewTemplate(templateId) {
                     const totalSets = groups[group].reduce((sum, ex) => sum + ex.sets, 0);
                     const icon = getMuscleIcon(group); // Use your icons
 
+                    const translatedGroup = t(group.toLowerCase());
+
                     html += `
                         <div class="mb-3 muscle-group-card">
         <button class="btn btn-dark w-100 d-flex justify-content-between align-items-center muscle-group-btn"
@@ -238,14 +240,15 @@ function previewTemplate(templateId) {
                 data-bs-target="#${groupId}"
                 aria-expanded="true"
                 aria-controls="${groupId}">
-            <span><i class="fas fa-${icon} me-2"></i>${group} (${totalSets} sets)</span>
+            <span><i class="fas fa-${icon} me-2"></i>${translatedGroup} (${totalSets} ${t('sets')})</span>
             <i class="fas fa-chevron-down chevron-icon"></i>
         </button>
         <div class="collapse show mt-2" id="${groupId}">
             <ul class="list-unstyled ps-4 mb-0">`;
                     groups[group].forEach(exercise => {
+                        const translatedExercise = t(exercise.exercise);
                         html += `<li class="mb-1">
-                                    <span class="fw-semibold">${exercise.exercise}</span> × ${exercise.sets} sets
+                                    <span class="fw-semibold">${translatedExercise}</span> × ${exercise.sets} ${t('sets')}
                                  </li>`;
                     });
 
@@ -253,7 +256,7 @@ function previewTemplate(templateId) {
                 });
 
                 $("#template-preview-content").html(html);
-                $("#template-preview-name").text(data.template.name);
+                $("#template-preview-name").text(t(data.template.name));
                 $("#apply-template-btn").data('template-id', templateId);
 
                 // Animate chevron rotation
@@ -272,7 +275,7 @@ function previewTemplate(templateId) {
 
             } else {
                 $("#template-preview-content").html(
-                    '<div class="text-center py-3">No exercises in this template</div>'
+                    `<div class="text-center py-3">${t('noTemplatesFound')}</div>`
                 );
             }
         },
