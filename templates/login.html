@@ -210,7 +210,7 @@ form-check-label
 <div class="container-page">
     <div class="card p-4">
         <div class="card-header text-center mb-3">
-            <h3>Login to Your Account</h3>
+            <h3>Kirjaudu Sisään</h3>
         </div>
         <div class="card-body">
             <form method="POST" action="">
@@ -220,7 +220,7 @@ form-check-label
                 <div class="form-group mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        {{ form.email(class="form-control", placeholder="Enter your email") }}
+                        {{ form.email(class="form-control", placeholder="Kirjoita sähköpostiosoitteesi") }}
                     </div>
                     {% if form.email.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -235,7 +235,7 @@ form-check-label
                 <div class="form-group mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        {{ form.password(class="form-control", placeholder="Enter your password") }}
+                        {{ form.password(class="form-control", placeholder="Kirjoita salasanasi") }}
                     </div>
                     {% if form.password.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -259,20 +259,20 @@ form-check-label
 
                 <div class="text-center mb-2">
                     <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-                        <i class="fas fa-key me-1"></i> Forgot Password?
+                        <i class="fas fa-key me-1"></i> Unohtuiko Salasana?
                     </a>
                 </div>
 
                 <div class="text-center pt-2 mt-3">
-                    <p class="mb-1">Don't have an account?</p>
+                    <p class="mb-1">Eikö löydy tiliä?</p>
                     <a href="{{ url_for('register') }}" class="accent-color fw-bold">
-                        <i class="fas fa-user-plus me-1"></i> Create Account
+                        <i class="fas fa-user-plus me-1"></i> Luo uusi tili
                     </a>
                 </div>
             </form>
         </div>
         <div class="social-login">
-    <h3>Or sign in with</h3>
+    <h3>Tai kirjaudu suoraan</h3>
     <div class="social-buttons">
         <!-- Google -->
         <a href="{{ url_for('oauth_login', provider='google') }}" class="btn btn-google">
