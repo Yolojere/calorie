@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/translationswo.js"></script>
   <style>
     /* ===== CSS VARIABLES ===== */
     :root {
@@ -546,7 +546,21 @@
     .toggle-icon i {
         transition: transform 0.2s ease;
     }
+.workout-table td.actions-cell {
+    display: table-cell !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    padding: 4px !important;
+}
 
+.workout-table td.actions-cell .delete-item {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
     .delete-item {
         margin: 0;
         line-height: 1;
@@ -773,10 +787,10 @@
     top: 100%;
     left: 0;
     min-width: 160px;
-    background-color: #333;
-    box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
-    border-radius: 10px;
-    border: 1px solid #ffffff;
+    border: 1px solid #555;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    background-color: #1e1e1e;
+    border-radius: 12px;
     z-index: 1000;
     overflow: hidden;
 
@@ -1083,9 +1097,9 @@
     .actions-cell {
         display: block !important;
         position: relative !important;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
         padding: 0 !important;
         background-color: var(--bg-tertiary) !important;
     }
@@ -1134,9 +1148,9 @@
     .rir-options {
         display: none;
         position: absolute;
-        background-color: #333;
+        background-color: #1e1e1e;
         min-width: 80px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         z-index: 999 !important;
         border-radius: 15px;
         overflow: visible;
@@ -2032,7 +2046,7 @@
     </div>
                 <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
                 <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
-                    - Track, eat, repeat -
+                    - Track, lift, repeat -
                 </a>
                 <button class="btn-beta">BETA</button>
                 <!-- Mobile Settings Dropdown (right-aligned) -->
@@ -2172,14 +2186,14 @@
         <!-- Workout Tracker Header -->
         <div class="workout-header d-none d-md-block">
             <div class="d-flex justify-content-between align-items-center">
-                <h2>Workout Tracker</h2>
+                <h2 data-i18n="workout_tracker">Workout Tracker</h2>
                 <div>
                     <button id="prev-week-btn" class="btn btn-sm btn-secondary me-2">
-                        <i class="fas fa-arrow-left me-1"></i> Prev
+                        <i class="fas fa-arrow-left me-1"></i><span data-i18n="prev"> Prev </span>
                     </button>
-                    <span id="week-display" class="fw-bold">Loading...</span>
+                    <span id="week-display" class="fw-bold" data-i18n="loading">Loading...</span>
                     <button id="next-week-btn" class="btn btn-sm btn-secondary ms-2">
-                        Next <i class="fas fa-arrow-right ms-1"></i>
+                       <span data-i18n="next">Next </span><i class="fas fa-arrow-right ms-1"></i>
                     </button>
                 </div>
             </div>
@@ -2197,7 +2211,7 @@
                 <!-- Toggle button for mobile -->
                 <div class="mobile-toggle-section d-md-none">
                     <div class="mobile-toggle-header" data-bs-toggle="collapse" data-bs-target="#add-set-body" aria-expanded="false">
-                        <h5>Add New Set</h5>
+                        <h5 data-i18n="add_new_set">Lisää Uusi Sarja</h5>
                         <span class="toggle-arrow"><i class="fas fa-chevron-down"></i></span>
                     </div>
                     
@@ -2205,18 +2219,18 @@
                         <!-- Add set form content -->
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label">Muscle Group</label>
+                                <label class="form-label" data-i18n="muscle_group">Lihasryhmä</label>
                                 <select id="muscle-group-select-mobile" class="form-select">
-                                    <option value="Chest">Chest</option>
-                                    <option value="Back">Back</option>
-                                    <option value="Legs">Legs</option>
-                                    <option value="Shoulders">Shoulders</option>
-                                    <option value="Arms">Arms</option>
-                                    <option value="Core">Core</option>
+                                    <option data-i18n="chest" value="Chest">Rinta</option>
+                                    <option data-i18n="back" value="Back">Selkä</option>
+                                    <option data-i18n="legs" value="Legs">Jalat</option>
+                                    <option data-i18n="shoulders" value="Shoulders">Olkapäät</option>
+                                    <option data-i18n="arms" value="Arms">Kädet</option>
+                                    <option data-i18n="core" value="Core">Vatsa</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Exercise</label>
+                                <label class="form-label" data-i18n="exercise">Liike</label>
                                 <div class="input-group">
                                     <select id="exercise-select-mobile" class="form-select">
                                         <!-- Populated by JavaScript -->
@@ -2229,7 +2243,7 @@
                                 </div>
                             </div>
                             <div class="col-4">
-                                <label class="form-label">Sets</label>
+                                <label class="form-label" data-i18n="sets">Sets</label>
                                 <select id="sets-input-mobile" class="form-select">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
@@ -2244,17 +2258,17 @@
                                 </select>
                             </div>
                             <div class="col-4">
-                                <label class="form-label">Reps</label>
+                                <label class="form-label" data-i18n="reps">Reps</label>
                                 <input type="number" id="reps-input-mobile" class="form-control" min="1" value="">
                             </div>
                             <div class="col-4">
-                                <label class="form-label">Weight (kg)</label>
+                                <label class="form-label" data-i18n="weight">Paino (kg)</label>
                                 <input type="number" id="weight-input-mobile" class="form-control" min="0.5" step="0.5" value="">
                             </div>
                         </div>
                         <div class="row g-3 mt-2">
                             <div class="col-12">
-                                <label class="form-label">RiR (Reps in Reserve)</label>
+                                <label class="form-label" data-i18n="rir_reps">RiR (Reps in Reserve)</label>
                                 <select id="rir-input-mobile" class="form-select">
                                     <option value="">None</option>
                                     <option value="Failure">Failure (0 RiR)</option>
@@ -2271,12 +2285,12 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Comments</label>
-                                <input type="text" id="comments-input-mobile" class="form-control" placeholder="Optional notes about the set">
+                                <label class="form-label" data-i18n="comments">Comments</label>
+                                <input type="text" id="comments-input-mobile" class="form-control" data-i18n="optional_notes" placeholder="Optional notes about the set">
                             </div>
                             <div class="col-12 d-flex align-items-end">
                                 <button id="save-set-btn-mobile" class="btn btn-jerew w-100">
-                                    <i class="fas fa-plus me-1"></i> Add Set
+                                    <i class="fas fa-plus me-1"></i> <span data-i18n="add_new_set">Add Set</span>
                                 </button>
                             </div>
                         </div>
@@ -2285,25 +2299,25 @@
                 
                 <div class="card d-none d-md-block">
                     <div class="card-header">
-                        <h5>Add New Set</h5>
+                        <h5 data-i18n="add_new_set">Add New Set</h5>
                     </div>
                     
                     <div class="card-body">
                         <!-- Add set form content -->
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <label class="form-label">Muscle Group</label>
+                                <label class="form-label" data-i18n="muscle_group">Lihasryhmä</label>
                                 <select id="muscle-group-select" class="form-select">
-                                    <option value="Chest">Chest</option>
-                                    <option value="Back">Back</option>
-                                    <option value="Legs">Legs</option>
-                                    <option value="Shoulders">Shoulders</option>
-                                    <option value="Arms">Arms</option>
-                                    <option value="Core">Core</option>
+                                    <option data-i18n="chest" value="Chest">Rinta</option>
+                                    <option data-i18n="back" value="Back">Selkä</option>
+                                    <option data-i18n="legs" value="Legs">Jalat</option>
+                                    <option data-i18n="shoulders" value="Shoulders">Olkapäät</option>
+                                    <option data-i18n="arms" value="Arms">Kädet</option>
+                                    <option data-i18n="core" value="Core">Vatsa</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Exercise</label>
+                                <label class="form-label" data-i18n="exercise">Exercise</label>
                                 <div class="input-group">
                                     <select id="exercise-select" class="form-select">
                                         <!-- Populated by JavaScript -->
@@ -2316,7 +2330,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Sets</label>
+                                <label class="form-label" data-i18n="sets">Sets</label>
                                 <select id="sets-input" class="form-select">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
@@ -2331,17 +2345,17 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Reps</label>
+                                <label class="form-label" data-i18n="reps">Reps</label>
                                 <input type="number" id="reps-input" class="form-control" min="1" value="">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Weight (kg)</label>
+                                <label class="form-label" data-i18n="weight">Weight (kg)</label>
                                 <input type="number" id="weight-input" class="form-control" min="0.5" step="0.5" value="">
                             </div>
                         </div>
                         <div class="row g-3 mt-2">
                             <div class="col-md-3">
-                                <label class="form-label">RiR (Reps in Reserve)</label>
+                                <label class="form-label" data-i18n="rir_reps">RiR (Reps in Reserve)</label>
                                 <select id="rir-input" class="form-select">
                                     <option value="">None</option>
                                     <option value="Failure">Failure (0 RiR)</option>
@@ -2358,12 +2372,12 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Comments</label>
-                                <input type="text" id="comments-input" class="form-control" placeholder="Optional notes about the set">
+                                <label class="form-label" data-i18n="comments">Comments</label>
+                                <input type="text" id="comments-input" class="form-control" data-i18n="optional_notes" placeholder="Optional notes about the set">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button id="save-set-btn" class="btn btn-jerew w-100">
-                                    <i class="fas fa-plus me-1"></i> Add Set
+                                    <i class="fas fa-plus me-1"></i><span data-i18n="add_new_set"> Add Set </span>
                                 </button>
                             </div>
                         </div>
@@ -2385,9 +2399,9 @@
         </div>
       </div>
       <div class="modal-footer bg-black">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="close">Close</button>
         <button id="copy-comparison-btn" type="button" class="btn btn-primary">
-          <i class="fas fa-copy me-1"></i> Copy This Workout
+          <i class="fas fa-copy me-1"></i><span data-i18n="copy_this_workout"> Copy This Workout </span>
         </button>
       </div>
     </div>
@@ -2401,7 +2415,7 @@
                 <div class="card">
                     <!-- Card Header -->
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Workout Log</h5>
+                        <h5 class="mb-0" data-i18n="workout_log">Workout Log</h5>
 
                         <!-- Mobile-only date selector with spacing -->
                         <div class="d-block d-lg-none ms-2">
@@ -2425,7 +2439,7 @@
                         <div id="workout-session-container" class="p-2">
                             <!-- Initial loading message -->
                             <div class="text-center py-4 text-muted">
-                                <i class="fas fa-spinner fa-spin me-2"></i> Loading workout data...
+                                <i class="fas fa-spinner fa-spin me-2"></i><span data-i18n="loading_workout_data"> Ladataan treenitietoja... </span>
                             </div>
                         </div>
                     </div>
@@ -2435,54 +2449,54 @@
                             <!-- Apply Template -->
                             <button id="templateDropdown" class="btn btn-jere dropdown-toggle flex-fill text-center" data-bs-toggle="dropdown">
                                 <i class="fas fa-layer-group fa-lg"></i>
-                                <span class="btn-label d-block d-md-inline">Apply</span>
+                                <span class="btn-label d-block d-md-inline" data-i18n="apply">Apply</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end w-70" id="template-list-desktop">
-                                <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+                                <li><a class="dropdown-item" href="#" data-i18n="loading_templates">Loading templates...</a></li>
                             </ul>
 
                             <!-- Save Workout -->
                             <button type="button" class="btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                                 <i class="fas fa-dumbbell fa-lg"></i>
-                                <span class="btn-label d-block d-md-inline">Save W.O.</span>
+                                <span class="btn-label d-block d-md-inline" data-i18n="save_workout">Save W.O.</span>
                             </button>
 
                             <!-- Copy Workout -->
                             <button id="copy-workout-btn" class="btn btn-jere flex-fill text-center">
                                 <i class="fas fa-copy fa-lg"></i>
-                                <span class="btn-label d-block d-md-inline">Copy</span>
+                                <span class="btn-label d-block d-md-inline" data-i18n="copy">Copy</span>
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Mobile Footer -->
-        <div class="d-lg-none mobile-footer p-2">
+                    </div>
+                    <div class="d-lg-none mobile-footer p-2">
             <div class="d-flex justify-content-between">
                 <!-- Apply Template -->
                 <button id="templateDropdownMobile" class="btn btn-jere flex-fill text-center dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="fas fa-layer-group"></i>
-                    <span class="btn-label d-block">&nbsp;Apply</span>
+                    <span class="btn-label d-block" data-i18n="apply">&nbsp;Apply</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
-                    <li><a class="dropdown-item" href="#">Loading templates...</a></li>
+                    <li><a class="dropdown-item" href="#" data-i18="loading_templates">Loading templates...</a></li>
                 </ul>
 
                 <!-- Save Workout -->
                 <button type="button" class="btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
                     <i class="fas fa-dumbbell"></i>
-                    <span class="btn-label d-block">&nbsp;Save W.O.</span>
+                    <span class="btn-label d-block" data-i18n="save_workout">&nbsp;Save W.O.</span>
                 </button>
 
                 <!-- Copy Workout -->
                 <button id="copy-workout-mobile-btn" class="btn btn-jere flex-fill text-center">
                     <i class="fas fa-copy"></i>
-                    <span class="btn-label d-block">&nbsp;Copy</span>
+                    <span class="btn-label d-block" data-i18="copy">&nbsp;Kopioi</span>
                 </button>
             </div>
         </div>
+            </div>
+        </div>
+        
+
 
 
     <!-- Add Exercise Modal -->
@@ -2490,36 +2504,36 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-black">
-                    <h5 class="modal-title">Add New Exercise</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" data-i18="add_exercise">Add Exercise</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" data-i18="close" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form>
                         <div class="mb-3">
-                            <label class="form-label">Exercise Name</label>
+                            <label class="form-label" data-i18="exercise_name">Exercise Name</label>
                             <input type="text" id="new-exercise-name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Muscle Group</label>
+                            <label class="form-label" data-i18="muscle_group">Muscle Group</label>
                             <select id="new-muscle-group" class="form-select" required>
-                                <option value="Chest">Chest</option>
-                                <option value="Back">Back</option>
-                                <option value="Legs">Legs</option>
-                                <option value="Shoulders">Shoulders</option>
-                                <option value="Arms">Arms</option>
-                                <option value="Core">Core</option>
+                                <option data-i18="chest" value="Chest">Chest</option>
+                                <option data-i18="back" value="Back">Back</option>
+                                <option data-i18="legs" value="Legs">Legs</option>
+                                <option data-i18="shoulders" value="Shoulders">Shoulders</option>
+                                <option data-i18="arms" value="Arms">Arms</option>
+                                <option data-i18="core" value="Core">Core</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Description (Optional)</label>
+                            <label class="form-label" data-i18="description">Description</label>
                             <textarea id="new-exercise-desc" class="form-control" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer bg-black">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18="cancel">Cancel</button>
                     
-                    <button id="save-exercise-btn" type="button" class="btn btn-primary">Save Exercise</button>
+                    <button id="save-exercise-btn" type="button" class="btn btn-primary" data-i18="save_exercise">Save Exercise</button>
                     
                 </div>
             </div>
@@ -2531,8 +2545,8 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-black">
-                    <h5 class="modal-title">Template Preview: <span id="template-preview-name"></span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" data-i18="template_preview">Template Preview: <span id="template-preview-name"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" data-i18="close" aria-label="Close"></button>
                 </div>
                 <div class="modal-body bg-dark text-light" id="template-preview-modal-body">
     <div id="template-preview-content" class="p-2">
@@ -2541,8 +2555,8 @@
 </div>
 
                 <div class="modal-footer bg-black">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="apply-template-btn">Apply Template</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="apply-template-btn" data-i18="apply_template">Apply Template</button>
                 </div>
             </div>
         </div>
@@ -2555,13 +2569,13 @@
       
       <!-- Header -->
       <div class="modal-header bg-black">
-        <h5 class="modal-title">Copy Workout</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" data-i18="copy_this_workout">Copy Workout</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" data-i18="close" aria-label="Close"></button>
       </div>
 
       <!-- Body -->
       <div class="modal-body">
-        <p>Copy current workout to:</p>
+        <p data-i18="copy_current_workout">Copy current workout to:</p>
 
         <div id="calendar-container">
           <div class="calendar-header">
@@ -2572,20 +2586,20 @@
 
           <div class="calendar-grid">
             <!-- Weekday headers -->
-            <div class="day-name">Sun</div>
-            <div class="day-name">Mon</div>
-            <div class="day-name">Tue</div>
-            <div class="day-name">Wed</div>
-            <div class="day-name">Thu</div>
-            <div class="day-name">Fri</div>
-            <div class="day-name">Sat</div>
+            <div class="day-name" data-i18n="sun">Su</div>
+            <div class="day-name" data-i18n="mon">Ma</div>
+            <div class="day-name" data-i18n="tue">Ti</div>
+            <div class="day-name" data-i18n="wed">Ke</div>
+            <div class="day-name" data-i18n="thu">To</div>
+            <div class="day-name" data-i18n="fri">Pe</div>
+            <div class="day-name" data-i18n="sat">La</div>
             <!-- Dates will be injected here -->
           </div>
         </div>
       </div>
       <!-- Footer -->
       <div class="modal-footer bg-black">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -2595,30 +2609,30 @@
   <div class="modal-dialog">
     <div class="modal-content bg-dark text-light">
       <div class="modal-header">
-        <h5 class="modal-title">Save Workout</h5>
+        <h5 class="modal-title"><span data-i18="save_workout_header">Tallenna Treeni</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         
         <!-- Workout Name -->
         <div class="mb-3">
-          <label class="form-label">Workout Name</label>
-          <input type="text" class="form-control bg-black text-light" id="workout-name-input" placeholder="e.g. Push Day, Chest Volume, etc.">
+          <label class="form-label" data-i18n="workout_name">Workout Name</label>
+          <input type="text" class="form-control bg-black text-light" id="workout-name-input" data-i18n="workout_name_input" placeholder="e.g. Legs, Chest Volume, etc.">
         </div>
         
         <!-- Focus Type -->
         <div class="mb-3">
-          <label class="form-label">Focus (comparing vs last workout of that focus)</label>
+          <label class="form-label" data-i18n="focus_type_comp">Focus (Verrataan viimeiseen saman fokuksen treeniin)</label>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-jere flex-fill focus-btn" data-focus="strength">Strength</button>
-            <button type="button" class="btn btn-jere flex-fill focus-btn" data-focus="hypertrophy">Hypertrophy</button>
+            <button type="button" class="btn btn-jere flex-fill focus-btn" data-i18n="strength" data-focus="strength">Strength</button>
+            <button type="button" class="btn btn-jere flex-fill focus-btn" data-i18n="hypertrophy" data-focus="hypertrophy">Hypertrophy</button>
           </div>
         </div>
         
       </div>
       <div class="modal-footer bg-black">
-  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-  <button id="save-workout-btn" type="button" class="btn btn-primary">Save Workout</button>
+  <button type="button" class="btn btn-jere" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+  <button id="save-workout-btn" type="button" class="btn btn-jere" data-i18n="save_workout">Save Workout</button>
 </div>
     </div>
   </div>
@@ -2667,7 +2681,7 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
     // FIXED: Always add weekday headers first
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     weekdays.forEach(day => {
-        $grid.append(`<div class="day-name">${day}</div>`);
+        $grid.append(`<div class="day-name">${t(day)}</div>`);
     });
 
     const today = new Date();
