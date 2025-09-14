@@ -165,7 +165,7 @@ input.form-control:-webkit-autofill {
 
                 <fieldset class="form-group mb-4">
                     <legend>
-                        <i class="fas fa-key me-2"></i>Enter your email to reset password
+                        <i class="fas fa-key me-2"></i>Kirjoita sähköpostiosoitteesi, salasanan nollaamiseksi.
                     </legend>
                     <div class="form-group mb-3">
                         <div class="input-group">
@@ -173,7 +173,7 @@ input.form-control:-webkit-autofill {
                             {% if form.email.errors %}
                                 {{ form.email(class="form-control is-invalid", placeholder="Enter your account email") }}
                             {% else %}
-                                {{ form.email(class="form-control", placeholder="Enter your account email") }}
+                                {{ form.email(class="form-control", placeholder="Kirjoita tilisi sähköposti") }}
                             {% endif %}
                         </div>
                         {% if form.email.errors %}
@@ -183,19 +183,19 @@ input.form-control:-webkit-autofill {
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <small class="text-muted">We'll send password reset instructions to this email</small>
+                            <small class="text-muted">Me lähetämme salasanan nollausohjeet tähän sähköpostiin</small>
                         {% endif %}
                     </div>
                 </fieldset>
 
                 <div class="form-group d-grid mb-3">
                     <button type="submit" class="btn-jere">
-                        <i class="fas fa-paper-plane me-2"></i> Send Reset Instructions
+                        <i class="fas fa-paper-plane me-2"></i> Lähetä Salasanan Nollaus Sähköposti
                     </button>
                 </div>
 
                 <div class="text-center mt-3">
-                    <p class="mb-1">Remember your password?</p>
+                    <p class="mb-1">Muistitko sittenkin salasanasi?</p>
                     <a href="{{ url_for('login') }}" class="accent-color fw-bold">
                         <i class="fas fa-sign-in-alt me-1"></i> Sign In
                     </a>
@@ -208,15 +208,15 @@ input.form-control:-webkit-autofill {
             <div class="d-flex justify-content-center">
                 <div class="me-4">
                     <i class="fas fa-shield-alt fa-2x"></i>
-                    <p class="mt-2">Secure</p>
+                    <p class="mt-2" data-18n="secure">Luotettava</p>
                 </div>
                 <div class="me-4">
                     <i class="fas fa-lock fa-2x"></i>
-                    <p class="mt-2">Encrypted</p>
+                    <p class="mt-2" data-18n="encrypted">Salattu</p>
                 </div>
                 <div>
                     <i class="fas fa-user-check fa-2x"></i>
-                    <p class="mt-2">Verified</p>
+                    <p class="mt-2" data-18n="verified">Varmennettu</p>
                 </div>
             </div>
         </div>
