@@ -95,13 +95,18 @@ function getWeekDates(date) {
 }
 
 function formatDate(date) {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(currentLang === "fi" ? "fi-FI" : "en-US", { 
+        month: 'short', 
+        day: 'numeric' 
+    });
 }
 
 function getWeekNumber(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tempDate.getUTCDay() || 7; // Sunday -> 7
+    tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
 }
 
 function saveScrollPosition() {
@@ -146,18 +151,21 @@ function formatDateForSelector(date) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    let dateString = date.toLocaleDateString('en-GB', { 
+    // Pick locale dynamically
+    const locale = currentLang === "fi" ? "fi-FI" : "en-GB";
+
+    let dateString = date.toLocaleDateString(locale, { 
         weekday: 'short', 
         month: 'numeric', 
         day: 'numeric' 
     });
 
     if (date.toDateString() === today.toDateString()) {
-        return "Today - " + dateString;
+        return `${t('today')} - ${dateString}`;
     } else if (date.toDateString() === yesterday.toDateString()) {
-        return "Yesterday - " + dateString;
+        return `${t('yesterday')} - ${dateString}`;
     } else if (date.toDateString() === tomorrow.toDateString()) {
-        return "Tomorrow - " + dateString;
+        return `${t('tomorrow')} - ${dateString}`;
     } else {
         return dateString;
     }
