@@ -378,7 +378,7 @@
     </div>
                 <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
                 <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
-                    - Track, eat, repeat -
+                    - Track, add food, repeat -
                 </a>
                 <button class="btn-beta">BETA</button>
                 <!-- Mobile Settings Dropdown (right-aligned) -->
@@ -527,7 +527,7 @@
                         <div class="row nutrition-row">
                             <div class="col-md-6">
                                 <button id="scanNutritionLabel" class="btn scan-btn">
-                                    <i class="fa-solid fa-camera me-2" data-i18n="scan_label"></i>Scan Label (Incoming)
+                                    <i class="fa-solid fa-camera me-2"></i><span data-i18n="scan_label">Scan Label (Incoming)</span>
                                 </button>
                             </div>
                         </div>
@@ -546,7 +546,7 @@
     <div class="row nutrition-row">
         <div class="col-md-6">
             <label class="form-label" data-i18n="ean_barcode">EAN/Barcode</label>
-            <input type="text" id="ean-input" name="ean" class="form-control">
+            <input type="text" id="ean-input" name="ean" class="form-control" placeholder="not required" data-i18n="not_required">
         </div>
     </div>
     
@@ -604,19 +604,24 @@
    
     <!-- Row 8: Serving Sizes -->
     <div class="row nutrition-row">
-        <div class="col-md-2">
-            <label class="form-label" data-i18n="serving_g">Serving Size (g)</label>
-            <input type="number" name="serving" class="form-control" step="0.1" min="0" data-i18n="serving" placeholder="1 piece/serving">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label" data-i18n="half_g">Half Package (g)</label>
-            <input type="number" name="half" class="form-control" step="0.1" min="0">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label" data-i18n="entire_g">Entire Package (g)</label>
-            <input type="number" name="entire" class="form-control" step="0.1" min="0">
-        </div>
+    <div class="col-md-2">
+        <label class="form-label" data-i18n="serving_g">Serving Size (g)</label>
+        <input type="number" name="serving" class="form-control" step="0.1" min="0" data-i18n="serving" placeholder="1 piece/serving">
     </div>
+    <div class="col-md-2">
+        <label class="form-label" data-i18n="bigserving_g">Big Serving(g)</label>
+        <input type="number" name="bigserving" class="form-control" step="0.1" min="0">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" data-i18n="half_g">Half Package (g)</label>
+        <input type="number" name="half" class="form-control" step="0.1" min="0">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" data-i18n="entire_g">Entire Package (g)</label>
+        <input type="number" name="entire" class="form-control" step="0.1" min="0">
+    </div>
+</div>
+
     
     <!-- Row 9: Base Grams -->
     <div class="row nutrition-row">
@@ -634,9 +639,9 @@
             </div>
             <div class="alert alert-danger d-none" id="error-message"></div>
             <!-- Changed button type to submit -->
-            <button type="submit" class="btn w-100 save-food-btn" data-i18n="save_food">
+            <button type="submit" class="btn w-100 save-food-btn">
   <i class="fa-solid fa-circle-plus me-2"></i>
-  Save Food
+  <span data-i18n="save_food">Save Food</span>
 </button>
         </div>
     </div>
@@ -837,10 +842,12 @@
     const serving = $('input[name="serving"]').val();
     const half = $('input[name="half"]').val();
     const entire = $('input[name="entire"]').val();
+    const bigserving = $('input[name="bigserving"]').val();
 
     if (serving) formData.serving = serving;
     if (half) formData.half = half;
     if (entire) formData.entire = entire;
+    if (bigserving) formData.bigserving = bigserving;
 
     // Submit via AJAX
     $.ajax({
