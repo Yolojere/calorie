@@ -668,7 +668,11 @@
                 color: #000000 !important;
                 transform: translateY(0);
             }
-            
+
+            /* portion buttons */
+            #portion-buttons .portion-btn {
+             margin: 3px; /* spacing between buttons */
+            }
             .portion-btn {
                 display: inline-block;
                 background-color: #1b1b1b;
@@ -694,7 +698,21 @@
                 transform: scale(1.02);
                 box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
             }
-            
+            /* Favorite portion button */
+            .favourite-btn {
+                background: linear-gradient(135deg, #ffd700, #ffa500) !important;
+                color: #000 !important;
+                border: 1px solid #ffa500 !important;
+            }
+
+            .favourite-btn:hover {
+                background: linear-gradient(135deg, #ffa500, #ff8c00) !important;
+            }
+
+            .favourite-btn.active {
+                background: linear-gradient(135deg, #ff8c00, #ff7700) !important;
+                border: 2px solid #000 !important;
+            }
             #action-move, #action-copy {
                 background: #1b1b1b !important;
                 color: #fff !important;
@@ -2693,7 +2711,7 @@
                         </div>
 
                         <!-- Portion buttons (centered) -->
-                <div class="d-flex justify-content-center mb-3" id="portion-buttons">
+                <div class="d-flex flex-wrap justify-content-center mb-3" id="portion-buttons">
                             <!-- Buttons will be added dynamically -->
                                 </div>
                             
@@ -2733,7 +2751,7 @@
                 <div class="card bg-dark h-100 d-flex flex-column">
                     <div class="card-header bg-black text-light d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <h7 data-i18n="food_log">Food Log</h7>
+                            <h7 data-i18n="food_log">Ruokapäiväkirja</h7>
                             <!-- Toggle Grid Button -->
                             <button id="toggle-grid-btn" class="btn active ms-3 p-1">
                                 <i class="bi bi-file-bar-graph"></i>
@@ -2891,20 +2909,20 @@
         <div class="combined-card">
             <div class="card-section">
                 <i class="fas fa-running"></i>
-                <div class="label" data-i18n="activity">Activity</div>
+                <div class="label" data-i18n="activity">Aktiivisuus</div>
                 <div class="value" id="mobile-activity-value">
                     {% if current_tdee %}{{ current_tdee|round(0) }} kcal{% else %}Not calculated{% endif %}
                 </div>
             </div>
             <div class="card-section today-section">
                 <i class="fas fa-balance-scale"></i>
-                <div class="label" data-i18n="today">Today</div>
+                <div class="label" data-i18n="today">Tänään</div>
                 <div class="today-value" id="mobile-today-value">{{ calorie_difference }}</div>
                 <div id="mobile-status-text" class="status-text {{ status_class }}">{{ calorie_status }}</div>
             </div>
             <div class="card-section">
                 <i class="fas fa-fire"></i>
-                <div class="label" data-i18n="calories">Calories</div>
+                <div class="label" data-i18n="calories">Kalorit</div>
                 <div class="value" id="mobile-calories-value">{{ totals.calories | round(0) }} kcal</div>
             </div>
         </div>
@@ -2922,46 +2940,46 @@
         <div class="nutrition-grid" style="height: 100%;">
             <div class="grid-cell grid-header">
                 <i class="fas fa-calculator"></i>
-                <span data-i18n="totals">Totals</span>
+                <span data-i18n="totals">Yhteenveto</span>
             </div>
             <div class="grid-cell grid-calories">
                 <i class="fas fa-fire"></i>
-                <span data-i18n="calories">Calories</span>
+                <span data-i18n="calories">Kalorit</span>
                 <div class="grid-value" id="grid-calories">{{ totals.calories | round(1) }}</div>
             </div>
             <div class="grid-cell grid-proteins">
                 <i class="fas fa-drumstick-bite"></i>
-                <span data-i18n="proteins">Proteins</span>
+                <span data-i18n="proteins">Proteiini</span>
                 <div class="grid-value" id="grid-proteins">{{ totals.proteins | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-carbs">
                 <i class="fas fa-bread-slice"></i>
-                <span data-i18n="carbs">Carbs</span>
+                <span data-i18n="carbs">Hiilari</span>
                 <div class="grid-value" id="grid-carbs">{{ totals.carbs | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-fats">
                 <i class="fas fa-oil-can"></i>
-                <span data-i18n="fats">Fats</span>
+                <span data-i18n="fats">Rasva</span>
                 <div class="grid-value" id="grid-fats">{{ totals.fats | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-saturated">
                 <i class="fas fa-bacon"></i>
-                <span data-i18n="saturated">Saturated</span>
+                <span data-i18n="saturated">Tyydyttynyt</span>
                 <div class="grid-value" id="grid-saturated">{{ totals.saturated | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-sugars">
                 <i class="fas fa-candy-cane"></i>
-                <span data-i18n="sugars">Sugars</span>
+                <span data-i18n="sugars">Sokeri</span>
                 <div class="grid-value" id="grid-sugars">{{ totals.sugars | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-fiber">
                 <i class="fas fa-apple-alt"></i>
-                <span data-i18n="fiber">Fiber</span>
+                <span data-i18n="fiber">Kuitu</span>
                 <div class="grid-value" id="grid-fiber">{{ totals.fiber | round(1) }}g</div>
             </div>
             <div class="grid-cell grid-salt">
                 <i class="fas fa-mortar-pestle"></i>
-                <span data-i18n="salt">Salt</span>
+                <span data-i18n="salt">Suola</span>
                 <div class="grid-value" id="grid-salt">{{ totals.salt | round(1) }}g</div>
             </div>
         </div>
@@ -3010,11 +3028,11 @@
                     <div class="mb-3">
                         <label class="form-label" data-i18n="select_meal_group">Select Meal Group</label>
                         <select id="target-group" class="form-select bg-secondary text-light">
-                            <option data-i18n="breakfast" value="breakfast">Breakfast</option>
-                            <option data-i18n="lunch" value="lunch">Lunch</option>
-                            <option data-i18n="dinner" value="dinner">Dinner</option>
-                            <option data-i18n="snack" value="snack">Snack</option>
-                            <option data-i18n="other" value="other">Other</option>
+                            <option data-i18n="breakfast" value="breakfast">Aamiainen</option>
+                            <option data-i18n="lunch" value="lunch">Lounas</option>
+                            <option data-i18n="dinner" value="dinner">Päivällinen</option>
+                            <option data-i18n="snack" value="snack">Välipala</option>
+                            <option data-i18n="other" value="other">Muu</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -3052,11 +3070,11 @@
                             </div>
                         </div>
                     </div>
-    <div class="modal-footer bg-black py-1">
+    <!-- <div class="modal-footer bg-black py-1">
         <button type="button" class="btn modal-btn" data-bs-dismiss="modal">Cancel</button>
         <button type="button" id="recipe-yes" class="btn modal-btn">Yes</button>
         <button type="button" id="recipe-save" class="btn modal-btn d-none">Save Recipe</button>
-    </div>
+    </div> -->
                 </div>
             </div>
         </div>
@@ -3226,7 +3244,7 @@
                     
                     // If we have a current food, update portion buttons
                     if (currentFood) {
-                        updatePortionButtons(currentFood);
+                        updatePortionButtons(currentFood, favouriteGrams);
                     }
                     
                     // Also update when language is changed
@@ -3237,7 +3255,7 @@
                 
                 // Refresh portion buttons if we have a current food
                 if (typeof currentFood !== 'undefined' && currentFood) {
-                    updatePortionButtons(currentFood);
+                    updatePortionButtons(currentFood, favouriteGrams);
                 }
                 
                 // Update progress bars if visible
@@ -3646,54 +3664,66 @@ function hideEmptyGroups() {
                     $('#rt-breakdown-container').addClass('d-none');
                 }
                 
-                $(document).on('click', '.food-item', function() {
-        const foodId = $(this).data('id');
-        const servingSize = $(this).data('serving');
-        const halfSize = $(this).data('half');
-        const entireSize = $(this).data('entire');
-        
-        $('#food-search').val($(this).find('.food-name').text().trim());
-        $('#search-results').empty();
-        
-        // Fetch actual food data from server
-        $.post('/get_food_details', { 
-            food_id: foodId 
-        }, function(foodData) {
-            if (foodData && foodData.success) {
-                // Store current food with actual nutrition data
-                currentFood = {
-                    id: foodId,
-                    serving_size: servingSize,
-                    half_size: halfSize,
-                    entire_size: entireSize,
-                    calories: parseFloat(foodData.calories) || 0,
-                    proteins: parseFloat(foodData.proteins) || 0,
-                    carbs: parseFloat(foodData.carbs) || 0,
-                    fats: parseFloat(foodData.fats) || 0,
-                    saturated: parseFloat(foodData.saturated) || 0,
-                    fiber: parseFloat(foodData.fiber) || 0,
-                    sugars: parseFloat(foodData.sugars) || 0,
-                    salt: parseFloat(foodData.salt) || 0
-                };
-                
-                $('#food-details').removeClass('d-none');
-                $('#grams').val(""); // Default to 100g
-                $('#add-food').data('id', foodId);
-                
-                updatePortionButtons(currentFood);
-                $('#rt-breakdown-container').removeClass('d-none');
-                updateRealTimeBreakdownFromForm();
-                
-                setTimeout(function() {
-                    $('#grams').trigger('focus').trigger('select');
-                }, 100);
-            } else {
-                alert('Error loading food details');
-            }
-        }).fail(function() {
-            alert('Failed to fetch food details');
-        });
+               $(document).on('click', '.food-item', async function() {
+    const foodId = $(this).data('id');
+
+    // Build food object directly from data attributes
+    const food = {
+        serving_size: $(this).data('serving'),
+        half_size: $(this).data('half'),
+        entire_size: $(this).data('entire'),
+        bigserving_size: $(this).data('bigserving')
+    };
+
+    // Get favourite grams from backend
+    const favouriteGrams = await getFavouriteGrams(foodId);
+
+    // Update portion buttons with both food + favourite
+    updatePortionButtons(food, favouriteGrams);
+
+    // Update search input + clear results
+    $('#food-search').val($(this).find('.food-name').text().trim());
+    $('#search-results').empty();
+
+    // Fetch actual food data from server
+    $.post('/get_food_details', { food_id: foodId }, function(foodData) {
+        if (foodData && foodData.success) {
+            // Store current food with actual nutrition data
+            currentFood = {
+                id: foodId,
+                serving_size: food.serving_size,   // ✅ use food object
+                half_size: food.half_size,
+                entire_size: food.entire_size,
+                bigserving_size: food.bigserving_size,
+                calories: parseFloat(foodData.calories) || 0,
+                proteins: parseFloat(foodData.proteins) || 0,
+                carbs: parseFloat(foodData.carbs) || 0,
+                fats: parseFloat(foodData.fats) || 0,
+                saturated: parseFloat(foodData.saturated) || 0,
+                fiber: parseFloat(foodData.fiber) || 0,
+                sugars: parseFloat(foodData.sugars) || 0,
+                salt: parseFloat(foodData.salt) || 0
+            };
+            
+            $('#food-details').removeClass('d-none');
+            $('#grams').val(""); // Default to 100g
+            $('#add-food').data('id', foodId);
+            
+            updatePortionButtons(currentFood, favouriteGrams); // ✅ pass favourite too
+            $('#rt-breakdown-container').removeClass('d-none');
+            updateRealTimeBreakdownFromForm();
+            
+            setTimeout(function() {
+                $('#grams').trigger('focus').trigger('select');
+            }, 100);
+        } else {
+            alert('Error loading food details');
+        }
+    }).fail(function() {
+        alert('Failed to fetch food details');
     });
+});
+
                 
 function handlePortionClick(e) {
     e.stopPropagation();
@@ -4573,10 +4603,11 @@ function createItemHtml(item) {
                     
                     return `
                         <a class="list-group-item list-group-item-action food-item small text-start" 
-                        data-id="${food.id}" 
-                        data-serving="${food.serving_size || ''}"
+                        data-id="${food.id}" }"
+                        data-entire="${food.entire_size || ''}"
                         data-half="${food.half_size || ''}"
-                        data-entire="${food.entire_size || ''}">
+                        data-serving="${food.serving_size || ''}"
+                        data-bigserving="${food.bigserving_size || ''}">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="food-name">${food.name}</span>
                                 <div>
@@ -4598,15 +4629,16 @@ function createItemHtml(item) {
                     return formatted.length > 5 ? num.toFixed(1) : formatted;
                 }
                 
-                function updatePortionButtons(food) {
+                function updatePortionButtons(food, favouriteGrams) {    
     const container = $('#portion-buttons');
     container.empty();
 
     const portionTypes = [
-        { type: 'serving', size: food.serving_size },
+        { type: 'entire', size: food.entire_size },            
         { type: 'half', size: food.half_size },
-        { type: 'entire', size: food.entire_size }
-    ];
+        { type: 'serving', size: food.serving_size },
+        { type: 'bigserving', size: food.bigserving_size }  
+    ];     
 
     portionTypes.forEach(portion => {
         if (portion.size) {
@@ -4621,10 +4653,29 @@ function createItemHtml(item) {
             container.append(button);
         }
     });
-}
 
-                
-                function initPortionControls() {
+    if (favouriteGrams) {
+        const favouriteButton = $(`
+            <button type="button" class="btn portion-btn favourite-btn" 
+                    data-portion-type="favourite" 
+                    data-portion-size="${favouriteGrams}">
+                ${t("Suosikki")} (${favouriteGrams}g)
+            </button>
+        `);
+        container.append(favouriteButton);
+    }
+}
+function getFavouriteGrams(foodId) {
+    return new Promise((resolve) => {
+        $.post('/get_favourite_grams', { food_id: foodId }, response => {
+                console.log("Favourite response:", response);
+            resolve(response.last_grams !== undefined ? response.last_grams : null);
+        }).fail(() => {
+            resolve(null);
+        });
+    });
+}
+                   function initPortionControls() {
                     // Document click handler to reset portion buttons
                     $(document).on('click', function(e) {
                         const target = $(e.target);
@@ -5317,9 +5368,9 @@ $(document).on('sessionUpdated', function() {
                         <div id="ean-alert" 
                             class="alert alert-warning alert-dismissible fade show text-center p-2 small" 
                             role="alert">
-                            EAN <strong>${query}</strong> not found in database.<br>
-                            <button id="create-custom-food" class="btn portion-btn btn-primary mt-2">
-                                Create new food
+                            <span data-i18n="ean_not_found">Viivakoodia</span> <strong>${query}</strong> <span data-i18n="in_data_base">Ei löytynyt tietokannasta</span><br>
+                            <button id="create-custom-food" class="btn portion-btn btn-primary mt-2" data-i18n="create_new_food">
+                                Tee uusi ruoka
                             </button>
                         </div>
                     `;
@@ -5338,7 +5389,7 @@ $(document).on('sessionUpdated', function() {
 
                 } else {
                     // Generic case
-                    resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    resultsHtml = '<div class="text-center p-2 small"><span data-i18n="no_results_found">No results found</span></div>';
                 }
             }
 
