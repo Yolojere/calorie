@@ -152,7 +152,7 @@ input.form-control:-webkit-autofill {
 <div class="container-page">
     <div class="card p-4">
         <div class="card-header text-center mb-3">
-            <h3>Create Your Account</h3>
+            <h3>Luo uusi tili</h3>
         </div>
         <div class="card-body">
             <form method="POST" action="">
@@ -161,7 +161,7 @@ input.form-control:-webkit-autofill {
                 <div class="mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        {{ form.email(class="form-control", placeholder="Enter your email address") }}
+                        {{ form.email(class="form-control", placeholder="Kirjoita sähköpostiosoitteesi") }}
                     </div>
                     {% if form.email.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -174,7 +174,7 @@ input.form-control:-webkit-autofill {
                 <div class="mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        {{ form.username(class="form-control", placeholder="Choose a username") }}
+                        {{ form.username(class="form-control", placeholder="Valitse käyttäjänimi") }}
                     </div>
                     {% if form.username.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -187,7 +187,7 @@ input.form-control:-webkit-autofill {
                 <div class="mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
+                        {{ form.password(class="form-control", placeholder="Valitse salasana", id="password") }}
                     </div>
                     {% if form.password.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -200,7 +200,7 @@ input.form-control:-webkit-autofill {
                 <div class="mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
+                        {{ form.confirm_password(class="form-control", placeholder="Vahvista salasana") }}
                     </div>
                     {% if form.confirm_password.errors %}
                         <div class="invalid-feedback d-block mt-1">
@@ -215,7 +215,7 @@ input.form-control:-webkit-autofill {
                         <div class="progress-bar" role="progressbar" style="width:0%" id="password-strength"></div>
                     </div>
                     <small class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i> Use at least 8 characters with a mix of letters, numbers & symbols
+                        <i class="fas fa-info-circle me-1"></i> Käytä vähintään 8 merkkiä, mukaan lukien isoja kirjaimia, numeroita ja erikoismerkkejä.
                     </small>
                 </div>
 
@@ -226,17 +226,17 @@ input.form-control:-webkit-autofill {
 
                 <!-- Terms -->
                 <div class="text-center small text-muted mt-2">
-                    <span style="color: white;">By creating an account, you agree to our </span>
-                    <a href="{{ url_for('terms') }}" class="accent-color">Terms of Service</a>
+                    <span style="color: white;">Näin hyväksyt käyttöehdot ja tietosuojakäytännön: </span>
+                    <a href="{{ url_for('terms') }}" class="accent-color">Käyttöehdot</a>
                     <span style="color: white;">and</span>
-                    <a href="{{ url_for('privacy') }}" class="accent-color">Privacy Policy</a>
+                    <a href="{{ url_for('privacy') }}" class="accent-color">tietosuojakäytäntö</a>
                 </div>
 
                 <!-- Login Prompt (moved inside card) -->
                 <div class="text-center mt-4">
-                    <p class="mb-0">Already have an account? 
+                    <p class="mb-0">Löytyykö sittenkin jo tili? 
                         <a href="{{ url_for('login') }}" class="accent-color fw-bold">
-                            <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                            <i class="fas fa-sign-in-alt me-1"></i> Kirjaudu Sisään
                         </a>
                     </p>
                 </div>
@@ -246,15 +246,15 @@ input.form-control:-webkit-autofill {
                     <div class="d-flex justify-content-center">
                         <div class="me-4 text-center">
                             <i class="fas fa-shield-alt fa-2x"></i>
-                            <p class="mt-2">Secure</p>
+                            <p class="mt-2" data-18n="secure">Luotettava</p>
                         </div>
                         <div class="me-4 text-center">
                             <i class="fas fa-lock fa-2x"></i>
-                            <p class="mt-2">Encrypted</p>
+                            <p class="mt-2" data-18n="encrypted">Salattu</p>
                         </div>
                         <div class="text-center">
                             <i class="fas fa-user-check fa-2x"></i>
-                            <p class="mt-2">Verified</p>
+                            <p class="mt-2" data-18n="verified">Varmennettu</p>
                         </div>
                     </div>
                 </div>
