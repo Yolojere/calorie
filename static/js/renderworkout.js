@@ -5,13 +5,13 @@ function renderWeekDates(dates) {
     container.empty();
 
     const todayISO = new Date().toISOString().split('T')[0]; // today in UTC
-
+    const weekdayKeys = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     dates.forEach(date => {
         // Force UTC parsing to avoid local timezone shifts
         const dateObj = new Date(date + 'T00:00Z'); 
 
         // Use en-GB locale for weekday names (Mon, Tue...)
-        const dayName = dateObj.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' });
+        const dayName = t(weekdayKeys[dateObj.getUTCDay()]);
         const dayNumber = dateObj.getUTCDate();
 
         // Compare ISO strings to mark today
@@ -43,7 +43,7 @@ function renderWeekDates(dates) {
     const start = new Date(dates[0] + 'T00:00Z');
     const end = new Date(dates[6] + 'T00:00Z');
 
-    const weekDisplay = `Week ${getWeekNumber(start)}: ${formatDate(start)} - ${formatDate(end)}`;
+   const weekDisplay = `${t('weekDisplay')} ${getWeekNumber(start)}: ${formatDate(start)} - ${formatDate(end)}`;
     $("#week-display").text(weekDisplay);
 }
 
@@ -111,9 +111,9 @@ function renderExerciseOptions() {
   if (select.length) {
     const prev = select.val();
     select.empty();
-    select.append('<option value="">Select Exercise</option>');
+    select.append(`<option value="">${t('selectExercise')}</option>`);
     desktopExercises.forEach(ex => {
-      select.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(ex.name)}</option>`);
+      select.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(t(ex.name))}</option>`);
     });
     if (prev && select.find(`option[value="${_escapeHtml(prev)}"]`).length) {
       select.val(prev);
@@ -126,7 +126,7 @@ function renderExerciseOptions() {
   if (selectMobile.length) {
     const prevM = selectMobile.val();
     selectMobile.empty();
-    selectMobile.append('<option value="">Select Exercise</option>');
+    selectMobile.append(`<option value="">${t('selectExercise')}</option>`);
     mobileExercises.forEach(ex => {
       selectMobile.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(ex.name)}</option>`);
     });
@@ -180,7 +180,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
     container.empty();
 
     if (!session || !exercises || exercises.length === 0) {
-        container.html(`<div class="alert alert-info">No workout recorded for this day. Add your first set below!</div>`);
+        container.html(`<div class="alert alert-info">${t('no_workout_message')}</div>`);
         return;
     }
 
@@ -223,6 +223,8 @@ function renderWorkoutSession(session, exercises, options = {}) {
         if (!collapseState.groups[currentDate][groupName]) collapseState.groups[currentDate][groupName] = { collapsed: false };
         const groupCollapsed = collapseState.groups[currentDate][groupName].collapsed;
 
+        let translatedGroupName = t(groupName.toLowerCase()) || groupName;
+
         let groupBlock = `
             <div class="workout-group ${groupName.toLowerCase()}" data-group="${groupName}">
                 <div class="group-header">
@@ -230,15 +232,15 @@ function renderWorkoutSession(session, exercises, options = {}) {
                         <div class="group-icon">
                             <i class="fas fa-${getMuscleIcon(groupName)}"></i>
                         </div>
-                        <span class="group-title">${groupName}</span>
+                        <span class="group-title">${translatedGroupName}</span>
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="group-summary">
-                            <span class="summary-item">${groupData.totalSets} sets</span>
+                            <span class="summary-item">${groupData.totalSets} ${t('set')}</span>
                             <span class="summary-item">${groupData.totalVolume.toFixed(1)} kg</span>
                         </div>
                         <div class="group-actions">
-                            <button class="toggle-icon toggle-group" title="${groupCollapsed ? 'Expand' : 'Collapse'}">
+                            <button class="toggle-icon toggle-group" title="${groupCollapsed ? t('expand') : t('collapse')}">
                                 <i class="fas fa-${groupCollapsed ? 'plus' : 'minus'}"></i>
                             </button>
                         </div>
@@ -263,6 +265,9 @@ function renderWorkoutSession(session, exercises, options = {}) {
             const isCompleted = completedExercises[currentDate]?.[exercise.id] || false;
             const completedClass = isCompleted ? 'completed' : '';
 
+            const exerciseName = exercise.name || 'Unknown Exercise';
+            const translatedExerciseName = t(exerciseName);
+
             groupBlock += `
                 <div class="exercise" data-exercise-id="${exercise.id}">
                     <div class="exercise-header ${expandedClass} ${completedClass}">
@@ -272,16 +277,16 @@ function renderWorkoutSession(session, exercises, options = {}) {
                                     <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
                                 </button>
                                 <div class="complete-exercise-options">
-                                    <div class="complete-option" data-value="yes">✔️ Complete</div>
-                                    <div class="complete-option" data-value="no">❌ Cancel</div>
-                                    <div class="complete-option quick-add-set" data-value="quick-add">➕ Quick Add Set</div>
+                                    <div class="complete-option" data-value="yes"><i class="fa-solid fa-check"></i>&nbsp;${t('valmis')}</div>
+                                    <div class="complete-option" data-value="no"><i class="fa-solid fa-xmark"></i>&nbsp;${t('hylkaa')}</div>
+                                    <div class="complete-option quick-add-set" data-value="quick-add"><i class="fa-solid fa-circle-plus"></i>&nbsp;${t('lisaaSarja')}</div>
                                 </div>
                             </div>
-                            <div class="exercise-title">${exercise.name}</div>
+                            <div class="exercise-title">${translatedExerciseName}</div>
                         </div>
                         <div class="exercise-info">
                             <div class="exercise-summary-text">
-                                ${exercise.exerciseSets} sets, ${exercise.exerciseVolume.toFixed(1)} kg
+                                ${exercise.exerciseSets} ${t('sets')}, ${exercise.exerciseVolume.toFixed(1)} kg
                             </div>
                             <button class="toggle-icon toggle-exercise" title="${exerciseCollapsed ? 'Expand' : 'Collapse'}">
                                 <i class="fas fa-${exerciseCollapsed ? 'plus' : 'minus'}"></i>
@@ -292,7 +297,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
                         <table class="workout-table">
                             <thead>
                                 <tr>
-                                    <th>Set</th><th>Reps</th><th>Weight</th><th>Volume</th><th>Actions</th>
+                                    <th>${t('set')}</th><th>${t('reps')}</th><th>${t('weight')}</th><th>${t('volume')}</th><th>${t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -487,8 +492,8 @@ function showWorkoutAnalysis() {
                 <div class="spinning-dumbbell">
                     <i class="fas fa-dumbbell"></i>
                 </div>
-                <div class="analysis-text">Analyzing Your Workout</div>
-                <div class="analysis-subtext" id="analysis-stage">Comparing with previous sessions...</div>
+                <div class="analysis-text">${t('analyzingWorkout')}</div>
+                <div class="analysis-subtext" id="analysis-stage">${t('comparingSessions')}</div>
                 <div class="analysis-progress">
                     <div class="analysis-progress-bar" id="progress-bar"></div>
                 </div>
@@ -501,10 +506,10 @@ function showWorkoutAnalysis() {
     // Animate progress bar and update text
     let progress = 0;
     const stages = [
-        "Comparing with previous sessions...",
-        "Detecting personal records...",
-        "Calculating volume trends...",
-        "Finalizing analysis..."
+        t('comparingSessions'),
+        t('detectingPRs'),
+        t('calculatingTrends'),
+        t('finalizingAnalysis')
     ];
     
     const progressInterval = setInterval(() => {
@@ -544,8 +549,8 @@ function showWorkoutResults(comparisonData, achievements) {
     let resultsHTML = `
         <div class="workout-results-modal" id="workout-results">
             <div class="results-header">
-                <h2 class="results-title">Workout Complete! 🎉</h2>
-                <div class="results-subtitle">Here's your performance analysis</div>
+                <h2 class="results-title">${t('workoutComplete')}</h2>
+                <div class="results-subtitle">${t('performanceAnalysis')}</div>
             </div>
             <div class="results-body">
     `;
@@ -557,17 +562,17 @@ function showWorkoutResults(comparisonData, achievements) {
             resultsHTML += `
                 <div class="pr-celebration">
                     <div class="pr-trophy">🏆</div>
-                    <div class="pr-text">New Best Set!</div>
+                    <div class="pr-text">${t('newBestSet')}</div>
                     <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} reps</div>
-                    <div class="pr-details">Previous best: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} reps</div>
+                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} reps</div>
                 </div>`;
         } else if (pr.type === 'heaviestWeight') {
             resultsHTML += `
                 <div class="pr-celebration">
                     <div class="pr-trophy">🏆</div>
-                    <div class="pr-text">Heaviest Weight Ever!</div>
+                    <div class="pr-text">${t('heaviestWeight')}</div>
                     <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
-                    <div class="pr-details">Previous best: ${pr.previousBest.weight}kg</div>
+                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg</div>
                 </div>`;
         }
     });
@@ -578,41 +583,41 @@ function showWorkoutResults(comparisonData, achievements) {
         <div class="achievement-grid">
             <div class="achievement-card">
                 <div class="achievement-icon">💪</div>
-                <div class="achievement-title">Total Volume</div>
+                <div class="achievement-title">${t('totalVolume')}</div>
                 <div class="achievement-value">${totalVolume.toLocaleString()} kg</div>
                 <div class="achievement-change ${volumeChange > 0 ? 'improvement' : volumeChange < 0 ? 'decline' : 'neutral'}">
                     <i class="fas fa-${volumeChange > 0 ? 'arrow-up' : volumeChange < 0 ? 'arrow-down' : 'minus'}"></i>
-                    ${Math.abs(volumeChange).toFixed(1)}% from last workout
+                    ${Math.abs(volumeChange).toFixed(1)}% ${t('fromLastWorkout')}
                 </div>
             </div>
             
             <div class="achievement-card">
                 <div class="achievement-icon">🎯</div>
-                <div class="achievement-title">Sets Completed</div>
+                <div class="achievement-title">${t('setsCompleted')}</div>
                 <div class="achievement-value">${comparisonData.totalSets || 0}</div>
                 <div class="achievement-change ${comparisonData.setsChange > 0 ? 'improvement' : 'neutral'}">
                     <i class="fas fa-${comparisonData.setsChange > 0 ? 'plus' : 'check'}"></i>
-                    ${comparisonData.setsChange > 0 ? '+' : ''}${comparisonData.setsChange || 0} from last workout
+                    ${comparisonData.setsChange > 0 ? '+' : ''}${comparisonData.setsChange || 0} ${t('fromLastWorkout')}
                 </div>
             </div>
             
             <div class="achievement-card">
                 <div class="achievement-icon">⚡</div>
-                <div class="achievement-title">Personal Records</div>
+               <div class="achievement-title">${t('personalRecords')}</div>
                 <div class="achievement-value">${personalRecords.length}</div>
                 <div class="achievement-change improvement">
                     <i class="fas fa-trophy"></i>
-                    ${personalRecords.length > 0 ? 'New records today!' : 'Keep pushing!'}
+                    ${personalRecords.length > 0 ? t('newRecordsToday') : t('keepPushing')}
                 </div>
             </div>
             
             <div class="achievement-card">
                 <div class="achievement-icon">📈</div>
-                <div class="achievement-title">Improvements</div>
+                <div class="achievement-title">${t('improvements')}</div>
                 <div class="achievement-value">${improvements.length}</div>
                 <div class="achievement-change improvement">
                     <i class="fas fa-trending-up"></i>
-                    ${improvements.length > 0 ? 'Sets improved from last time' : 'Great effort today!'}
+                    ${improvements.length > 0 ? t('setsImproved') : t('greatEffort')}
                 </div>
             </div>
         </div>
@@ -622,8 +627,8 @@ function showWorkoutResults(comparisonData, achievements) {
     resultsHTML += `
             </div>
             <div class="results-actions">
-                <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">Close</button>
-                <button class="btn-results btn-primary-results" onclick="shareWorkout()">Share Results</button>
+                <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">${t('close')}</button>
+                <button class="btn-results btn-primary-results" onclick="shareWorkout()">${t('shareResults')}</button>
             </div>
         </div>
     `;
@@ -654,7 +659,7 @@ function updateSetRowsWithProgress(comparisonData) {
         if ($setRow.length === 0) return;
         if (comparison.noPrevious) {
         $setRow.find('.set-progress-indicator').remove();
-        const indicator = $('<div class="set-progress-indicator first-session">First session of this focus type!</div>');
+        const indicator = $(`<div class="set-progress-indicator first-session">${t('firstSession')}</div>`);
         $setRow.find('.volume-display').css('position', 'relative').append(indicator);
         return;
     }
@@ -806,7 +811,7 @@ function hideEmptyWorkoutGroups() {
                     
                     // If no groups left, show empty state
                     if ($('.workout-group').length === 0) {
-                        $('#workout-session-container').html('<div class="alert alert-info">No workout recorded for this day. Add your first set below!</div>');
+                        $('#workout-session-container').html(`<div class="alert alert-info">${t('no_workout_message')}</div>`);
                     }
                 });
             }
