@@ -4,7 +4,7 @@
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Reset Password</legend>
+                <legend class="border-bottom mb-4" data-i18n="reset_password">Reset Password</legend>
                 <div class="form-group">
                     {{ form.password.label(class="form-control-label") }}
                     {% if form.password.errors %}
@@ -32,9 +32,36 @@
                     {% endif %}
                 </div>
             </fieldset>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
+            <div class="form-group text-center mt-3">
+                {{ form.submit(class="btn-jere") }}
             </div>
         </form>
     </div>
 {% endblock content %}
+
+{% block styles %}
+<style>
+    .btn-jere {
+        display: inline-block;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.1s ease;
+    }
+
+    .btn-jere:hover {
+        background-color: #d4d4d4 !important;
+        color: black !important;
+        transform: scale(1.02);
+    }
+
+    .btn-jere.active {
+        background: #858585 !important;
+        color: #000000 !important;
+    }
+</style>
+{% endblock %}
