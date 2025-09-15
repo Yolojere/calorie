@@ -4,7 +4,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackYou Activity</title>
+    <title data-i18n="app_title">TrackYou Activity</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -184,6 +184,31 @@ body {
     }
 
 /* Override btn-primary to match theme */
+.btn-flash-success {
+    background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%) !important;
+    border-color: #2e7d32 !important;
+    color: #fff !important;
+}
+.btn-success {
+    display: inline-block;
+    background: linear-gradient(135deg, #252525 0%, #383838 100%);
+    border: 1px solid #3f3f3f;
+    border-color: rgba(54, 54, 54, 0.2);
+    padding: 12px 25px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #353535 0%, #494949 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(92, 92, 92, 0.4);
+}
 .btn-primary {
     display: inline-block;
     background: linear-gradient(135deg, #252525 0%, #383838 100%);
@@ -566,8 +591,8 @@ body {
              alt="TrackYou Logo" 
              class="pulsing-logo">
 
-        <div class="analyzing-text">Analyzing...</div>
-        <div class="loading-text">Calculating your energy expenditure</div>
+        <div class="analyzing-text" data-i18n="analyzing">Analyzing...</div>
+        <div class="loading-text" data-i18n="calculating_energy_expenditure">Calculating your energy expenditure</div>
     </div>
 
     <!-- Navbar -->
@@ -578,11 +603,11 @@ body {
         <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
                 </a>
     </div>
-                <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;">Track You</a>
+                <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;" data-i18n="track_you">Track You</a>
                 <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                     - Track, measure, repeat -
                 </a>
-                <button class="btn-beta">BETA</button>
+                <button class="btn-beta" data-i18n="beta">BETA</button>
                 <!-- Mobile Settings Dropdown (right-aligned) -->
                 <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                     <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -595,49 +620,49 @@ body {
                             <a class="dropdown-item" 
                             href="/"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home" data-i18n="home">Home</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts" data-i18n="workouts">Workouts</span>
                             </a>
                             </li>
                             <li>
                                         <a class="dropdown-item" 
                             href="/history"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history" data-i18n="history">History</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('activity') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity" data-i18n="activity">Activity</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="/custom_food"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food" data-i18n="add_food">Add Food</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
                             style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
                             </a>
                         </li>
                         
@@ -649,31 +674,31 @@ body {
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <a class="nav-link home-link nav-link-box" href="/" 
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" data-i18n="tooltip_home" >
                                 <i class="fa-solid fa-house-chimney-window"></i>
                             </a>
                             <li class="nav-item">
         <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts">
+        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts" data-i18n="tooltip_workouts">
             <i class="fa-solid fa-dumbbell"></i>
         </a>
     </li>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link add-link nav-link-box" href="/custom_food"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food" data-i18n="tooltip_add_food">
                                 <i class="fa-solid fa-file-circle-plus"></i>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link history-link nav-link-box" href="/history"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history" data-i18n="tooltip_history">
                                 <i class="fa-solid fa-chart-pie"></i>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link nav-link-box" href="/activity"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity">
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity" data-i18n="tooltip_activity">
                                 <i class="fas fa-fire"></i>
                             </a>
                         </li>
@@ -686,7 +711,7 @@ body {
                             role="button" 
                             data-bs-toggle="dropdown" 
                             aria-expanded="false"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings" data-i18n="tooltip_settings"
                             style="position: relative;">
                                 <i class="bi bi-wrench-adjustable"></i>
                             </a>
@@ -698,14 +723,14 @@ body {
                                     <a class="dropdown-item" 
                                     href="{{ url_for('profile') }}"
                                     style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" 
                                     href="{{ url_for('logout') }}"
                                     style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
                                     </a>
                                 </li>
                             </ul>
@@ -719,8 +744,8 @@ body {
     <!-- Activity Tracker Content -->
     <div class="activity-container">
         <div class="header">
-            <h1><i class="fas fa-fire me-2"></i>Activity & TDEE Calculator</h1>
-            <p>Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE)</p>
+            <h1><i class="fas fa-fire me-2"></i data-i18n="activity_tdee_calculator">Activity & TDEE Calculator</h1>
+            <p data-i18n="calculate_bmr_tdee_description">Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE)</p>
         </div>
         
         <!-- Personal Information Card -->
@@ -732,27 +757,27 @@ body {
                 <div class="gender-selector">
                     <div class="gender-btn active" data-gender="male">
                         <i class="fas fa-mars"></i>
-                        <div>Male</div>
+                        <div data-i18n="male">Male</div>
                     </div>
                     <div class="gender-btn" data-gender="female">
                         <i class="fas fa-venus"></i>
-                        <div>Female</div>
+                        <div data-i18n="female">Female</div>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label"><i class="fas fa-birthday-cake me-2"></i>Age (years)</label>
-                        <input type="number" class="form-control" id="age" min="1" max="120" value="" placeholder="Enter age">
+                        <label class="form-label"><i class="fas fa-birthday-cake me-2"></i><span data-i18n="age_years">Age (years)</span></label>
+                        <input type="number" class="form-control" id="age" min="1" max="120" value="" placeholder="Enter age" data-i18n="enter_age">
                     </div>
                     <div class="col-md-4 mb-3">
-    <label class="form-label"><i class="fas fa-weight-scale me-2"></i>Weight (kg)</label>
+    <label class="form-label"><i class="fas fa-weight-scale me-2"></i><span data-i18n="weight_kg">Weight (kg)</span></label>
     <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" 
-           value="{% if current_weight %}{{ current_weight }}{% endif %}" placeholder="Enter weight">
+           value="{% if current_weight %}{{ current_weight }}{% endif %}" placeholder="Enter weight" data-i18n="enter_weight">
 </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label"><i class="fas fa-ruler me-2"></i>Height (cm)</label>
-                        <input type="number" class="form-control" id="height" min="50" max="250" value="" placeholder="Enter height">
+                        <label class="form-label"><i class="fas fa-ruler me-2"></i><span data-i18n="height_cm">Height (cm)</span></label>
+                        <input type="number" class="form-control" id="height" min="50" max="250" value="" placeholder="Enter height" data-i18n="enter_height">
                     </div>
                 </div>
             </div>
@@ -771,12 +796,12 @@ body {
                             <div class="activity-icon">
                                 <i class="fas fa-bed"></i>
                             </div>
-                            <h5 class="activity-title">Sleep</h5>
+                            <h5 class="activity-title" data-i18n="sleep">Sleep</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="" placeholder="Hours">
-                                <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes">
-                                <span class="input-group-text">min</span>
+                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                <span class="input-group-text" data-i18n="hr">hr</span>
+                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                <span class="input-group-text" data-i18n="min">min</span>
                             </div>
                             <div class="value-display negative-value" id="sleep-value" style="display: none;"></div>
                         </div>
@@ -788,12 +813,12 @@ body {
                             <div class="activity-icon">
                                 <i class="fas fa-fire"></i>
                             </div>
-                            <h5 class="activity-title">Intense Exercise</h5>
+                            <h5 class="activity-title" data-i18n="intense_exercise">Intense Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="" placeholder="Hours">
-                                <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="" placeholder="Minutes">
-                                <span class="input-group-text">min</span>
+                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                <span class="input-group-text" data-i18n="hr">hr</span>
+                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                <span class="input-group-text" data-i18n="min">min</span>
                             </div>
                             <div class="value-display positive-value" id="intense-value"></div>
                         </div>
@@ -805,12 +830,12 @@ body {
                             <div class="activity-icon">
                                 <i class="fas fa-biking"></i>
                             </div>
-                            <h5 class="activity-title">Moderate Exercise</h5>
+                            <h5 class="activity-title" data-i18n="moderate_exercise">Moderate Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="" placeholder="Hours">
-                                <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="" placeholder="Minutes">
-                                <span class="input-group-text">min</span>
+                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                <span class="input-group-text" data-i18n="hr">hr</span>
+                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                <span class="input-group-text" data-i18n="min">min</span>
                             </div>
                             <div class="value-display positive-value" id="moderate-value"></div>
                         </div>
@@ -822,12 +847,12 @@ body {
                             <div class="activity-icon">
                                 <i class="fas fa-walking"></i>
                             </div>
-                            <h5 class="activity-title">Light Exercise</h5>
+                            <h5 class="activity-title" data-i18n="light_exercise">Light Exercise</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="" placeholder="Hours">
-                                <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="" placeholder="Minutes">
-                                <span class="input-group-text">min</span>
+                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                <span class="input-group-text" data-i18n="hr">hr</span>
+                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                <span class="input-group-text" data-i18n="min">min</span>
                             </div>
                             <div class="value-display positive-value" id="light-value"></div>
                         </div>
@@ -839,12 +864,12 @@ body {
                             <div class="activity-icon">
                                 <i class="fas fa-shoe-prints"></i>
                             </div>
-                            <h5 class="activity-title">Standing/Walking</h5>
+                            <h5 class="activity-title" data-i18n="standing_walking">Standing/Walking</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="" placeholder="Hours">
-                                <span class="input-group-text">hr</span>
-                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="" placeholder="Minutes">
-                                <span class="input-group-text">min</span>
+                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                <span class="input-group-text" data-i18n="hr">hr</span>
+                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                <span class="input-group-text" data-i18n="min">min</span>
                             </div>
                             <div class="value-display positive-value" id="walking-value"></div>
                         </div>
@@ -856,19 +881,19 @@ body {
                             <div class="activity-icon">
                                 <i class="fa-solid fa-face-grin-hearts"></i>
                             </div>
-                            <h5 class="activity-title">Steps (Future)</h5>
+                            <h5 class="activity-title" data-i18n="steps_future">Steps (Future)</h5>
                             <div class="input-group">
-                                <input type="number" class="form-control" disabled value="" placeholder="Steps">
-                                <span class="input-group-text">steps</span>
+                                <input type="number" class="form-control" disabled value="" placeholder="Steps" data-i18n="steps">
+                                <span class="input-group-text" data-i18n="steps">steps</span>
                             </div>
-                            <div class="value-display">Coming soon</div>
+                            <div class="value-display" data-i18n="coming_soon">Coming soon</div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="d-grid mt-2">
                     <button class="btn btn-primary btn-lg" id="calculate-btn">
-                        <i class="fas fa-calculator me-2"></i>Calculate TDEE
+                        <i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Calculate TDEE</span>
                     </button>
                 </div>
             </div>
@@ -878,39 +903,39 @@ body {
 <div class="glass-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div>
-            <i class="fas fa-chart-line me-2"></i>Energy Expenditure Results
+            <i class="fas fa-chart-line me-2"></i><span data-i18n="energy_expenditure_results">Energy Expenditure Results</span>
         </div>
         <button class="btn btn-sm btn-primary" id="save-tdee-btn" style="display: none;">
-            <i class="fas fa-save me-1"></i>Save TDEE
+            <i class="fas fa-save me-1"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>
         </button>
     </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
-                            <h5><i class="fas fa-heartbeat me-2"></i>Basal Metabolic Rate (BMR)</h5>
+                            <h5><i class="fas fa-heartbeat me-2"></i><span data-i18n="basal_metabolic_rate_bmr">Basal Metabolic Rate (BMR)</span></h5>
                             <div class="result-value" id="bmr-result"></div>
-                            <p>How much your body needs calories at rest.
+                            <p data-i18n="bmr_description">How much your body needs calories at rest.
                                 (function of organs,heart,brain - breathing, temperature and so on..)
                             </p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
                         <div class="result-card">
-                            <h5><i class="fas fa-burn me-2"></i>Total Daily Energy Expenditure (TDEE)</h5>
+                            <h5><i class="fas fa-burn me-2"></i><span data-i18n="total_daily_energy_expenditure_tdee">Total Daily Energy Expenditure (TDEE)</span></h5>
                             <div class="result-value" id="tdee-result"></div>
-                            <p>Total calories burned per day</p>
+                            <p data-i18n="total_calories_burned_per_day">Total calories burned per day</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="tdee-explanation">
-    <h5><i class="fas fa-chart-pie me-2"></i>Energy Breakdown</h5>
+    <h5><i class="fas fa-chart-pie me-2"></i data-i18n="energy_breakdown">Energy Breakdown</h5>
     
     <!-- BMR Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span><i class="fas fa-heartbeat me-2"></i>BMR</span>
+            <span><i class="fas fa-heartbeat me-2"></i data-i18n="bmr_short">BMR</span>
             <span class="positive-value" id="bmr-breakdown-result"></span>
         </div>
         <div class="progress">
@@ -923,7 +948,7 @@ body {
     <!-- Intense Exercise Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span><i class="fas fa-fire me-2"></i>Intense Exercise</span>
+            <span><i class="fas fa-fire me-2"></i><span data-i18n="intense_exercise">Intense Exercise</span></span>
             <span class="positive-value" id="intense-result"></span>
         </div>
         <div class="progress">
@@ -936,7 +961,7 @@ body {
     <!-- Moderate Exercise Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span><i class="fas fa-biking me-2"></i>Moderate Exercise</span>
+            <span><i class="fas fa-biking me-2"></i><span data-i18n="moderate_exercise">Moderate Exercise</span></span>
             <span class="positive-value" id="moderate-result"></span>
         </div>
         <div class="progress">
@@ -949,7 +974,7 @@ body {
     <!-- Light Exercise Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span><i class="fas fa-walking me-2"></i>Light Exercise</span>
+            <span><i class="fas fa-walking me-2"></i><span data-i18n="light_exercise">Light Exercise</span></span>
             <span class="positive-value" id="light-result"></span>
         </div>
         <div class="progress">
@@ -962,7 +987,7 @@ body {
     <!-- Standing/Walking Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span><i class="fas fa-shoe-prints me-2"></i>Standing/Walking</span>
+            <span><i class="fas fa-shoe-prints me-2"></i><span data-i18n="standing_walking">Standing/Walking</span></span>
             <span class="positive-value" id="walking-result"></span>
         </div>
         <div class="progress">
@@ -975,7 +1000,7 @@ body {
     <!-- Other (Fidgeting, passive moving etc.) Progress Bar -->
     <div class="mb-3">
         <div class="d-flex justify-content-between">
-            <span class="text-white"><i class="fas fa-random me-2"></i>Other (Fidgeting, passive moving etc.)</span>
+           <span class="text-white"><i class="fas fa-random me-2"></i><span data-i18n="other_fidgeting">Other (Fidgeting, passive moving etc.)</span></span>
             <span class="positive-value text-white" id="other-result"></span>
         </div>
         <div class="progress" style="height: 0.6rem;">
@@ -1049,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const height = parseInt(document.getElementById('height').value) || 0;
 
             if(!age || !weight || !height) {
-                alert('Please fill in all personal information fields');
+                alert(t('fill_all_personal_info'));
                 return;
             }
 
@@ -1059,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     calculateTDEE();
                 } catch(e) {
                     console.error('Calculation error:', e);
-                    alert('Error in calculation: ' + e.message);
+                    alert(t('error_in_calculation') + ' ' + e.message);
                 } finally {
                     loadingOverlay.classList.remove('active');
                 }
@@ -1067,45 +1092,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Save TDEE & Weight button
-    if(saveTdeeBtn) {
-        saveTdeeBtn.addEventListener('click', function() {
-            const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
-            const weightValue = parseFloat(weightInput.value) || 0;
+   // Save TDEE & Weight button
+if (saveTdeeBtn) {
+    saveTdeeBtn.addEventListener('click', function() {
+        const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
+        const weightValue = parseFloat(weightInput.value) || 0;
 
-            loadingOverlay.classList.add('active');
+        loadingOverlay.classList.add('active');
 
-            $.ajax({
-                type: 'POST',
-                url: '/save_metrics',
-                data: { tdee: tdeeValue, weight: weightValue },
-                headers: { "X-CSRFToken": csrfToken },
-                 success: function(response) {
-                    if(response.success) {
-                        saveFormState();
-                        const btn = saveTdeeBtn;
-                        btn.innerHTML = '<i class="fas fa-check me-1"></i>Saved!';
-                        btn.classList.remove('btn-primary');
-                        btn.classList.add('btn-success');
-                        setTimeout(() => {
-                            btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Metrics';
-                            btn.classList.remove('btn-success');
-                            btn.classList.add('btn-primary');
-                        }, 2000);
-                    } else {
-                        alert('Error saving: ' + (response.error || 'Unknown error'));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX error:', error);
-                    alert('Error saving. Please check console for details.');
-                },
-                complete: function() {
-                    loadingOverlay.classList.remove('active');
+        $.ajax({
+            type: 'POST',
+            url: '/save_metrics',
+            data: { tdee: tdeeValue, weight: weightValue },
+            headers: { "X-CSRFToken": csrfToken },
+            success: function(response) {
+                if (response.success) {
+                    saveFormState();
+                    const btn = saveTdeeBtn;
+
+                    // Change to success style + text
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
+                    btn.classList.add('btn-flash-success');
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('save_metrics');
+                        btn.classList.remove('btn-flash-success');
+                    }, 2000);
+
+                } else {
+                    alert(t('error_saving') + ' ' + (response.error || t('unknown_error')));
                 }
-            });
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+                alert(t('error_saving_console'));
+            },
+            complete: function() {
+                loadingOverlay.classList.remove('active');
+            }
         });
-    }
+    });
+}
 
     // Calculate TDEE function
     function calculateTDEE() {
@@ -1146,9 +1173,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('other-result').textContent = '+' + results.activityBreakdown.other + ' kcal';
         
         updateActivityBreakdown(results.bmr, results.tdee, results.activityBreakdown);
-        saveTdeeBtn.style.display = 'block';
-        saveFormState(); // Save after calculation
-    }
+          // Show save button and flash green
+    saveTdeeBtn.style.display = 'block';
+    saveTdeeBtn.classList.add('btn-flash-success');
+    setTimeout(() => {
+        saveTdeeBtn.classList.remove('btn-flash-success');
+    }, 1500);
+
+    saveFormState(); // Save after calculation
+}
 
     // Energy expenditure formula
     function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
