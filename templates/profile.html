@@ -171,8 +171,6 @@ input.form-control:-webkit-autofill {
         border: 1px solid #333 !important;
         border-radius: 20px 0 0 20px;
     }
-
-
     /* Button styles */
     .btn, .btn-accent, .btn-outline-light, a.accent-color {
         display: inline-block;
@@ -416,8 +414,6 @@ input.form-control:-webkit-autofill {
     text-align: center;
     display: inline-block;
 }
-
-
 .profile-field .form-control {
     border-radius: 0 25px 25px 0 !important; /* square left, pill right */
     background-color: #1b1b1b !important;
@@ -714,7 +710,6 @@ input.form-control:-webkit-autofill {
     font-size: 13px;
     padding: 8px 0;
 }
-
 /* Responsive adjustments */
 @media (max-width: 576px) {
     .social-dropdown {
@@ -862,7 +857,7 @@ input.form-control:-webkit-autofill {
                         </div>
 
                         <div class="mb-3">
-                            {{ form.email.label(class="form-label") }}
+                            {{ form.email.label(class="form-label", **{"data-i18n": "email"}) }}
                             {{ form.email(class="form-control bg-dark text-light") }}
                         </div>
 
@@ -877,7 +872,7 @@ input.form-control:-webkit-autofill {
                                 <div class="input-group profile-field">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="full_name" name="full_name" 
-                                           value="{{ form.full_name.data or '' }}" placeholder="e.g. Arnold Swarzenegger">
+                                           value="{{ form.full_name.data or '' }}" data-i18n="full_name_placeholder" placeholder="e.g. Arnold Schwarzenegger">
                                 </div>
                             </div>
 
@@ -887,12 +882,12 @@ input.form-control:-webkit-autofill {
                                 <div class="input-group profile-field">
                                     <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
                                     <input type="text" class="form-control" id="main_sport" name="main_sport" 
-                                           value="{{ form.main_sport.data or '' }}" placeholder="e.g. Puntti, Juoksu, Pyörä jne..">
+                                           value="{{ form.main_sport.data or '' }}" data-i18n="main_sport_placeholder" placeholder="e.g. Weightlifting, Running, Cycling">
                                 </div>
                             </div>
                                 <!-- Social Media Section -->
                                <div class="form-group mb-4 socials-container">
-    <label class="form-label">Social Media</label>
+    <label class="form-label" data-i18n="social_media">Social Media</label>
     
     <!-- Container for social media pills - starts empty -->
     <div class="social-pills-container" id="social-pills-container">
@@ -901,31 +896,31 @@ input.form-control:-webkit-autofill {
     
     <!-- Add social button and dropdown -->
     <div class="position-relative">
-        <button type="button" class="add-social-btn" id="add-social-btn" title="Add social media">+</button>
+        <button type="button" class="add-social-btn" id="add-social-btn" data-i18n="add_social_media" title="Add social media">+</button>
         <div class="social-dropdown" id="social-dropdown">
             <div class="social-option" data-platform="instagram">
                 <i class="fa-brands fa-instagram"></i>
-                <span>Instagram</span>
+                <span data-i18n="instagram">Instagram</span>
             </div>
             <div class="social-option" data-platform="tiktok">
                 <i class="fa-brands fa-tiktok"></i>
-                <span>TikTok</span>
+                <span data-i18n="tiktok">TikTok</span>
             </div>
             <div class="social-option" data-platform="spotify">
                 <i class="fa-brands fa-spotify"></i>
-                <span>Spotify</span>
+                <span data-i18n="spotify">Spotify</span>
             </div>
             <div class="social-option" data-platform="strava">
                 <i class="fa-solid fa-person-running"></i>
-                <span>Strava</span>
+                <span data-i18n="strava">Strava</span>
             </div>
             <div class="social-option" data-platform="facebook">
                 <i class="fa-brands fa-facebook"></i>
-                <span>Facebook</span>
+                <span data-i18n="facebook">Facebook</span>
             </div>
             <div class="social-option" data-platform="twitter">
                 <i class="fa-brands fa-twitter"></i>
-                <span>Twitter</span>
+                <span data-i18n="twitter">Twitter</span>
             </div>
         </div>
     </div>
@@ -939,9 +934,9 @@ input.form-control:-webkit-autofill {
                         <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
                         <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
 
-                   <button type="submit" class="btn btn-primary" id="submit-button">
+                        <button type="submit" class="btn btn-primary" id="submit-button">
                             <span id="submit-text" data-i18n="update_profile">Update Profile</span>
-                            <span id="submit-spinner" class="d-none"><span class="spinner"></span data-i18n="updating"> Päivittää...</span>
+                            <span id="submit-spinner" class="d-none"><span class="spinner"></span><span data-i18n="updating">Updating...</span></span>
                         </button>
                     </form>
                 </div>
@@ -953,15 +948,15 @@ input.form-control:-webkit-autofill {
         <div class="social-modal-content">
             <div class="social-modal-header">
                 <i id="modal-platform-icon" class="fa-brands fa-question"></i>
-                <h5 id="modal-platform-name">Platform</h5>
+                <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
             </div>
             <div class="social-modal-body">
-                <input type="text" id="social-handle-input" placeholder="Enter your handle" autocomplete="off">
-                <small class="text-muted d-block mt-2">Enter your username without @ symbol</small>
+                <input type="text" id="social-handle-input" data-i18n="enter_handle" placeholder="Enter your handle" autocomplete="off">
+                <small class="text-muted d-block mt-2" data-i18n="handle_instructions">Enter your username without @ symbol</small>
             </div>
             <div class="social-modal-footer">
-                <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-social-handle">Save</button>
+                <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-social-handle" data-i18n="save">Save</button>
             </div>
         </div>
     </div>
@@ -984,9 +979,9 @@ input.form-control:-webkit-autofill {
             </div>
             
           <!-- <label for="avatar_upload_input" class="upload-btn">
-                <i class="fas fa-upload me-2"></i> Upload Your Own Image
+                <i class="fas fa-upload me-2"></i> <span data-i18n="upload_image">Upload Your Own Image</span>
             </label>
-            <small class="d-block text-secondary mb-3">Max file size: 2MB (JPG, PNG)</small> -->
+            <small class="d-block text-secondary mb-3" data-i18n="max_file_size">Max file size: 2MB (JPG, PNG)</small> -->
             
             <div class="modal-buttons">
                 <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
@@ -1031,7 +1026,7 @@ input.form-control:-webkit-autofill {
                         {% if current_tdee %}
                             {{ current_tdee|round(0) }} kcal
                         {% else %}
-                            Not calculated
+                            <span data-i18n="not_calculated">Not calculated</span>
                         {% endif %}
                     </div>
                     <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
@@ -1087,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submit-button');
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
-
 
     // Initial avatar state
     let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
@@ -1150,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainAvatar.src = '/static/avatars/' + selectedAvatar;
             }
 
-            showToast('Avatar updated successfully!');
+            showToast(t('avatar_updated'));
             closeModal();
         });
     }
@@ -1175,13 +1169,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const file = this.files[0];
 
                 if (!file.type.match('image.*')) {
-                    showToast('Please select an image file (JPG, PNG).', true);
+                    showToast(t('select_image'), true);
                     this.value = '';
                     return;
                 }
 
                 if (file.size > 2 * 1024 * 1024) {
-                    showToast('Please select an image smaller than 2MB.', true);
+                    showToast(t('image_too_large'), true);
                     this.value = '';
                     return;
                 }
@@ -1338,11 +1332,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Set modal content
         modalPlatformIcon.className = platformInfo.icon;
-        modalPlatformName.textContent = `Add ${platformInfo.name}`;
+        modalPlatformName.textContent = `${t('add')} ${platformInfo.name}`;
         
         // Clear and focus input
         socialHandleInput.value = '';
-        socialHandleInput.placeholder = `Enter your ${platformInfo.placeholder}`;
+        socialHandleInput.placeholder = `${t('enter_your')} ${t(platformInfo.placeholder)}`;
         
         // Show modal
         socialModal.style.display = 'flex';
@@ -1376,12 +1370,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const handle = socialHandleInput.value.trim();
         
         if (!handle || !currentPlatform) {
-            showToast('Please enter a valid handle', true);
+            showToast(t('enter_valid_handle'), true);
             return;
         }
 
         if (!validateHandle(currentPlatform, handle)) {
-            showToast('Invalid handle or already exists', true);
+            showToast(t('invalid_handle'), true);
             return;
         }
 
@@ -1401,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closeModal();
         
         // Show success message
-        showToast(`${platformData[currentPlatform].name} added successfully!`);
+        showToast(`${platformData[currentPlatform].name} ${t('added_successfully')}`);
     }
 
     // Render social pills
@@ -1431,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', function() {
             link.href = platformInfo.baseUrl + handle;
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.title = `Visit ${handle} on ${platformInfo.name}`;
+            link.title = `${t('visit')} ${handle} ${t('on')} ${platformInfo.name}`;
 
             // Create icon
             const icon = document.createElement('i');
@@ -1450,7 +1444,7 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteBtn.className = 'delete-btn';
             deleteBtn.innerHTML = '×';
             deleteBtn.type = 'button';
-            deleteBtn.title = 'Remove this social link';
+            deleteBtn.title = t('remove_social');
             deleteBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1473,7 +1467,7 @@ document.addEventListener('DOMContentLoaded', function() {
             socialsData.splice(index, 1);
             socialsDataInput.value = JSON.stringify(socialsData);
             renderSocialPills();
-            showToast(`${platformData[deletedSocial.platform].name} removed`);
+            showToast(`${platformData[deletedSocial.platform].name} ${t('removed')}`);
         }
     }
 
@@ -1515,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Modal controls
     if (saveSocialHandle) {
-        saveSocialHandle.addEventListener('click', saveSocialHandle);
+        saveSocialHandle.addEventListener('click', handleSaveSocial);
     }
 
     if (cancelSocialHandle) {
