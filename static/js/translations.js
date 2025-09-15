@@ -63,6 +63,20 @@ const translations = {
     save_tdee: "Save TDEE",
     save_metrics: "Save Metrics",
     saved: "Saved!",
+    remember_me: "Remember me",
+    login: "Login",
+    login_failed: "Login Unsuccessful. Please check email and password",
+    register_error: "Username or email already exists",
+    email_error: "Email already registered. Please use a different email.",
+    username_error: "Username already taken. Please choose a different one.",
+    register: "Register",
+    create_account: "Create Account",
+    password_hint: "Use atleast 8 letters , including big letters, numbers and symbols.",
+    register_success: "Account created! you can now login to the page",
+
+
+
+    
     
     // Results
     energy_expenditure_results: "Energy Expenditure Results",
@@ -383,6 +397,17 @@ const translations = {
     save_tdee: "Tallenna TDEE",
     save_metrics: "Tallenna Mittaukset",
     saved: "Tallennettu!",
+    remember_me: "Muista minut",
+    login: "Kirjaudu Sisään",
+    login_failed: "Kirjautuminen epäonnistui. Tarkista sähköposti ja salasana",
+    register_error: "Sähköposti tai käyttäjänimi on jo käytössä",
+    email_error: "Sähköposti on jo käytössä. Valitse toinen",
+    username_error: "Käyttäjänimi on jo käytössä. Valitse toinen",
+    register: "Rekisteröidy",
+    create_account: "Luo uusi tili",
+    password_hint: "Käytä vähintään 8 merkkiä, mukaan lukien isoja kirjaimia, numeroita ja erikoismerkkejä.",
+    register_success: "Tili luotu! Voit nyt kirjautua sisään",
+
     
     // Results
     energy_expenditure_results: "Energiankulutus Tulokset",
