@@ -397,11 +397,33 @@ def init_workout_db():
 
 # Forms (unchanged)
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', 
-                                    validators=[DataRequired(), EqualTo('password')])
+    username = StringField(
+        'Username',
+        validators=[
+            DataRequired(message="username_required"),
+            Length(min=4, max=20, message="username_length")
+        ]
+    )
+    email = StringField(
+        'Email',
+        validators=[
+            DataRequired(message="email_required"),
+            Email(message="email_invalid")
+        ]
+    )
+    password = PasswordField(
+        'Password',
+        validators=[
+            DataRequired(message="password_required")
+        ]
+    )
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[
+            DataRequired(message="confirm_required"),
+            EqualTo('password', message="password_must_match")
+        ]
+    )
     submit = SubmitField('Register')
 
     def validate_username(self, username):
@@ -806,10 +828,10 @@ def format_date(date_str):
 # Email functions
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = MIMEText(f'''To reset your password, visit the following link:
+    msg = MIMEText(f'''Nollataksesi salasanasi, klikkaa alla olevaa linkkiä:
 {url_for('reset_token', token=token, _external=True)}
 
-If you did not make this request, please ignore this email.
+jos et ole pyytänyt salasanan nollausta, voit jättää tämän viestin huomioimatta.
 ''')
     msg['Subject'] = 'Password Reset Request'
     msg['From'] = app.config['MAIL_USERNAME']
@@ -1213,8 +1235,6 @@ def profile():
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     form = RequestResetForm()
     if form.validate_on_submit():
         email = form.email.data.lower()  # normalize to lowercase
@@ -1279,7 +1299,7 @@ def reset_token(token):
         )
         conn.commit()
         conn.close()
-        flash('Your password has been updated! You can now log in', 'success')
+        flash('Salasana on päivitetty! voit kirjautua sisään uudella', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
@@ -1661,79 +1681,151 @@ def clear_session():
 @app.route('/move_items', methods=['POST'])
 @login_required
 def move_items():
-    return move_or_copy_items(remove_original=True)
+    return move_or_copy_items_optimized(remove_original=True)
 
 @app.route('/copy_items', methods=['POST'])
 @login_required
 def copy_items():
-    return move_or_copy_items(remove_original=False)
+    return move_or_copy_items_optimized(remove_original=False)
 
-def move_or_copy_items(remove_original=True):
+def move_or_copy_items_optimized(remove_original=True):
     try:
         user_id = current_user.id
         date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
-        
         new_group = request.form.get('new_group')
         target_date = request.form.get('target_date', date)
         item_ids = json.loads(request.form.get('item_ids', '[]'))
         
-        # Get source session
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute(
-            'SELECT data FROM user_sessions WHERE user_id = %s AND date = %s',
-            (user_id, date)
-        )
-        session_data = cursor.fetchone()
-        eaten_items = json.loads(session_data['data']) if session_data else []
-        
-        # Prepare items to transfer by matching IDs
+        if not item_ids or not new_group:
+            return jsonify({'error': 'Missing required parameters'}), 400
+
+        # --- Load source session ---
+        eaten_items, _ = get_current_session(user_id, date)
+
+        # --- Prepare items to transfer ---
         items_to_transfer = []
         for item in eaten_items:
             if item['id'] in item_ids:
-                # Create a copy and update the group
                 new_item = item.copy()
                 new_item['group'] = new_group
-                if not remove_original:  # Only for copies, not moves
+                if not remove_original:  # copy → new ID
                     new_item['id'] = str(uuid.uuid4())
                 items_to_transfer.append(new_item)
-        
-        # If moving, remove original items by ID
-        if remove_original:
-            # Create a new list without the moved items
-            eaten_items = [item for item in eaten_items if item['id'] not in item_ids]
-        
-        # Save source session
-        save_current_session(user_id, eaten_items, date)
-        
-        # Get target session
-        cursor.execute(
-            'SELECT data FROM user_sessions WHERE user_id = %s AND date = %s',
-            (user_id, target_date)
-        )
-        target_data = cursor.fetchone()
-        target_items = json.loads(target_data['data']) if target_data else []
-        
-        # Add items to target session
-        target_items.extend(items_to_transfer)
-        save_current_session(user_id, target_items, target_date)
-        
-        # Return updated session
-        totals = calculate_totals(eaten_items)
-        group_breakdown = calculate_group_breakdown(eaten_items)
-        current_date_formatted = format_date(date)
-        
-        return jsonify({
-            'session': eaten_items,
-            'totals': totals,
-            'current_date': date,
+
+        # --- Case 1: same date move/copy ---
+        if target_date == date:
+            if remove_original:
+                eaten_items = [i for i in eaten_items if i['id'] not in item_ids]
+            eaten_items.extend(items_to_transfer)
+            save_current_session(user_id, eaten_items, date)
+
+            target_items = eaten_items  # alias since same date
+
+        # --- Case 2: cross-date move/copy ---
+        else:
+            if remove_original:
+                eaten_items = [i for i in eaten_items if i['id'] not in item_ids]
+                save_current_session(user_id, eaten_items, date)
+
+            target_items, _ = get_current_session(user_id, target_date)
+            target_items.extend(items_to_transfer)
+            save_current_session(user_id, target_items, target_date)
+
+        # --- Recalculate totals/breakdown for target session ---
+        recalculated_totals = calculate_totals(target_items)
+        recalculated_breakdown = calculate_group_breakdown(target_items)
+        current_date_formatted = format_date(target_date)
+
+        # --- Build response payload (same as update_grams) ---
+        response_data = {
+            'success': True,
+            'action': 'move' if remove_original else 'copy',
+            'session': target_items,
+            'totals': recalculated_totals,
+            'breakdown': recalculated_breakdown,
             'current_date_formatted': current_date_formatted,
-            'breakdown': group_breakdown
-        })
-        
+        }
+
+        return jsonify(response_data)
+
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+def format_item_for_frontend(item):
+    """Format item for frontend display, handling both units and grams-only items"""
+    try:
+        return {
+            'id': item.get('id', ''),
+            'key': item.get('key', ''),
+            'name': item.get('name', ''),
+            'calories': float(item.get('calories', 0)),
+            'proteins': float(item.get('proteins', 0)),
+            'carbs': float(item.get('carbs', 0)),
+            'fats': float(item.get('fats', 0)),
+            'saturated': float(item.get('saturated', 0)),
+            'fiber': float(item.get('fiber', 0)),
+            'sugars': float(item.get('sugars', 0)),
+            'salt': float(item.get('salt', 0)),
+            # ✅ Use 'grams' directly if available, otherwise fallback to 'units'
+            'grams': float(item.get('grams', item.get('units', 0))),
+            'group': item.get('group', 'other')
+        }
+    except Exception as e:
+        print(f"Error formatting item for frontend: {e}")
+        # Return a safe default
+        return {
+            'id': item.get('id', ''),
+            'key': item.get('key', ''),
+            'name': item.get('name', 'Unknown'),
+            'calories': 0,
+            'proteins': 0,
+            'carbs': 0,
+            'fats': 0,
+            'saturated': 0,
+            'fiber': 0,
+            'sugars': 0,
+            'salt': 0,
+            'grams': 0,
+            'group': item.get('group', 'other')
+        }
+
+def calculate_group_breakdown(eaten_items):
+    """
+    Enhanced group breakdown calculation with complete nutritional data
+    """
+    breakdown = {}
+    
+    for item in eaten_items:
+        group = item.get('group', 'other')
+        
+        if group not in breakdown:
+            breakdown[group] = {
+                'calories': 0,
+                'proteins': 0,
+                'carbs': 0,
+                'fats': 0,
+                'saturated': 0,
+                'fiber': 0,
+                'sugars': 0,
+                'salt': 0,
+                'items': []
+            }
+        
+        # Add to group totals
+        breakdown[group]['calories'] += float(item['calories'])
+        breakdown[group]['proteins'] += float(item['proteins'])
+        breakdown[group]['carbs'] += float(item['carbs'])
+        breakdown[group]['fats'] += float(item['fats'])
+        breakdown[group]['saturated'] += float(item.get('saturated', 0))
+        breakdown[group]['fiber'] += float(item.get('fiber', 0))
+        breakdown[group]['sugars'] += float(item.get('sugars', 0))
+        breakdown[group]['salt'] += float(item.get('salt', 0))
+        
+        # Add formatted item to group
+        breakdown[group]['items'].append(format_item_for_frontend(item))
+    
+    return breakdown
 
 
 
