@@ -1,6 +1,7 @@
 // translations.js
 const translations = {
   en: {
+    // Existing translations
     home: "Home",
     workouts: "Workouts",
     add_food: "Add Food",
@@ -20,6 +21,72 @@ const translations = {
     profile: "Profile",
     logout: "Logout",
     kcal: "kcal",
+
+    // NEW TRANSLATIONS FOR ACTIVITY PAGE
+    app_title: "TrackYou Activity",
+    track_you: "Track You",
+    track_measure_repeat: "- Track, measure, repeat -",
+    beta: "BETA",
+    
+    // Activity & TDEE Calculator
+    activity_tdee_calculator: "Activity & TDEE Calculator",
+    calculate_bmr_tdee_description: "Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE)",
+    
+    // Personal Information
+    personal_information: "Personal Information",
+    male: "Male",
+    female: "Female",
+    age_years: "Age (years)",
+    enter_age: "Enter age",
+    weight_kg: "Weight (kg)",
+    enter_weight: "Enter weight",
+    height_cm: "Height (cm)",
+    enter_height: "Enter height",
+    
+    // Activity Tracking
+    daily_activity_tracking: "Daily Activity Tracking",
+    sleep: "Sleep",
+    hours: "Hours",
+    minutes: "Minutes",
+    hr: "hr",
+    min: "min",
+    intense_exercise: "Intense Exercise",
+    moderate_exercise: "Moderate Exercise",
+    light_exercise: "Light Exercise",
+    standing_walking: "Standing/Walking",
+    steps_future: "Steps (Future)",
+    steps: "Steps",
+    coming_soon: "Coming soon",
+    
+    // Buttons
+    calculate_tdee: "Calculate TDEE",
+    save_tdee: "Save TDEE",
+    save_metrics: "Save Metrics",
+    saved: "Saved!",
+    
+    // Results
+    energy_expenditure_results: "Energy Expenditure Results",
+    basal_metabolic_rate_bmr: "Basal Metabolic Rate (BMR)",
+    bmr_description: "How much your body needs calories at rest.",
+    bmr_function_description: "(function of organs, heart, brain - breathing, temperature and so on..)",
+    total_daily_energy_expenditure_tdee: "Total Daily Energy Expenditure (TDEE)",
+    total_calories_burned_per_day: "Total calories burned per day",
+    
+    // Energy Breakdown
+    energy_breakdown: "Energy Breakdown",
+    bmr_short: "BMR",
+    other_fidgeting: "Other (Fidgeting, passive moving etc.)",
+    
+    // Loading messages
+    analyzing: "Analyzing...",
+    calculating_energy_expenditure: "Calculating your energy expenditure",
+    
+    // Error messages
+    fill_all_personal_info: "Please fill in all personal information fields",
+    error_in_calculation: "Error in calculation:",
+    error_saving_console: "Error saving. Please check console for details.",
+    error_saving: "Error saving:",
+    unknown_error: "Unknown error",
 
     // Nutrition
     bigserving: "Big Serving",
@@ -71,7 +138,6 @@ const translations = {
     snack: "Snack",
     other: "Other",
     totals: "Totals",
-    totals: "Yhteenveto",
     no_food_message: "no food logged yet",
     ean_not_found: "EAN",
     in_data_base: "not found in database",
@@ -93,7 +159,6 @@ const translations = {
     thu: "Thu",
     fri: "Fri",
     sat: "Sat",
-    sun: "Sun",
 
     grams: "g",
 
@@ -253,11 +318,10 @@ const translations = {
     on: "on",
     remove_social: "Remove this social link",
     not_set: "Not set",
-    not_calculated: "Not calculated",
-    add: "Add",
-    save: "Save"
+    not_calculated: "Not calculated"
   },
   fi: {
+    // Existing Finnish translations
     home: "Koti",
     workouts: "Harjoitukset", 
     add_food: "Lisää Ruoka",
@@ -278,9 +342,76 @@ const translations = {
     logout: "Kirjaudu Ulos",
     kcal: "kcal",
 
+    // NEW FINNISH TRANSLATIONS FOR ACTIVITY PAGE
+    app_title: "TrackYou Aktiivisuus",
+    track_you: "Track You",
+    track_measure_repeat: "- Seuraa, mittaa, toista -",
+    beta: "BETA",
+    
+    // Activity & TDEE Calculator
+    activity_tdee_calculator: "Aktiivisuus & TDEE Laskin",
+    calculate_bmr_tdee_description: "Laske perusaineenvaihdunta (BMR) ja kokonaisenergiankulutus (TDEE)",
+    
+    // Personal Information
+    personal_information: "Henkilötiedot",
+    male: "Mies",
+    female: "Nainen",
+    age_years: "Ikä (vuotta)",
+    enter_age: "Syötä ikä",
+    weight_kg: "Paino (kg)",
+    enter_weight: "Syötä paino",
+    height_cm: "Pituus (cm)",
+    enter_height: "Syötä pituus",
+    
+    // Activity Tracking
+    daily_activity_tracking: "Päivittäinen Aktiivisuusseuranta",
+    sleep: "Uni",
+    hours: "Tunnit",
+    minutes: "Minuutit",
+    hr: "t",
+    min: "min",
+    intense_exercise: "Intensiivinen Liikunta",
+    moderate_exercise: "Kohtalainen Liikunta",
+    light_exercise: "Kevyt Liikunta",
+    standing_walking: "Seisominen/Kävely",
+    steps_future: "Askeleet (Tulossa)",
+    steps: "Askelta",
+    coming_soon: "Tulossa pian",
+    
+    // Buttons
+    calculate_tdee: "Laske TDEE",
+    save_tdee: "Tallenna TDEE",
+    save_metrics: "Tallenna Mittaukset",
+    saved: "Tallennettu!",
+    
+    // Results
+    energy_expenditure_results: "Energiankulutus Tulokset",
+    basal_metabolic_rate_bmr: "Perusaineenvaihdunta (BMR)",
+    bmr_description: "Kuinka paljon kehosi tarvitsee kaloreita levossa.",
+    bmr_function_description: "(elimien, sydämen, aivojen toiminta - hengitys, lämpötila jne..)",
+    total_daily_energy_expenditure_tdee: "Kokonaisenergiankulutus (TDEE)",
+    total_calories_burned_per_day: "Yhteensä poltettuja kaloreita päivässä",
+    
+    // Energy Breakdown
+    energy_breakdown: "Energian Jakautuminen",
+    bmr_short: "BMR",
+    other_fidgeting: "Muu (Liikkuminen, passiivinen liike jne.)",
+    
+    // Loading messages
+    analyzing: "Analysoidaan...",
+    calculating_energy_expenditure: "Lasketaan energiankulutusta",
+    
+    // Error messages
+    fill_all_personal_info: "Täytä kaikki henkilötiedot",
+    error_in_calculation: "Virhe laskennassa:",
+    error_saving_console: "Virhe tallennuksessa. Tarkista konsoli.",
+    error_saving: "Virhe tallennuksessa:",
+    unknown_error: "Tuntematon virhe",
+
     // Nutrition
     favourite: "Suosikki",
     bigserving: "Iso Annos",
+    bigserving_g: "Iso Annos (g)",
     add_custom_food: "Lisää uusi ruoka",
     scan_label: "Skannaa Ravintoarvot (Tulossa)",
     ean_barcode: "EAN/Viivakoodi",
@@ -513,9 +644,7 @@ const translations = {
     remove_social: "Poista tämä sosiaalinen linkki",
     not_set: "Ei asetettu",
     not_calculated: "Ei laskettu",
-    add: "Lisää",
-    enter_your: "Syötä",
-    save: "Tallenna"
+    enter_your: "Syötä"
   }
 };
 
