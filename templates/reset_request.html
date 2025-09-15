@@ -165,15 +165,15 @@ input.form-control:-webkit-autofill {
 
                 <fieldset class="form-group mb-4">
                     <legend>
-                        <i class="fas fa-key me-2"></i>Kirjoita sähköpostiosoitteesi, salasanan nollaamiseksi.
+                        <i class="fas fa-key me-2"></i><span data-i18n="request_password_reset">Request Password Reset</span>
                     </legend>
                     <div class="form-group mb-3">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                             {% if form.email.errors %}
-                                {{ form.email(class="form-control is-invalid", placeholder="Enter your account email") }}
+                                {{ form.email(class="form-control is-invalid", placeholder="Syötä sähköpostiosoitteesi") }}
                             {% else %}
-                                {{ form.email(class="form-control", placeholder="Kirjoita tilisi sähköposti") }}
+                                {{ form.email(class="form-control", placeholder="Sähköpostiosoite") }}
                             {% endif %}
                         </div>
                         {% if form.email.errors %}
@@ -183,21 +183,21 @@ input.form-control:-webkit-autofill {
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <small class="text-muted">Me lähetämme salasanan nollausohjeet tähän sähköpostiin</small>
+                            <small class="text-muted"><span data-i18n="weSendPasswordReset">Lähetämme sinulle sähköpostin, jossa on linkki salasanan nollaamiseen.</span></small>
                         {% endif %}
                     </div>
                 </fieldset>
 
                 <div class="form-group d-grid mb-3">
                     <button type="submit" class="btn-jere">
-                        <i class="fas fa-paper-plane me-2"></i> Lähetä Salasanan Nollaus Sähköposti
+                        <i class="fas fa-paper-plane me-2"></i><span data-i18n="sendPasswordReset">Lähetä Nollauslinkki</span>
                     </button>
                 </div>
 
                 <div class="text-center mt-3">
                     <p class="mb-1">Muistitko sittenkin salasanasi?</p>
                     <a href="{{ url_for('login') }}" class="accent-color fw-bold">
-                        <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                        <i class="fas fa-sign-in-alt me-1" style="color:#dd5252"></i><span style="color:#dd5252" data-i18n="signIn">Sign In</span>
                     </a>
                 </div>
             </form>
@@ -233,7 +233,7 @@ input.form-control:-webkit-autofill {
             if(!document.querySelector('.email-format-error')) {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'invalid-feedback d-block mt-1 email-format-error';
-                errorDiv.textContent = 'Please enter a valid email address';
+                errorDiv.textContent = 'Syötä kelvollinen sähköpostiosoite.';
                 emailInput.parentElement.parentElement.appendChild(errorDiv);
             }
             emailInput.classList.add('is-invalid');
