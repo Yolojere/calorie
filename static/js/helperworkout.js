@@ -146,30 +146,44 @@ function ymd(y,m,d){
 function formatDateForSelector(date) {
     const today = new Date();
     today.setHours(0,0,0,0);
+
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
+
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    // Pick locale dynamically
+    // Locale for numeric date
     const locale = currentLang === "fi" ? "fi-FI" : "en-GB";
 
-    let dateString = date.toLocaleDateString(locale, { 
-        weekday: 'short', 
-        month: 'numeric', 
-        day: 'numeric' 
+    // Get numeric date string (day.month)
+    const numericDate = date.toLocaleDateString(locale, { 
+        day: 'numeric', 
+        month: 'numeric' 
     });
 
     if (date.toDateString() === today.toDateString()) {
-        return `${t('today')} - ${dateString}`;
+        return `${t('today')} ${numericDate}`;
     } else if (date.toDateString() === yesterday.toDateString()) {
-        return `${t('yesterday')} - ${dateString}`;
+        return `${t('yesterday')} ${numericDate}`;
     } else if (date.toDateString() === tomorrow.toDateString()) {
-        return `${t('tomorrow')} - ${dateString}`;
+        return `${t('tomorrow')} ${numericDate}`;
     } else {
-        return dateString;
+        // Map JS weekday index to translation keys
+        const weekdays = [
+            t('sunday'),
+            t('monday'),
+            t('tuesday'),
+            t('wednesday'),
+            t('thursday'),
+            t('friday'),
+            t('saturday')
+        ];
+        const weekday = weekdays[date.getDay()];
+        return `${weekday} ${numericDate}`;
     }
 }
+
 function collectWorkoutData() {
   let data = {
     date: currentSelectedDate,
