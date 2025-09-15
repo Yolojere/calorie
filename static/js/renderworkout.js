@@ -114,7 +114,7 @@ function renderExerciseOptions() {
     select.append(`<option value="">${t('selectExercise')}</option>`);
     desktopExercises.forEach(ex => {
       select.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(t(ex.name))}</option>`);
-    });
+});
     if (prev && select.find(`option[value="${_escapeHtml(prev)}"]`).length) {
       select.val(prev);
     }
@@ -128,8 +128,8 @@ function renderExerciseOptions() {
     selectMobile.empty();
     selectMobile.append(`<option value="">${t('selectExercise')}</option>`);
     mobileExercises.forEach(ex => {
-      selectMobile.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(ex.name)}</option>`);
-    });
+      selectMobile.append(`<option value="${_escapeHtml(ex.id)}">${_escapeHtml(t(ex.name))}</option>`);
+});
     if (prevM && selectMobile.find(`option[value="${_escapeHtml(prevM)}"]`).length) {
       selectMobile.val(prevM);
     }
