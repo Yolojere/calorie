@@ -248,14 +248,17 @@ form-check-label
 
                 <!-- Remember Me -->
                 <div class="mb-3 form-check">
-                    {{ form.remember(class="form-check-input") }}
-                    {{ form.remember.label(class="form-check-label") }}
+                    {{ form.remember(class="form-check-input", id="remember") }}
+                    <label class="form-check-label" for="remember" data-i18n="remember_me">
+                        Remember Me
+                    </label>
                 </div>
 
                 <!-- Submit -->
                 <div class="d-grid mb-3">
-                    {{ form.submit(class="btn-jere") }}
+                    <button type="submit" class="btn-jere" data-i18n="login">Login</button>
                 </div>
+
 
                 <div class="text-center mb-2">
                     <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
