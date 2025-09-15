@@ -161,7 +161,7 @@
                     <div class="mb-3">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                            {{ form.email(class="form-control", placeholder="Kirjoita sähköpostiosoitteesi") }}
+                            {{ form.email(class="form-control", placeholder="Sähköpostiosoite") }}
                         </div>
                         {% if form.email.errors %}
                             <div class="invalid-feedback d-block mt-1">
@@ -255,17 +255,17 @@
 
                     <!-- Terms -->
                     <div class="text-center small text-muted mt-2">
-                        <span style="color: white;">Näin hyväksyt käyttöehdot ja tietosuojakäytännön: </span>
-                        <a href="{{ url_for('terms') }}" class="accent-color">Käyttöehdot</a>
-                        <span style="color: white;">and</span>
-                        <a href="{{ url_for('privacy') }}" class="accent-color">tietosuojakäytäntö</a>
+                        <span style="color: white;">Rekisteröitymällä hyväksyt käyttöehdot ja tietosuojakäytännön: </span>
+                        <a href="{{ url_for('terms') }}" class="accent-color"><span data-i18n="terms" style="color:#06d6a0">Käyttöehdot</span></a>
+                        <span style="color: white;" data-i18n="and">and</span>
+                        <a href="{{ url_for('privacy') }}" class="accent-color" style="color:#06d6a0">tietosuojakäytäntö</a>
                     </div>
 
                     <!-- Login Prompt (moved inside card) -->
                     <div class="text-center mt-4">
                         <p class="mb-0">Löytyykö sittenkin jo tili? 
                             <a href="{{ url_for('login') }}" class="accent-color fw-bold">
-                                <i class="fas fa-sign-in-alt me-1"></i> Kirjaudu Sisään
+                                <i class="fas fa-sign-in-alt me-1" style="color:#dd5252"></i><span data-i18n="login" style="color:#dd5252;">Kirjaudu Sisään</span>
                             </a>
                         </p>
                     </div>
