@@ -498,7 +498,7 @@ const translations = {
     select_image: "Valitse kuva tiedosto (JPG, PNG).",
     image_too_large: "Valitse alle 2MB kokoinen kuva.",
     platform: "Alusta",
-    enter_handle: "Syötä käyttäjätunnus",
+    enter_handle: "Syötä",
     handle_instructions: "Syötä käyttäjänimesi ilman @-merkkiä",
     add_social: "Lisää sosiaalinen media",
     username: "Käyttäjätunnus",
@@ -514,7 +514,7 @@ const translations = {
     not_set: "Ei asetettu",
     not_calculated: "Ei laskettu",
     add: "Lisää",
-    enter_your: "Syötä käyttäjätunnuksesi",
+    enter_your: "Syötä",
     save: "Tallenna"
   }
 };
