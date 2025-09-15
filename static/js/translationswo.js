@@ -239,7 +239,7 @@ const translations = {
     description: "Kuvaus",
     loading_workout_data: "Ladataan treenitietoja...",
     workout_log: "Treeni Päiväkirja",
-    copy_this_workout: "Kopioi Tämä Treeni",
+    copy_this_workout: "Kopioi tämä treeni",
     comments: "Kommentit",
     rir_reps: "RiR (Toistoa Jäljellä)",
     weight: "Paino (kg)",
