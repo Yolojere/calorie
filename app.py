@@ -411,7 +411,7 @@ class RegistrationForm(FlaskForm):
         user = cursor.fetchone()
         conn.close()
         if user:
-            raise ValidationError('Username already taken. Please choose a different one.')
+            raise ValidationError('username_error')
 
     def validate_email(self, email):
         conn = get_db_connection()
@@ -420,7 +420,7 @@ class RegistrationForm(FlaskForm):
         user = cursor.fetchone()
         conn.close()
         if user:
-            raise ValidationError('Email already registered. Please use a different email.')
+            raise ValidationError('email_error')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -464,7 +464,7 @@ class UpdateProfileForm(FlaskForm):
             cursor.execute('SELECT id FROM users WHERE username = %s', (username.data,))
             user = cursor.fetchone()
             if user:
-                raise ValidationError('Username already taken. Please choose a different one.')
+                raise ValidationError('username_error')
         finally:
             cursor.close()
             conn.close()
@@ -481,7 +481,7 @@ class UpdateProfileForm(FlaskForm):
             cursor.execute('SELECT id FROM users WHERE email = %s', (email.data,))
             user = cursor.fetchone()
             if user:
-                raise ValidationError('Email already registered. Please use a different email.')
+                raise ValidationError('email_error')
         finally:
             cursor.close()
             conn.close()
@@ -1022,10 +1022,10 @@ def register():
                 (username, email, hashed_password)
             )
             conn.commit()
-            flash('Your account has been created! You can now log in', 'success')
+            flash('register_success', 'success')
             return redirect(url_for('login'))
         except psycopg2.IntegrityError as e:
-            flash('Username or email already exists', 'danger')
+            flash('register_error', 'danger')
             app.logger.error(f"Registration error: {e}")
         finally:
             conn.close()
@@ -1054,7 +1054,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
-            flash('Login Unsuccessful. Please check email and password', 'danger')
+            flash('login_failed', 'danger')
 
     return render_template('login.html', title='Login', form=form)
 
@@ -1233,11 +1233,11 @@ def reset_request():
                 role=user['role']
             )
             if send_reset_email(user_obj):
-                flash('An email has been sent with instructions to reset your password.', 'info')
+                flash('Sähköposti lähetetty! ohjeet salasanan uusimiseen tulossa!', 'info')
             else:
-                flash('Could not send email. Please try again later.', 'danger')
+                flash('Sähköpostia ei voi lähettää. Kokeile myöhemmin uudelleen', 'danger')
         else:
-            flash('No account found with that email.', 'warning')
+            flash('Käyttäjää ei löydy tuolla sähköpostilla', 'warning')
         return redirect(url_for('login'))
     return render_template('reset_request.html', title='Reset Password', form=form)
 
