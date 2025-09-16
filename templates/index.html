@@ -3230,6 +3230,8 @@
                 let scanningActive = false;
                 let lastScannedCode = null;
                 let collapseAllGroups = false;
+                let currentSearchRequest = null;
+                let searchTimeout = null;
                 
                 // ===== MODAL INSTANCES =====
                 const editGramsModal = new bootstrap.Modal(document.getElementById('editGramsModal'));
@@ -3313,7 +3315,12 @@
                 $('#toggle-grid-btn').click(toggleGridVisibility);
                 
                 // Food search
-                $('#food-search').on('input', handleFoodSearch);
+                $('#food-search').on('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        handleFoodSearch.call(this);
+                    }, 300); // 300ms delay
+                });
                 $('#clear-search').click(clearSearch);            
                 
                 // Portion controls
@@ -3643,27 +3650,55 @@ function hideEmptyGroups() {
                 }
                 
                 function handleFoodSearch() {
-                    const query = $(this).val().trim();
+                const query = $(this).val().trim();
+                
+                if (query.length === 0) {
+                    loadTopFoods();
+                    return;
+                }
+                
+                // Cancel previous request if it's still pending
+                if (currentSearchRequest) {
+                    currentSearchRequest.abort();
+                }
+                
+                // Show loading indicator
+                $('#search-results').html('<div class="text-center p-2 small">Searching...</div>');
+                
+                // Make the AJAX request and store the reference
+                currentSearchRequest = $.post('/search_foods', { query }, data => {
+                    let resultsHtml = '';
+                    const seenIds = new Set(); // Track unique IDs to prevent duplicates
                     
-                    if (query.length === 0) {
-                        loadTopFoods();
-                        return;
-                    }
-                    
-                    $.post('/search_foods', { query }, data => {
-                        let resultsHtml = '';
+                    if (data && data.length > 0) {
+                        resultsHtml = '<div class="list-group">';
                         
-                        if (data.length > 0) {
-                            resultsHtml = '<div class="list-group">';
-                            data.forEach(food => resultsHtml += createFoodItemHtml(food));
-                            resultsHtml += '</div>';
-                        } else {
+                        // Filter out duplicates by food ID
+                        data.forEach(food => {
+                            if (!seenIds.has(food.id)) {
+                                seenIds.add(food.id);
+                                resultsHtml += createFoodItemHtml(food);
+                            }
+                        });
+                        
+                        resultsHtml += '</div>';
+                        
+                        if (seenIds.size === 0) {
                             resultsHtml = '<div class="text-center p-2 small">No results found</div>';
                         }
-                        
-                        $('#search-results').html(resultsHtml);
-                    });
-                }
+                    } else {
+                        resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                    }
+                    
+                    $('#search-results').html(resultsHtml);
+                }).fail(function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('#search-results').html('<div class="text-center p-2 small">Search failed. Please try again.</div>');
+                    }
+                }).always(function() {
+                    currentSearchRequest = null;
+                });
+}
                 
                 function clearSearch() {
                     $('#food-search').val('');
@@ -5573,56 +5608,72 @@ $(document).on('sessionUpdated', function() {
                 }
     
                 function performFoodSearch(query) {
-        $.post('/search_foods', { query }, data => {
-            let resultsHtml = '';
-
-            if (data.length > 0) {
-                resultsHtml = '<div class="list-group">';
-                data.forEach(food => resultsHtml += createFoodItemHtml(food));
-                resultsHtml += '</div>';
-
-                // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
-                setTimeout(() => {
-                    if ($('.food-item').length > 0) {
-                        $('.food-item:first').trigger('click');
+                    // Cancel previous request if it's still pending
+                    if (currentSearchRequest) {
+                        currentSearchRequest.abort();
                     }
-                }, 300);
-            } else {
-                // No results found
-                if (/^\d{13}$/.test(query)) {
-                    // Special case: 13-digit EAN not found
-                    resultsHtml = `
-                        <div id="ean-alert" 
-                            class="alert alert-warning alert-dismissible fade show text-center p-2 small" 
-                            role="alert">
-                            <span data-i18n="ean_not_found">Viivakoodia</span> <strong>${query}</strong> <span data-i18n="in_data_base">Ei löytynyt tietokannasta</span><br>
-                            <button id="create-custom-food" class="btn portion-btn btn-primary mt-2" data-i18n="create_new_food">
-                                Tee uusi ruoka
-                            </button>
-                        </div>
-                    `;
-
-                    // Attach button handler *after* rendering
-                    setTimeout(() => {
+                    
+                    // Show loading indicator
+                    $('#search-results').html('<div class="text-center p-2 small">Searching...</div>');
+                    
+                    currentSearchRequest = $.post('/search_foods', { query }, data => {
+                        let resultsHtml = '';
+                        const seenIds = new Set();
+                        
+                        if (data && data.length > 0) {
+                            resultsHtml = '<div class="list-group">';
+                            
+                            data.forEach(food => {
+                                if (!seenIds.has(food.id)) {
+                                    seenIds.add(food.id);
+                                    resultsHtml += createFoodItemHtml(food);
+                                }
+                            });
+                            
+                            resultsHtml += '</div>';
+                            
+                            if (seenIds.size === 0) {
+                                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                            }
+                            
+                            // AUTO-SELECT THE FIRST RESULT AFTER RENDERING
+                            setTimeout(() => {
+                                if ($('.food-item').length > 0) {
+                                    $('.food-item:first').trigger('click');
+                                }
+                            }, 300);
+                        } else {
+                            // Handle EAN barcode case
+                            if (/^\d{8,13}$/.test(query)) {
+                                resultsHtml = `
+                                    <div id="ean-alert" 
+                                        class="alert alert-warning alert-dismissible fade show text-center p-2 small" 
+                                        role="alert">
+                                        <span data-i18n="ean_not_found">Barcode</span> <strong>${query}</strong> <span data-i18n="in_data_base">not found in database</span><br>
+                                        <button id="create-custom-food" class="btn portion-btn btn-primary mt-2" data-i18n="create_new_food">
+                                            Create New Food
+                                        </button>
+                                    </div>
+                                `;
+                            } else {
+                                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                            }
+                        }
+                        
+                        $('#search-results').html(resultsHtml);
+                        
+                        // Attach event handler for creating custom food
                         $('#create-custom-food').off('click').on('click', () => {
                             window.location.href = '/custom_food?ean=' + encodeURIComponent(query);
                         });
-
-                        // Auto-close after 5s if not clicked
-                        setTimeout(() => {
-                            $('#ean-alert').alert('close');
-                        }, 5000);
-                    }, 100);
-
-                } else {
-                    // Generic case
-                    resultsHtml = '<div class="text-center p-2 small"><span data-i18n="no_results_found">No results found</span></div>';
+                    }).fail(function(xhr, status) {
+                        if (status !== 'abort') {
+                            $('#search-results').html('<div class="text-center p-2 small">Search failed. Please try again.</div>');
+                        }
+                    }).always(function() {
+                        currentSearchRequest = null;
+                    });
                 }
-            }
-
-            $('#search-results').html(resultsHtml);
-        });
-    }
                 
                 // ===== INITIALIZE THE APP =====
                 initializeApp();
