@@ -1327,35 +1327,38 @@ def get_favourite_grams():
 @app.route('/search_foods', methods=['POST'])
 @login_required
 def search_foods():
-    query = request.form.get('query', '').strip()
+    query = request.form.get('query', '').strip().lower()
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
-    # Base WHERE clause for visibility
-    if current_user.role == 'admin':
-        visibility_clause = "TRUE"  # admin sees all
-        params_visibility = []
+    user_id = current_user.id
+    is_admin = current_user.role == 'admin'
+
+    # Visibility clause & parameters
+    if is_admin:
+        visibility_clause = "TRUE"
+        params = [user_id]  # only for usage join
     else:
         visibility_clause = "(f.owner_id IS NULL OR f.owner_id = %s)"
-        params_visibility = [current_user.id]
+        params = [user_id, user_id]  # one for JOIN, one for visibility
 
     if not query:
-        sql = f'''
-            SELECT f.*, COALESCE(u.count, 0) as usage
+        sql = f"""
+            SELECT f.*, COALESCE(u.count, 0) AS usage
             FROM foods f
-            LEFT JOIN food_usage u ON f.key = u.food_key
+            LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
             WHERE {visibility_clause}
             ORDER BY usage DESC, name ASC
             LIMIT 15
-        '''
-        cursor.execute(sql, params_visibility)
+        """
+        cursor.execute(sql, params)
     else:
-        sql = f'''
-            SELECT f.*, COALESCE(u.count, 0) as usage
+        sql = f"""
+            SELECT f.*, COALESCE(u.count, 0) AS usage
             FROM foods f
-            LEFT JOIN food_usage u ON f.key = u.food_key
-            WHERE {visibility_clause} AND 
-                  (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
+            LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
+            WHERE {visibility_clause}
+              AND (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
             ORDER BY 
                 CASE 
                     WHEN LOWER(f.name) LIKE %s THEN 0
@@ -1365,34 +1368,24 @@ def search_foods():
                 usage DESC,
                 name ASC
             LIMIT 15
-        '''
-        cursor.execute(sql, params_visibility + [
-            f'{query.lower()}%',   # starts with
-            f'%{query.lower()}%',  # contains
-            query,                 # EAN match
-            f'{query.lower()}%',   # for ORDER BY startswith
-            f'%{query.lower()}%',  # for ORDER BY contains
+        """
+        cursor.execute(sql, params + [
+            f"{query}%",   # starts with
+            f"%{query}%",  # contains
+            query,         # EAN exact
+            f"{query}%",   # order by startswith
+            f"%{query}%",  # order by contains
         ])
 
     foods = cursor.fetchall()
     conn.close()
-
-    results = []
-    for food in foods:
-        results.append({
-            'id': food['key'],
-            'name': food['name'],
-            'calories': food['calories'],
-            'serving_size': food['serving'],
-            'half_size': food['half'],
-            'entire_size': food['entire'],
-            'bigserving_size': food['bigserving'],
-            'usage': food['usage'],
-            'ean': food['ean']
-        })
-
-    return jsonify(results)
-
+    result = []
+    for f in foods:
+        d = dict(f)
+        d["id"] = d.get("id") or d.get("key")  # Ensure 'id' field exists
+        result.append(d)
+    return jsonify(result)
+    
 
 @app.route('/get_food_details', methods=['POST'])
 @login_required
