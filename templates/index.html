@@ -207,40 +207,6 @@
             }
             
             /* ===== FOOD GROUPS ===== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes highlight {
-            0% { background-color: var(--group-color); }
-            100% { background-color: transparent; }
-        }
-
-     .food-item-animate {
-            animation: fadeInUp 0.5s ease-out;
-        }
-        
-        .group-highlight {
-            animation: highlight 1s ease;
-        }
-        
-        /* Ensure smooth transitions for all food items */
-        .list-group-item {
-            transition: all 0.3s ease;
-        }
-            .food-group {
-                display: flex;
-                flex-direction: column;
-                min-height: auto;
-                animation: fadeIn 0.5s ease-out;
-            }
             
             .collapsed-group {
                 height: auto !important;
@@ -696,6 +662,26 @@
                 color: #000000 !important;
                 transform: translateY(0);
             }
+            /* food items animations */
+
+/* Group highlight when items are moved/copied */
+.group-highlight {
+  position: relative;
+  animation: highlightBorder 1s ease;
+}
+
+@keyframes highlightBorder {
+  0% {
+    box-shadow: 0 0 0 rgba(0, 200, 150, 0);
+  }
+  50% {
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.6); /* subtle glow under header */
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(0, 200, 150, 0);
+  }
+}
+
 
             /* portion buttons */
             #portion-buttons .portion-btn {
@@ -1659,6 +1645,7 @@
             .progress-saturated .progress-bar-fill { background: linear-gradient(to right, #ffd166, #b39347); }
             .progress-sugars .progress-bar-fill { background: linear-gradient(to right, #7bc8a4, #4e8e71); }
             .progress-fiber .progress-bar-fill { background: linear-gradient(to right, #ffbe9e, #b3846e); }
+            
             /* ===== MEDIA QUERIES ===== */
             @media (max-width: 1400px) {
                             .combined-card {
@@ -4072,16 +4059,27 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
     });
 }
                 
-                function clearSession() {
-                    if (!confirm(t("confirm_clear_session"))) return;
-                    
-                    $.post('/clear_session', {}, response => {
-                        updateSessionDisplay(response.session, response.totals, response.breakdown);
-                        updateCalorieDifference();
-                        applyTranslations();
-                        updateNutritionAbbreviations();
-                    });
-                }
+    let isClearingSession = false;
+
+function clearSession() {
+    if (isClearingSession) return; // already running
+
+    if (!confirm(t("confirm_clear_session"))) return;
+
+    isClearingSession = true;
+    const $btn = $('#clear-session');
+    $btn.prop('disabled', true); // optional: disable while running
+
+    $.post('/clear_session', { date: currentSelectedDate }, response => {
+        updateSessionDisplay(response.session, response.totals, response.breakdown);
+        updateCalorieDifference();
+        applyTranslations();
+        updateNutritionAbbreviations();
+    }).always(() => {
+        isClearingSession = false;
+        $btn.prop('disabled', false); // re-enable after done
+    });
+}
                 
                 function handleDateChange() {
                 const date = $(this).val();
@@ -4158,167 +4156,171 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
                     }
                 }
                       function confirmMoveCopyAction() {
-        const targetDate = $('#target-date').val();
-        const targetGroup = $('#target-group').val();
-        const currentDate = currentSelectedDate;
-        
-        // Store current collapse states before any DOM changes
-        const beforeCollapseStates = {};
-        $('.food-group').each(function() {
-            const groupName = $(this).data('group');
-            beforeCollapseStates[groupName] = $(this).hasClass('collapsed-group');
-        });
-        
-        // Show loading state
-        const confirmBtn = $('#confirm-action');
-        const originalText = confirmBtn.html();
-        confirmBtn.html(`<span class="spinner-border spinner-border-sm" role="status"></span> ${t('processing')}`);
-        
-        $.post('/' + selectedAction + '_items', {
-            date: currentDate,
-            item_ids: JSON.stringify(selectedItems),
-            new_group: targetGroup,
-            target_date: targetDate
-        }, response => {
-            if (response.success) {
-                // Update nutrition totals
-                updateNutritionTotalsOnly(response.totals);
-                updateNutritionProgressBars();
-                updateCalorieDifference();
-                
-                if ($('#nutrition-panel').hasClass('active')) {
-                    updateMobileNutrition(response.totals);
-                }
-                
-                // Clear selection state
-                selectedItems = [];
-                $('#move-items, #move-items-mobile').prop('disabled', true);
-                $('#create-recipe').addClass('d-none').prop('disabled', true);
-                $('#moveItemsModal').modal('hide');
-                
-                // Handle DOM updates with animations
-                if (response.same_date_operation) {
-                    // Same date operation - update with animations
-                    handleSameDateMoveCopy(response, targetGroup, beforeCollapseStates);
-                } else {
-                    // Different date operation
-                    if (targetDate === currentSelectedDate) {
-                        // We moved to the currently viewed date
-                        handleDifferentDateMoveCopy(response, targetGroup);
-                    } else {
-                        // We moved to a different date - just show success
-                        alert('Operation successful! The items have been moved to ' + targetDate);
-                    }
-                }
-                
-                // Apply translations and update abbreviations
-                applyTranslations();
-                updateNutritionAbbreviations();
-            } else {
-                alert('Error: ' + (response.error || 'Operation failed'));
+    const targetDate = $('#target-date').val();
+    const targetGroup = $('#target-group').val();
+    const currentDate = currentSelectedDate;
+
+    // Store current collapse states before any DOM changes
+    const beforeCollapseStates = {};
+    $('.food-group').each(function() {
+        const groupName = $(this).data('group');
+        beforeCollapseStates[groupName] = $(this).hasClass('collapsed-group');
+    });
+
+    // Show loading state
+    const confirmBtn = $('#confirm-action');
+    const originalText = confirmBtn.html();
+    confirmBtn.html(`<span class="spinner-border spinner-border-sm" role="status"></span> ${t('processing')}`);
+
+    // Keep a copy of selectedItems for removal
+    const itemsToRemove = [...selectedItems];
+
+    $.post('/' + selectedAction + '_items', {
+        date: currentDate,
+        item_ids: JSON.stringify(selectedItems),
+        new_group: targetGroup,
+        target_date: targetDate
+    }, response => {
+        if (response.success) {
+            // Update nutrition totals
+            updateNutritionTotalsOnly(response.totals);
+            updateNutritionProgressBars();
+            updateCalorieDifference();
+
+            if ($('#nutrition-panel').hasClass('active')) {
+                updateMobileNutrition(response.totals);
             }
-        }).fail(function(xhr, status, error) {
-            console.error('Move/Copy error:', error);
-            alert('Failed to move/copy items. Please try again.');
-        }).always(() => {
-            confirmBtn.html(originalText);
-        });
-    }
 
-    function handleSameDateMoveCopy(response, targetGroup, beforeCollapseStates) {
-        // Remove moved items with animation
-        if (response.action === 'move') {
-            selectedItems.forEach(itemId => {
-                const $item = $(`.list-group-item[data-id="${itemId}"]`);
-                $item.addClass('removing-item');
-                $item.fadeOut(300, function() {
-                    $(this).remove();
-                    // Update source group totals
-                    const sourceGroup = $item.closest('.food-group').data('group');
-                    if (response.breakdown[sourceGroup]) {
-                        updateGroupTotals(sourceGroup, response.breakdown[sourceGroup]);
+            // Handle DOM updates
+            if (response.same_date_operation) {
+                handleSameDateMoveCopy(response, targetGroup, beforeCollapseStates, itemsToRemove);
+            } else {
+                if (targetDate === currentSelectedDate) {
+                    handleDifferentDateMoveCopy(response, targetGroup);
+                } else {
+                    // Different date → remove from current view if moving
+                    if (response.action === 'move') {
+                        removeMovedItems(response, itemsToRemove);
                     }
+                    alert('Operaatio onnistui! tuotteet siirretty ' + targetDate);
+                }
+            }
+
+            // Clear selection state AFTER removing items
+            selectedItems = [];
+            $('#move-items, #move-items-mobile').prop('disabled', true);
+            $('#create-recipe').addClass('d-none').prop('disabled', true);
+            $('#moveItemsModal').modal('hide');
+
+            // Apply translations and update abbreviations
+            applyTranslations();
+            updateNutritionAbbreviations();
+        } else {
+            alert('Error: ' + (response.error || 'Operation failed'));
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('Move/Copy error:', error);
+        alert('Siirto ei onnistunut. Yritä uudelleen!');
+    }).always(() => {
+        confirmBtn.html(originalText);
+    });
+}
+
+// Updated helper: accepts items array to remove
+function removeMovedItems(response, items) {
+    items.forEach(itemId => {
+        const $item = $(`.list-group-item[data-id="${itemId}"]`);
+        const $group = $item.closest('.food-group'); // Get parent group
+
+        $item.addClass('removing-item');
+        $item.fadeOut(300, function() {
+            $(this).remove();
+
+            // Update source group totals
+            const sourceGroup = $group.data('group');
+            if (response.breakdown[sourceGroup]) {
+                updateGroupTotals(sourceGroup, response.breakdown[sourceGroup]);
+            }
+
+            // If the group has no more items, remove or hide the header
+            if ($group.find('.list-group-item').length === 0) {
+                $group.fadeOut(200, function() {
+                    $(this).remove(); // or $(this).hide(); if you prefer just hiding
                 });
-            });
-        }
-        
-        // Add items to target group with animation
-        if (response.transferred_items && response.transferred_items.length > 0) {
-            addItemsToGroupWithAnimation(targetGroup, response.transferred_items, response.breakdown[targetGroup]);
-        }
-        
-        // Update all group totals
-        for (const group in response.breakdown) {
-            updateGroupTotals(group, response.breakdown[group]);
-        }
-        
-        // Restore collapse states
-        setTimeout(() => {
-            restoreCollapseStates(beforeCollapseStates);
-            saveCollapseStates();
-        }, 500);
+            }
+        });
+    });
+}
+
+function handleSameDateMoveCopy(response, targetGroup, beforeCollapseStates, items) {
+    // Remove moved items
+    if (response.action === 'move') {
+        removeMovedItems(response, items);
     }
 
-    function handleDifferentDateMoveCopy(response, targetGroup) {
-        // We're viewing the target date, so update the UI
-        updateSessionDisplay(response.session, response.totals, response.breakdown);
-        updateCalorieDifference();
-        
-        // Highlight the target group
-        const $targetGroup = $(`.food-group[data-group="${targetGroup}"]`);
-        if ($targetGroup.length) {
-            $targetGroup.addClass('group-highlight');
-            setTimeout(() => {
-                $targetGroup.removeClass('group-highlight');
-            }, 1000);
-        }
+    // Add items to target group with animation
+    if (response.transferred_items && response.transferred_items.length > 0) {
+        addItemsToGroupWithAnimation(targetGroup, response.transferred_items, response.breakdown[targetGroup]);
     }
+
+    // Update all group totals
+    for (const group in response.breakdown) {
+        updateGroupTotals(group, response.breakdown[group]);
+    }
+
+    // Restore collapse states
+    setTimeout(() => {
+        restoreCollapseStates(beforeCollapseStates);
+        saveCollapseStates();
+    }, 500);
+}
+
+function handleDifferentDateMoveCopy(response, targetGroup) {
+    // We're viewing the target date, so update the UI
+    updateSessionDisplay(response.session, response.totals, response.breakdown);
+    updateCalorieDifference();
+
+    // Highlight the target group
+    const $targetGroup = $(`.food-group[data-group="${targetGroup}"]`);
+    if ($targetGroup.length) {
+        $targetGroup.addClass('group-highlight');
+        setTimeout(() => {
+            $targetGroup.removeClass('group-highlight');
+        }, 1000);
+    }
+}
+
+
 
     function addItemsToGroupWithAnimation(groupName, newItems, groupData) {
-        let groupElement = $(`.food-group[data-group="${groupName}"]`);
-        
-        // If group doesn't exist, create it
-        if (groupElement.length === 0) {
-            groupElement = createGroupElement(groupName, groupData);
-            insertGroupInCorrectOrder(groupElement, groupName);
-        }
-        
-        const groupItemsList = groupElement.find('.group-items');
-        
-        // Remove empty state if present
-        groupItemsList.find('.empty-state').remove();
-        
-        // Add new items with animation
-        newItems.forEach((item, index) => {
-            const itemHtml = createItemHtml(item);
-            const $newItem = $(itemHtml);
-            
-            // Start hidden and off-screen
-            $newItem.css({
-                opacity: 0,
-                marginLeft: '100%'
-            }).appendTo(groupItemsList);
-            
-            // Animate entrance with delay
-            setTimeout(() => {
-                $newItem.animate({
-                    opacity: 1,
-                    marginLeft: '0'
-                }, 300, () => {
-                    $newItem.addClass('food-item-animate');
-                });
-            }, index * 75);
-        });
-        
-        // Update group totals
-        updateGroupTotals(groupName, groupData);
-        
-        // Ensure target group is expanded to show new items
-        expandTargetGroupSmooth(groupName);
-        
-        // Remove global empty state if present
-        $('.empty-state').remove();
+    let groupElement = $(`.food-group[data-group="${groupName}"]`);
+    
+    // If group doesn't exist, create it
+    if (groupElement.length === 0) {
+        groupElement = createGroupElement(groupName, groupData);
+        insertGroupInCorrectOrder(groupElement, groupName);
     }
+    
+    const groupItemsList = groupElement.find('.group-items');
+    
+    // Remove empty state if present
+    groupItemsList.find('.empty-state').remove();
+    
+    // Add new items directly without animation
+    newItems.forEach(item => {
+        const itemHtml = createItemHtml(item);
+        $(itemHtml).appendTo(groupItemsList);
+    });
+    
+    // Update group totals
+    updateGroupTotals(groupName, groupData);
+    
+    // Ensure target group is expanded to show new items
+    expandTargetGroupSmooth(groupName);
+    
+    // Remove global empty state if present
+    $('.empty-state').remove();
+}
     
 
 function createItemHtmlFromData(item) {
