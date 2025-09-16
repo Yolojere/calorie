@@ -255,7 +255,57 @@
             border: 1px solid #444;
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
+        .period-row {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin-bottom: 8px !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
+.period-row:hover {
+    background: linear-gradient(135deg, #333 0%, #222 100%) !important;
+    transform: translateY(-1px);
+}
+
+.period-row.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.muscle-row {
+    background-color: #1a1a1a !important;
+    border-left: 3px solid #ffd166;
+    margin-left: 20px;
+}
+
+/* Compact metrics display */
+.compact-metrics {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding: 8px 0;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+
+.metric-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffd166;
+}
+
+.metric-label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+}
         /* Tooltip arrow */
         .tooltip.bs-tooltip-top .tooltip-arrow::before {
             border-top-color: #1b1b1b;
@@ -457,6 +507,51 @@
             background-color: #ffd166;
         }
 
+.exercise-search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.exercise-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.muscle-group-filter {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 12px;
+    background: #1b1b1b;
+    color: #fff;
+    border: 1px solid #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.muscle-group-filter.active {
+    background: #ffd166;
+    color: #000;
+}
+
+/* Enhanced exercise list items */
+.exercise-row {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.exercise-row:hover {
+    background-color: #1a1a1a !important;
+}
+
+.exercise-row:hover td {
+    background-color: #1a1a1a !important;
+}
         /* Empty state styling */
         .empty-state {
             padding: 40px 20px;
@@ -469,6 +564,75 @@
             margin-bottom: 15px;
             opacity: 0.5;
         }
+        .expandable-trigger {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+    border-radius: 8px;
+}
+
+.expandable-trigger:active {
+    border-color: #ffd166;
+    background-color: rgba(255, 209, 102, 0.1);
+}
+
+/* Enhanced empty states */
+.empty-state {
+    padding: 30px 15px !important;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 40px !important;
+    margin-bottom: 12px !important;
+    opacity: 0.6;
+    color: #888;
+}
+
+.empty-state h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.empty-state p {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+/* Loading states */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #333;
+    border-top: 3px solid #ffd166;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 12px;
+    color: #888;
+}
         
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
@@ -522,7 +686,44 @@
                 white-space: nowrap;
                 flex-shrink: 0;
             }
-        }
+                .table-custom th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 20 !important;
+        background: #0f0f0f !important;
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .table-custom td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+        white-space: nowrap;
+    }
+    
+    .expand-collapse-controls {
+        position: sticky;
+        top: 0;
+        z-index: 15;
+        background: #161616;
+        padding: 10px 0;
+        margin-bottom: 10px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        border-bottom: 1px solid #333;
+    }
+    
+    #expand-all,
+    #collapse-all {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+        min-width: 80px;
+    }
+}
+        
 
         /* Animation for tab content */
         .tab-pane {
@@ -737,23 +938,47 @@
                     <div class="summary-label" data-i18n="today_protein">Today's Protein</div>
                 </div>
             </div>
-            <div class="col-md-3 col-6 mb-3">
-                <div class="summary-card">
+                <!-- ✅ NEW: Current Calorie Balance Card -->
+    <div class="col-md-3 col-6 mb-3">
+        <div class="summary-card">
                     <div class="summary-value text-success">
                         {% if weekly_data %}{{ weekly_data[0].avg_calories | round(0) }}{% else %}0{% endif %}
                     </div>
-                    <div class="summary-label" data-i18n="weekly_avg_calories">Weekly Avg Calories</div>
-                </div>
+                    <div class="summary-label" data-i18n="weekly_avg_calories">Weekly Avg Calories
+                        </div>
+            <div class="summary-value {% if daily_balance > 0 %}text-danger{% elif daily_balance < 0 %}text-success{% else %}text-muted{% endif %}">
+                {% if daily_balance > 0 %}+{{ daily_balance | round(0) }}{% elif daily_balance < 0 %}{{ daily_balance | round(0) }}{% else %}0{% endif %}
             </div>
-            <div class="col-md-3 col-6 mb-3">
-                <div class="summary-card">
-                    <div class="summary-value text-primary">
-                        7
-                    </div>
-                    <div class="summary-label" data-i18n="workouts_this_week">Workouts This Week</div>
-                </div>
+            <div class="summary-label">
+                {% if daily_balance > 0 %}
+                    Kaloria yli kulutuksen
+                {% elif daily_balance < 0 %}
+                    Kaloria alle kulutuksen
+                {% else %}
+                    Ylläpitää painoa
+                {% endif %}
             </div>
         </div>
+    </div>
+    
+    <!-- ✅ NEW: Projected Weight Change Card -->
+    <div class="col-md-3 col-6 mb-3">
+        <div class="summary-card">
+            <div class="summary-value {% if projected_change_kg > 0 %}text-warning{% elif projected_change_kg < 0 %}text-success{% else %}text-muted{% endif %}">
+                {% if projected_change_kg > 0 %}+{{ (projected_change_kg * 1000) | round(0) }}g{% elif projected_change_kg < 0 %}{{ (projected_change_kg * 1000) | round(0) }}g{% else %}0g{% endif %}
+            </div>
+            <div class="summary-label">
+                {% if projected_change_kg > 0 %}
+                    Laskettu painoinn nousu/Viikko
+                {% elif projected_change_kg < 0 %}
+                    Laskettu Painon lasku/viikko
+                {% else %}
+                    Ei muutoksia odotettavissa
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Main Content Card -->
         <div class="history-card">
@@ -916,10 +1141,10 @@
                             </ul>
 
                             <!-- Expand / Collapse buttons -->
-                            <div class="my-3">
-                                <button id="expand-all" class="btn-jere me-2" data-i18n="expand_all">Expand All</button>
-                                <button id="collapse-all" class="btn-jere" data-i18n="collapse_all">Collapse All</button>
-                            </div>
+                            <div class="expand-collapse-controls">
+    <button id="expand-all" class="btn-jere me-2" data-i18n="expand_all">Expand All</button>
+    <button id="collapse-all" class="btn-jere" data-i18n="collapse_all">Collapse All</button>
+</div>
 
                             <!-- Tab content -->
                             <div class="tab-content mt-3">
@@ -988,6 +1213,15 @@
                         <div class="p-3">
                             <div class="row mb-3">
                                 <div class="col-md-6">
+                                    <div class="exercise-filters" id="muscle-group-filters">
+    <button class="muscle-group-filter active" data-muscle="all">All</button>
+    <button class="muscle-group-filter" data-muscle="chest">Chest</button>
+    <button class="muscle-group-filter" data-muscle="back">Back</button>
+    <button class="muscle-group-filter" data-muscle="shoulders">Shoulders</button>
+    <button class="muscle-group-filter" data-muscle="arms">Arms</button>
+    <button class="muscle-group-filter" data-muscle="legs">Legs</button>
+    <button class="muscle-group-filter" data-muscle="core">Core</button>
+</div>
                                     <div class="input-group">
                                         <span class="input-group-text bg-dark text-light border-secondary">
                                             <i class="fas fa-search"></i>
@@ -995,6 +1229,7 @@
                                         <input type="text" id="exercise-search" class="form-control bg-dark text-light border-secondary" placeholder="Search exercises..." data-i18n="search_exercises_placeholder">
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-6 text-end">
                                     <div class="btn-group">
                                         <button class="btn-jere active" data-sort="name" data-i18n="name">Name</button>
@@ -1268,7 +1503,30 @@
             if (denom <= 0) return 0; // prevent negative or zero denominator
             return weight / denom;
         }
-
+        function enhancePeriodRows() {
+        $(document).on('click', '.period-row', function(e) {
+            e.preventDefault();
+            
+            const $this = $(this);
+            const isCollapsed = $this.hasClass('collapsed');
+            
+            // Toggle collapsed state
+            $this.toggleClass('collapsed');
+            
+            // Add collapse icon if it doesn't exist
+            if ($this.find('.collapse-icon').length === 0) {
+                $this.find('td:first').append(' <i class="fas fa-chevron-down collapse-icon"></i>');
+            }
+            
+            // Toggle visibility of muscle group rows
+            let $nextRow = $this.next();
+            while ($nextRow.length && $nextRow.hasClass('muscle-row')) {
+                $nextRow.toggleClass('d-none');
+                $nextRow = $nextRow.next();
+            }
+        });
+    }
+    
         // Render exercise detail (chart + session table)
         function renderExerciseDetail(data) {
             // Show exercise name
