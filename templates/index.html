@@ -212,12 +212,7 @@
                 height: auto !important;
                 min-height: unset !important;
             }
-            .collapsed-group .group-items {
-    display: none !important; /* Force hide with high specificity */
-    max-height: 0 !important;
-    overflow: hidden !important;
-    visibility: hidden !important; /* Extra insurance against flash */
-}
+        
             
             .group-header {
                 background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.8)) !important;
@@ -675,22 +670,6 @@
             }
             /* food items animations */
 
-/* Group highlight when items are moved/copied */
-.group-highlight {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    
-    animation: pulseHighlight 1s ease-in;
-    z-index: 10;
-}
-
-@keyframes pulseHighlight {
-    0%, 100% { 
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-    }
-    50% { 
-        box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
-    }
-}
 
 
 
