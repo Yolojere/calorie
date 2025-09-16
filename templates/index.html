@@ -212,6 +212,12 @@
                 height: auto !important;
                 min-height: unset !important;
             }
+            .collapsed-group .group-items {
+    display: none !important; /* Force hide with high specificity */
+    max-height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important; /* Extra insurance against flash */
+}
             
             .group-header {
                 background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.8)) !important;
@@ -277,7 +283,12 @@
                 border-bottom: 3px solid #00000079;
                 border-radius: 0 0 6px 6px;
                 line-height: 12px;
+                transition: none !important;
             }
+            .group-items.list-group-flush {
+    border-radius: 0 0 var(--radius-base) var(--radius-base) !important;
+    margin-bottom: 0;
+}
             
             .toggle-group {
                 padding: 2px 4px !important;
@@ -666,21 +677,21 @@
 
 /* Group highlight when items are moved/copied */
 .group-highlight {
-  position: relative;
-  animation: highlightBorder 1s ease;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    
+    animation: pulseHighlight 1s ease-in;
+    z-index: 10;
 }
 
-@keyframes highlightBorder {
-  0% {
-    box-shadow: 0 0 0 rgba(0, 200, 150, 0);
-  }
-  50% {
-    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.6); /* subtle glow under header */
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(0, 200, 150, 0);
-  }
+@keyframes pulseHighlight {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+    }
 }
+
 
 
             /* portion buttons */
@@ -1153,6 +1164,8 @@
             }
             
             /* ===== INPUT UNIT ===== */
+
+
             .input-unit {
                 position: absolute;
                 right: 12px;
@@ -2785,7 +2798,7 @@
                             {% if group_breakdown %}
                                 {% for group, group_data in group_breakdown.items() %}
                                 <div class="food-group {{ group }}" data-group="{{ group }}">
-                                    <div class="group-header d-flex justify-content-between align-items-center">
+                                 <div class="group-header d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center">
                                             <div class="group-icon">
                                                 {% if group == 'breakfast' %}
@@ -2817,11 +2830,11 @@
                                                     <span>{{ group_data['fats']|round(1) }}g F</span>
                                                 </div>
                                             </div>
-                                            <button class="btn btn-sm toggle-group ms-1">−</button>
+                                            <button class="btn btn-sm toggle-group ms-1">+</button>
                                         </div>
                                     </div>
-                                    <ul class="group-items list-group list-group-flush">
-                                        {% for item in group_data['items'] %}
+                                     <ul class="group-items list-group list-group-flush" style="display:none;">
+                                               {% for item in group_data['items'] %}
                                         <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center" data-id="{{ item.id }}" 
         data-key="{{ item.key }}">
                                             <div class="food-item-container">
@@ -3278,6 +3291,8 @@
                     updateNutritionProgressBars();
                 }
             }
+
+
                                         // Mobile button linking
                     $('#move-items-mobile').click(() => $('#move-items').click());
                     $('#apply-template-btn-mobile').click(() => $('#apply-template-btn').click());
@@ -5057,6 +5072,7 @@ function saveCollapseStates() {
     localStorage.setItem('mealGroupCollapseStates', JSON.stringify(collapseStates));
 }
 
+
 function updateSessionDisplay(session, totals, breakdown) {
     console.log("Updating session display:", totals, breakdown);
     updateNutritionGrid(totals);
@@ -5074,7 +5090,7 @@ function updateSessionDisplay(session, totals, breakdown) {
         for (const group in breakdown) {
             const groupData = breakdown[group];
             // Check if this group should be collapsed based on saved state
-            const isCollapsed = collapseStates[group] !== undefined ? collapseStates[group] : true;
+            const isCollapsed = collapseStates[group] !== undefined ? collapseStates[group] : false;
             
             logHtml += `
                 <div class="food-group ${group} ${isCollapsed ? 'collapsed-group' : ''}" data-group="${group}">
