@@ -258,8 +258,11 @@ const translations = {
     error_loading_template: "Error loading templates",
     applying: "Applying",
     adding: "Adding",
+    operationSuccessful: "Operation successful! The items have been moved to ",
+    failedMove: "Failed to move/copy items. Please try again.",
 
     // Progress bars - NEW
+    processing: "Processing..",
     proteins_upper: "PROTEINS",
     carbs_upper: "CARBS", 
     fats_upper: "FATS",
@@ -480,6 +483,7 @@ const translations = {
     sugars_g: "Sokeri (g)",
     fiber_g: "Kuitu (g)",
     proteins_g: "Proteiini (g)",
+    processing: "Prosessoi..",
     salt_g: "Suola (g)",
     serving_g: "kpl/annos (g)",
     half_g: "Puoli PKT (g)",
@@ -614,6 +618,8 @@ const translations = {
     error_loading_template: "Virhe ladattaessa pohjia",
     applying: "Sovelletaan",
     adding: "Lisätään",
+    operationSuccessful: "Operaatio onnistui! ruoat on siirretty ",
+    failedMove: "Siirto epäonnistui. Yritä uudelleen",
 
     // Progress bars - NEW (Finnish translations)
     proteins_upper: "PROTEIINI",
