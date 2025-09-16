@@ -2096,10 +2096,37 @@ def calculate_weekly_averages(session_history):
     result.sort(key=lambda x: x["end_date"], reverse=True)
     return result
 
+def calculate_weekly_projection(tdee, weekly_avg):
+    """
+    Calculate projected weekly weight change based on TDEE vs weekly average calories.
+
+    Args:
+        tdee (float): User's daily maintenance calories.
+        weekly_avg (float): Average daily calories over the past 7 days.
+
+    Returns:
+        dict: projected weight change in kg and daily balance.
+    """
+    daily_balance = weekly_avg - tdee               # calories/day above/below TDEE
+    projected_change_kg = (daily_balance * 7) / 7700  # 7700 kcal ~ 1 kg fat
+
+    return {
+        "daily_balance": daily_balance,
+        "projected_change_kg": projected_change_kg
+    }
 @app.route('/history')
 @login_required
 def history():
     user_id = current_user.id
+    
+    # ✅ Fetch user_tdee from users table
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    cursor.execute("SELECT tdee FROM users WHERE id = %s", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    user_tdee = row["tdee"] if row and row["tdee"] is not None else 0  # default 0 if not set
+
     session_history = get_session_history(user_id)
     today = datetime.today()
     daily_dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(-3, 4)]
@@ -2122,12 +2149,23 @@ def history():
             'fiber': fiber
         })
 
-    # Today’s totals
+    # Today's totals
     today_data = session_history.get(today_str, [])
     today_calories, today_proteins, today_fats, today_carbs, today_salt, today_saturated, today_fiber = get_daily_totals(today_data)
 
     # Weekly averages
     weekly_data = calculate_weekly_averages(session_history)
+    
+    # ✅ Calculate weekly projection using the provided function
+    weekly_projection = None
+    daily_balance = 0
+    projected_change_kg = 0
+    
+    if weekly_data and len(weekly_data) > 0 and user_tdee > 0:
+        weekly_avg_calories = weekly_data[0]['avg_calories']  # Get current week's average
+        weekly_projection = calculate_weekly_projection(user_tdee, weekly_avg_calories)
+        daily_balance = weekly_projection['daily_balance']
+        projected_change_kg = weekly_projection['projected_change_kg']
 
     return render_template(
         'history.html',
@@ -2139,8 +2177,13 @@ def history():
         today_carbs=today_carbs,
         today_salt=today_salt,
         today_saturated=today_saturated,
-        today_fiber=today_fiber
+        today_fiber=today_fiber,
+        user_tdee=user_tdee,
+        daily_balance=daily_balance,  # ✅ New variable
+        projected_change_kg=projected_change_kg  # ✅ New variable
     )
+
+
 # food templates #
 @app.route('/save_template_food', methods=['POST'])
 @login_required
