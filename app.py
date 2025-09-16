@@ -846,40 +846,7 @@ jos et ole pyytänyt salasanan nollausta, voit jättää tämän viestin huomioi
     except Exception as e:
         app.logger.error(f"Error sending email: {e}")
         return False
-def deduplicate_foods():
-    print("Deduplicating foods...")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    try:
-        # Find duplicates
-        cursor.execute('''
-            SELECT key, COUNT(*), array_agg(name)
-            FROM foods 
-            GROUP BY key 
-            HAVING COUNT(*) > 1
-        ''')
-        duplicates = cursor.fetchall()
-        
-        for key, count, names in duplicates:
-            print(f"Found {count} duplicates for key: {key}")
-            # Keep the first occurrence, delete others
-            cursor.execute('''
-                DELETE FROM foods 
-                WHERE key = %s AND ctid NOT IN (
-                    SELECT ctid FROM foods 
-                    WHERE key = %s 
-                    LIMIT 1
-                )
-            ''', (key, key))
-        
-        conn.commit()
-        print(f"Removed {len(duplicates)} duplicate food entries")
-    except Exception as e:
-        print(f"Error deduplicating: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
+
 # Admin decorator
 def admin_required(func):
     @wraps(func)
@@ -948,7 +915,6 @@ def calculate_calorie_status(calorie_difference):
     
 # Initialize database and migrate data
 init_db()
-deduplicate_foods()
 update_food_keys_normalization()
 
 
@@ -1385,11 +1351,11 @@ def search_foods():
         cursor.execute(sql, params_visibility)
     else:
         sql = f'''
-            SELECT DISTINCT f.*, COALESCE(u.count, 0) as usage
+            SELECT f.*, COALESCE(u.count, 0) as usage
             FROM foods f
-            LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
+            LEFT JOIN food_usage u ON f.key = u.food_key
             WHERE {visibility_clause} AND 
-                (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
+                  (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
             ORDER BY 
                 CASE 
                     WHEN LOWER(f.name) LIKE %s THEN 0
@@ -1399,7 +1365,7 @@ def search_foods():
                 usage DESC,
                 name ASC
             LIMIT 15
-                '''
+        '''
         cursor.execute(sql, params_visibility + [
             f'{query.lower()}%',   # starts with
             f'%{query.lower()}%',  # contains
