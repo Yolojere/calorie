@@ -920,34 +920,74 @@
             <p class="page-subtitle" data-i18n="history_subtitle">Track your progress and analyze your performance over time</p>
         </div>
 
-        <!-- Summary Stats Row -->
-        <div class="row mb-4">
-            <div class="col-md-3 col-6 mb-3">
-                <div class="summary-card">
-                    <div class="summary-value text-warning">
-                        {{ today_calories | round(0) }}
-                    </div>
-                    <div class="summary-label" data-i18n="today_calories">Today's Calories</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-6 mb-3">
-                <div class="summary-card">
-                    <div class="summary-value text-info">
-                        {{ today_protein | round(0) }}g
-                    </div>
-                    <div class="summary-label" data-i18n="today_protein">Today's Protein</div>
-                </div>
-            </div>
-                <!-- ✅ NEW: Current Calorie Balance Card -->
+   <!-- Summary Stats Row -->
+<div class="row mb-4">
+  <!-- ✅ Today's Calories -->
+<div class="col-md-3 col-6 mb-3">
+    <div class="summary-card">
+        <div class="summary-value text-warning">
+            {% if today_calories >= 10000 %}
+                {{ "%.1fk"|format(today_calories / 1000) }}
+            {% else %}
+                {{ today_calories | round(0) | int }}
+            {% endif %}
+        </div>
+        <div class="summary-label" data-i18n="today_calories">Today's Calories</div>
+    </div>
+</div>
+
+<!-- ✅ Today's Protein -->
+<div class="col-md-3 col-6 mb-3">
+    <div class="summary-card">
+        <div class="summary-value text-info">
+            {% if today_protein >= 10000 %}
+                {{ "%.1fk"|format(today_protein / 1000) }}g
+            {% else %}
+                {{ today_protein | round(0) | int }}g
+            {% endif %}
+        </div>
+        <div class="summary-label" data-i18n="today_protein">Today's Protein</div>
+    </div>
+</div>
+
+    <!-- ✅ Weekly Avg Calories + Current Balance (combined) -->
     <div class="col-md-3 col-6 mb-3">
         <div class="summary-card">
-                    <div class="summary-value text-success">
-                        {% if weekly_data %}{{ weekly_data[0].avg_calories | round(0) }}{% else %}0{% endif %}
-                    </div>
-                    <div class="summary-label" data-i18n="weekly_avg_calories">Weekly Avg Calories
-                        </div>
+            <!-- Weekly Avg Calories -->
+            <div class="summary-value text-success">
+                {% if weekly_data %}
+                    {% set avg_cals = weekly_data[0].avg_calories %}
+                    {% if avg_cals >= 10000 %}
+                        {% set val = (avg_cals / 1000) | round(1) %}
+                        {{ (val|string).replace('.0','') }}k
+                    {% else %}
+                        {{ avg_cals | round(0) }}
+                    {% endif %}
+                {% else %}
+                    0
+                {% endif %}
+            </div>
+            <div class="summary-label" data-i18n="weekly_avg_calories">Weekly Avg Calories</div>
+
+            <!-- Current Balance -->
             <div class="summary-value {% if daily_balance > 0 %}text-danger{% elif daily_balance < 0 %}text-success{% else %}text-muted{% endif %}">
-                {% if daily_balance > 0 %}+{{ daily_balance | round(0) }}{% elif daily_balance < 0 %}{{ daily_balance | round(0) }}{% else %}0{% endif %}
+                {% if daily_balance > 0 %}
+                    +{% if daily_balance | abs >= 1000 %}
+                        {% set val = (daily_balance / 1000) | round(1) %}
+                        {{ (val|string).replace('.0','') }}k
+                    {% else %}
+                        {{ daily_balance | round(0) }}
+                    {% endif %}
+                {% elif daily_balance < 0 %}
+                    {% if daily_balance | abs >= 1000 %}
+                        {% set val = (daily_balance / 1000) | round(1) %}
+                        {{ (val|string).replace('.0','') }}k
+                    {% else %}
+                        {{ daily_balance | round(0) }}
+                    {% endif %}
+                {% else %}
+                    0
+                {% endif %}
             </div>
             <div class="summary-label">
                 {% if daily_balance > 0 %}
@@ -960,18 +1000,32 @@
             </div>
         </div>
     </div>
-    
-    <!-- ✅ NEW: Projected Weight Change Card -->
+
+    <!-- ✅ Projected Weight Change -->
     <div class="col-md-3 col-6 mb-3">
         <div class="summary-card">
             <div class="summary-value {% if projected_change_kg > 0 %}text-warning{% elif projected_change_kg < 0 %}text-success{% else %}text-muted{% endif %}">
-                {% if projected_change_kg > 0 %}+{{ (projected_change_kg * 1000) | round(0) }}g{% elif projected_change_kg < 0 %}{{ (projected_change_kg * 1000) | round(0) }}g{% else %}0g{% endif %}
+                {% if projected_change_kg > 0 %}
+                    +{% if projected_change_kg | abs < 10 %}
+                        {{ "%.1f"|format(projected_change_kg) }}kg
+                    {% else %}
+                        {{ projected_change_kg | round(0) | int }}kg
+                    {% endif %}
+                {% elif projected_change_kg < 0 %}
+                    {% if projected_change_kg | abs < 10 %}
+                        {{ "%.1f"|format(projected_change_kg) }}kg
+                    {% else %}
+                        {{ projected_change_kg | round(0) | int }}kg
+                    {% endif %}
+                {% else %}
+                    0kg
+                {% endif %}
             </div>
             <div class="summary-label">
                 {% if projected_change_kg > 0 %}
-                    Laskettu painoinn nousu/Viikko
+                    Arvioitu painon nousu / viikko
                 {% elif projected_change_kg < 0 %}
-                    Laskettu Painon lasku/viikko
+                    Arvioitu painon lasku / viikko
                 {% else %}
                     Ei muutoksia odotettavissa
                 {% endif %}
@@ -979,6 +1033,7 @@
         </div>
     </div>
 </div>
+
 
         <!-- Main Content Card -->
         <div class="history-card">
@@ -1040,10 +1095,10 @@
                                         <tbody>
                                             {% for entry in history_data %}
                                             <tr>
-                                                <td>{{ entry.date }}</td>
-                                                <td>{{ entry.calories | round(1) }}</td>
+                                               <td data-raw-date="{{ entry.date_raw }}">{{ entry.date }}</td>
+                                                <td>{{ entry.calories | round(0) }}</td>
                                                 <td>
-                                                    {{ entry.proteins | round(1) }}
+                                                    {{ entry.proteins | round(0) }}
                                                     <div class="progress">
                                                         <div class="progress-bar progress-bar-protein" data-value="{{ entry.proteins }}"></div>
                                                     </div>
@@ -1214,13 +1269,13 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="exercise-filters" id="muscle-group-filters">
-    <button class="muscle-group-filter active" data-muscle="all">All</button>
-    <button class="muscle-group-filter" data-muscle="chest">Chest</button>
-    <button class="muscle-group-filter" data-muscle="back">Back</button>
-    <button class="muscle-group-filter" data-muscle="shoulders">Shoulders</button>
-    <button class="muscle-group-filter" data-muscle="arms">Arms</button>
-    <button class="muscle-group-filter" data-muscle="legs">Legs</button>
-    <button class="muscle-group-filter" data-muscle="core">Core</button>
+    <button class="muscle-group-filter active" data-muscle="all" data-i18n="all">All</button>
+    <button class="muscle-group-filter" data-muscle="chest" data-i18n="chest">Chest</button>
+    <button class="muscle-group-filter" data-muscle="back" data-i18n="back">Back</button>
+    <button class="muscle-group-filter" data-muscle="shoulders" data-i18n="shoulders">Shoulders</button>
+    <button class="muscle-group-filter" data-muscle="arms" data-i18n="arms">Arms</button>
+    <button class="muscle-group-filter" data-muscle="legs" data-i18n="legs">Legs</button>
+    <button class="muscle-group-filter" data-muscle="core" data-i18n="core">Core</button>
 </div>
                                     <div class="input-group">
                                         <span class="input-group-text bg-dark text-light border-secondary">
@@ -1233,7 +1288,7 @@
                                 <div class="col-md-6 text-end">
                                     <div class="btn-group">
                                         <button class="btn-jere active" data-sort="name" data-i18n="name">Name</button>
-                                        <button class="btn-jere" data-sort="pb" data-i18n="personal_best">Personal Best</button>
+                                        <button class="btn-jere" data-sort="pb">Personal Best</button>
                                         <button class="btn-jere" data-sort="recent" data-i18n="most_recent">Most Recent</button>
                                     </div>
                                 </div>
@@ -1244,7 +1299,7 @@
                                     <thead>
                                         <tr>
                                             <th data-i18n="exercise">Exercise</th>
-                                           <th class="text-end" data-i18n="personal_best">Personal Best</th>
+                                           <th class="text-end">Personal Best</th>
                                             <th class="text-end" data-i18n="last_performed">Last Performed</th>
                                             <th class="text-end" data-i18n="total_volume">Total Volume</th>
                                             <th class="text-end" data-i18n="trend">Trend</th>
@@ -1331,12 +1386,114 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
+         let exerciseChart = null;
+         let allExercises = [];
+         
     $(document).ready(function() {
-        let exerciseChart = null;
-        let allExercises = []; // Store exercises for sorting
         
+
+            setTimeout(function() {
+        localiseNutritionDates();
+    }, 100);
+
+        function formatDateLocalized(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+
+    const weekdayKey = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+    const monthKey = date.toLocaleDateString('en-US', { month: 'long' }).toLowerCase();
+
+    console.log('Date:', dateString, 'WeekdayKey:', weekdayKey, 'MonthKey:', monthKey);
+    
+    const weekday = translateWeekday(weekdayKey);
+    const month = translateMonth(monthKey);
+    
+    console.log('Translated weekday:', weekday, 'Translated month:', month);
+
+    return `${weekday} ${date.getDate()} ${month} ${date.getFullYear()}`;
+}
+
+function localiseNutritionDates() {
+    $('#daily-nutrition tbody tr').each(function () {
+        const $first = $(this).find('td:first');
+        const rawDate = $first.data('raw-date');  // Get raw date from data attribute
+        if (rawDate) {
+            $first.text(formatDateLocalized(rawDate));
+        }
+    });
+    /* --- Weekly nutrition table --- */
+    $('#weekly-nutrition tbody tr').each(function () {
+        const $range = $(this).find('small'); // contains “2025-09-01 to 2025-09-07”
+        if ($range.length === 0) return;
+
+        const raw      = $range.text().trim();
+        const [startRaw, endRaw] = raw.split(' to ');
+        if (!endRaw) return; // unexpected format – skip
+
+        const startLocal = formatDateLocalized(startRaw.trim());
+        const endLocal   = formatDateLocalized(endRaw.trim());
+
+        $range.text(`${startLocal} – ${endLocal}`); // en-dash between dates
+    });
+}
+    // --- Update progress bars & localize dates when nutrition tab is shown ---
+   $('#nutrition-tab').on('shown.bs.tab', function() {
+    updateProgressBarsWithTargets();
+    setTimeout(function() {
+        localiseNutritionDates();
+    }, 50);
+});
+
+// --- On page load if nutrition tab is active ---
+if ($('#nutrition-tab').hasClass('active')) {
+    updateProgressBarsWithTargets();
+    setTimeout(function() {
+        localiseNutritionDates();
+    }, 100);
+}
+
+// --- Update progress bars & localize dates when switching daily/weekly sub-tabs ---
+$('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
+    updateProgressBarsWithTargets();
+    setTimeout(function() {
+        localiseNutritionDates();
+    }, 50);
+});
+});
+        
+        // Helper function to translate exercise names
+        function translateExerciseName(exerciseName) {
+            return t(exerciseName) !== exerciseName ? t(exerciseName) : exerciseName;
+        }
+
+        // Helper function to translate muscle groups
+        function translateMuscleGroup(muscleGroup) {
+    if (!muscleGroup) return 'N/A';
+    const lowercased = muscleGroup.toLowerCase().trim();
+    
+    // Map common muscle group variations to translation keys
+    const muscleMap = {
+        'chest': 'chest',
+        'back': 'back',
+        'legs': 'legs',
+        'shoulders': 'shoulders',
+        'arms': 'arms',
+        'core': 'core',
+        'rinta': 'chest',
+        'selkä': 'back', 
+        'jalat': 'legs',
+        'olkapäät': 'shoulders',
+        'kädet': 'arms',
+        'vatsa': 'core'
+    };
+    
+    const key = muscleMap[lowercased];
+    return key ? t(key) : muscleGroup;
+}
+
+
         // CSRF TOKEN //
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
@@ -1362,7 +1519,38 @@
             $('#exercise-detail').hide();
             $('#exercises-list').closest('.table-responsive').show();
         });
+        function smartKg(value) {
+    if (value == null) return '0 kg';
+    const rounded = Math.round(value * 10) / 10; // 1 decimal
+    return (Number.isInteger(rounded) ? rounded : rounded.toFixed(1)) + ' kg';
+}
+function smartPercent(value) {
+    if (value == null) return '0%';
+    const rounded = Math.round(value * 10) / 10; // 1 decimal
+    return (Number.isInteger(rounded) ? rounded : rounded.toFixed(1)) + '%';
+}
+       // Muscle group filter handler
+let currentMuscleFilter = 'all';
 
+$('.muscle-group-filter').click(function() {
+    $('.muscle-group-filter').removeClass('active');
+    $(this).addClass('active');
+
+    currentMuscleFilter = $(this).data('muscle').toLowerCase().trim();
+    applyMuscleFilter();
+});
+
+function applyMuscleFilter() {
+    $('.exercise-row').each(function() {
+        const muscle = $(this).data('muscle').toLowerCase().trim();
+
+        if (currentMuscleFilter === 'all' || muscle === currentMuscleFilter) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+}
         // Search functionality
         $('#exercise-search').on('input', function() {
             const searchTerm = $(this).val().toLowerCase();
@@ -1407,7 +1595,7 @@
                 $("#exercises-list").html(`
                     <tr>
                         <td colspan="5" class="text-center py-4 text-warning">
-                            Failed to load exercises. Please try again.
+                            ${t("failed_load_exercises")}
                         </td>
                     </tr>
                 `);
@@ -1416,40 +1604,44 @@
 
         // Render exercises list
         function renderExercisesList(exercises) {
-            const container = $("#exercises-list");
-            container.empty();
+    const container = $("#exercises-list");
+    container.empty();
 
-            if (!exercises || exercises.length === 0) {
-                container.append(`<tr><td colspan="5" class="text-center py-4">No exercises found</td></tr>`);
-                return;
-            }
+    if (!exercises || exercises.length === 0) {
+        container.append(`<tr><td colspan="5" class="text-center py-4">${t("no_exercises_found")}</td></tr>`);
+        return;
+    }
 
-            exercises.forEach(ex => {
-                const trendClass = ex.volume_trend > 0 ? 'text-success' : 
-                                ex.volume_trend < 0 ? 'text-danger' : 'text-muted';
-                const trendIcon = ex.volume_trend > 0 ? 'fa-arrow-up' : 
-                                ex.volume_trend < 0 ? 'fa-arrow-down' : 'fa-minus';
-                
-                const row = `
-                <tr class="exercise-row" data-id="${ex.id}" data-name="${ex.name}">
-                    <td>
-                        <strong>${ex.name}</strong><br>
-                        <small class="text-muted">${ex.muscle_group || 'N/A'}</small>
-                    </td>
-                    <td class="text-end align-middle">
-                        <span class="badge bg-warning text-dark">${(ex.personal_best || 0).toFixed(1)} kg</span>
-                    </td>
-                    <td class="text-end align-middle">${ex.last_performed || 'Never'}</td>
-                    <td class="text-end align-middle">${(ex.total_volume || 0).toFixed(1)} kg</td>
-                    <td class="text-end align-middle">
-                        <span class="${trendClass}">
-                            <i class="fas ${trendIcon} me-1"></i>
-                            ${Math.abs(ex.volume_trend || 0).toFixed(1)}%
-                        </span>
-                    </td>
-                </tr>`;
-                container.append(row);
-            });
+    exercises.forEach(ex => {
+        const trendClass = ex.volume_trend > 0 ? 'text-success' : 
+                            ex.volume_trend < 0 ? 'text-danger' : 'text-muted';
+        const trendIcon = ex.volume_trend > 0 ? 'fa-arrow-up' : 
+                          ex.volume_trend < 0 ? 'fa-arrow-down' : 'fa-minus';
+        
+        const row = `
+<tr class="exercise-row" data-id="${ex.id}" data-name="${ex.name}" data-muscle="${ex.muscle_group || 'N/A'}">
+    <td>
+        <strong>${translateExerciseName(ex.name)}</strong><br>
+        <small class="text-muted">${translateMuscleGroup(ex.muscle_group)}</small>
+    </td>
+            <td class="text-end align-middle">
+                <span class="badge bg-warning text-dark">${Math.round(ex.personal_best || 0)} kg</span>
+            </td>
+            <td class="text-end align-middle">${ex.last_performed || t('never')}</td>
+            <td class="text-end align-middle">${(ex.total_volume || 0).toFixed(1)} kg</td>
+            <td class="text-end align-middle">
+                <span class="${trendClass}">
+                    <i class="fas ${trendIcon} me-1"></i>
+                    ${Math.abs(ex.volume_trend || 0).toFixed(1)}%
+                </span>
+            </td>
+        </tr>`;
+        container.append(row);
+    });
+
+    // Apply the active muscle filter after rendering
+    applyMuscleFilter();
+
 
             // Add click handlers
             $('.exercise-row').click(function() {
@@ -1463,7 +1655,7 @@
             $.get(`/workout/exercise/${exerciseId}`, function(data) {
                 renderExerciseDetail(data);
             }).fail(function() {
-                alert("Failed to load exercise details. Please try again.");
+                alert(t("failed_load_exercise_details"));
             });
         }
 
@@ -1528,135 +1720,145 @@
     }
     
         // Render exercise detail (chart + session table)
-        function renderExerciseDetail(data) {
-            // Show exercise name
-            $('#exercise-detail-name').text(data.name);
+        // ---------- Smart formatting helpers ----------
+function smartKg(value) {
+    if (value == null) return '0 kg';
+    const rounded = Math.round(value * 10) / 10; // 1 decimal
+    return (Number.isInteger(rounded) ? rounded : rounded.toFixed(1)) + ' kg';
+}
 
-            // Summary cards
-            $('#exercise-personal-best').text((data.personal_best || 0).toFixed(1) + ' kg');
-            $('#exercise-monthly-volume').text((data.monthly_volume || 0).toFixed(1) + ' kg');
-            $('#exercise-best-set').text(data.best_set || '-');
+function smartPercent(value) {
+    if (value == null) return '0%';
+    const rounded = Math.round(value * 10) / 10; // 1 decimal
+    return (Number.isInteger(rounded) ? rounded : rounded.toFixed(1)) + '%';
+}
 
-            // Calculate and display 1RM
-            const bestSetData = parseBestSet(data.best_set);
-            if (bestSetData) {
-                const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
-                $('#exercise-ranking').text(oneRepMax.toFixed(1) + ' kg');
-            } else {
-                $('#exercise-ranking').text('-');
-            }
+// ---------- Render exercise detail ----------
+function renderExerciseDetail(data) {
+    // Exercise name
+    $('#exercise-detail-name').text(translateExerciseName(data.name));
 
-            // Chart
-            renderExerciseChart(data.history);
+    // Summary cards
+    $('#exercise-personal-best').text(smartKg(data.personal_best || 0));
+    $('#exercise-monthly-volume').text(smartKg(data.monthly_volume || 0));
+    $('#exercise-best-set').text(data.best_set || '-');
 
-            // Session table
-            renderSessionsTable(data.history);
+    // 1RM
+    const bestSetData = parseBestSet(data.best_set);
+    if (bestSetData) {
+        const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
+        $('#exercise-ranking').text(smartKg(oneRepMax));
+    } else {
+        $('#exercise-ranking').text('-');
+    }
 
-            // Show detail view and hide exercises list
-            $('#exercises-list').closest('.table-responsive').hide();
-            $('#exercise-detail').show();
-        }
-        
-        // Render exercise chart
-        function renderExerciseChart(history) {
-            const ctx = document.getElementById('exercise-chart').getContext('2d');
+    // Chart
+    renderExerciseChart(data.history);
 
-            // Destroy previous chart if exists
-            if (exerciseChart) exerciseChart.destroy();
+    // Session table
+    renderSessionsTable(data.history);
 
-            // Sort history by date (oldest → newest)
-            const sortedHistory = [...history].sort((a, b) => {
-                const [dA, mA, yA] = a.date.split('.');
-                const [dB, mB, yB] = b.date.split('.');
-                return new Date(`${yA}-${mA}-${dA}`) - new Date(`${yB}-${mB}-${dB}`);
-            });
+    // Show detail view and hide exercises list
+    $('#exercises-list').closest('.table-responsive').hide();
+    $('#exercise-detail').show();
+}
 
-            const dates = sortedHistory.map(h => h.date);
-            const volumes = sortedHistory.map(h => h.volume || 0);
-            const bestWeights = sortedHistory.map(h => h.best_weight || 0);
+// ---------- Render exercise chart ----------
+function renderExerciseChart(history) {
+    const ctx = document.getElementById('exercise-chart').getContext('2d');
 
-            // PR points only if is_pr === true
-            const volumePointColors = sortedHistory.map(h => h.is_pr ? '#ffd166' : '#4cc9f0');
-            const volumePointRadius = sortedHistory.map(h => h.is_pr ? 6 : 3);
-            const weightPointColors = sortedHistory.map(h => h.is_pr ? '#ffd166' : '#f72585');
-            const weightPointRadius = sortedHistory.map(h => h.is_pr ? 6 : 3);
+    if (exerciseChart) exerciseChart.destroy();
 
-            // Precompute trend percentages
-            const trendValues = sortedHistory.map((h, i) => {
-                if (i === 0) return null;
-                const prevVolume = sortedHistory[i-1].volume || 0;
-                return prevVolume ? ((h.volume - prevVolume) / prevVolume) * 100 : null;
-            });
+    const sortedHistory = [...history].sort((a, b) => {
+        const [dA, mA, yA] = a.date.split('.');
+        const [dB, mB, yB] = b.date.split('.');
+        return new Date(`${yA}-${mA}-${dA}`) - new Date(`${yB}-${mB}-${dB}`);
+    });
 
-            exerciseChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'Volume (kg)',
-                            data: volumes,
-                            borderColor: '#4cc9f0',
-                            backgroundColor: 'rgba(76,201,240,0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            yAxisID: 'y',
-                            pointBackgroundColor: volumePointColors,
-                            pointRadius: volumePointRadius,
-                        },
-                        {
-                            label: 'Best Weight (kg)',
-                            data: bestWeights,
-                            borderColor: '#f72585',
-                            backgroundColor: 'rgba(247,37,133,0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            yAxisID: 'y1',
-                            pointBackgroundColor: weightPointColors,
-                            pointRadius: weightPointRadius,
-                        }
-                    ]
+    const dates = sortedHistory.map(h => h.date);
+    const volumes = sortedHistory.map(h => h.volume || 0);
+    const bestWeights = sortedHistory.map(h => h.best_weight || 0);
+    const volumePointColors = sortedHistory.map(h => h.is_pr ? '#ffd166' : '#4cc9f0');
+    const volumePointRadius = sortedHistory.map(h => h.is_pr ? 6 : 3);
+    const weightPointColors = sortedHistory.map(h => h.is_pr ? '#ffd166' : '#f72585');
+    const weightPointRadius = sortedHistory.map(h => h.is_pr ? 6 : 3);
+
+    // Precompute trend percentages
+    const trendValues = sortedHistory.map((h, i) => {
+        if (i === 0) return null;
+        const prevVolume = sortedHistory[i-1].volume || 0;
+        return prevVolume ? ((h.volume - prevVolume) / prevVolume) * 100 : null;
+    });
+
+    exerciseChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Volume (kg)',
+                    data: volumes,
+                    borderColor: '#4cc9f0',
+                    backgroundColor: 'rgba(76,201,240,0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: 'y',
+                    pointBackgroundColor: volumePointColors,
+                    pointRadius: volumePointRadius,
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#e0e0e0' } },
-                        y: { 
-                            type: 'linear', 
-                            display: true, 
-                            position: 'left', 
-                            title: { display: true, text: 'Volume (kg)', color: '#e0e0e0' },
-                            grid: { color: 'rgba(255,255,255,0.1)' }, 
-                            ticks: { color: '#e0e0e0' } 
-                        },
-                        y1: { 
-                            type: 'linear', 
-                            display: true, 
-                            position: 'right', 
-                            title: { display: true, text: 'Weight (kg)', color: '#e0e0e0' },
-                            grid: { drawOnChartArea: false, color: 'rgba(255,255,255,0.1)' }, 
-                            ticks: { color: '#e0e0e0' } 
-                        }
-                    },
-                    plugins: {
-                        legend: { labels: { color: '#e0e0e0' } },
-                        tooltip: {
-                            callbacks: {
-                                afterLabel: function(context) {
-                                    const index = context.dataIndex;
-                                    if (trendValues[index] !== null) {
-                                        const trend = trendValues[index];
-                                        return `Trend: ${trend >= 0 ? '+' : ''}${trend.toFixed(1)}% from previous`;
-                                    }
-                                    return null;
-                                }
+                {
+                    label: 'Best Weight (kg)',
+                    data: bestWeights,
+                    borderColor: '#f72585',
+                    backgroundColor: 'rgba(247,37,133,0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: 'y1',
+                    pointBackgroundColor: weightPointColors,
+                    pointRadius: weightPointRadius,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#e0e0e0' } },
+                y: { 
+                    type: 'linear', 
+                    display: true, 
+                    position: 'left', 
+                    title: { display: true, text: 'Volume (kg)', color: '#e0e0e0' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }, 
+                    ticks: { color: '#e0e0e0' } 
+                },
+                y1: { 
+                    type: 'linear', 
+                    display: true, 
+                    position: 'right', 
+                    title: { display: true, text: 'Weight (kg)', color: '#e0e0e0' },
+                    grid: { drawOnChartArea: false, color: 'rgba(255,255,255,0.1)' }, 
+                    ticks: { color: '#e0e0e0' } 
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            if (trendValues[index] !== null) {
+                                const trend = trendValues[index];
+                                return `Trend: ${trend >= 0 ? '+' : ''}${smartPercent(trend)} from previous`;
                             }
+                            return null;
                         }
                     }
                 }
-            });
+            }
         }
+    });
+}
         
         // Render sessions table
         function renderSessionsTable(history) {
@@ -1684,7 +1886,7 @@
             const sortedHistory = [...ascendingHistory]
 
             if (sortedHistory.length === 0) {
-                container.append(`<tr><td colspan="4" class="text-center py-4">No session history available</td></tr>`);
+                container.append(`<tr><td colspan="4" class="text-center py-4">${t("no_session_history")}</td></tr>`);
                 return;
             }
 
@@ -1737,59 +1939,70 @@
         }
         
         // Render workout history
-        function renderWorkoutHistory(history, period) {
-            const container = $("#" + period + "-workout-history");
-            container.empty();
+       function renderWorkoutHistory(history, period) {
+    const container = $("#" + period + "-workout-history");
+    container.empty();
 
-            if (!history || history.length === 0) {
-                container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
-                return;
+    if (!history || history.length === 0) {
+        container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
+        return;
+    }
+
+    history.forEach(item => {
+        let periodLabel = '';
+        let periodRow = '';
+        let muscleRows = '';
+
+        if (period === 'daily') {
+            const date = new Date(item.date);
+            const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+            const translatedWeekday = translateWeekday(weekday);
+            periodLabel = `${translatedWeekday}, ${date.getDate()}/${date.getMonth() + 1}`;
+            
+            periodRow = `<tr class="period-row collapsed align-middle" style="cursor:pointer;">
+                            <td><strong>${periodLabel}</strong></td>
+                            <td class="text-end">${item.sessions_count || 0}</td>
+                            <td>&nbsp;</td>
+                            <td class="text-end">${item.total_sets || 0}</td>
+                            <td class="text-end">${item.total_reps || 0}</td>
+                            <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+                        </tr>`;
+        } else {
+            const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
+            
+            if (period === 'weekly') {
+                const weekEnd = new Date(startDate); 
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
+            } else {
+                const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                periodLabel = `${monthName} ${startDate.getFullYear()}`;
             }
 
-            history.forEach(item => {
-                let periodLabel = '';
-                let periodRow = '';
-                let muscleRows = '';
-
-                if (period === 'daily') {
-                    periodLabel = new Date(item.date).toLocaleDateString('en-GB', { weekday:'short', month:'numeric', day:'numeric' });
-                    periodRow = `<tr class="period-row collapsed align-middle" style="cursor:pointer;">
-                                    <td><strong>${periodLabel}</strong></td>
-                                    <td class="text-end">${item.sessions_count || 0}</td>
-                                    <td>&nbsp;</td>
-                                    <td class="text-end">${item.total_sets || 0}</td>
-                                    <td class="text-end">${item.total_reps || 0}</td>
-                                    <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                                </tr>`;
-                } else {
-                    const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
-                    if (period === 'weekly') {
-                        const weekEnd = new Date(startDate); weekEnd.setDate(weekEnd.getDate() + 6);
-                        periodLabel = `${startDate.toLocaleDateString('en-GB',{month:'short',day:'numeric'})} - ${weekEnd.toLocaleDateString('en-GB',{month:'short',day:'numeric'})}`;
-                    } else periodLabel = startDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-
-                    periodRow = `<tr class="period-row align-middle" style="cursor:pointer;">
-                                    <td><strong>${periodLabel}</strong></td>
-                                    <td class="text-end">${item.sessions_count || 0}</td>
-                                    <td>&nbsp;</td>
-                                    <td class="text-end">${item.total_sets || 0}</td>
-                                    <td class="text-end">${item.total_reps || 0}</td>
-                                    <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                                </tr>`;
-                }
-
-                for (const [muscle, stats] of Object.entries(item.muscles || {})) {
-                    muscleRows += `<tr class="muscle-row d-none">
-                                    <td></td><td></td><td>${muscle}</td>
-                                    <td class="text-end">${stats.total_sets || 0}</td>
-                                    <td class="text-end">${stats.total_reps || 0}</td>
-                                    <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
-                                </tr>`;
-                }
-
-                container.append(periodRow + muscleRows);
-            });
+            periodRow = `<tr class="period-row align-middle" style="cursor:pointer;">
+                            <td><strong>${periodLabel}</strong></td>
+                            <td class="text-end">${item.sessions_count || 0}</td>
+                            <td>&nbsp;</td>
+                            <td class="text-end">${item.total_sets || 0}</td>
+                            <td class="text-end">${item.total_reps || 0}</td>
+                            <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
+                        </tr>`;
         }
+
+        for (const [muscle, stats] of Object.entries(item.muscles || {})) {
+            muscleRows += `<tr class="muscle-row d-none">
+                            <td></td><td></td><td>${translateMuscleGroup(muscle)}</td>
+                            <td class="text-end">${stats.total_sets || 0}</td>
+                            <td class="text-end">${stats.total_reps || 0}</td>
+                            <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
+                        </tr>`;
+        }
+
+        container.append(periodRow + muscleRows);
+    });
+}
         
         // Function to update progress bars with targets from server
         function updateProgressBarsWithTargets() {
@@ -1847,21 +2060,7 @@
             });
         }
         
-        // Update progress bars when nutrition tab is shown
-        $('#nutrition-tab').on('shown.bs.tab', function() {
-            updateProgressBarsWithTargets();
-        });
-        
-        // Also update when the page loads if nutrition tab is active
-        if ($('#nutrition-tab').hasClass('active')) {
-            updateProgressBarsWithTargets();
-        }
-        
-        // Update progress bars when switching between daily/weekly nutrition sub-tabs
-        $('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
-            updateProgressBarsWithTargets();
-        });
-    });
+   
     </script>
     
     <script>
