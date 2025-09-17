@@ -356,7 +356,7 @@ function copyWorkoutToDate(targetDate) {
 
     const sourceDate = currentSelectedDate;
     if (sourceDate === targetDate) {
-        alert("Cannot copy to the same date!");
+        alert("Ei pysty kopioimaan samalle päivälle!");
         isCopyingWorkout = false;
         return;
     }
@@ -368,7 +368,7 @@ function copyWorkoutToDate(targetDate) {
 
         getSessionWithCache(targetDate, function(data) {
         if (data.session && data.exercises && data.exercises.length > 0) {
-            if (!confirm("This date already has a workout. Overwrite it?")) {
+            if (!confirm("Tällä päivällä on jo merkattu treeni. Kopioidaanko sen päälle?")) {
                 hideLoadingOverlay();
                 $btn.html(originalContent);
                 $btn.prop('disabled', false);
@@ -378,7 +378,7 @@ function copyWorkoutToDate(targetDate) {
         }
 
     // Show a loading overlay for better UX
-    showLoadingOverlay("Copying workout...");
+    showLoadingOverlay("Kopioidaan treeni...");
     
 
     $.post("/workout/copy_session", {
@@ -403,6 +403,11 @@ function copyWorkoutToDate(targetDate) {
             });
             
             $("#copyWorkoutModal").modal("hide");
+            // Show success toast
+    const toastEl = document.getElementById('copySuccessToast');
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 }); // auto-hide after 3s
+    toast.show();
+
         } else {
             showErrorMessage("Error: " + response.error);
         }
