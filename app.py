@@ -2154,6 +2154,7 @@ def history():
         calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(day_data)
         history_data.append({
             'date': format_date(date),
+            'date_raw': date,
             'calories': calories,
             'proteins': proteins,
             'fats': fats,
