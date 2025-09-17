@@ -563,8 +563,8 @@ function showWorkoutResults(comparisonData, achievements) {
                 <div class="pr-celebration">
                     <div class="pr-trophy">🏆</div>
                     <div class="pr-text">${t('newBestSet')}</div>
-                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} reps</div>
-                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} reps</div>
+                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} toistoa</div>
+                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} toistoa</div>
                 </div>`;
         } else if (pr.type === 'heaviestWeight') {
             resultsHTML += `
