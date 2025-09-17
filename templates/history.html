@@ -25,6 +25,13 @@
             background-color: #0c0c0c !important;
             border-color: #444;
         }
+        .bg-warning {
+            border: 1px solid !important;
+            border-color: #060606 !important;
+            font-size: 10px !important;
+            box-shadow:#222 !important;
+            font-weight: bold !important;
+        }
         
         /* === NEW BUTTON STYLES === */
         .btn-jere {
@@ -41,14 +48,20 @@
         }
 
         .btn-jere:hover {
-            background-color: #d4d4d4 !important;
+            background-color: #ffffff !important;
             color: black !important;
             transform: scale(1.02);
         }
 
         .btn-jere.active {
-            background: #858585 !important;
+            background: #ffffff !important;
             color: #000000 !important;
+            transform: scale(1.01) !important ;
+        }
+        .btn-jere.focus {
+             background: #ffffff !important;
+            color: #000000 !important;
+            transform: scale(1.03);
         }
         
         /* Make tabs use the new button style */
@@ -66,16 +79,6 @@
             margin-bottom: 10px;
         }
 
-        .nav-tabs .nav-link:hover {
-            background-color: #d4d4d4 !important;
-            color: black !important;
-            transform: scale(1.02);
-        }
-
-        .nav-tabs .nav-link.active {
-            background: #858585 !important;
-            color: #000000 !important;
-        }
 
         /* ===== NAV LINK BOX ===== */
         .nav-link-box {
@@ -255,57 +258,242 @@
             border: 1px solid #444;
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
-        .period-row {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+
+        /* NEW WORKOUT CARD STYLES */
+        .workout-period-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Match summary cards */
+            border: 1px solid #444;
+            border-radius: 12px;
+            margin-bottom: 10px; /* Reduced from 12px */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 12px 15px; /* Reduced from 15px 20px */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow like summary cards */
+        }
+
+                    .workout-period-card:hover {
+                background: linear-gradient(135deg, #333 0%, #222 100%); /* Match summary card hover */
+                transform: translateY(-3px); /* Match summary card hover transform */
+                box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            }
+
+        .workout-period-card .period-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #ffd166;
+        }
+
+        .workout-period-card .period-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .workout-period-card .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .workout-period-card .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .workout-period-card .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Workout Detail View */
+        .workout-detail-view {
+            display: none;
+        }
+
+       .workout-detail-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    border-radius: 12px;
+    padding: 15px; /* Reduced from 20px */
+    margin-bottom: 15px; /* Reduced from 20px */
     border: 1px solid #444;
-    border-radius: 8px;
-    margin-bottom: 8px !important;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.period-row:hover {
-    background: linear-gradient(135deg, #333 0%, #222 100%) !important;
-    transform: translateY(-1px);
-}
-
-.period-row.collapsed .collapse-icon {
-    transform: rotate(-90deg);
-}
-
-.muscle-row {
-    background-color: #1a1a1a !important;
-    border-left: 3px solid #ffd166;
-    margin-left: 20px;
-}
-
-/* Compact metrics display */
-.compact-metrics {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow like summary cards */
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    padding: 8px 0;
-}
-
-.metric-item {
-    display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    min-width: 60px;
 }
 
-.metric-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: #ffd166;
+        .workout-detail-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd166;
+            margin-bottom: 5px;
+        }
+
+        .workout-detail-subtitle {
+            font-size: 14px;
+            color: #b1b0b0;
+        }
+
+        .workout-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .workout-summary-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #444;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .workout-summary-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .workout-summary-card .card-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .workout-summary-card .card-title {
+            font-size: 14px;
+            color: #b1b0b0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .workout-summary-card .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .workout-summary-card.sessions .card-icon { color: #4cc9f0; }
+        .workout-summary-card.muscle-groups .card-icon { color: #f72585; }
+        .workout-summary-card.sets .card-icon { color: #06d6a0; }
+        .workout-summary-card.reps .card-icon { color: #ffd166; }
+        .workout-summary-card.volume .card-icon { color: #ff6b35; }
+
+        /* Muscle Group Details */
+       .muscle-group-details {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    border-radius: 12px;
+    padding: 15px; /* Reduced from 20px */
+    border: 1px solid #444;
+    margin-bottom: 15px; /* Reduced from 20px */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow like summary cards */
 }
 
-.metric-label {
-    font-size: 10px;
-    color: #888;
-    text-transform: uppercase;
-}
+        .muscle-group-details h5 {
+            color: #ffd166;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+            .muscle-detail-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Match summary cards instead of solid #0c0c0c */
+            border: 1px solid #444; /* Consistent with summary cards */
+            border-radius: 8px;
+            padding: 12px; /* Reduced from 15px */
+            margin-bottom: 8px; /* Reduced from 10px */
+            border-left: 4px solid #ffd166;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Add subtle shadow */
+        }
+
+        .muscle-detail-card .muscle-name {
+            font-weight: 600;
+            color: #ffd166;
+            margin-bottom: 8px;
+        }
+
+        .muscle-detail-card .muscle-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .muscle-detail-card .muscle-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
+
+        .muscle-detail-card .muscle-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .muscle-detail-card .muscle-stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .period-row {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 8px !important;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .period-row:hover {
+            background: linear-gradient(135deg, #333 0%, #222 100%) !important;
+            transform: translateY(-1px);
+        }
+
+        .period-row.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .muscle-row {
+            background-color: #1a1a1a !important;
+            border-left: 3px solid #ffd166;
+            margin-left: 20px;
+        }
+
+        /* Compact metrics display */
+        .compact-metrics {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffd166;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
         /* Tooltip arrow */
         .tooltip.bs-tooltip-top .tooltip-arrow::before {
             border-top-color: #1b1b1b;
@@ -348,42 +536,46 @@
         .table-container {
             border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin: 0; /* Remove margin-bottom: 20px */
             width: 100%;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        }
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Use summary card gradient */
+            border: 1px solid #444; /* Add border like summary cards */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow like summary cards */
+            }
 
-        .table-custom {
-            color: #ffffff; /* Changed to white */
+         .table-custom {
+            color: #ffffff;
             margin-bottom: 0;
             border-collapse: separate;
             border-spacing: 0;
-            background-color: #060606; /* Added black background */
-            min-width: 600px; /* Ensure table has minimum width */
+            background-color: transparent; /* Let container gradient show through */
+            min-width: 600px;
         }
 
-        .table-custom th {
-            background: #0f0f0f; /* Changed to solid black */
+                .table-custom th {
+            background: linear-gradient(135deg, #333 0%, #1b1b1b 50%, #333 100%); /* Match summary card styling */
             border-bottom: 2px solid #444;
-            padding: 12px 15px;
+            padding: 8px 10px; /* Reduced from 12px 15px */
             font-weight: 600;
             text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
-            color: #ffffff; /* Added white text */
+            color: #ffffff;
             white-space: nowrap;
         }
 
+        
         .table-custom td {
-            padding: 12px 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid #333;
-            background-color: #1b1b1b; /* Added black background */
-            color: #ffffff; /* Added white text */
-            white-space: nowrap;
-        }
+    padding: 8px 10px; /* Reduced from 12px 15px */
+    vertical-align: middle;
+    border-bottom: 1px solid #333;
+    background-color: transparent; /* Let container gradient show through */
+    color: #ffffff;
+    white-space: nowrap;
+}
 
         .table-custom tbody tr {
             transition: background-color 0.2s ease;
@@ -403,11 +595,13 @@
 
         /* Tab content - UPDATED WITH BLACK BACKGROUND */
         .tab-content {
-            background-color: #000000; /* Added black background */
-            color: #ffffff; /* Added white text */
-            padding: 15px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Use summary card gradient */
+            color: #ffffff;
+            padding: 10px; /* Reduced from 15px */
             border-radius: 0 0 10px 10px;
-            overflow-x: auto; /* Enable horizontal scrolling */
+            overflow-x: auto;
+            border: 1px solid #444; /* Add border like summary cards */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow like summary cards */
         }
 
         /* Summary cards */
@@ -507,51 +701,52 @@
             background-color: #ffd166;
         }
 
-.exercise-search-container {
-    position: relative;
-    margin-bottom: 15px;
-}
+        .exercise-search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
 
-.exercise-filters {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 15px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-    -webkit-overflow-scrolling: touch;
-}
+        .exercise-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+        }
 
-.muscle-group-filter {
-    flex-shrink: 0;
-    padding: 4px 8px;
-    font-size: 10px;
-    border-radius: 12px;
-    background: #1b1b1b;
-    color: #fff;
-    border: 1px solid #444;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
+        .muscle-group-filter {
+            flex-shrink: 0;
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 12px;
+            background: #1b1b1b;
+            color: #fff;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
 
-.muscle-group-filter.active {
-    background: #ffd166;
-    color: #000;
-}
+        .muscle-group-filter.active {
+            background: #ffd166;
+            color: #000;
+        }
 
-/* Enhanced exercise list items */
-.exercise-row {
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
+        /* Enhanced exercise list items */
+        .exercise-row {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
 
-.exercise-row:hover {
-    background-color: #1a1a1a !important;
-}
+        .exercise-row:hover {
+            background-color: #1a1a1a !important;
+        }
 
-.exercise-row:hover td {
-    background-color: #1a1a1a !important;
-}
+        .exercise-row:hover td {
+            background-color: #1a1a1a !important;
+        }
+
         /* Empty state styling */
         .empty-state {
             padding: 40px 20px;
@@ -564,81 +759,88 @@
             margin-bottom: 15px;
             opacity: 0.5;
         }
+
         .expandable-trigger {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.2s ease;
-    border-radius: 8px;
-}
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease;
+            border-radius: 8px;
+        }
 
-.expandable-trigger:active {
-    border-color: #ffd166;
-    background-color: rgba(255, 209, 102, 0.1);
-}
+        .expandable-trigger:active {
+            border-color: #ffd166;
+            background-color: rgba(255, 209, 102, 0.1);
+        }
 
-/* Enhanced empty states */
-.empty-state {
-    padding: 30px 15px !important;
-    text-align: center;
-}
+        /* Enhanced empty states */
+        .empty-state {
+            padding: 30px 15px !important;
+            text-align: center;
+        }
 
-.empty-state i {
-    font-size: 40px !important;
-    margin-bottom: 12px !important;
-    opacity: 0.6;
-    color: #888;
-}
+        .empty-state i {
+            font-size: 40px !important;
+            margin-bottom: 12px !important;
+            opacity: 0.6;
+            color: #888;
+        }
 
-.empty-state h4 {
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: #fff;
-}
+        .empty-state h4 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
 
-.empty-state p {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 15px;
-    line-height: 1.4;
-}
+        .empty-state p {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
 
-/* Loading states */
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-}
+        /* Loading states */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
 
-.loading-spinner {
-    width: 30px;
-    height: 30px;
-    border: 3px solid #333;
-    border-top: 3px solid #ffd166;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top: 3px solid #ffd166;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-.loading-text {
-    font-size: 12px;
-    color: #888;
-}
+        .loading-text {
+            font-size: 12px;
+            color: #888;
+        }
         
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
             .history-container {
                 overflow-x: hidden; /* Prevent horizontal scroll on container */
+                margin-left: -10px;
+                margin-right: -10px;
                 width: 100%;
+                padding: 0 10px;
+                border-radius: 0;
+                width: calc(100% + 20px);
+
             }
             
             .table-container {
@@ -650,7 +852,29 @@
             .table-custom {
                 min-width: 700px; /* Ensure table is wide enough to scroll */
             }
-            
+            .tab-content {
+        padding: 8px; /* Even more compact on mobile */
+        margin-left: -10px;
+        margin-right: -10px;
+        width: calc(100% + 20px);
+        border-radius: 0;
+    }
+       .nav-tabs {
+        padding: 0 10px;
+        margin-left: -10px;
+        margin-right: -10px;
+        width: calc(100% + 20px);
+        padding-bottom: 8px;
+    }
+    .nav-tabs .nav-link {
+        padding: 5px 8px; /* Even more compact on mobile */
+        font-size: 10px;
+    }
+     .table-custom th,
+    .table-custom td {
+        padding: 6px 4px; /* Very compact on mobile */
+        font-size: 10px;
+    }
             .page-title {
                 font-size: 22px;
             }
@@ -686,44 +910,62 @@
                 white-space: nowrap;
                 flex-shrink: 0;
             }
-                .table-custom th {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 20 !important;
-        background: #0f0f0f !important;
-        padding: 8px 6px !important;
-        font-size: 11px !important;
-        white-space: nowrap;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .table-custom td {
-        padding: 8px 6px !important;
-        font-size: 11px !important;
-        white-space: nowrap;
-    }
-    
-    .expand-collapse-controls {
-        position: sticky;
-        top: 0;
-        z-index: 15;
-        background: #161616;
-        padding: 10px 0;
-        margin-bottom: 10px;
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        border-bottom: 1px solid #333;
-    }
-    
-    #expand-all,
-    #collapse-all {
-        padding: 6px 12px !important;
-        font-size: 11px !important;
-        min-width: 80px;
-    }
-}
-        
+
+            .table-custom th {
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 20 !important;
+                background: #0f0f0f !important;
+                padding: 8px 6px !important;
+                font-size: 11px !important;
+                white-space: nowrap;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            
+            .table-custom td {
+                padding: 8px 6px !important;
+                font-size: 11px !important;
+                white-space: nowrap;
+            }
+            
+            .expand-collapse-controls {
+                position: sticky;
+                top: 0;
+                z-index: 15;
+                background: #161616;
+                padding: 10px 0;
+                margin-bottom: 10px;
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                border-bottom: 1px solid #333;
+            }
+            
+            #expand-all,
+            #collapse-all {
+                padding: 6px 12px !important;
+                font-size: 11px !important;
+                min-width: 80px;
+            }
+
+            /* Mobile adaptations for workout cards */
+            .workout-summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .workout-summary-card {
+                padding: 15px 10px;
+            }
+
+            .workout-summary-card .card-value {
+                font-size: 20px;
+            }
+
+            .muscle-detail-card .muscle-stats {
+                gap: 10px;
+            }
+        }
 
         /* Animation for tab content */
         .tab-pane {
@@ -1034,7 +1276,6 @@
     </div>
 </div>
 
-
         <!-- Main Content Card -->
         <div class="history-card">
             <div class="card-header-custom">
@@ -1155,7 +1396,7 @@
                                             {% for week in weekly_data %}
                                             <tr>
                                                 <td>
-                                                    <span class="week-range">{{ week.week }}</span><br>
+                                                    
                                                     <small>{{ week.start_date }} to {{ week.end_date }}</small>
                                                 </td>
                                                 <td>{{ week.avg_calories | round(1) }}</td>
@@ -1195,68 +1436,179 @@
                                 </li>
                             </ul>
 
-                            <!-- Expand / Collapse buttons -->
-                            <div class="expand-collapse-controls">
-    <button id="expand-all" class="btn-jere me-2" data-i18n="expand_all">Expand All</button>
-    <button id="collapse-all" class="btn-jere" data-i18n="collapse_all">Collapse All</button>
-</div>
-
                             <!-- Tab content -->
                             <div class="tab-content mt-3">
                                 <!-- DAILY -->
                                 <div class="tab-pane fade show active" id="daily-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-custom">
-                                            <thead>
-                                                <tr>
-                                                    <th data-i18n="date_period">Date / Period</th>
-                                                    <th class="text-end" data-i18n="sessions">Sessions</th>
-                                                    <th data-i18n="muscle_group">Muscle Group</th>
-                                                    <th class="text-end" data-i18n="sets">Sets</th>
-                                                    <th class="text-end" data-i18n="total_reps">Total Reps</th>
-                                                    <th class="text-end" data-i18n="volume_kg">Volume (kg)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="daily-workout-history"></tbody>
-                                        </table>
+                                    <!-- List View -->
+                                    <div id="daily-workout-list">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+
+                                    <!-- Detail View (initially hidden) -->
+                                    <div id="daily-workout-detail" class="workout-detail-view">
+                                        <div class="workout-detail-header">
+                                            <div>
+                                                <div class="workout-detail-title" id="daily-detail-title">Monday, 16/09</div>
+                                                <div class="workout-detail-subtitle" data-i18n="workout_details">Workout Details</div>
+                                            </div>
+                                            <button id="back-to-daily-list" class="btn-jere">
+                                                <i class="fas fa-arrow-left me-1"></i> <span data-i18n="backk">Back</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Summary Cards -->
+                                        <div class="workout-summary-cards">
+                                            <div class="workout-summary-card sessions">
+                                                <i class="fas fa-play-circle card-icon"></i>
+                                                <div class="card-title" data-i18n="sessions">Sessions</div>
+                                                <div class="card-value" id="daily-detail-sessions">2</div>
+                                            </div>
+                                            <div class="workout-summary-card muscle-groups">
+                                                <i class="fas fa-dumbbell card-icon"></i>
+                                                <div class="card-title" data-i18n="muscle_groups">Muscle Groups</div>
+                                                <div class="card-value" id="daily-detail-muscle-groups">3</div>
+                                            </div>
+                                            <div class="workout-summary-card sets">
+                                                <i class="fas fa-layer-group card-icon"></i>
+                                                <div class="card-title" data-i18n="sets">Sets</div>
+                                                <div class="card-value" id="daily-detail-sets">24</div>
+                                            </div>
+                                            <div class="workout-summary-card reps">
+                                                <i class="fas fa-redo card-icon"></i>
+                                                <div class="card-title" data-i18n="reps">Reps</div>
+                                                <div class="card-value" id="daily-detail-reps">320</div>
+                                            </div>
+                                            <div class="workout-summary-card volume">
+                                                <i class="fas fa-weight-hanging card-icon"></i>
+                                                <div class="card-title" data-i18n="volume">Volume</div>
+                                                <div class="card-value" id="daily-detail-volume">2,540 kg</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Muscle Group Details -->
+                                        <div class="muscle-group-details">
+                                            <h5><i class="fas fa-dumbbell me-2"></i><span data-i18n="muscle_group_breakdown">Muscle Group Breakdown</span></h5>
+                                            <div id="daily-detail-muscle-breakdown">
+                                                <!-- Will be populated by JavaScript -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- WEEKLY -->
                                 <div class="tab-pane fade" id="weekly-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-custom">
-                                            <thead>
-                                                <tr>
-                                                    <th>Date / Period</th>
-                                                    <th class="text-end">Sessions</th>
-                                                    <th>Muscle Group</th>
-                                                    <th class="text-end">Sets</th>
-                                                    <th class="text-end">Total Reps</th>
-                                                    <th class="text-end">Volume (kg)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="weekly-workout-history"></tbody>
-                                        </table>
+                                    <!-- List View -->
+                                    <div id="weekly-workout-list">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+
+                                    <!-- Detail View (initially hidden) -->
+                                    <div id="weekly-workout-detail" class="workout-detail-view">
+                                        <div class="workout-detail-header">
+                                            <div>
+                                                <div class="workout-detail-title" id="weekly-detail-title">Week 16 Sep - 22 Sep</div>
+                                                <div class="workout-detail-subtitle" data-i18n="weekly_workout_details">Weekly Workout Details</div>
+                                            </div>
+                                            <button id="back-to-weekly-list" class="btn-jere">
+                                                <i class="fas fa-arrow-left me-1"></i> <span data-i18n="backk">Back</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Summary Cards -->
+                                        <div class="workout-summary-cards">
+                                            <div class="workout-summary-card sessions">
+                                                <i class="fas fa-play-circle card-icon"></i>
+                                                <div class="card-title" data-i18n="sessions">Sessions</div>
+                                                <div class="card-value" id="weekly-detail-sessions">12</div>
+                                            </div>
+                                            <div class="workout-summary-card muscle-groups">
+                                                <i class="fas fa-dumbbell card-icon"></i>
+                                                <div class="card-title" data-i18n="muscle_groups">Muscle Groups</div>
+                                                <div class="card-value" id="weekly-detail-muscle-groups">6</div>
+                                            </div>
+                                            <div class="workout-summary-card sets">
+                                                <i class="fas fa-layer-group card-icon"></i>
+                                                <div class="card-title" data-i18n="sets">Sets</div>
+                                                <div class="card-value" id="weekly-detail-sets">156</div>
+                                            </div>
+                                            <div class="workout-summary-card reps">
+                                                <i class="fas fa-redo card-icon"></i>
+                                                <div class="card-title" data-i18n="reps">Reps</div>
+                                                <div class="card-value" id="weekly-detail-reps">1,840</div>
+                                            </div>
+                                            <div class="workout-summary-card volume">
+                                                <i class="fas fa-weight-hanging card-icon"></i>
+                                                <div class="card-title" data-i18n="volume">Volume</div>
+                                                <div class="card-value" id="weekly-detail-volume">12,450 kg</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Muscle Group Details -->
+                                        <div class="muscle-group-details">
+                                            <h5><i class="fas fa-dumbbell me-2"></i><span data-i18n="muscle_group_breakdown">Muscle Group Breakdown</span></h5>
+                                            <div id="weekly-detail-muscle-breakdown">
+                                                <!-- Will be populated by JavaScript -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- MONTHLY -->
                                 <div class="tab-pane fade" id="monthly-workout" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-custom">
-                                            <thead>
-                                                <tr>
-                                                    <th>Date / Period</th>
-                                                    <th class="text-end">Sessions</th>
-                                                    <th>Muscle Group</th>
-                                                    <th class="text-end">Sets</th>
-                                                    <th class="text-end">Total Reps</th>
-                                                    <th class="text-end">Volume (kg)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="monthly-workout-history"></tbody>
-                                        </table>
+                                    <!-- List View -->
+                                    <div id="monthly-workout-list">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+
+                                    <!-- Detail View (initially hidden) -->
+                                    <div id="monthly-workout-detail" class="workout-detail-view">
+                                        <div class="workout-detail-header">
+                                            <div>
+                                                <div class="workout-detail-title" id="monthly-detail-title">September 2024</div>
+                                                <div class="workout-detail-subtitle" data-i18n="monthly_workout_details">Monthly Workout Details</div>
+                                            </div>
+                                            <button id="back-to-monthly-list" class="btn-jere">
+                                                <i class="fas fa-arrow-left me-1"></i> <span data-i18n="backk">Back</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Summary Cards -->
+                                        <div class="workout-summary-cards">
+                                            <div class="workout-summary-card sessions">
+                                                <i class="fas fa-play-circle card-icon"></i>
+                                                <div class="card-title" data-i18n="sessions">Sessions</div>
+                                                <div class="card-value" id="monthly-detail-sessions">48</div>
+                                            </div>
+                                            <div class="workout-summary-card muscle-groups">
+                                                <i class="fas fa-dumbbell card-icon"></i>
+                                                <div class="card-title" data-i18n="muscle_groups">Muscle Groups</div>
+                                                <div class="card-value" id="monthly-detail-muscle-groups">6</div>
+                                            </div>
+                                            <div class="workout-summary-card sets">
+                                                <i class="fas fa-layer-group card-icon"></i>
+                                                <div class="card-title" data-i18n="sets">Sets</div>
+                                                <div class="card-value" id="monthly-detail-sets">624</div>
+                                            </div>
+                                            <div class="workout-summary-card reps">
+                                                <i class="fas fa-redo card-icon"></i>
+                                                <div class="card-title" data-i18n="reps">Reps</div>
+                                                <div class="card-value" id="monthly-detail-reps">7,680</div>
+                                            </div>
+                                            <div class="workout-summary-card volume">
+                                                <i class="fas fa-weight-hanging card-icon"></i>
+                                                <div class="card-title" data-i18n="volume">Volume</div>
+                                                <div class="card-value" id="monthly-detail-volume">52,890 kg</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Muscle Group Details -->
+                                        <div class="muscle-group-details">
+                                            <h5><i class="fas fa-dumbbell me-2"></i><span data-i18n="muscle_group_breakdown">Muscle Group Breakdown</span></h5>
+                                            <div id="monthly-detail-muscle-breakdown">
+                                                <!-- Will be populated by JavaScript -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1320,7 +1672,7 @@
                                     </button>
                                 </div>
 
-                                <!-- Summary Cards - REORDERED AS REQUESTED -->
+                                <!-- Summary Cards -->
                                 <div class="row mb-4">
                                     <!-- Volume Card -->
                                     <div class="col-md-3 mb-3">
@@ -1425,7 +1777,7 @@ function localiseNutritionDates() {
     });
     /* --- Weekly nutrition table --- */
     $('#weekly-nutrition tbody tr').each(function () {
-        const $range = $(this).find('small'); // contains “2025-09-01 to 2025-09-07”
+        const $range = $(this).find('small'); // contains "2025-09-01 to 2025-09-07"
         if ($range.length === 0) return;
 
         const raw      = $range.text().trim();
@@ -1519,6 +1871,23 @@ $('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
             $('#exercise-detail').hide();
             $('#exercises-list').closest('.table-responsive').show();
         });
+
+        // Back to workout list buttons
+        $('#back-to-daily-list').click(function() {
+            $('#daily-workout-detail').hide();
+            $('#daily-workout-list').show();
+        });
+
+        $('#back-to-weekly-list').click(function() {
+            $('#weekly-workout-detail').hide();
+            $('#weekly-workout-list').show();
+        });
+
+        $('#back-to-monthly-list').click(function() {
+            $('#monthly-workout-detail').hide();
+            $('#monthly-workout-list').show();
+        });
+
         function smartKg(value) {
     if (value == null) return '0 kg';
     const rounded = Math.round(value * 10) / 10; // 1 decimal
@@ -1642,7 +2011,6 @@ function applyMuscleFilter() {
     // Apply the active muscle filter after rendering
     applyMuscleFilter();
 
-
             // Add click handlers
             $('.exercise-row').click(function() {
                 const exerciseId = $(this).data('id');
@@ -1673,7 +2041,7 @@ function applyMuscleFilter() {
 
             if (typeof rawSet === 'string') {
                 // Match formats like "180kg × 5" or "180kg x 5"
-                const match = rawSet.match(/(\d+(\.\d+)?)\s*kg\s*[×x]\s*(\d+)/i);
+                const match = rawSet.match(/(\\d+(\\.\\d+)?)\\s*kg\\s*[×x]\\s*(\\d+)/i);
                 if (!match) return null;
                 const weight = parseFloat(match[1]);
                 const reps = parseInt(match[3]);
@@ -1695,30 +2063,7 @@ function applyMuscleFilter() {
             if (denom <= 0) return 0; // prevent negative or zero denominator
             return weight / denom;
         }
-        function enhancePeriodRows() {
-        $(document).on('click', '.period-row', function(e) {
-            e.preventDefault();
-            
-            const $this = $(this);
-            const isCollapsed = $this.hasClass('collapsed');
-            
-            // Toggle collapsed state
-            $this.toggleClass('collapsed');
-            
-            // Add collapse icon if it doesn't exist
-            if ($this.find('.collapse-icon').length === 0) {
-                $this.find('td:first').append(' <i class="fas fa-chevron-down collapse-icon"></i>');
-            }
-            
-            // Toggle visibility of muscle group rows
-            let $nextRow = $this.next();
-            while ($nextRow.length && $nextRow.hasClass('muscle-row')) {
-                $nextRow.toggleClass('d-none');
-                $nextRow = $nextRow.next();
-            }
-        });
-    }
-    
+
         // Render exercise detail (chart + session table)
         // ---------- Smart formatting helpers ----------
 function smartKg(value) {
@@ -1796,7 +2141,7 @@ function renderExerciseChart(history) {
             labels: dates,
             datasets: [
                 {
-                    label: 'Volume (kg)',
+                    label: 'Volyymi (kg)',
                     data: volumes,
                     borderColor: '#4cc9f0',
                     backgroundColor: 'rgba(76,201,240,0.1)',
@@ -1807,7 +2152,7 @@ function renderExerciseChart(history) {
                     pointRadius: volumePointRadius,
                 },
                 {
-                    label: 'Best Weight (kg)',
+                    label: 'Raskain Paino (kg)',
                     data: bestWeights,
                     borderColor: '#f72585',
                     backgroundColor: 'rgba(247,37,133,0.1)',
@@ -1828,7 +2173,7 @@ function renderExerciseChart(history) {
                     type: 'linear', 
                     display: true, 
                     position: 'left', 
-                    title: { display: true, text: 'Volume (kg)', color: '#e0e0e0' },
+                    title: { display: true, text: 'Volyymi (kg)', color: '#e0e0e0' },
                     grid: { color: 'rgba(255,255,255,0.1)' }, 
                     ticks: { color: '#e0e0e0' } 
                 },
@@ -1836,7 +2181,7 @@ function renderExerciseChart(history) {
                     type: 'linear', 
                     display: true, 
                     position: 'right', 
-                    title: { display: true, text: 'Weight (kg)', color: '#e0e0e0' },
+                    title: { display: true, text: 'Paino (kg)', color: '#e0e0e0' },
                     grid: { drawOnChartArea: false, color: 'rgba(255,255,255,0.1)' }, 
                     ticks: { color: '#e0e0e0' } 
                 }
@@ -1912,15 +2257,6 @@ function renderExerciseChart(history) {
             const period = $(this).attr('id').split('-')[0];
             loadWorkoutHistory(period);
         });
-        
-        $('#expand-all').click(() => $('.muscle-row').removeClass('d-none'));
-        $('#collapse-all').click(() => $('.muscle-row').addClass('d-none'));
-        
-        $(document).on('click', '.period-row', function() {
-            const wasCollapsed = $(this).hasClass('collapsed');
-            $(this).toggleClass('collapsed', !wasCollapsed);
-            $(this).nextUntil('.period-row').toggleClass('d-none');
-        });
 
         // Initialize workout history if needed
         if (window.location.hash === '#workouts') loadWorkoutHistory('daily');
@@ -1928,81 +2264,167 @@ function renderExerciseChart(history) {
         // Workout history functions
         function loadWorkoutHistory(period) {
             $.get("/workout/history?period=" + period, function(data) {
-                renderWorkoutHistory(data.history, period);
+                renderWorkoutHistoryCards(data.history, period);
             }).fail(function() {
-                const containerId = period + "-workout-history";
+                const containerId = period + "-workout-list";
                 $("#" + containerId).html(`
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-warning">Failed to load workout data. Please try again.</td>
-                    </tr>`);
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Failed to load workout data</h4>
+                        <p>Please try again later.</p>
+                    </div>`);
             });
         }
         
-        // Render workout history
-       function renderWorkoutHistory(history, period) {
-    const container = $("#" + period + "-workout-history");
-    container.empty();
+        // NEW: Render workout history as cards
+        function renderWorkoutHistoryCards(history, period) {
+            const container = $("#" + period + "-workout-list");
+            container.empty();
 
-    if (!history || history.length === 0) {
-        container.append(`<tr><td colspan="6" class="text-center py-4">No workout data available</td></tr>`);
-        return;
-    }
+            if (!history || history.length === 0) {
+                container.html(`
+                    <div class="empty-state">
+                        <i class="fas fa-dumbbell"></i>
+                        <h4>No workout data available</h4>
+                        <p>Start tracking your workouts to see ${period} history</p>
+                    </div>`);
+                return;
+            }
 
-    history.forEach(item => {
-        let periodLabel = '';
-        let periodRow = '';
-        let muscleRows = '';
+            history.forEach(item => {
+                let periodLabel = '';
+                let muscleGroupCount = Object.keys(item.muscles || {}).length;
 
-        if (period === 'daily') {
-            const date = new Date(item.date);
-            const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
-            const translatedWeekday = translateWeekday(weekday);
-            periodLabel = `${translatedWeekday}, ${date.getDate()}/${date.getMonth() + 1}`;
+                if (period === 'daily') {
+                    const date = new Date(item.date);
+                    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+                    const translatedWeekday = translateWeekday(weekday);
+                    periodLabel = `${translatedWeekday}, ${date.getDate()}/${date.getMonth() + 1}`;
+                } else if (period === 'weekly') {
+                    const startDate = new Date(item.week_start);
+                    const weekEnd = new Date(startDate); 
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+                    const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                    const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                    periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
+                } else {
+                    const startDate = new Date(item.month_start);
+                    const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                    periodLabel = `${monthName} ${startDate.getFullYear()}`;
+                }
+
+                const cardHtml = `
+                    <div class="workout-period-card" data-period="${period}" data-item='${JSON.stringify(item)}'>
+                        <div class="period-title">${periodLabel}</div>
+                        <div class="period-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${item.sessions_count || 0}</div>
+                                <div class="stat-label" data-i18n="sessions">Sessions</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${muscleGroupCount}</div>
+                                <div class="stat-label" data-i18n="muscles">Muscles</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${item.total_sets || 0}</div>
+                                <div class="stat-label" data-i18n="sets">Sets</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${item.total_reps || 0}</div>
+                                <div class="stat-label" data-i18n="reps">Reps</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${parseFloat(item.total_volume || 0).toFixed(0)}</div>
+                                <div class="stat-label">kg</div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                container.append(cardHtml);
+            });
+
+            // Add click handlers for cards
+            $('.workout-period-card').click(function() {
+                const period = $(this).data('period');
+                const item = $(this).data('item');
+                showWorkoutDetail(period, item);
+            });
+        }
+
+        // Show workout detail view
+        function showWorkoutDetail(period, item) {
+            const detailContainer = `#${period}-workout-detail`;
+            const listContainer = `#${period}-workout-list`;
             
-            periodRow = `<tr class="period-row collapsed align-middle" style="cursor:pointer;">
-                            <td><strong>${periodLabel}</strong></td>
-                            <td class="text-end">${item.sessions_count || 0}</td>
-                            <td>&nbsp;</td>
-                            <td class="text-end">${item.total_sets || 0}</td>
-                            <td class="text-end">${item.total_reps || 0}</td>
-                            <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                        </tr>`;
-        } else {
-            const startDate = period === 'weekly' ? new Date(item.week_start) : new Date(item.month_start);
-            
-            if (period === 'weekly') {
+            // Hide list and show detail
+            $(listContainer).hide();
+            $(detailContainer).show();
+
+            // Update detail header
+            let periodLabel = '';
+            if (period === 'daily') {
+                const date = new Date(item.date);
+                const weekday = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                const translatedWeekday = translateWeekday(weekday);
+                const monthName = translateMonth(date.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+                periodLabel = `${translatedWeekday}, ${date.getDate()} ${monthName}`;
+            } else if (period === 'weekly') {
+                const startDate = new Date(item.week_start);
                 const weekEnd = new Date(startDate); 
                 weekEnd.setDate(weekEnd.getDate() + 6);
                 const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
                 const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
                 periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
             } else {
+                const startDate = new Date(item.month_start);
                 const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
                 periodLabel = `${monthName} ${startDate.getFullYear()}`;
             }
 
-            periodRow = `<tr class="period-row align-middle" style="cursor:pointer;">
-                            <td><strong>${periodLabel}</strong></td>
-                            <td class="text-end">${item.sessions_count || 0}</td>
-                            <td>&nbsp;</td>
-                            <td class="text-end">${item.total_sets || 0}</td>
-                            <td class="text-end">${item.total_reps || 0}</td>
-                            <td class="text-end">${parseFloat(item.total_volume || 0).toFixed(1)}</td>
-                        </tr>`;
-        }
+            $(`#${period}-detail-title`).text(periodLabel);
 
-        for (const [muscle, stats] of Object.entries(item.muscles || {})) {
-            muscleRows += `<tr class="muscle-row d-none">
-                            <td></td><td></td><td>${translateMuscleGroup(muscle)}</td>
-                            <td class="text-end">${stats.total_sets || 0}</td>
-                            <td class="text-end">${stats.total_reps || 0}</td>
-                            <td class="text-end">${parseFloat(stats.total_volume || 0).toFixed(1)}</td>
-                        </tr>`;
-        }
+            // Update summary cards
+            const muscleGroupCount = Object.keys(item.muscles || {}).length;
+            $(`#${period}-detail-sessions`).text(item.sessions_count || 0);
+            $(`#${period}-detail-muscle-groups`).text(muscleGroupCount);
+            $(`#${period}-detail-sets`).text(item.total_sets || 0);
+            $(`#${period}-detail-reps`).text(item.total_reps || 0);
+            $(`#${period}-detail-volume`).text(parseFloat(item.total_volume || 0).toLocaleString() + ' kg');
 
-        container.append(periodRow + muscleRows);
-    });
-}
+            // Update muscle breakdown
+            const muscleBreakdownContainer = $(`#${period}-detail-muscle-breakdown`);
+            muscleBreakdownContainer.empty();
+
+            if (item.muscles && Object.keys(item.muscles).length > 0) {
+                Object.entries(item.muscles).forEach(([muscle, stats]) => {
+                    const muscleCardHtml = `
+                        <div class="muscle-detail-card">
+                            <div class="muscle-name">${translateMuscleGroup(muscle)}</div>
+                            <div class="muscle-stats">
+                                <div class="muscle-stat">
+                                    <div class="muscle-stat-value">${stats.total_sets || 0}</div>
+                                    <div class="muscle-stat-label" data-i18n="sets">Sets</div>
+                                </div>
+                                <div class="muscle-stat">
+                                    <div class="muscle-stat-value">${stats.total_reps || 0}</div>
+                                    <div class="muscle-stat-label" data-i18n="reps">Reps</div>
+                                </div>
+                                <div class="muscle-stat">
+                                    <div class="muscle-stat-value">${parseFloat(stats.total_volume || 0).toFixed(0)}</div>
+                                    <div class="muscle-stat-label">kg</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    muscleBreakdownContainer.append(muscleCardHtml);
+                });
+            } else {
+                muscleBreakdownContainer.html(`
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span data-i18n="no_muscle_data">No muscle group data available</span>
+                    </div>`);
+            }
+        }
         
         // Function to update progress bars with targets from server
         function updateProgressBarsWithTargets() {
