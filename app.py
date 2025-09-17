@@ -64,6 +64,7 @@ app.config['OAUTH_PROVIDERS'] = {
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message = "Sisäänkirjautuminen vaadittu!"
 login_manager.login_message_category = 'info'
 csrf = CSRFProtect(app)
 
@@ -1379,12 +1380,25 @@ def search_foods():
 
     foods = cursor.fetchall()
     conn.close()
+
     result = []
     for f in foods:
-        d = dict(f)
-        d["id"] = d.get("id") or d.get("key")  # Ensure 'id' field exists
+        d = {
+            "id": f.get("id") or f.get("key"),
+            "name": f.get("name"),
+            "calories": f.get("calories"),
+            "serving_size": f.get("serving"),
+            "half_size": f.get("half"),
+            "entire_size": f.get("entire"),
+            "bigserving_size": f.get("bigserving"),
+            "usage": f.get("usage"),
+            "ean": f.get("ean"),
+            "groups": ["breakfast", "lunch", "dinner", "snack"],  # still included
+        }
         result.append(d)
+
     return jsonify(result)
+
     
 
 @app.route('/get_food_details', methods=['POST'])
@@ -1926,7 +1940,7 @@ def save_food_route():
         # Extract form data
         name = request.form.get('name', '').strip()
         if not name:
-            return jsonify({'success': False, 'error': 'Name is required'}), 400
+            return jsonify({'success': False, 'error': 'Pakko nimetä!'}), 400
 
         ean = request.form.get('ean') or None
 
@@ -1940,7 +1954,7 @@ def save_food_route():
             if existing_food:
                 return jsonify({
                     'success': False,
-                    'error': f'EAN {ean} already in use by food: {existing_food[0]}'
+                    'error': f'EAN {ean} käytössä jo: {existing_food[0]}'
                 }), 400
 
         # Helper to parse floats
@@ -2195,7 +2209,7 @@ def save_template_food():
         print(f"Template save request: name={name}, items={items_json}")
         
         if not name:
-            return jsonify({'success': False, 'error': 'Template name is required'})
+            return jsonify({'success': False, 'error': 'Pohjan nimi on pakollinen!'})
         
         try:
             items = json.loads(items_json)
@@ -2204,7 +2218,7 @@ def save_template_food():
             return jsonify({'success': False, 'error': 'Invalid items format'})
         
         if not items or len(items) == 0:
-            return jsonify({'success': False, 'error': 'Template must contain at least one item'})
+            return jsonify({'success': False, 'error': 'Pohjan luomiseen vaaditaan ainakin 1 ruoka-aine'})
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -2215,7 +2229,7 @@ def save_template_food():
             (current_user.id, name)
         )
         if cursor.fetchone():
-            return jsonify({'success': False, 'error': 'Template with this name already exists'})
+            return jsonify({'success': False, 'error': 'Tämän niminen pohja on jo käytössä'})
         
         # Save template to database
         cursor.execute(
@@ -2322,7 +2336,7 @@ def apply_template_food():
         template_items = cursor.fetchall()
         
         if not template_items:
-            return jsonify({'success': False, 'error': 'Template not found or empty'})
+            return jsonify({'success': False, 'error': 'Pohjaa ei löydy'})
         
         # Get current session data
         session_data, _ = get_current_session(current_user.id, date_str)
@@ -2807,7 +2821,7 @@ def add_exercise():
     description = request.form.get('description')
     
     if not name or not muscle_group:
-        return jsonify(success=False, error="Name and muscle group are required"), 400
+        return jsonify(success=False, error="Nimi ja lihasryhmä vaaditaan"), 400
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2823,7 +2837,7 @@ def add_exercise():
         return jsonify(success=True, exercise_id=exercise_id)
     
     except psycopg2.IntegrityError:
-        return jsonify(success=False, error="Exercise name already exists"), 400
+        return jsonify(success=False, error="Liike on jo olemassa"), 400
     except Exception as e:
         conn.rollback()
         return jsonify(success=False, error=str(e)), 500
@@ -3506,7 +3520,7 @@ def save_workout():
     name = data.get("name", "Unnamed Workout")
 
     if not focus_type or not date:
-        return jsonify({"success": False, "error": "Focus type and date are required"}), 400
+        return jsonify({"success": False, "error": "Focus vaihtoehto on valittava"}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -3767,7 +3781,6 @@ def oauth_authorize(provider):
             # Existing user - log them in
             user = load_user(existing_connection['user_id'])
             login_user(user)
-            flash(f'Successfully logged in with {provider}!', 'success')
             return redirect(url_for('index'))
         
         # Check if user with this email already exists
@@ -3786,7 +3799,7 @@ def oauth_authorize(provider):
                 role=user['role']
             )
             login_user(user_obj)
-            flash(f'{provider.capitalize()} account linked successfully!', 'success')
+            flash(f'{provider.capitalize()} Kyttäjätili yhdisttety onnistuneesti!', 'success')
             return redirect(url_for('index'))
         else:
             # Create new user
@@ -3820,21 +3833,13 @@ def oauth_authorize(provider):
                 role='user'
             )
             login_user(user_obj)
-            flash(f'Account created with {provider}!', 'success')
+            flash(f'Käyttäjätili luotu käyttäen {provider}!', 'success')
             return redirect(url_for('index'))
             
     except Exception as e:
-        flash(f'OAuth login failed: {str(e)}', 'danger')
+        flash(f'OAuth kirjautuminen epäonnistui: {str(e)}', 'danger')
         return redirect(url_for('login'))
 
-
-@app.route('/foods')
-def list_foods():
-    cursor = get_cursor()
-    cursor.execute("SELECT * FROM foods LIMIT 10;")
-    foods = cursor.fetchall()
-    cursor.close()
-    return jsonify(foods)        
     
 if __name__ == '__main__':
     try:
