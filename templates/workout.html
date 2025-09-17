@@ -606,7 +606,7 @@
   border: 1px solid #333;
   right: 0 !important;
   width: 150px !important;
-  max-height: 250px; /* adjust to taste */
+  max-height:min-content; /* adjust to taste */
   overflow-y: auto;
   overflow-x: hidden; /* keep it clean */
   scrollbar-width: thin; /* Firefox */
@@ -1458,15 +1458,16 @@
 
     /* Mobile footer container */
     .mobile-footer {
-        background-color: #121212; /* match dark theme */
+        background-color: #222; /* match dark theme */
         height: 42px;              /* fixed compact height */           /* tighter side padding */
-        display: flex;
+        display:flex;
         border-radius: 15px;
         flex: 1 1;
         align-items: center;       /* vertically center buttons */
         position: relative;
         z-index: 1055;
-        justify-content: space-between;
+        justify-content:space-evenly;
+        align-content: center;
     }
 
     /* Footer buttons */
