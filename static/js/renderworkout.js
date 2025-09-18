@@ -236,7 +236,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="group-summary">
-                            <span class="summary-item">${groupData.totalSets} ${t('set')}</span>
+                            <span class="summary-item">${groupData.totalSets} ${t('sets')}</span>
                             <span class="summary-item">${groupData.totalVolume.toFixed(1)} kg</span>
                         </div>
                         <div class="group-actions">
