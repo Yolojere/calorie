@@ -2247,7 +2247,7 @@
                                 </div>
                             </div>
                             <div class="col-4">
-                                <label class="form-label" data-i18n="sets">Sets</label>
+                                <label class="form-label" data-i18n="set">Sets</label>
                                 <select id="sets-input-mobile" class="form-select">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
@@ -2334,7 +2334,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label" data-i18n="sets">Sets</label>
+                                <label class="form-label" data-i18n="set">Sets</label>
                                 <select id="sets-input" class="form-select">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
@@ -2644,7 +2644,7 @@
     <!-- Comment Tooltip (hidden by default) -->
     <div class="comment-tooltip" id="comment-tooltip">
         <textarea placeholder="Add your comment here..." rows="3"></textarea>
-        <button id="save-comment-btn">Save Comment</button>
+        <button id="save-comment-btn">Tallenna</button>
     </div>
 
                            {% if current_user.role == 'admin' %}
@@ -2765,7 +2765,7 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
   <div id="copySuccessToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body">
-        Workout copied successfully!
+        <span data-i18n="workoutCopiedSuccess">Workout copied successfully!</span>
       </div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
