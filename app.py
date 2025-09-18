@@ -3402,7 +3402,11 @@ def get_exercise_history(exercise_id):
             'name': exercise['name'],
             'personal_best': personal_best,
             'monthly_volume': monthly_volume,
-            'best_set': best_set,
+            'best_set': {
+                'weight': float(best_set_row['weight']) if best_set_row else 0,
+                'reps': int(best_set_row['reps']) if best_set_row else 0,
+                'formatted': f"{best_set_row['weight']}kg × {best_set_row['reps']}" if best_set_row else '-'
+                },
             'history': history
         })
         
