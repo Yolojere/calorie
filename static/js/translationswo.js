@@ -82,6 +82,7 @@ const translations = {
     loading: "Loading...",
     next: "Next",
     add_new_set: "Add New Set",
+    email: "E-Mail",
 
     // Modals & buttons
     close: "Close",
@@ -112,6 +113,7 @@ const translations = {
     loading_templates: "Loading templates...",
     no_template_available: "No templates available",
     error_loading_template: "Error loading templates",
+    workoutCopiedSuccess: "Workout copied succesfully!",
     applying: "Applying",
     adding: "Adding",
 
@@ -247,7 +249,7 @@ const translations = {
     muscle_group: "Lihasryhmä",
     add_exercise: "Lisää Liike",
     set: "Sarjat",
-    sets: "Sarjat",
+    sets: "Sarjaa",
     reps: "Toistot",
     volume: "Volyymi",
     delete: "Poista",
@@ -262,6 +264,7 @@ const translations = {
     loading: "Ladataan...",
     next: "Seuraava",
     add_new_set: "Lisää Uusi Sarja",
+    email: "Sähköposti",
 
     // Modals & buttons
     close: "Sulje",
@@ -359,6 +362,8 @@ const translations = {
     template_applied_success: "Pohja sovellettu onnistuneesti!",
     error: "Virhe",
     error_loading_template: "Virhe ladattaessa pohjaa",
+    workoutCopiedSuccess: "Treeni tallennettu onnistuneesti!",
+
      // Exercises (static + dynamic ready)
      // CHEST
     "Bench press": "Penkkipunnerrus",
