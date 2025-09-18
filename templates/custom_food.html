@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="/static/js/translations.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
         /* === MAIN STYLES FROM INDEX PAGE === */
         body {
@@ -693,6 +694,8 @@
     }
 });</script>
     <script>
+        let stream = null;
+        
         $(document).ready(function() {
                const params = new URLSearchParams(window.location.search);
     const eanFromQS = params.get('ean');
@@ -703,8 +706,39 @@
             $eanInput.val(eanFromQS).addClass('highlight');
             setTimeout(() => $eanInput.removeClass('highlight'), 2000);
         } 
+    }   
+    async function openCamera() {
+    try {
+        // Request camera access
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'environment' // Use back camera for better label scanning
+            } 
+        });
+        
+        // Get video element and set stream
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = stream;
+        video.play();
+        
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        showMessage('Failed to access camera. Please ensure you have granted camera permissions.', 'error');
     }
-            let stream = null;
+}
+
+// Function to stop camera
+function stopCamera() {
+    if (stream) {
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        
+        // Clear video source
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = null;
+    }
+}
             const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
             // Open camera when scan button is clicked
             $('#scanNutritionLabel').on('click', function() {
@@ -716,56 +750,63 @@
             $('#captureImage').on('click', function() {
                 captureImage();
             });
-            
+            $('#cameraModal').on('shown.bs.modal', function() {
+                openCamera();
+            });
             // Clean up when modal is closed
             $('#cameraModal').on('hidden.bs.modal', function() {
                 stopCamera();
             });
-  
+        
    
             // Fill form with extracted nutrition data
             function fillFormWithNutritionData(nutritionData) {
-                // Fill basic fields
-                if (nutritionData.product_name) {
-                    $('input[name="name"]').val(nutritionData.product_name);
-                }
-                
-                if (nutritionData.calories) {
-                    $('input[name="calories"]').val(nutritionData.calories);
-                }
-                
-                // Fill macronutrients
-                if (nutritionData.fats) {
-                    $('input[name="fats"]').val(nutritionData.fats);
-                }
-                
-                if (nutritionData.saturated_fat) {
-                    $('input[name="saturated"]').val(nutritionData.saturated_fat);
-                }
-                
-                if (nutritionData.carbohydrates) {
-                    $('input[name="carbs"]').val(nutritionData.carbohydrates);
-                }
-                
-                if (nutritionData.sugars) {
-                    $('input[name="sugars"]').val(nutritionData.sugars);
-                }
-                
-                if (nutritionData.fiber) {
-                    $('input[name="fiber"]').val(nutritionData.fiber);
-                }
-                
-                if (nutritionData.proteins) {
-                    $('input[name="proteins"]').val(nutritionData.proteins);
-                }
-                
-                if (nutritionData.salt) {
-                    $('input[name="salt"]').val(nutritionData.salt);
-                }
-                
-                // Show success message
-                showMessage('Nutrition data extracted successfully!', 'success');
-            }
+    // Fill basic fields
+    if (nutritionData.product_name) {
+        $('input[name="name"]').val(nutritionData.product_name);
+    }
+    
+    if (nutritionData.calories) {
+        $('input[name="calories"]').val(nutritionData.calories);
+    }
+    
+    // Fill macronutrients
+    if (nutritionData.fats || nutritionData.fat) {
+        $('input[name="fats"]').val(nutritionData.fats || nutritionData.fat);
+    }
+    
+    if (nutritionData.saturated_fat || nutritionData.saturated) {
+        $('input[name="saturated"]').val(nutritionData.saturated_fat || nutritionData.saturated);
+    }
+    
+    if (nutritionData.carbohydrates || nutritionData.carbs) {
+        $('input[name="carbs"]').val(nutritionData.carbohydrates || nutritionData.carbs);
+    }
+    
+    if (nutritionData.sugars) {
+        $('input[name="sugars"]').val(nutritionData.sugars);
+    }
+    
+    if (nutritionData.fiber || nutritionData.fibre) {
+        $('input[name="fiber"]').val(nutritionData.fiber || nutritionData.fibre);
+    }
+    
+    if (nutritionData.proteins || nutritionData.protein) {
+        $('input[name="proteins"]').val(nutritionData.proteins || nutritionData.protein);
+    }
+    
+    if (nutritionData.salt || nutritionData.sodium) {
+        // Convert sodium to salt if needed (sodium * 2.5 ≈ salt)
+        let saltValue = nutritionData.salt || (nutritionData.sodium ? nutritionData.sodium * 2.5 / 1000 : null);
+        if (saltValue) {
+            $('input[name="salt"]').val(saltValue);
+        }
+    }
+    
+    // Close modal and show success
+    $('#cameraModal').modal('hide');
+    showMessage('Puuttuvat ravintoarvot täytetty onnistuneesti!', 'success');
+}
             
             // Show message function
             function showMessage(message, type) {
@@ -893,6 +934,138 @@
                 setTimeout(() => errorMessage.css('animation', ''), 500);
             }
         });
+async function processNutritionLabel(imageElement) {
+    const { createWorker } = Tesseract;
+    
+    // Show processing overlay
+    $('#scanningOverlay').removeClass('d-none');
+    
+    try {
+        // Create and initialize worker
+        const worker = await createWorker('eng');
+        
+        // Recognize text from image
+        const { data: { text } } = await worker.recognize(imageElement);
+        
+        // Parse nutrition data from OCR text
+        const nutritionData = parseNutritionText(text);
+        
+        // Fill your form
+        fillFormWithNutritionData(nutritionData);
+        
+        await worker.terminate();
+    } catch (error) {
+        console.error('OCR processing failed:', error);
+        showMessage('Failed to process nutrition label', 'error');
+    } finally {
+        $('#scanningOverlay').addClass('d-none');
+    }
+}
+
+function parseNutritionText(text) {
+    const nutritionData = {};
+    
+    // Clean and normalize text
+    const cleanText = text.toLowerCase()
+        .replace(/[^\w\s\d.,]/g, ' ')
+        .replace(/\s+/g, ' ');
+    
+    console.log('OCR Text:', cleanText); // For debugging
+    
+    // Enhanced patterns for nutrition facts
+    const patterns = {
+        // Product name - look for text at the beginning
+        product_name: /^([a-zA-Z\s]+)(?=.*nutrition)/i,
+        
+        // Calories
+        calories: /(?:calories?|energy)\s*:?\s*(\d+(?:\.\d+)?)/i,
+        
+        // Fats
+        fats: /(?:total\s*)?fat\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        saturated_fat: /saturated\s*fat\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        
+        // Carbohydrates
+        carbohydrates: /(?:total\s*)?carbohydrate?s?\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        sugars: /sugars?\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        fiber: /(?:dietary\s*)?fib(?:e|re)\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        
+        // Protein
+        proteins: /protein\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        
+        // Salt/Sodium
+        salt: /salt\s*:?\s*(\d+(?:\.\d+)?)\s*g/i,
+        sodium: /sodium\s*:?\s*(\d+(?:\.\d+)?)\s*(?:mg|g)/i
+    };
+    
+    // Extract values using regex patterns
+    Object.keys(patterns).forEach(key => {
+        const match = cleanText.match(patterns[key]);
+        if (match) {
+            let value = match[1];
+            
+            // Handle numeric conversion
+            if (key !== 'product_name') {
+                value = parseFloat(value);
+                
+                // Convert sodium from mg to g if needed
+                if (key === 'sodium' && cleanText.includes('mg')) {
+                    value = value / 1000;
+                }
+            }
+            
+            nutritionData[key] = value;
+        }
+    });
+    
+    return nutritionData;
+}
+async function captureImage() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('captureCanvas');
+    const context = canvas.getContext('2d');
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
+    context.drawImage(video, 0, 0);
+    
+    // Show processing overlay
+    $('#scanningOverlay').removeClass('d-none');
+    
+    try {
+        // Process with Tesseract.js
+        const worker = await Tesseract.createWorker('eng');
+        
+        // Configure Tesseract for better nutrition label recognition
+        await worker.setParameters({
+            tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.%():- ',
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO
+        });
+        
+        const { data: { text } } = await worker.recognize(canvas);
+        
+        // Parse and fill nutrition data
+        const nutritionData = parseNutritionText(text);
+        
+        // Check if we found any useful data
+        if (Object.keys(nutritionData).length > 0) {
+            fillFormWithNutritionData(nutritionData);
+        } else {
+            showMessage('Dataa ei pysty lukemaan. Kokeile paremmassa valossa tai suorista viivakoodi', 'error');
+        }
+        
+        await worker.terminate();
+        
+    } catch (error) {
+        console.error('OCR processing failed:', error);
+        showMessage('Ongelma datan lukemisessa, yritä uudelleen!', 'error');
+    } finally {
+        $('#scanningOverlay').addClass('d-none');
+    }
+}
+
     </script>
 <script>
   // Initialize tooltips globally
