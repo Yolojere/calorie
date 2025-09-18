@@ -829,9 +829,134 @@
             font-size: 12px;
             color: #888;
         }
-        
+        /* Enhanced Exercise Search and Filter Container */
+.exercise-search-filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    border: 1px solid #444;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* Webkit-styled Search Input */
+.exercise-search-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.exercise-search-input {
+    width: 100%;
+    background-color: #1b1b1b;
+    color: #ffffff;
+    border: 1px solid #444;
+    border-radius: 20px;
+    padding: 12px 45px 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.exercise-search-input:focus {
+    outline: none;
+    border-color: #ffd166;
+    box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.2), inset 0 2px 4px rgba(0,0,0,0.2);
+    background-color: #222;
+}
+
+.exercise-search-input::placeholder {
+    color: #888;
+}
+
+.exercise-search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+}
+
+        /* Enhanced Muscle Group Filters matching btn-jere style */
+        .exercise-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .muscle-group-filter {
+            display: inline-block;
+            background-color: #1b1b1b;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.1s ease;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .muscle-group-filter:hover {
+            background-color: #ffffff !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .muscle-group-filter.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+            transform: scale(1.01) !important;
+        }
+
+        /* Sortable Table Headers */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sortable-header:hover {
+            background-color: #444 !important;
+            color: #ffd166 !important;
+        }
+
+        .sortable-header.active {
+            background-color: #333 !important;
+            color: #ffd166 !important;
+        }
+
+        .sort-icon {
+            opacity: 0.5;
+            margin-left: 5px;
+            font-size: 10px;
+            transition: opacity 0.2s ease;
+        }
+
+        .sortable-header:hover .sort-icon,
+        .sortable-header.active .sort-icon {
+            opacity: 1;
+        }
+
+        .sortable-header.asc .sort-icon:before {
+            content: "\f0de"; /* fa-sort-up */
+        }
+
+        .sortable-header.desc .sort-icon:before {
+            content: "\f0dd"; /* fa-sort-down */
+        }
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
+            
             .history-container {
                 overflow-x: hidden; /* Prevent horizontal scroll on container */
                 margin-left: -10px;
@@ -965,6 +1090,24 @@
             .muscle-detail-card .muscle-stats {
                 gap: 10px;
             }
+                .exercise-search-filter-container {
+        padding: 15px;
+        gap: 12px;
+    }
+    
+    .exercise-search-input {
+        padding: 10px 40px 10px 15px;
+        font-size: 13px;
+    }
+    
+    .muscle-group-filter {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .exercise-filters {
+        gap: 6px;
+    }
         }
 
         /* Animation for tab content */
@@ -1616,123 +1759,119 @@
                     </div>
                     
                     <!-- Exercises Tab -->
-                    <div class="tab-pane fade" id="exercises" role="tabpanel">
-                        <div class="p-3">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="exercise-filters" id="muscle-group-filters">
-    <button class="muscle-group-filter active" data-muscle="all" data-i18n="all">All</button>
-    <button class="muscle-group-filter" data-muscle="chest" data-i18n="chest">Chest</button>
-    <button class="muscle-group-filter" data-muscle="back" data-i18n="back">Back</button>
-    <button class="muscle-group-filter" data-muscle="shoulders" data-i18n="shoulders">Shoulders</button>
-    <button class="muscle-group-filter" data-muscle="arms" data-i18n="arms">Arms</button>
-    <button class="muscle-group-filter" data-muscle="legs" data-i18n="legs">Legs</button>
-    <button class="muscle-group-filter" data-muscle="core" data-i18n="core">Core</button>
-</div>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-dark text-light border-secondary">
-                                            <i class="fas fa-search"></i>
-                                        </span>
-                                        <input type="text" id="exercise-search" class="form-control bg-dark text-light border-secondary" placeholder="Search exercises..." data-i18n="search_exercises_placeholder">
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6 text-end">
-                                    <div class="btn-group">
-                                        <button class="btn-jere active" data-sort="name" data-i18n="name">Name</button>
-                                        <button class="btn-jere" data-sort="pb">Personal Best</button>
-                                        <button class="btn-jere" data-sort="recent" data-i18n="most_recent">Most Recent</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="table-responsive">
-                                <table class="table table-custom table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="exercise">Exercise</th>
-                                           <th class="text-end">Personal Best</th>
-                                            <th class="text-end" data-i18n="last_performed">Last Performed</th>
-                                            <th class="text-end" data-i18n="total_volume">Total Volume</th>
-                                            <th class="text-end" data-i18n="trend">Trend</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="exercises-list">
-                                        <!-- Will be populated by JavaScript -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <!-- Exercise Detail View (initially hidden) -->
-                            <div id="exercise-detail" class="mt-4" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h4 id="exercise-detail-name" class="mb-0"></h4>
-                                    <button id="back-to-list" class="btn-jere">
-                                        <i class="fas fa-arrow-left me-1"></i> <span data-i18n="back_to_list">Back to List</span>
-                                    </button>
-                                </div>
+<div class="tab-pane fade" id="exercises" role="tabpanel">
+    <div class="p-3">
+        <!-- Exercise Search and Filter Container with webkit styling -->
+        <div class="exercise-search-filter-container mb-3">
+            <!-- Search Input -->
+            <div class="exercise-search-wrapper">
+                <input type="text" id="exercise-search" class="exercise-search-input" placeholder="Search exercises..." data-i18n="search_exercises_placeholder">
+                <i class="fas fa-search exercise-search-icon"></i>
+            </div>
+            
+            <!-- Muscle Group Filters -->
+            <div class="exercise-filters" id="muscle-group-filters">
+                <button class="muscle-group-filter active" data-muscle="all" data-i18n="all">All</button>
+                <button class="muscle-group-filter" data-muscle="chest" data-i18n="chest">Chest</button>
+                <button class="muscle-group-filter" data-muscle="back" data-i18n="back">Back</button>
+                <button class="muscle-group-filter" data-muscle="shoulders" data-i18n="shoulders">Shoulders</button>
+                <button class="muscle-group-filter" data-muscle="arms" data-i18n="arms">Arms</button>
+                <button class="muscle-group-filter" data-muscle="legs" data-i18n="legs">Legs</button>
+                <button class="muscle-group-filter" data-muscle="core" data-i18n="core">Core</button>
+            </div>
+        </div>
+        
+        <!-- Exercise Table with clickable headers -->
+        <div class="table-responsive">
+            <table class="table table-custom table-hover">
+                <thead>
+                    <tr>
+                        <th class="sortable-header" data-sort="name" data-i18n="exercise">
+                            Liike <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th class="sortable-header text-end" data-sort="pb">
+                            Personal Best <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th class="sortable-header text-end" data-sort="volume">
+                            Total Volume <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th class="sortable-header text-end" data-sort="trend">
+                            Trendi <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="exercises-list">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Exercise Detail View (initially hidden) -->
+        <div id="exercise-detail" class="mt-4" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 id="exercise-detail-name" class="mb-0"></h4>
+                <button id="back-to-list" class="btn-jere">
+                    <i class="fas fa-arrow-left me-1"></i> <span data-i18n="back_to_list">Back to List</span>
+                </button>
+            </div>
 
-                                <!-- Summary Cards -->
-                                <div class="row mb-4">
-                                    <!-- Volume Card -->
-                                    <div class="col-md-3 mb-3">
-                                        <div class="summary-card">
-                                            <div class="summary-value text-primary" id="exercise-monthly-volume">0 kg</div>
-                                           <div class="summary-label" data-i18n="monthly_volume">MONTHLY VOLUME</div>
-                                        </div>
-                                    </div>
-                                    <!-- Personal Best Card -->
-                                    <div class="col-md-3 mb-3">
-                                        <div class="summary-card">
-                                            <div class="summary-value text-warning" id="exercise-personal-best">0 kg</div>
-                                            <div class="summary-label" data-i18n="personal_best">PERSONAL BEST</div>
-                                        </div>
-                                    </div>
-                                    <!-- Best Set Card -->
-                                    <div class="col-md-3 mb-3">
-                                        <div class="summary-card">
-                                            <div class="summary-value text-info" id="exercise-best-set">-</div>
-                                         <div class="summary-label" data-i18n="best_set">BEST SET</div>
-                                        </div>
-                                    </div>
-                                    <!-- Ranking Card with 1RM -->
-                                    <div class="col-md-3 mb-3">
-                                        <div class="summary-card">
-                                            <div class="summary-value text-success" id="exercise-ranking">-</div>
-                                          <div class="summary-label" data-i18n="estimated_1rm">ESTIMATED 1 RM</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Chart -->
-                                <div class="chart-container mb-4" style="position: relative; height: 250px;">
-                                    <canvas id="exercise-chart"></canvas>
-                                </div>
-
-                                <!-- Session History -->
-                                <h5 class="mb-3" data-i18n="session_history">Session History</h5>
-                                <div class="table-responsive">
-                                    <table class="table table-custom">
-                                        <thead>
-                                            <tr>
-                                               <th data-i18n="date">Date</th>
-                                             <th class="text-end" data-i18n="sets">Sets</th>
-                                         <th class="text-end" data-i18n="best_set">Best Set</th>
-                                          <th class="text-end" data-i18n="volume">Volume</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="exercise-sessions">
-                                            <!-- Populated by JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <!-- Volume Card -->
+                <div class="col-md-3 mb-3">
+                    <div class="summary-card">
+                        <div class="summary-value text-primary" id="exercise-monthly-volume">0 kg</div>
+                       <div class="summary-label" data-i18n="monthly_volume">MONTHLY VOLUME</div>
+                    </div>
+                </div>
+                <!-- Personal Best Card -->
+                <div class="col-md-3 mb-3">
+                    <div class="summary-card">
+                        <div class="summary-value text-warning" id="exercise-personal-best">0 kg</div>
+                        <div class="summary-label" data-i18n="personal_best">PERSONAL BEST</div>
+                    </div>
+                </div>
+                <!-- Best Set Card -->
+                <div class="col-md-3 mb-3">
+                    <div class="summary-card">
+                        <div class="summary-value text-info" id="exercise-best-set">-</div>
+                     <div class="summary-label" data-i18n="best_set">BEST SET</div>
+                    </div>
+                </div>
+                <!-- Ranking Card with 1RM -->
+                <div class="col-md-3 mb-3">
+                    <div class="summary-card">
+                        <div class="summary-value text-success" id="exercise-ranking">-</div>
+                      <div class="summary-label" data-i18n="estimated_1rm">ESTIMATED 1 RM</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Chart -->
+            <div class="chart-container mb-4" style="position: relative; height: 250px;">
+                <canvas id="exercise-chart"></canvas>
+            </div>
+
+            <!-- Session History -->
+            <h5 class="mb-3" data-i18n="session_history">Session History</h5>
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                           <th data-i18n="date">Date</th>
+                         <th class="text-end" data-i18n="sets">Sets</th>
+                     <th class="text-end" data-i18n="best_set">Best Set</th>
+                      <th class="text-end" data-i18n="volume">Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exercise-sessions">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+</div>
 
     <!-- JS dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1740,8 +1879,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-         let exerciseChart = null;
-         let allExercises = [];
+        let currentSort = { field: 'name', direction: 'asc' };
+        let exerciseChart = null;
+        let allExercises = [];
          
     $(document).ready(function() {
         
@@ -1888,6 +2028,26 @@ $('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
             $('#monthly-workout-list').show();
         });
 
+        // Clickable header sorting
+        $(document).on('click', '.sortable-header', function() {
+             const sortField = $(this).data('sort');
+            
+            // Update sort direction
+                if (currentSort.field === sortField) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.field = sortField;
+                    currentSort.direction = 'asc';
+                }
+    
+            
+            // Update header visual state
+            $('.sortable-header').removeClass('active asc desc');
+            $(this).addClass(`active ${currentSort.direction}`);
+            
+            // Apply sort
+            sortExercises(sortField, currentSort.direction);
+        });
         function smartKg(value) {
     if (value == null) return '0 kg';
     const rounded = Math.round(value * 10) / 10; // 1 decimal
@@ -1901,10 +2061,9 @@ function smartPercent(value) {
        // Muscle group filter handler
 let currentMuscleFilter = 'all';
 
-$('.muscle-group-filter').click(function() {
+$(document).on('click', '.muscle-group-filter', function() {
     $('.muscle-group-filter').removeClass('active');
     $(this).addClass('active');
-
     currentMuscleFilter = $(this).data('muscle').toLowerCase().trim();
     applyMuscleFilter();
 });
@@ -1912,7 +2071,6 @@ $('.muscle-group-filter').click(function() {
 function applyMuscleFilter() {
     $('.exercise-row').each(function() {
         const muscle = $(this).data('muscle').toLowerCase().trim();
-
         if (currentMuscleFilter === 'all' || muscle === currentMuscleFilter) {
             $(this).show();
         } else {
@@ -1921,55 +2079,92 @@ function applyMuscleFilter() {
     });
 }
         // Search functionality
-        $('#exercise-search').on('input', function() {
-            const searchTerm = $(this).val().toLowerCase();
-            $('.exercise-row').each(function() {
-                const exerciseName = $(this).data('name').toLowerCase();
-                $(this).toggle(exerciseName.includes(searchTerm));
-            });
-        });
-
-        // Sorting functionality
-        $('[data-sort]').click(function() {
-            $('[data-sort]').removeClass('active');
-            $(this).addClass('active');
-            sortExercises($(this).data('sort'));
-        });
+           $(document).on('input', '#exercise-search', function() {
+    const searchTerm = $(this).val().toLowerCase();
+    $('.exercise-row').each(function() {
+        // Get both the raw database name and the translated display name
+        const exerciseNameRaw = $(this).data('name').toLowerCase();
+        const exerciseNameTranslated = translateExerciseName($(this).data('name')).toLowerCase();
+        
+        // Check if search term matches either raw name or translated name
+        const matchesRaw = exerciseNameRaw.includes(searchTerm);
+        const matchesTranslated = exerciseNameTranslated.includes(searchTerm);
+        
+        // Show row if either name matches
+        $(this).toggle(matchesRaw || matchesTranslated);
+    });
+});
         
         // Sort exercises based on criteria
-        function sortExercises(criteria) {
-            const sorted = [...allExercises];
-            
-            if (criteria === 'name') {
-                sorted.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (criteria === 'pb') {
-                sorted.sort((a, b) => b.personal_best - a.personal_best);
-            } else if (criteria === 'recent') {
-                sorted.sort((a, b) => {
-                    const dateA = a.last_performed ? new Date(a.last_performed) : new Date(0);
-                    const dateB = b.last_performed ? new Date(b.last_performed) : new Date(0);
-                    return dateB - dateA;
-                });
-            }
-            
-            renderExercisesList(sorted);
+        function sortExercises(criteria, direction = 'asc') {
+    console.log('Sorting exercises by:', criteria, direction); // Debug log
+    
+    if (!allExercises || allExercises.length === 0) {
+        console.warn('No exercises to sort');
+        return;
+    }
+    
+    const sorted = [...allExercises];
+    
+    sorted.sort((a, b) => {
+        let valueA, valueB;
+        
+        switch(criteria) {
+            case 'name':
+                valueA = (a.name || '').toLowerCase();
+                valueB = (b.name || '').toLowerCase();
+                break;
+            case 'pb':
+                valueA = parseFloat(a.personal_best) || 0;
+                valueB = parseFloat(b.personal_best) || 0;
+                break;
+            case 'volume':
+                valueA = parseFloat(a.total_volume) || 0;
+                valueB = parseFloat(b.total_volume) || 0;
+                break;
+            case 'trend':
+                valueA = parseFloat(a.volume_trend) || 0;
+                valueB = parseFloat(b.volume_trend) || 0;
+                break;
+            default:
+                console.warn('Unknown sort criteria:', criteria);
+                return 0;
         }
+        
+        if (typeof valueA === 'string') {
+            const comparison = valueA.localeCompare(valueB);
+            return direction === 'asc' ? comparison : -comparison;
+        } else {
+            const comparison = valueA - valueB;
+            return direction === 'asc' ? comparison : -comparison;
+        }
+    });
+    
+    console.log('Sorted exercises:', sorted.length); // Debug log
+    renderExercisesList(sorted);
+}
+
 
         // Load exercises list
         function loadExercises() {
-            $.get("/workout/exercises", function(data) {
-                allExercises = data.exercises || [];
-                renderExercisesList(allExercises);
-            }).fail(function() {
-                $("#exercises-list").html(`
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-warning">
-                            ${t("failed_load_exercises")}
-                        </td>
-                    </tr>
-                `);
-            });
-        }
+    $.get('/workout/exercises', function(data) {
+        console.log('Loaded exercises:', data.exercises.length); // Debug log
+        allExercises = data.exercises;
+        
+        // Apply default sort
+        sortExercises('name', 'asc');
+    }).fail(function(xhr, status, error) {
+        console.error('Failed to load exercises:', error);
+        $('#exercises-list').html(`
+            <tr>
+                <td colspan="4" class="text-center py-4 text-warning">
+                    Failed to load exercises. Please try again.
+                </td>
+            </tr>
+        `);
+    });
+}
+
 
         // Render exercises list
         function renderExercisesList(exercises) {
@@ -1977,46 +2172,54 @@ function applyMuscleFilter() {
     container.empty();
 
     if (!exercises || exercises.length === 0) {
-        container.append(`<tr><td colspan="5" class="text-center py-4">${t("no_exercises_found")}</td></tr>`);
+        container.append(`
+            <tr>
+                <td colspan="4" class="text-center py-4">No exercises found</td>
+            </tr>
+        `);
         return;
     }
 
+    console.log('Rendering exercises:', exercises.length); // Debug log
+
     exercises.forEach(ex => {
-        const trendClass = ex.volume_trend > 0 ? 'text-success' : 
-                            ex.volume_trend < 0 ? 'text-danger' : 'text-muted';
-        const trendIcon = ex.volume_trend > 0 ? 'fa-arrow-up' : 
-                          ex.volume_trend < 0 ? 'fa-arrow-down' : 'fa-minus';
+        // Get volume trend from backend data
+        const volumeTrend = parseFloat(ex.volume_trend) || 0;
+        const trendClass = volumeTrend > 0 ? 'text-success' : 
+                          volumeTrend < 0 ? 'text-danger' : 'text-muted';
+        const trendIcon = volumeTrend > 0 ? 'fa-arrow-up' : 
+                         volumeTrend < 0 ? 'fa-arrow-down' : 'fa-minus';
         
         const row = `
-<tr class="exercise-row" data-id="${ex.id}" data-name="${ex.name}" data-muscle="${ex.muscle_group || 'N/A'}">
-    <td>
-        <strong>${translateExerciseName(ex.name)}</strong><br>
-        <small class="text-muted">${translateMuscleGroup(ex.muscle_group)}</small>
-    </td>
-            <td class="text-end align-middle">
-                <span class="badge bg-warning text-dark">${Math.round(ex.personal_best || 0)} kg</span>
-            </td>
-            <td class="text-end align-middle">${ex.last_performed || t('never')}</td>
-            <td class="text-end align-middle">${(ex.total_volume || 0).toFixed(1)} kg</td>
-            <td class="text-end align-middle">
-                <span class="${trendClass}">
-                    <i class="fas ${trendIcon} me-1"></i>
-                    ${Math.abs(ex.volume_trend || 0).toFixed(1)}%
-                </span>
-            </td>
-        </tr>`;
+            <tr class="exercise-row" data-id="${ex.id}" data-name="${ex.name}" data-muscle="${ex.muscle_group || 'N/A'}">
+                <td>
+                    <strong>${translateExerciseName(ex.name)}</strong><br>
+                    <small class="text-muted">${translateMuscleGroup(ex.muscle_group)}</small>
+                </td>
+                <td class="text-end align-middle">
+                    <span class="badge bg-warning text-dark">${Math.round(ex.personal_best || 0)} kg</span>
+                </td>
+                <td class="text-end align-middle">${(ex.total_volume || 0).toFixed(1)} kg</td>
+                <td class="text-end align-middle">
+                    <span class="${trendClass}">
+                        <i class="fas ${trendIcon} me-1"></i>
+                        ${Math.abs(volumeTrend).toFixed(1)}%
+                    </span>
+                </td>
+            </tr>`;
         container.append(row);
     });
 
     // Apply the active muscle filter after rendering
     applyMuscleFilter();
 
-            // Add click handlers
-            $('.exercise-row').click(function() {
-                const exerciseId = $(this).data('id');
-                loadExerciseDetail(exerciseId);
-            });
-        }
+    // Add click handlers for exercise rows
+    $('.exercise-row').off('click').on('click', function() {
+        const exerciseId = $(this).data('id');
+        loadExerciseDetail(exerciseId);
+    });
+}
+
 
         // Load exercise detail
         function loadExerciseDetail(exerciseId) {
