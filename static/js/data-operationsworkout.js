@@ -240,7 +240,7 @@ function previewTemplate(templateId) {
                 data-bs-target="#${groupId}"
                 aria-expanded="true"
                 aria-controls="${groupId}">
-            <span><i class="fas fa-${icon} me-2"></i>${translatedGroup} (${totalSets} ${t('sets')})</span>
+            <span><i class="fas fa-${icon} me-2"></i>${translatedGroup} (${totalSets} ${t('set')})</span>
             <i class="fas fa-chevron-down chevron-icon"></i>
         </button>
         <div class="collapse show mt-2" id="${groupId}">
