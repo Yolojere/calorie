@@ -277,9 +277,9 @@ function renderWorkoutSession(session, exercises, options = {}) {
                                     <i class="fas fa-check ${isCompleted ? 'completed' : ''}"></i>
                                 </button>
                                 <div class="complete-exercise-options">
-                                    <div class="complete-option" data-value="yes"><i class="fa-solid fa-check"></i>&nbsp;${t('valmis')}</div>
-                                    <div class="complete-option" data-value="no"><i class="fa-solid fa-xmark"></i>&nbsp;${t('hylkaa')}</div>
-                                    <div class="complete-option quick-add-set" data-value="quick-add"><i class="fa-solid fa-circle-plus"></i>&nbsp;${t('lisaaSarja')}</div>
+                                    <div class="complete-option" data-value="yes"><i class="fa-solid fa-check"></i>&nbsp;&nbsp;${t('valmis')}</div>
+                                    <div class="complete-option" data-value="no"><i class="fa-solid fa-xmark"></i>&nbsp;&nbsp;${t('hylkaa')}</div>
+                                    <div class="complete-option quick-add-set" data-value="quick-add"><i class="fa-solid fa-circle-plus"></i>&nbsp;&nbsp;${t('lisaaSarja')}</div>
                                 </div>
                             </div>
                             <div class="exercise-title">${translatedExerciseName}</div>
