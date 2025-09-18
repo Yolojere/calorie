@@ -3285,20 +3285,42 @@ def get_exercises_list():
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
-        # Get ALL exercises with optional user stats using LEFT JOIN
+        # Get ALL exercises with optional user stats and trend calculation
         cursor.execute('''
+            WITH exercise_volumes AS (
+                SELECT 
+                    e.id,
+                    e.name,
+                    e.muscle_group,
+                    COALESCE(MAX(ws.weight), 0) AS personal_best,
+                    MAX(s.date) AS last_performed,
+                    COALESCE(SUM(ws.volume), 0) AS total_volume,
+                    -- Calculate monthly volumes for trend
+                    COALESCE(SUM(CASE 
+                        WHEN s.date >= date_trunc('month', CURRENT_DATE) 
+                        THEN ws.volume 
+                        ELSE 0 
+                    END), 0) AS current_month_volume,
+                    COALESCE(SUM(CASE 
+                        WHEN s.date >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
+                        AND s.date < date_trunc('month', CURRENT_DATE)
+                        THEN ws.volume 
+                        ELSE 0 
+                    END), 0) AS previous_month_volume
+                FROM exercises e
+                LEFT JOIN workout_sets ws ON e.id = ws.exercise_id
+                LEFT JOIN workout_sessions s ON ws.session_id = s.id AND s.user_id = %s
+                GROUP BY e.id, e.name, e.muscle_group
+            )
             SELECT 
-                e.id,
-                e.name,
-                e.muscle_group,
-                COALESCE(MAX(ws.weight), 0) AS personal_best,
-                MAX(s.date) AS last_performed,
-                COALESCE(SUM(ws.volume), 0) AS total_volume
-            FROM exercises e
-            LEFT JOIN workout_sets ws ON e.id = ws.exercise_id
-            LEFT JOIN workout_sessions s ON ws.session_id = s.id AND s.user_id = %s
-            GROUP BY e.id, e.name, e.muscle_group
-            ORDER BY e.name
+                *,
+                CASE 
+                    WHEN previous_month_volume > 0 
+                    THEN ((current_month_volume - previous_month_volume) / previous_month_volume::float) * 100
+                    ELSE 0 
+                END AS volume_trend
+            FROM exercise_volumes
+            ORDER BY name
         ''', (user_id,))
         
         exercises = []
@@ -3310,7 +3332,7 @@ def get_exercises_list():
                 'personal_best': float(row['personal_best'] or 0),
                 'last_performed': row['last_performed'].strftime('%Y-%m-%d') if row['last_performed'] else None,
                 'total_volume': float(row['total_volume'] or 0),
-                'volume_trend': 0  # Calculate client-side if needed
+                'volume_trend': float(row['volume_trend'] or 0)
             })
         
         return jsonify(exercises=exercises)
