@@ -413,9 +413,9 @@ const translations = {
     "Overhead press (Barbell)": "Pystypunnerrus (Levytanko)",
     "Overhead press (Dumbell)": "Pystypunnerrus (Käsipainot)",
     "Overhead press (Machine)": "Pystypunnerrus (Laite)",
-    "Rear delt raise": "Taka olkapään nosto",
+    "Rear delt raise": "Vipunosto taakse",
     "Shrug": "Olankohautus",
-    "Side lateral raise": "Sivu vipunosto",
+    "Side lateral raise": "Vipunosto sivulle",
     // ARMS
     "Bayesian curl": "Bayesian kääntö",
     "Bench press (Narrow)": "Penkkipunnerrus (Kapea)",
