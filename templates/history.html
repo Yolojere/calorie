@@ -2086,16 +2086,15 @@ function renderExerciseDetail(data) {
     // Summary cards
     $('#exercise-personal-best').text(smartKg(data.personal_best || 0));
     $('#exercise-monthly-volume').text(smartKg(data.monthly_volume || 0));
-    $('#exercise-best-set').text(data.best_set || '-');
+    $('#exercise-best-set').text(data.best_set.formatted || '-');
 
-    // 1RM
-    const bestSetData = parseBestSet(data.best_set);
-    if (bestSetData) {
-        const oneRepMax = calculateOneRepMax(bestSetData.weight, bestSetData.reps);
-        $('#exercise-ranking').text(smartKg(oneRepMax));
-    } else {
-        $('#exercise-ranking').text('-');
-    }
+// Calculate 1RM from structured data
+if (data.best_set.weight > 0 && data.best_set.reps > 0) {
+    const oneRepMax = calculateOneRepMax(data.best_set.weight, data.best_set.reps);
+    $('#exercise-ranking').text(smartKg(oneRepMax));
+} else {
+    $('#exercise-ranking').text('-');
+}
 
     // Chart
     renderExerciseChart(data.history);
