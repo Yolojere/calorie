@@ -246,7 +246,7 @@ const translations = {
     weight: "Paino (kg)",
     muscle_group: "Lihasryhmä",
     add_exercise: "Lisää Liike",
-    set: "Sarja",
+    set: "Sarjat",
     sets: "Sarjat",
     reps: "Toistot",
     volume: "Volyymi",
@@ -320,7 +320,7 @@ const translations = {
     exercise: "Liike",
 
     // Empty states
-    no_workout_message: "Tälle päivälle ei ole tallennettu harjoitusta. Lisää ensimmäinen sarja alla!",
+    no_workout_message: "Tälle päivälle ei ole tallennettu harjoitusta. Lisää ensimmäinen sarja itse tai valitse valmis pohja alta!",
     no_data: "Ei tietoja saatavilla",
     
     // Additional status messages
