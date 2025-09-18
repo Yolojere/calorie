@@ -401,7 +401,7 @@ const translations = {
     "Squat (Goblet)": "Kyykky (Goblet)",
     "Squat (Belt)": "Kyykky (Vyö)",
     "Squat (Hack)": "Kyykky (Hack)",
-    "Squat (Machine)": "Kyykky (laite)",
+    "Squat (Machine)": "Kyykky (Laite)",
     "Squat (Safebar)": "Kyykky (Safebar)",
     "Squat (Smith)": "Kyykky (Smith)",
     "Hip thrust (Barbell)": "Lantionnosto",
@@ -438,7 +438,7 @@ const translations = {
     "Push down (Machine)": "Punnerrus taljassa (Laite)",
     // CORE
     "Bicycle crunch": "Polkupyörä vatsalihas",
-    "Crunch (Machine)": "Vatsarutistus (laite)",
+    "Crunch (Machine)": "Vatsarutistus (Laite)",
     "Crunch (Regular)": "Vatsarutistus (Normaali)",
     "Leg raise": "Jalkojen nosto",
     "Reverse crunch": "Käänteinen vatsarutistus",
