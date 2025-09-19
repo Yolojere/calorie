@@ -860,42 +860,94 @@
             }
         });
 
- function preprocessImageForOCR(canvas) {
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    // Multi-step preprocessing for better nutrition label recognition
-    
-    // Step 1: Advanced contrast enhancement with CLAHE-like approach
-    const contrastFactor = 2.5;  // Increased for nutrition labels
-    const brightness = 30;       // Slight brightness boost
-    
-    for (let i = 0; i < data.length; i += 4) {
-        // Calculate luminance
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-        
-        // Apply contrast and brightness adjustment
-        let newLuminance = (luminance - 128) * contrastFactor + 128 + brightness;
-        newLuminance = Math.max(0, Math.min(255, newLuminance));
-        
-        // Apply aggressive binary thresholding - optimized for nutrition labels
-        const threshold = 140; // Lower threshold for printed nutrition text
-        const binaryValue = newLuminance > threshold ? 255 : 0;
-        
-        data[i] = binaryValue;     // Red
-        data[i + 1] = binaryValue; // Green
-        data[i + 2] = binaryValue; // Blue
-        // Alpha unchanged
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-    
-    // Step 2: Morphological operations to clean up text
-    return morphologicalCleanup(canvas);
+ // ─── PREPROCESS FOR MOBILE PHOTO ──────────────────────────────
+function preprocessImageForOCR(canvas) {
+  const src = cv.imread(canvas);
+  let lab = new cv.Mat(); cv.cvtColor(src, lab, cv.COLOR_RGBA2LAB);
+  let ch  = new cv.MatVector(); cv.split(lab, ch);
+  let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+  clahe.apply(ch.get(0), ch.get(0));
+  cv.merge(ch, lab); cv.cvtColor(lab, src, cv.COLOR_LAB2RGBA);
+  cv.bilateralFilter(src, src, 9, 75, 75);
+  let gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  let bin  = new cv.Mat();
+  cv.ximgproc.niBlackThreshold(
+      gray, bin, 255, cv.ximgproc.BINARIZATION_SAUVOLA, 25, 0.3,
+      cv.THRESH_BINARY);
+  cv.imshow(canvas, bin);
+  [lab, gray, bin].forEach(m => m.delete()); ch.delete(); src.delete();
+}
+
+// ─── OCR NUTRITION BLOCK ─────────────────────────────────────
+async function ocrNutrition(canvas, worker) {
+  await worker.setParameters({
+    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+    tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+    user_defined_dpi: 300,
+    preserve_interword_spaces: '1',
+    tessedit_char_whitelist: '0123456789.,kjKJKCalmgGkcalKCALg%',
+  });
+  let data = await worker.recognize(canvas);
+  if (data.confidence < 60) {
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK });
+    data = await worker.recognize(canvas);
+  }
+  return data;
+}
+
+// ─── FUZZY ROW ALIGNER ───────────────────────────────────────
+const ROW_KEYS = {
+  calories:   ["energia","energy"],
+  fats:       ["rasva","fett"],
+  saturated:  ["tyydy","mättat"],
+  carbs:      ["hiilihyd","kolhyd"],
+  sugars:     ["soker","socker"],
+  fiber:      ["kuitu","fiber"],
+  proteins:   ["proteiini","protein"],
+  salt:       ["suola","salt"]
+};
+function alignRows(lines) {
+  const dist = (a,b)=>(new Levenshtein(a,b)).distance;
+  const rows = {};
+  lines.forEach(raw=>{
+    const l = raw.toLowerCase();
+    Object.entries(ROW_KEYS).forEach(([key, kwArr])=>{
+      kwArr.forEach(kw=>{
+        if (dist(l, kw) <= 2 || l.includes(kw)) rows[key] = raw;
+      });
+    });
+  });
+  return rows;
+}
+
+// ─── NUTRITION DATA EXTRACTOR ────────────────────────────────
+function extractNutrition(lines) {
+  const aligned = alignRows(lines);
+  const nutritionData = {};
+  Object.entries(aligned).forEach(([field, row])=>{
+    const num = row.match(/[0-9]+[.,]?[0-9]*/);
+    if (num) nutritionData[field] = parseFloat(num[0].replace(",","."));
+  });
+  ["calories","fats","carbs","proteins","fiber","sugars","saturated","salt"]
+    .forEach(k=>{
+      const v = nutritionData[k]; if (v==null) return;
+      if (k!=="calories" && v > 100) nutritionData[k] = v / 10;
+      if (k==="salt" && v > 20)      nutritionData[k] = v / 1000;
+  });
+  return nutritionData;
+}
+
+// ─── OCR POSTPROCESS & FEEDBACK ──────────────────────────────
+function handleNutritionOCR(data, lines) {
+  const nutritionData = extractNutrition(lines);
+  let extractedCount = Object.keys(nutritionData).filter(k=>nutritionData[k]!=null).length;
+  if (extractedCount === 0) {
+    showMessage("No nutrition data …", "error");
+    return;
+  }
+  fillFormWithNutritionData(nutritionData);
+  if (data.confidence && data.confidence < 50)
+    setTimeout(()=>showMessage("Tip: shoot in daylight, keep the phone 15-20 cm away, & disable flash.","info"), 250);
 }
 
 // New morphological cleanup function
@@ -981,30 +1033,29 @@ async function processNutritionLabel(imageElement) {
                 
                 // Set parameters for nutrition label recognition
               await worker.setParameters({
-                    // Use AUTOMATIC page segmentation - let Tesseract decide
-                    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-                    
-                    // Keep character whitelist but make it more permissive
-                    tessedit_char_whitelist: '0123456789.,%/()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
-                    
-                    // Use LSTM engine only (more robust for mobile)
-                    tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
-                    
-                    // Better settings for mobile images
-                    preserve_interword_spaces: '1',
-                    
-                    // Don't be too strict about text formatting
-                    textord_really_old_xheight: '0',
-                    textord_heavy_nr: '0',
-                    
-                    // Allow more variation in text size
-                    textord_min_linesize: '0.5',
-                    textord_min_xheight: '4',
-                    
-                    // Better handling of mobile image artifacts
-                    classify_enable_learning: '0',  // Disable learning for consistency
-                    classify_enable_adaptive_matcher: '0'  // Disable adaptive matching
-                });
+                        // Use single text line mode for nutrition labels
+                        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_TEXT_LINE, // or PSM.SINGLE_BLOCK
+                        
+                        // Use LSTM engine only (better for mobile)
+                        tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+                        
+                        // More restrictive character whitelist for nutrition
+                        tessedit_char_whitelist: '0123456789.,%/()kcalmgjkJKG ',
+                        
+                        // Improved settings for mobile
+                        preserve_interword_spaces: '1',
+                        
+                        // Disable adaptive features that can cause issues on mobile
+                        classify_enable_learning: '0',
+                        classify_enable_adaptive_matcher: '0',
+                        
+                        // Better handling of mobile artifacts
+                        textord_min_linesize: '2.5',
+                        textord_min_xheight: '8',
+                        
+                        // Improve number recognition
+                        numeric_punctuation: '.,%',
+                    });
                 // Recognize text from image
                 const { data: { text } } = await worker.recognize(imageElement);
                 
@@ -1148,50 +1199,62 @@ function applyFinalCorrections(nutritionData, originalText) {
     
     console.log('Data after targeted corrections:', nutritionData);
 }
-function convertNutritionValue(key, value, context = {}) {
-    // Define typical maximum values for each nutrient (per 100g)
-    const maxTypical = {
-        calories: 900,
-        fats: 100,
-        saturated_fat: 100,
-        carbohydrates: 100,
-        sugars: 100,
-        fiber: 100,
-        proteins: 100,
-        salt: 10
-    };
 
-    // Special handling for different nutrients
-    if (key === 'carbohydrates' && value > 100 && value < 200) {
-        // Values like 119 are likely 11.9 (divide by 10)
-        return value / 10;
-    }
+const nutritionPSMModes = [
+    Tesseract.PSM.SINGLE_BLOCK,      // Best for nutrition label blocks
+    Tesseract.PSM.SINGLE_TEXT_LINE,  // Good for individual lines
+    Tesseract.PSM.AUTO,              // Fallback
+    Tesseract.PSM.UNIFORM_BLOCK      // Alternative
+];
+
+async function processWithBestPSM(imageBlob) {
+    let bestResult = null;
+    let bestConfidence = 0;
     
-    if ((key === 'fats' || key === 'saturated_fat') && value > 100 && value < 1000) {
-        // Values like 919 are likely 9.19 (divide by 100)
-        return value / 100;
-    }
-    
-    if (key === 'sugars' && value > 100 && value < 1000) {
-        // Values like 229 are likely 2.29 (divide by 100)
-        return value / 100;
-    }
-    
-    // For other values, use typical maximum to determine if conversion is needed
-    if (maxTypical[key] && value > maxTypical[key]) {
-        // Check if dividing by 10 gives a reasonable value
-        const dividedBy10 = value / 10;
-        if (dividedBy10 <= maxTypical[key]) {
-            return dividedBy10;
+    for (const psm of nutritionPSMModes) {
+        const worker = await Tesseract.createWorker(['fin', 'eng']);
+        
+        await worker.setParameters({
+            tessedit_pageseg_mode: psm,
+            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+            tessedit_char_whitelist: '0123456789.,%/()kcalmgjkJKG ',
+        });
+        
+        const { data: { text, confidence } } = await worker.recognize(imageBlob);
+        
+        if (confidence > bestConfidence) {
+            bestConfidence = confidence;
+            bestResult = { text, confidence };
         }
         
-        // Otherwise divide by 100
-        return value / 100;
+        await worker.terminate();
+        
+        // If we get high confidence, use it
+        if (confidence > 80) break;
     }
     
-    return value;
+    return bestResult;
 }
-
+async function processWithConfidenceChecks(imageBlob) {
+    const result = await processWithBestPSM(imageBlob);
+    
+    if (result.confidence < 60) {
+        console.log('Low confidence, trying enhanced preprocessing...');
+        
+        // Apply more aggressive preprocessing for difficult images
+        const canvas = await createCanvasFromBlob(imageBlob);
+        const enhancedCanvas = applyAggressivePreprocessing(canvas);
+        const enhancedBlob = await canvasToBlob(enhancedCanvas);
+        
+        const enhancedResult = await processWithBestPSM(enhancedBlob);
+        
+        if (enhancedResult.confidence > result.confidence) {
+            return enhancedResult;
+        }
+    }
+    
+    return result;
+}
 function enhancedTextNormalization(text) {
     console.log('Original OCR text:', text);
 
@@ -1976,35 +2039,42 @@ function showMessage(message, type) {
         }, 8000);
     }
 }
+let sharpEnough = false;
 async function openCamera() {
-    try {
-        // Request camera access
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } // Use back camera for better label scanning
-        });
-        
-        // Get video element and set stream
-        const video = document.getElementById('cameraVideo');
-        video.srcObject = stream;
-        video.play();
-        
-        // Hide file upload section
-        $('#fileUploadSection').addClass('d-none');
-        $('#cameraVideo').removeClass('d-none');
-        
-    } catch (error) {
-        console.error('Error accessing camera:', error);
-        
-        // Show file upload option instead
-        $('#cameraVideo').addClass('d-none');
-        $('#fileUploadSection').removeClass('d-none');
-        
-        // Update modal title and button
-        $('.modal-title').text('Upload Nutrition Label');
-        $('#captureImage').text('Process Image');
-        
-        showMessage('Camera not available. Please upload an image instead.', 'error');
-    }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { exact: "environment" },
+        advanced: [{ focusMode: "continuous" }]
+      }
+    });
+    const video = document.getElementById("cameraVideo");
+    video.srcObject = stream;
+    await video.play();
+
+    // Live sharpness test (Laplacian variance every 300 ms)
+    const lapCanvas = document.createElement("canvas");
+    const lapCtx    = lapCanvas.getContext("2d");
+    const varianceT = 100;
+    const interval  = setInterval(() => {
+      if (video.readyState < 2) return;
+      lapCanvas.width  = video.videoWidth / 4;
+      lapCanvas.height = video.videoHeight / 4;
+      lapCtx.drawImage(video, 0, 0, lapCanvas.width, lapCanvas.height);
+      const mat = cv.imread(lapCanvas);
+      const lap = new cv.Mat();
+      cv.Laplacian(mat, lap, cv.CV_64F);
+      const mean = cv.meanStdDev(lap)[1].data64F[0];
+      mat.delete(); lap.delete();
+      sharpEnough = mean > varianceT;
+      document.getElementById("scanningOverlay")
+              .classList.toggle("d-none", sharpEnough);
+      if (sharpEnough) clearInterval(interval);
+    }, 300);
+  } catch (err) {
+    console.error("Camera error", err);
+    // Fallback already present
+  }
 }
 
 // Function to stop camera
