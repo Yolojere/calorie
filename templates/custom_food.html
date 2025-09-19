@@ -980,11 +980,34 @@ async function processNutritionLabel(imageElement) {
                 await worker.initialize('fin+eng');
                 
                 // Set parameters for nutrition label recognition
-                await worker.setParameters({
-                    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
-                    tessedit_char_whitelist: '0123456789.,%/g()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: '
+               await worker.setParameters({
+                    // Better page segmentation for mobile images
+                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+                    
+                    // Nutrition-optimized character whitelist
+                    tessedit_char_whitelist: '0123456789.,%/()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
+                    
+                    // Mobile-optimized settings
+                    preserve_interword_spaces: '1',
+                    tessedit_ocr_engine_mode: '1', // LSTM + Legacy
+                    
+                    // Better handling for mobile image quality
+                    classify_bln_numeric_mode: '1',
+                    textord_min_linesize: '1.0',    // Lower for mobile
+                    textord_min_xheight: '6',       // Lower for mobile text
+                    
+                    // Improve character recognition for mobile
+                    classify_enable_learning: '1',
+                    classify_enable_adaptive_matcher: '1',
+                    
+                    // Better word detection for nutrition labels
+                    textord_really_old_xheight: '1',
+                    textord_heavy_nr: '1',
+                    
+                    // Mobile-specific optimizations
+                    textord_debug_tabfind: '0',
+                    edges_use_new_outline_complexity: '1'
                 });
-                
                 // Recognize text from image
                 const { data: { text } } = await worker.recognize(imageElement);
                 
@@ -1603,19 +1626,19 @@ async function processImageBlob(imageBlob) {
             textord_heavy_nr: '1'
         });
         
-        console.log('Worker configured, preprocessing image...');
-        
-        // Create canvas from blob for preprocessing
+        console.log('Worker configured, preprocessing mobile image...');
+
+        // Create canvas from blob for mobile preprocessing
         const canvas = await createCanvasFromBlob(imageBlob);
-        
-        // Apply enhanced preprocessing pipeline
-        const scaledCanvas = scaleImageForOCR(canvas, 350); // Optimal DPI for nutrition labels
-        const processedCanvas = preprocessImageForOCR(scaledCanvas);
-        
+
+        // Apply mobile-optimized preprocessing pipeline
+        const scaledCanvas = scaleImageForMobileOCR(canvas, 400); // Higher DPI for mobile
+        const processedCanvas = preprocessMobileImage(scaledCanvas);
+
         // Convert processed canvas back to blob
-        const processedBlob = await canvasToBlob(processedCanvas);
-        
-        console.log('Image preprocessed, starting OCR recognition...');
+        const processedBlob = await canvasToBlob(processedCanvas, 0.98); // Higher quality
+
+        console.log('Mobile image preprocessed, starting OCR recognition...');
         
         const { data: { text, confidence } } = await worker.recognize(processedBlob);
         
@@ -1792,6 +1815,120 @@ function fillFormWithNutritionData(nutritionData) {
     } else {
         showMessage('❌ Could not extract nutrition data. Please try again with a clearer, well-lit image of the nutrition label, or enter values manually.', 'error');
     }
+}
+function preprocessMobileImage(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    console.log('Preprocessing mobile image for OCR...');
+    
+    // Step 1: Aggressive contrast enhancement for mobile photos
+    const contrastFactor = 3.5; // Higher for mobile
+    const brightness = 40;      // More brightness for mobile
+    
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // Calculate luminance
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        // Apply aggressive contrast and brightness
+        let newLuminance = (luminance - 128) * contrastFactor + 128 + brightness;
+        newLuminance = Math.max(0, Math.min(255, newLuminance));
+        
+        // More aggressive thresholding for mobile images
+        const threshold = 120; // Lower threshold for mobile
+        const binaryValue = newLuminance > threshold ? 255 : 0;
+        
+        data[i] = binaryValue;
+        data[i + 1] = binaryValue;
+        data[i + 2] = binaryValue;
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Step 2: Apply morphological operations for mobile
+    return morphologicalMobileCleanup(canvas);
+}
+
+// Morphological cleanup optimized for mobile images
+function morphologicalMobileCleanup(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    const newData = new ImageData(width, height);
+    for (let i = 0; i < data.length; i++) {
+        newData.data[i] = data[i];
+    }
+    
+    // More aggressive cleanup for mobile noise
+    for (let y = 2; y < height - 2; y++) {
+        for (let x = 2; x < width - 2; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // Check 5x5 neighborhood instead of 3x3
+            let whiteCount = 0;
+            for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                    const nIdx = ((y + dy) * width + (x + dx)) * 4;
+                    if (data[nIdx] === 255) whiteCount++;
+                }
+            }
+            
+            // Need majority in larger neighborhood
+            const newValue = whiteCount >= 13 ? 255 : 0; // 13 out of 25 pixels
+            newData.data[idx] = newValue;
+            newData.data[idx + 1] = newValue;
+            newData.data[idx + 2] = newValue;
+        }
+    }
+    
+    ctx.putImageData(newData, 0, 0);
+    return canvas;
+}
+function scaleImageForMobileOCR(canvas, targetDPI = 400) {
+    const ctx = canvas.getContext('2d');
+    
+    console.log(`Original mobile image size: ${canvas.width}x${canvas.height}`);
+    
+    // Mobile images need higher DPI for nutrition labels
+    const currentDPI = 72;
+    const scaleFactor = targetDPI / currentDPI;
+    
+    // Ensure minimum dimensions for mobile nutrition labels
+    const minWidth = 1200;  // Higher for mobile
+    const minHeight = 800;  // Minimum height too
+    
+    const widthScale = Math.max(scaleFactor, minWidth / canvas.width);
+    const heightScale = Math.max(scaleFactor, minHeight / canvas.height);
+    const finalScale = Math.max(widthScale, heightScale);
+    
+    const newWidth = Math.floor(canvas.width * finalScale);
+    const newHeight = Math.floor(canvas.height * finalScale);
+    
+    console.log(`Scaling mobile image to: ${newWidth}x${newHeight} (${Math.round(finalScale * 100)}%)`);
+    
+    // Create high-quality scaled canvas
+    const scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = newWidth;
+    scaledCanvas.height = newHeight;
+    const scaledCtx = scaledCanvas.getContext('2d');
+    
+    // Use highest quality scaling for mobile
+    scaledCtx.imageSmoothingEnabled = true;
+    scaledCtx.imageSmoothingQuality = 'high';
+    
+    // Apply sharpening during scaling
+    scaledCtx.filter = 'contrast(150%) brightness(110%)';
+    scaledCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+    
+    return scaledCanvas;
 }
 // Enhanced message showing with different types
 function showMessage(message, type) {
