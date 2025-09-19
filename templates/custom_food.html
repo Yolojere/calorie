@@ -860,94 +860,42 @@
             }
         });
 
- // ─── PREPROCESS FOR MOBILE PHOTO ──────────────────────────────
-function preprocessImageForOCR(canvas) {
-  const src = cv.imread(canvas);
-  let lab = new cv.Mat(); cv.cvtColor(src, lab, cv.COLOR_RGBA2LAB);
-  let ch  = new cv.MatVector(); cv.split(lab, ch);
-  let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
-  clahe.apply(ch.get(0), ch.get(0));
-  cv.merge(ch, lab); cv.cvtColor(lab, src, cv.COLOR_LAB2RGBA);
-  cv.bilateralFilter(src, src, 9, 75, 75);
-  let gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  let bin  = new cv.Mat();
-  cv.ximgproc.niBlackThreshold(
-      gray, bin, 255, cv.ximgproc.BINARIZATION_SAUVOLA, 25, 0.3,
-      cv.THRESH_BINARY);
-  cv.imshow(canvas, bin);
-  [lab, gray, bin].forEach(m => m.delete()); ch.delete(); src.delete();
-}
-
-// ─── OCR NUTRITION BLOCK ─────────────────────────────────────
-async function ocrNutrition(canvas, worker) {
-  await worker.setParameters({
-    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
-    tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
-    user_defined_dpi: 300,
-    preserve_interword_spaces: '1',
-    tessedit_char_whitelist: '0123456789.,kjKJKCalmgGkcalKCALg%',
-  });
-  let data = await worker.recognize(canvas);
-  if (data.confidence < 60) {
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK });
-    data = await worker.recognize(canvas);
-  }
-  return data;
-}
-
-// ─── FUZZY ROW ALIGNER ───────────────────────────────────────
-const ROW_KEYS = {
-  calories:   ["energia","energy"],
-  fats:       ["rasva","fett"],
-  saturated:  ["tyydy","mättat"],
-  carbs:      ["hiilihyd","kolhyd"],
-  sugars:     ["soker","socker"],
-  fiber:      ["kuitu","fiber"],
-  proteins:   ["proteiini","protein"],
-  salt:       ["suola","salt"]
-};
-function alignRows(lines) {
-  const dist = (a,b)=>(new Levenshtein(a,b)).distance;
-  const rows = {};
-  lines.forEach(raw=>{
-    const l = raw.toLowerCase();
-    Object.entries(ROW_KEYS).forEach(([key, kwArr])=>{
-      kwArr.forEach(kw=>{
-        if (dist(l, kw) <= 2 || l.includes(kw)) rows[key] = raw;
-      });
-    });
-  });
-  return rows;
-}
-
-// ─── NUTRITION DATA EXTRACTOR ────────────────────────────────
-function extractNutrition(lines) {
-  const aligned = alignRows(lines);
-  const nutritionData = {};
-  Object.entries(aligned).forEach(([field, row])=>{
-    const num = row.match(/[0-9]+[.,]?[0-9]*/);
-    if (num) nutritionData[field] = parseFloat(num[0].replace(",","."));
-  });
-  ["calories","fats","carbs","proteins","fiber","sugars","saturated","salt"]
-    .forEach(k=>{
-      const v = nutritionData[k]; if (v==null) return;
-      if (k!=="calories" && v > 100) nutritionData[k] = v / 10;
-      if (k==="salt" && v > 20)      nutritionData[k] = v / 1000;
-  });
-  return nutritionData;
-}
-
-// ─── OCR POSTPROCESS & FEEDBACK ──────────────────────────────
-function handleNutritionOCR(data, lines) {
-  const nutritionData = extractNutrition(lines);
-  let extractedCount = Object.keys(nutritionData).filter(k=>nutritionData[k]!=null).length;
-  if (extractedCount === 0) {
-    showMessage("No nutrition data …", "error");
-    return;
-  }
-  fillFormWithNutritionData(nutritionData);
-  if (data.confidence && data.confidence < 50)
-    setTimeout(()=>showMessage("Tip: shoot in daylight, keep the phone 15-20 cm away, & disable flash.","info"), 250);
+ function preprocessImageForOCR(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Multi-step preprocessing for better nutrition label recognition
+    
+    // Step 1: Advanced contrast enhancement with CLAHE-like approach
+    const contrastFactor = 2.5;  // Increased for nutrition labels
+    const brightness = 30;       // Slight brightness boost
+    
+    for (let i = 0; i < data.length; i += 4) {
+        // Calculate luminance
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        // Apply contrast and brightness adjustment
+        let newLuminance = (luminance - 128) * contrastFactor + 128 + brightness;
+        newLuminance = Math.max(0, Math.min(255, newLuminance));
+        
+        // Apply aggressive binary thresholding - optimized for nutrition labels
+        const threshold = 140; // Lower threshold for printed nutrition text
+        const binaryValue = newLuminance > threshold ? 255 : 0;
+        
+        data[i] = binaryValue;     // Red
+        data[i + 1] = binaryValue; // Green
+        data[i + 2] = binaryValue; // Blue
+        // Alpha unchanged
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Step 2: Morphological operations to clean up text
+    return morphologicalCleanup(canvas);
 }
 
 // New morphological cleanup function
