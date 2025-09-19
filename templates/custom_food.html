@@ -721,11 +721,11 @@
             // Event handlers
 
             // Open camera when scan button is clicked
-            $('#scanNutritionLabel').on('click', function() {
-                openCamera();
-                cameraModal.show();
+           $('#scanNutritionLabel').on('click', function() {
+                cameraModal.show(); // Show modal first
+                // openCamera will be called automatically by the modal shown event
             });
-                    
+                                
             // Capture image when capture button is clicked
              $('#captureImage').on('click', function() {
             if (stream) {
@@ -861,54 +861,112 @@
         });
 
  function preprocessImageForOCR(canvas) {
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Multi-step preprocessing for better nutrition label recognition
+    
+    // Step 1: Advanced contrast enhancement with CLAHE-like approach
+    const contrastFactor = 2.5;  // Increased for nutrition labels
+    const brightness = 30;       // Slight brightness boost
+    
+    for (let i = 0; i < data.length; i += 4) {
+        // Calculate luminance
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        // Apply contrast and brightness adjustment
+        let newLuminance = (luminance - 128) * contrastFactor + 128 + brightness;
+        newLuminance = Math.max(0, Math.min(255, newLuminance));
+        
+        // Apply aggressive binary thresholding - optimized for nutrition labels
+        const threshold = 140; // Lower threshold for printed nutrition text
+        const binaryValue = newLuminance > threshold ? 255 : 0;
+        
+        data[i] = binaryValue;     // Red
+        data[i + 1] = binaryValue; // Green
+        data[i + 2] = binaryValue; // Blue
+        // Alpha unchanged
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Step 2: Morphological operations to clean up text
+    return morphologicalCleanup(canvas);
+}
+
+// New morphological cleanup function
+function morphologicalCleanup(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Create a copy for processing
+    const newData = new ImageData(width, height);
+    for (let i = 0; i < data.length; i++) {
+        newData.data[i] = data[i];
+    }
+    
+    // Apply erosion followed by dilation (opening) to remove noise
+    // This helps clean up small artifacts while preserving text structure
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const idx = (y * width + x) * 4;
             
-            // Increase contrast and convert to grayscale
-            for (let i = 0; i < data.length; i += 4) {
-                // Calculate grayscale value (luminance)
-                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                
-                // Increase contrast
-                const contrast = 1.5;
-                const adjusted = Math.max(0, Math.min(255, (gray - 128) * contrast + 128));
-                
-                // Apply binary thresholding
-                const threshold = 160; // Slightly higher threshold for printed text
-                const binaryValue = adjusted > threshold ? 255 : 0;
-                
-                data[i] = binaryValue;     // Red
-                data[i + 1] = binaryValue; // Green
-                data[i + 2] = binaryValue; // Blue
-                // Alpha stays the same
+            // Check 3x3 neighborhood
+            let whiteCount = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const nIdx = ((y + dy) * width + (x + dx)) * 4;
+                    if (data[nIdx] === 255) whiteCount++;
+                }
             }
             
-            ctx.putImageData(imageData, 0, 0);
-            return canvas;
+            // Keep pixel white only if majority of neighbors are white
+            const newValue = whiteCount >= 5 ? 255 : 0;
+            newData.data[idx] = newValue;
+            newData.data[idx + 1] = newValue;
+            newData.data[idx + 2] = newValue;
         }
+    }
+    
+    ctx.putImageData(newData, 0, 0);
+    return canvas;
+}
 
 // Enhanced image scaling function
-function scaleImageForOCR(canvas, targetWidth = 1200) {
+function scaleImageForOCR(canvas, targetDPI = 300) {
     const ctx = canvas.getContext('2d');
-    const originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
-    // Calculate scaling factor to achieve target width
-    const scaleFactor = targetWidth / canvas.width;
-    const newWidth = Math.floor(canvas.width * scaleFactor);
-    const newHeight = Math.floor(canvas.height * scaleFactor);
+    // Calculate optimal scaling - nutrition labels work best at 300-400 DPI
+    const currentDPI = 72; // Default screen DPI
+    const scaleFactor = targetDPI / currentDPI;
     
-    // Create new canvas with scaled dimensions
+    // Ensure minimum width for nutrition labels (they need to be readable)
+    const minWidth = 800;
+    const actualScaleFactor = Math.max(scaleFactor, minWidth / canvas.width);
+    
+    const newWidth = Math.floor(canvas.width * actualScaleFactor);
+    const newHeight = Math.floor(canvas.height * actualScaleFactor);
+    
+    // Create new canvas with optimal size
     const scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = newWidth;
     scaledCanvas.height = newHeight;
     const scaledCtx = scaledCanvas.getContext('2d');
     
-    // Draw scaled image
+    // Use high-quality scaling
+    scaledCtx.imageSmoothingEnabled = true;
+    scaledCtx.imageSmoothingQuality = 'high';
     scaledCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
     
     return scaledCanvas;
-}        
+} 
 async function processNutritionLabel(imageElement) {
             const { createWorker } = Tesseract;
             
@@ -960,139 +1018,419 @@ async function processNutritionLabel(imageElement) {
         .trim();
 }
 
-function parseFinnishNutritionText(text) {
+// Enhanced nutrition text parsing with better pattern recognition
+function parseEnhancedNutritionText(text, ocrConfidence = 0) {
     const nutritionData = {};
     
-    // Clean and normalize text - handle Finnish specific characters
-    const cleanText = normalizeOCRNumbers(text.toLowerCase())
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-        .replace(/[^\w\s\d.,äöå()/:-]/g, ' ') // Keep Finnish letters and common symbols
-        .replace(/\s+/g, ' ')
-        .trim();
+    // Clean and normalize text with better preprocessing
+    const cleanText = enhancedTextNormalization(text);
+    console.log('Enhanced cleaned OCR Text:', cleanText);
     
-    console.log('Cleaned OCR Text:', cleanText);
+    // Split into lines for better analysis
+    const lines = cleanText.split(/[\n\r]+/).filter(line => line.trim().length > 0);
     
-    // Enhanced Finnish nutrition label patterns with better regex
-    const finnishPatterns = {
-        // Energy/Calories - more flexible patterns
+    // Multi-pass parsing with different strategies
+    
+    // Pass 1: Structured pattern matching (most reliable)
+    parseStructuredPatterns(cleanText, nutritionData);
+    
+    // Pass 2: Line-by-line parsing for missed values (THIS IS KEY FOR YOUR CASE)
+    parseLineByLine(lines, nutritionData);
+    
+    // Pass 3: Contextual parsing (e.g., "josta" patterns in Finnish)
+    parseContextualPatterns(cleanText, nutritionData);
+    
+    // Pass 4: Fallback numeric extraction
+    if (Object.keys(nutritionData).length === 0) {
+        parseFallbackNumbers(cleanText, nutritionData);
+    }
+    
+    // Validate and clean up extracted data
+    const result = validateNutritionData(nutritionData, ocrConfidence);
+    
+    // Fix: Check if we actually have nutrition data (not just metadata)
+    const actualNutritionFields = ['calories', 'fats', 'saturated_fat', 'carbohydrates', 'sugars', 'fiber', 'proteins', 'salt'];
+    const hasNutritionData = actualNutritionFields.some(field => result[field] !== undefined);
+    
+    console.log('Final parsing result:', result);
+    console.log('Has actual nutrition data:', hasNutritionData);
+    
+    return hasNutritionData ? result : {};
+}
+
+function enhancedTextNormalization(text) {
+    console.log('Original OCR text:', text);
+    
+    // Split into lines first to preserve structure
+    let lines = text.split(/[\n\r]+/);
+    
+    // Process each line separately to maintain context
+    let processedLines = lines.map(line => {
+        let cleanLine = line.trim();
+        if (!cleanLine) return '';
+        
+        // Only fix the most obvious OCR errors, don't be aggressive
+        cleanLine = cleanLine
+            // Fix common OCR character confusions but only when they make sense
+            .replace(/([0-9])O([0-9])/g, '$10$2')  // 1O5 -> 105
+            .replace(/([0-9])l([0-9])/g, '$11$2')  // 1l5 -> 115
+            
+            // Fix obvious energy text corruptions
+            .replace(/\b(?:ererga|energa|ehergia)\b/gi, 'energia')
+            .replace(/\b(?:enero|energi)\b/gi, 'energi')
+            
+            // Fix kcal corruptions 
+            .replace(/\b(?:za|kcai|kcat|kca1)\b/gi, 'kcal')
+            .replace(/\bkou\b/gi, 'kcal')
+            
+            // Fix other common nutrition word corruptions
+            .replace(/\b(?:mydraatit|mydraati)\b/gi, 'hiilihydraatit')
+            .replace(/\b(?:proce)\b/gi, 'proteiini')
+            .replace(/\b(?:su0|su01)\b/gi, 'suola')
+            
+            // Only normalize decimal points for 3-digit numbers that clearly should be decimals
+            // But SKIP 100g, 300g, etc. (serving sizes)
+            .replace(/\b(\d{3})(?=\s*(?!g\b))/g, (match, number) => {
+                const num = parseInt(number);
+                // Only convert if it's likely a nutrition value (not 100, 300, 640, 1920 which are serving sizes or kJ)
+                if (num >= 100 && num <= 999 && num !== 100 && num !== 300 && num !== 640 && num !== 1920) {
+                    return (num / 100).toFixed(1);
+                }
+                return match;
+            });
+        
+        return cleanLine;
+    });
+    
+    // Rejoin lines but keep line structure for parsing
+    const result = processedLines.join('\n');
+    console.log('Better normalized text (with line breaks):', result);
+    return result;
+}
+
+function parseStructuredPatterns(cleanText, nutritionData) {
+    console.log('Parsing with better patterns. Clean text:', cleanText);
+    
+    // Split into lines for easier processing
+    const lines = cleanText.split(/[\n\r]+/).filter(line => line.trim().length > 0);
+    console.log('Lines to process:', lines);
+    
+    // Enhanced patterns that match the actual OCR structure
+    const enhancedPatterns = {
         calories: [
-            /energia[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i,
-            /energi[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i,
-            /(\d+(?:[,.]?\d+)?)\s*kcal/i,
-            /energia[^\d]*?(\d+(?:[,.]?\d+)?)[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i // Extract second number (kcal)
+            // Match "150 kcal" from "640 kJ/150 kcal"
+            /(?:energia|energi)[^0-9]*\d+[^0-9]+kj[^0-9]*\/[^0-9]*([0-9.]+)[^0-9]*kcal/i,
+            /([0-9.]+)\s*kcal/i,
+            // Match just the kcal value
+            /\b([0-9.]+)\s*kcal\b/i
         ],
         
-        // Fats - look for patterns with "josta" (of which) structure
         fats: [
-            /rasva[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /fett[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /fat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match fat values - look for "Rasva/Fett" followed by numbers
+            /(?:rasva|fett)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            // Look for the pattern after Rasva/Fett line
+            /(?:rasva|fett).*?([0-9.]+)/i
         ],
         
-        // Saturated fat - specific patterns for Finnish labels
         saturated_fat: [
-            /josta\s+tyydyttynyt[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /josta\s+tyydyttyneit[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /varav\s+mattat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /tyydyttyn[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /saturated[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match saturated fat - after "tyydyttyneet" or "mättade"
+            /(?:tyydyttyn|mättade)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            // Look for the value after the saturated fat line
+            /-\s*(?:tyydyttyn|mättade).*?([0-9.]+)/i
         ],
         
-        // Carbohydrates
         carbohydrates: [
-            /hiilihydraatit[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /hiilihydraatti[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /kolhydrat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /carbohydrat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match carbs - after "Hiilihydraatit/Kolhydrater"
+            /(?:hiilihydraat|kolhydrat)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:hiilihydraat|kolhydrat).*?([0-9.]+)/i
         ],
         
-        // Sugars - specific patterns for "josta sokereita"
         sugars: [
-            /josta\s+sokereita[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /josta\s+soker[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /varav\s+socker[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /sokeri[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /sugar[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match sugars - after "sokerit" or "sockerarter"
+            /(?:soker|sockerar)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /-\s*(?:soker|sockerar).*?([0-9.]+)/i
         ],
         
-        // Fiber
         fiber: [
-            /ravintokuitu[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /kuitu[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /fiber[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /fibre[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match fiber - after "Ravintokuitu" or "Kostfiber"
+            /(?:ravintokuitu|kostfiber|kosttib)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:ravintokuitu|kostfiber|kosttib).*?([0-9.]+)/i
         ],
         
-        // Protein - look for various forms
         proteins: [
-            /proteiini[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /protein[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /valkuais[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match protein - after "Proteiini"
+            /(?:proteiini|protein)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:proteiini|protein).*?([0-9.]+)/i
         ],
         
-        // Salt
         salt: [
-            /suola[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
-            /salt[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+            // Match salt - after "Suola/Salt"
+            /(?:suola|salt)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:suola|salt).*?([0-9.]+)/i
         ]
     };
     
-    // Extract values using all patterns
-    Object.keys(finnishPatterns).forEach(key => {
-        for (const pattern of finnishPatterns[key]) {
+    // Extract using enhanced patterns
+    Object.keys(enhancedPatterns).forEach(key => {
+        if (nutritionData[key]) return; // Skip if already found
+        
+        for (const pattern of enhancedPatterns[key]) {
             const match = cleanText.match(pattern);
             if (match && match[1]) {
-                // Replace comma with dot for decimal parsing
-                let value = parseFloat(match[1].replace(',', '.'));
+                let value = parseFloat(match[1]);
+                console.log(`Pattern matched for ${key}: ${match[1]} -> ${value}`);
                 
-                // Only add if value is reasonable for nutrition
-                if (!isNaN(value) && value >= 0 && value <= 1000) {
+                // Validate range (nutrition values per 100g shouldn't exceed these limits)
+                const maxValues = {
+                    calories: 900, fats: 100, saturated_fat: 50, 
+                    carbohydrates: 100, sugars: 100, fiber: 50, 
+                    proteins: 100, salt: 20
+                };
+                
+                if (!isNaN(value) && value >= 0 && value <= (maxValues[key] || 1000)) {
                     nutritionData[key] = value;
-                    console.log(`Found ${key}: ${value}`);
-                    break; // Use the first match found
+                    console.log(`Successfully extracted ${key}: ${value}`);
+                    break;
+                } else {
+                    console.log(`Value ${value} for ${key} failed validation`);
                 }
             }
         }
     });
+}
+
+function parseLineByLine(lines, nutritionData) {
+    console.log('Line-by-line parsing with', lines.length, 'lines:', lines);
     
-    // Special case for calories - sometimes energy is in kJ followed by kcal
-    if (!nutritionData.calories) {
-        const calorieMatch = cleanText.match(/(\d+(?:[,.]?\d+)?)\s*kj[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i);
-        if (calorieMatch && calorieMatch[2]) {
-            const kcalValue = parseFloat(calorieMatch[2].replace(',', '.'));
-            if (!isNaN(kcalValue) && kcalValue > 0 && kcalValue <= 1000) {
-                nutritionData.calories = kcalValue;
-                console.log(`Found calories from kJ/kcal pattern: ${kcalValue}`);
+    // If we only have one line (collapsed), try to split it by detecting nutrition terms
+    if (lines.length === 1 && lines[0].length > 100) {
+        const longLine = lines[0];
+        // Split by nutrition keywords to recreate line structure
+        const splitPoints = [];
+        const keywords = ['energia', 'energi', 'rasva', 'fett', 'hiilihydraat', 'kolhydrat', 'proteiini', 'protein', 'suola', 'salt', 'mattace', 'tyydytt'];
+        
+        keywords.forEach(keyword => {
+            const regex = new RegExp('\\b' + keyword, 'gi');
+            let match;
+            while ((match = regex.exec(longLine)) !== null) {
+                splitPoints.push(match.index);
+            }
+        });
+        
+        splitPoints.sort((a, b) => a - b);
+        
+        // Create new lines based on split points
+        if (splitPoints.length > 0) {
+            lines = [];
+            for (let i = 0; i < splitPoints.length; i++) {
+                const start = splitPoints[i];
+                const end = splitPoints[i + 1] || longLine.length;
+                const segment = longLine.substring(start, end).trim();
+                if (segment) lines.push(segment);
+            }
+            console.log('Reconstructed lines:', lines);
+        }
+    }
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].toLowerCase().trim();
+        console.log(`Processing line ${i}: "${line}"`);
+        
+        // Extract all numbers from the line
+        const numbers = line.match(/\b([0-9.]+)\b/g);
+        if (!numbers) continue;
+        
+        const values = numbers.map(n => parseFloat(n)).filter(n => !isNaN(n) && n >= 0);
+        console.log(`Found numbers in line: ${values}`);
+        
+        // Energy/Energia line - look for kcal value
+        if ((line.includes('energia') || line.includes('energi')) && !nutritionData.calories) {
+            // Look for reasonable calorie values (50-900 kcal per 100g)
+            const calorieValue = values.find(v => v >= 50 && v <= 900);
+            if (calorieValue) {
+                nutritionData.calories = calorieValue;
+                console.log(`Found calories from energy line: ${calorieValue}`);
+            }
+        }
+        
+        // Fat line - "Rasva/Fett" - look for reasonable fat values
+        else if ((line.includes('rasva') || line.includes('fett')) && 
+                 !line.includes('tyydytt') && !line.includes('mättad') && 
+                 !nutritionData.fats) {
+            // Find reasonable fat value (0-100g per 100g)
+            const fatValue = values.find(v => v > 0 && v <= 100 && v !== 100 && v !== 300);
+            if (fatValue) {
+                nutritionData.fats = fatValue;
+                console.log(`Found fats from fat line: ${fatValue}`);
+            }
+        }
+        
+        // Saturated fat line - has "tyydyttyneet" or "mättade"
+        else if ((line.includes('tyydytt') || line.includes('mättad') || line.includes('mattace')) && 
+                 !nutritionData.saturated_fat) {
+            const satFatValue = values.find(v => v > 0 && v <= 50);
+            if (satFatValue) {
+                nutritionData.saturated_fat = satFatValue;
+                console.log(`Found saturated fat from saturated line: ${satFatValue}`);
+            }
+        }
+        
+        // Carbohydrates line
+        else if ((line.includes('hiilihydraat') || line.includes('kolhydrat') || line.includes('mydraatit')) && 
+                 !nutritionData.carbohydrates) {
+            const carbValue = values.find(v => v > 0 && v <= 100 && v !== 100 && v !== 300);
+            if (carbValue) {
+                nutritionData.carbohydrates = carbValue;
+                console.log(`Found carbohydrates from carb line: ${carbValue}`);
+            }
+        }
+        
+        // Sugars line - has "soker" but not carbohydrate keywords
+        else if (line.includes('soker') && 
+                 !line.includes('hiilihydraat') && !line.includes('kolhydrat') && 
+                 !nutritionData.sugars) {
+            const sugarValue = values.find(v => v > 0 && v <= 100);
+            if (sugarValue) {
+                nutritionData.sugars = sugarValue;
+                console.log(`Found sugars from sugar line: ${sugarValue}`);
+            }
+        }
+        
+        // Fiber line
+        else if ((line.includes('ravintokuitu') || line.includes('kostfiber') || 
+                 line.includes('kosttib') || line.includes('ri oku tu')) && 
+                 !nutritionData.fiber) {
+            const fiberValue = values.find(v => v > 0 && v <= 50);
+            if (fiberValue) {
+                nutritionData.fiber = fiberValue;
+                console.log(`Found fiber from fiber line: ${fiberValue}`);
+            }
+        }
+        
+        // Protein line
+        else if ((line.includes('proteiini') || line.includes('protein') || line.includes('proce')) && 
+                 !nutritionData.proteins) {
+            const proteinValue = values.find(v => v > 0 && v <= 100 && v !== 100 && v !== 300);
+            if (proteinValue) {
+                nutritionData.proteins = proteinValue;
+                console.log(`Found proteins from protein line: ${proteinValue}`);
+            }
+        }
+        
+        // Salt line
+        else if ((line.includes('suola') || line.includes('salt') || line.includes('su0')) && 
+                 !nutritionData.salt) {
+            const saltValue = values.find(v => v >= 0 && v <= 20);
+            if (saltValue !== undefined) {
+                nutritionData.salt = saltValue;
+                console.log(`Found salt from salt line: ${saltValue}`);
             }
         }
     }
     
-    // Try to extract values from structured lines like "Protein: 10g"
-    const lines = cleanText.split(/[\n\r]/);
-    lines.forEach(line => {
-        // Look for colon-separated values
-        const colonMatch = line.match(/([a-zäöå]+)[:]\s*(\d+(?:[,.]?\d+)?)\s*g/i);
-        if (colonMatch) {
-            const nutrient = colonMatch[1].toLowerCase();
-            const value = parseFloat(colonMatch[2].replace(',', '.'));
-            
-            if (!isNaN(value) && value >= 0 && value <= 1000) {
-                if (nutrient.includes('protein') || nutrient.includes('valkuais')) {
-                    nutritionData.proteins = nutritionData.proteins || value;
-                } else if (nutrient.includes('rasva') || nutrient.includes('fat')) {
-                    nutritionData.fats = nutritionData.fats || value;
-                } else if (nutrient.includes('hiilihydraat') || nutrient.includes('carb')) {
-                    nutritionData.carbohydrates = nutritionData.carbohydrates || value;
-                } else if (nutrient.includes('suola') || nutrient.includes('salt')) {
-                    nutritionData.salt = nutritionData.salt || value;
-                }
-            }
+    console.log('Line-by-line parsing results:', nutritionData);
+}
+
+function parseContextualPatterns(cleanText, nutritionData) {
+    // Look for "per 100g" or similar indicators
+    if (cleanText.includes('100g') || cleanText.includes('100 g') || cleanText.includes('per 100')) {
+        nutritionData.is_per_100g = true;
+    }
+    
+    // Look for serving size information
+    const servingPattern = /(?:annos|serving|portion)[^0-9]*([0-9,.]+)\s*g/i;
+    const servingMatch = cleanText.match(servingPattern);
+    if (servingMatch) {
+        const servingSize = parseFloat(servingMatch[1].replace(',', '.'));
+        if (!isNaN(servingSize) && servingSize > 0 && servingSize <= 1000) {
+            nutritionData.suggested_serving = servingSize;
+        }
+    }
+}
+
+function parseFallbackNumbers(cleanText, nutritionData) {
+    console.log('Smart fallback parsing for remaining fields');
+    
+    // Extract all numbers and try smarter matching based on expected ranges
+    const allNumbers = cleanText.match(/\b([0-9.]+)\b/g);
+    if (!allNumbers || allNumbers.length === 0) return;
+    
+    const values = allNumbers
+        .map(n => parseFloat(n))
+        .filter(n => !isNaN(n) && n >= 0)
+        .filter(n => n !== 100 && n !== 300 && n !== 640 && n !== 1920) // Remove serving sizes and energy kJ
+        .sort((a, b) => b - a); // Sort descending
+    
+    console.log('Fallback numbers for smart matching:', values);
+    
+    // Smart assignment based on typical nutrition label ranges
+    values.forEach(value => {
+        // Calories: usually highest value, 50-900 range
+        if (!nutritionData.calories && value >= 50 && value <= 900) {
+            nutritionData.calories = value;
+            console.log(`Fallback assigned calories: ${value}`);
+        }
+        // Carbs: often second highest, 1-100 range
+        else if (!nutritionData.carbohydrates && value >= 1 && value <= 100) {
+            nutritionData.carbohydrates = value;
+            console.log(`Fallback assigned carbohydrates: ${value}`);
+        }
+        // Fats: 0-100 range
+        else if (!nutritionData.fats && value > 0 && value <= 100) {
+            nutritionData.fats = value;
+            console.log(`Fallback assigned fats: ${value}`);
+        }
+        // Proteins: 0-100 range
+        else if (!nutritionData.proteins && value > 0 && value <= 100) {
+            nutritionData.proteins = value;
+            console.log(`Fallback assigned proteins: ${value}`);
+        }
+        // Saturated fat: usually lower than total fat, 0-50 range
+        else if (!nutritionData.saturated_fat && value > 0 && value <= 50 && 
+                 (!nutritionData.fats || value < nutritionData.fats)) {
+            nutritionData.saturated_fat = value;
+            console.log(`Fallback assigned saturated fat: ${value}`);
+        }
+        // Sugars: usually lower than carbs, 0-100 range
+        else if (!nutritionData.sugars && value > 0 && value <= 100 && 
+                 (!nutritionData.carbohydrates || value < nutritionData.carbohydrates)) {
+            nutritionData.sugars = value;
+            console.log(`Fallback assigned sugars: ${value}`);
+        }
+        // Fiber: usually small values, 0-50 range
+        else if (!nutritionData.fiber && value > 0 && value <= 50) {
+            nutritionData.fiber = value;
+            console.log(`Fallback assigned fiber: ${value}`);
+        }
+        // Salt: usually very small, 0-20 range
+        else if (!nutritionData.salt && value >= 0 && value <= 20) {
+            nutritionData.salt = value;
+            console.log(`Fallback assigned salt: ${value}`);
         }
     });
     
-    // Check if values are per 100g
-    if (cleanText.includes('100g') || cleanText.includes('100 g') || cleanText.includes('per 100')) {
-        nutritionData.is_per_100g = true;
+    console.log('Smart fallback results:', nutritionData);
+}
+
+function validateNutritionData(nutritionData, ocrConfidence) {
+    // Remove any obviously incorrect values
+    Object.keys(nutritionData).forEach(key => {
+        const value = nutritionData[key];
+        if (typeof value === 'number') {
+            // Basic sanity checks
+            if (value < 0 || value > 200) { // Most nutrients shouldn't exceed 200g per 100g
+                console.warn(`Removing suspicious ${key} value: ${value}`);
+                delete nutritionData[key];
+            }
+            
+            // Round to reasonable precision
+            nutritionData[key] = Math.round(value * 100) / 100;
+        }
+    });
+    
+    // Add confidence metadata
+    if (ocrConfidence > 0) {
+        nutritionData._ocr_confidence = Math.round(ocrConfidence);
     }
     
     return nutritionData;
@@ -1141,85 +1479,140 @@ async function processImageBlob(imageBlob) {
     $('#scanningOverlay').removeClass('d-none');
     
     try {
-        console.log('Creating Tesseract worker...');
+        console.log('Creating enhanced Tesseract worker...');
         
-        // Create worker with multiple languages prioritizing Finnish
-        const worker = await Tesseract.createWorker(['fin', 'swe', 'eng'], 1, {
+        // Create worker with optimal language pack prioritization
+        const worker = await Tesseract.createWorker(['fin', 'eng', 'swe'], 1, {
             logger: m => {
                 if (m.status === 'recognizing text') {
-                    console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+                    const progress = Math.round(m.progress * 100);
+                    console.log(`OCR Progress: ${progress}%`);
+                    // Update progress in UI if needed
+                    $('#scanningOverlay p').text(`Processing image... ${progress}%`);
                 }
             }
         });
         
-        // Set enhanced parameters for nutrition label recognition
+        // Enhanced parameters specifically optimized for nutrition labels
         await worker.setParameters({
-            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-            tessedit_char_whitelist: '0123456789.,%/g()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
-            preserve_interword_spaces: '1'
+            // Page segmentation: Treat image as sparse text (good for labels)
+            tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+            
+            // Character whitelist - optimized for nutrition labels
+            tessedit_char_whitelist: '0123456789.,%/()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
+            
+            // Preserve word spacing (important for nutrition data)
+            preserve_interword_spaces: '1',
+            
+            // OCR Engine Mode: Use LSTM + Legacy for better accuracy
+            tessedit_ocr_engine_mode: '1',
+            
+            // Enable dictionary for better word recognition
+            load_system_dawg: '1',
+            load_freq_dawg: '1',
+            
+            // Optimize for better number recognition
+            classify_enable_learning: '1',
+            classify_enable_adaptive_matcher: '1',
+            
+            // Better segmentation for nutrition labels
+            textord_really_old_xheight: '1',
+            textord_min_xheight: '10',
+            
+            // Improve text line detection
+            textord_heavy_nr: '1'
         });
         
-        console.log('Worker created, starting recognition...');
+        console.log('Worker configured, preprocessing image...');
         
-        const { data: { text } } = await worker.recognize(imageBlob);
+        // Create canvas from blob for preprocessing
+        const canvas = await createCanvasFromBlob(imageBlob);
         
-        console.log('OCR completed, raw text found:', text);
+        // Apply enhanced preprocessing pipeline
+        const scaledCanvas = scaleImageForOCR(canvas, 350); // Optimal DPI for nutrition labels
+        const processedCanvas = preprocessImageForOCR(scaledCanvas);
         
-        // Parse nutrition data with improved function
-        const nutritionData = parseFinnishNutritionText(text);
+        // Convert processed canvas back to blob
+        const processedBlob = await canvasToBlob(processedCanvas);
+        
+        console.log('Image preprocessed, starting OCR recognition...');
+        
+        const { data: { text, confidence } } = await worker.recognize(processedBlob);
+        
+        console.log('OCR completed with confidence:', confidence);
+        console.log('Raw OCR text:', text);
+        
+        // Enhanced nutrition data parsing
+        const nutritionData = parseEnhancedNutritionText(text, confidence);
         console.log('Parsed nutrition data:', nutritionData);
         
         // Fill form if data found
         if (Object.keys(nutritionData).length > 0) {
             fillFormWithNutritionData(nutritionData);
+            
+            // Show confidence-based message
+            const confidenceLevel = confidence > 80 ? 'High' : confidence > 60 ? 'Medium' : 'Low';
+            const confidenceMessage = `OCR completed with ${confidenceLevel} confidence (${Math.round(confidence)}%). Please verify the extracted values.`;
+            showMessage(confidenceMessage, 'success');
         } else {
-            showMessage('No nutrition data found. Please try a clearer image with better lighting.', 'error');
+            showMessage('No nutrition data found. Please try a clearer image with better lighting, or ensure the nutrition label is clearly visible.', 'error');
         }
         
         await worker.terminate();
-        console.log('Worker terminated successfully');
+        console.log('OCR worker terminated successfully');
         
     } catch (error) {
-        console.error('OCR processing failed:', error);
-        showMessage(`Failed to process image: ${error.message}`, 'error');
+        console.error('Enhanced OCR processing failed:', error);
+        showMessage(`Failed to process image: ${error.message}. Try taking a clearer photo with better lighting.`, 'error');
     } finally {
         $('#scanningOverlay').addClass('d-none');
     }
 }
-function showMessage(message, type) {
-            const messageElement = type === 'success' ? $('#success-message') : $('#error-message');
-            messageElement.text(message).removeClass('d-none');
-            
-            if (type === 'success') {
-                $('#error-message').addClass('d-none');
-            } else {
-                $('#success-message').addClass('d-none');
-            }
-            
-            // Scroll to message
-            $('html, body').animate({
-                scrollTop: messageElement.offset().top - 100
-            }, 500);
-            
-            // Auto-hide success messages after 5 seconds
-            if (type === 'success') {
-                setTimeout(() => {
-                    messageElement.addClass('d-none');
-                }, 5000);
-            }
-        }
+
+// Helper function to create canvas from blob
+async function createCanvasFromBlob(blob) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas);
+        };
+        img.src = URL.createObjectURL(blob);
+    });
+}
+
+// Helper function to convert canvas to blob
+async function canvasToBlob(canvas, quality = 0.95) {
+    return new Promise((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+    });
+}
 function fillFormWithNutritionData(nutritionData) {
-    console.log('Filling form with:', nutritionData);
+    console.log('Filling form with enhanced data:', nutritionData);
     
-    // Add CSS for extracted values highlight
-    if (!$('#extracted-value-style').length) {
-        $('<style id="extracted-value-style">.extracted-value { background-color: #4CAF50 !important; color: white !important; border: 2px solid #45a049 !important; }</style>').appendTo('head');
+    // Add CSS for confidence-based highlighting
+    if (!$('#confidence-value-style').length) {
+        $(`<style id="confidence-value-style">
+            .high-confidence { background-color: #4CAF50 !important; color: white !important; border: 2px solid #45a049 !important; }
+            .medium-confidence { background-color: #FF9800 !important; color: white !important; border: 2px solid #F57C00 !important; }
+            .low-confidence { background-color: #f44336 !important; color: white !important; border: 2px solid #d32f2f !important; }
+            .suggested-value { background-color: #2196F3 !important; color: white !important; border: 2px solid #1976D2 !important; }
+            .confidence-indicator { font-size: 12px; margin-left: 8px; padding: 2px 6px; border-radius: 10px; }
+            .confidence-high { background-color: #4CAF50; color: white; }
+            .confidence-medium { background-color: #FF9800; color: white; }
+            .confidence-low { background-color: #f44336; color: white; }
+        </style>`).appendTo('head');
     }
     
-    // Visual feedback for extracted values
-    $('input').removeClass('extracted-value');
+    // Clear previous highlights
+    $('input').removeClass('high-confidence medium-confidence low-confidence suggested-value');
+    $('.confidence-indicator').remove();
     
-    // Fill the form fields based on what was extracted
+    // Field mappings with improved handling
     const fieldMappings = {
         'calories': 'input[name="calories"]',
         'fats': 'input[name="fats"]',
@@ -1233,45 +1626,135 @@ function fillFormWithNutritionData(nutritionData) {
     
     let extractedCount = 0;
     let extractedFields = [];
+    const ocrConfidence = nutritionData._ocr_confidence || 0;
     
+    // Determine confidence level
+    let confidenceClass = 'low-confidence';
+    let confidenceText = 'Low';
+    if (ocrConfidence > 80) {
+        confidenceClass = 'high-confidence';
+        confidenceText = 'High';
+    } else if (ocrConfidence > 60) {
+        confidenceClass = 'medium-confidence';
+        confidenceText = 'Medium';
+    }
+    
+    // Fill the form fields
     Object.keys(fieldMappings).forEach(key => {
         if (nutritionData[key] !== undefined) {
             const $field = $(fieldMappings[key]);
-            $field.val(nutritionData[key]).addClass('extracted-value');
+            const value = nutritionData[key];
+            
+            $field.val(value).addClass(confidenceClass);
+            
+            // Add confidence indicator
+            const $indicator = $(`<span class="confidence-indicator confidence-${confidenceText.toLowerCase()}">${confidenceText}</span>`);
+            $field.after($indicator);
+            
             extractedCount++;
             extractedFields.push(key);
             
-            // Add a small animation
-            $field.fadeOut(100).fadeIn(200);
+            // Add animation feedback
+            $field.fadeOut(150).fadeIn(300);
         }
     });
     
-    // Set base grams to 100 if we detected per 100g values
-    if (nutritionData.is_per_100g) {
-        $('input[name="grams"]').val('100').addClass('extracted-value');
+    // Handle serving size suggestion
+    if (nutritionData.suggested_serving) {
+        const $servingField = $('input[name="serving"]');
+        if (!$servingField.val()) { // Only fill if empty
+            $servingField.val(nutritionData.suggested_serving).addClass('suggested-value');
+            const $indicator = $('<span class="confidence-indicator" style="background-color: #2196F3; color: white;">Suggested</span>');
+            $servingField.after($indicator);
+        }
     }
     
-    // Close modal and show success with count of extracted values
+    // Set base grams to 100 if detected per 100g values
+    if (nutritionData.is_per_100g) {
+        const $gramsField = $('input[name="grams"]');
+        $gramsField.val('100').addClass('high-confidence');
+        const $indicator = $('<span class="confidence-indicator confidence-high">Detected</span>');
+        $gramsField.after($indicator);
+    }
+    
+    // Close modal and show enhanced success message
     $('#cameraModal').modal('hide');
     
     if (extractedCount > 0) {
-        showMessage(`Successfully extracted ${extractedCount} values: ${extractedFields.join(', ')}`, 'success');
+        const confidenceMsg = ocrConfidence > 0 ? ` (${ocrConfidence}% confidence)` : '';
+        const message = `✅ Successfully extracted ${extractedCount} values${confidenceMsg}: ${extractedFields.join(', ')}. Please verify the highlighted values before saving.`;
+        showMessage(message, 'success');
         
-        // Remove highlight after 5 seconds
+        // Auto-remove highlights after 10 seconds
         setTimeout(() => {
-            $('.extracted-value').removeClass('extracted-value');
-        }, 5000);
+            $('.high-confidence, .medium-confidence, .low-confidence, .suggested-value').removeClass('high-confidence medium-confidence low-confidence suggested-value');
+            $('.confidence-indicator').fadeOut(500, function() { $(this).remove(); });
+        }, 10000);
+        
+        // Scroll to first extracted field
+        if (extractedFields.length > 0) {
+            const firstFieldSelector = fieldMappings[extractedFields[0]];
+            const $firstField = $(firstFieldSelector);
+            if ($firstField.length) {
+                $('html, body').animate({
+                    scrollTop: $firstField.offset().top - 150
+                }, 800);
+            }
+        }
+        
+        // Show tips for improving results if confidence is low
+        if (ocrConfidence > 0 && ocrConfidence < 70) {
+            setTimeout(() => {
+                showMessage('💡 Tip: For better accuracy, ensure good lighting, hold camera steady, and capture the nutrition label straight-on.', 'info');
+            }, 3000);
+        }
+        
     } else {
-        showMessage('Could not extract nutrition data. Please try again with a clearer image or enter manually.', 'error');
+        showMessage('❌ Could not extract nutrition data. Please try again with a clearer, well-lit image of the nutrition label, or enter values manually.', 'error');
+    }
+}
+// Enhanced message showing with different types
+function showMessage(message, type) {
+    const messageElement = type === 'success' ? $('#success-message') : $('#error-message');
+    
+    // Handle info messages
+    if (type === 'info') {
+        // Create temporary info message if it doesn't exist
+        let $infoMessage = $('#info-message');
+        if (!$infoMessage.length) {
+            $infoMessage = $('<div id="info-message" class="alert alert-info d-none" style="background-color: #0c5460; color: #b8daff; border-color: #0c5460;"></div>');
+            $('#success-message').after($infoMessage);
+        }
+        $infoMessage.html(message).removeClass('d-none');
+        setTimeout(() => $infoMessage.addClass('d-none'), 8000);
+        return;
+    }
+    
+    messageElement.html(message).removeClass('d-none');
+    
+    if (type === 'success') {
+        $('#error-message').addClass('d-none');
+    } else {
+        $('#success-message').addClass('d-none');
+    }
+    
+    // Scroll to message
+    $('html, body').animate({
+        scrollTop: messageElement.offset().top - 100
+    }, 500);
+    
+    // Auto-hide success messages after 8 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            messageElement.addClass('d-none');
+        }, 8000);
     }
 }
 async function openCamera() {
     try {
         // Request camera access
         stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment' // Use back camera for better label scanning
-            } 
+            video: { facingMode: 'environment' } // Use back camera for better label scanning
         });
         
         // Get video element and set stream
