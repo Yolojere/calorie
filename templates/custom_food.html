@@ -944,7 +944,7 @@ async function processNutritionLabel(imageElement) {
                 $('#scanningOverlay').addClass('d-none');
             }
         }
-        function normalizeOCRNumbers(text) {
+       function normalizeOCRNumbers(text) {
     return text
         // Fix common OCR character confusion
         .replace(/[Oo]/g, '0')  // O -> 0
@@ -959,103 +959,144 @@ async function processNutritionLabel(imageElement) {
         .replace(/\s+/g, ' ')
         .trim();
 }
-       function parseFinnishNutritionText(text) {
-            const nutritionData = {};
-            
-            // Clean and normalize text - handle Finnish specific characters
-            const cleanText = text.toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-                .replace(/[^\w\s\d.,äöå]/g, ' ') // Keep Finnish letters
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            console.log('Cleaned OCR Text:', cleanText);
-            
-            // Finnish nutrition label patterns
-            const finnishPatterns = {
-                // Energy/Calories
-                calories: [
-                    /energia.*?(\d+)\s*kcal/i, // "Energia" followed by numbers and "kcal"
-                    /energy.*?(\d+)\s*kcal/i,  // English alternative
-                    /(\d+)\s*kcal.*?100\s*g/i  // "kcal" followed by "100g"
-                ],
-                
-                // Fats
-                fats: [
-                    /rasva.*?(\d+[,.]?\d*)\s*g/i,
-                    /fett.*?(\d+[,.]?\d*)\s*g/i, // Swedish
-                    /fat.*?(\d+[,.]?\d*)\s*g/i    // English
-                ],
-                
-                // Saturated fat
-                saturated_fat: [
-                    /tyydyttyneet.*?(\d+[,.]?\d*)\s*g/i,
-                    /josta tyydyttyneitä.*?(\d+[,.]?\d*)\s*g/i,
-                    /mättat.*?fett.*?(\d+[,.]?\d*)\s*g/i, // Swedish
-                    /saturated.*?fat.*?(\d+[,.]?\d*)\s*g/i // English
-                ],
-                
-                // Carbohydrates
-                carbohydrates: [
-                    /hiilihydraatit.*?(\d+[,.]?\d*)\s*g/i,
-                    /kolhydrat.*?(\d+[,.]?\d*)\s*g/i, // Swedish
-                    /carbohydrate.*?(\d+[,.]?\d*)\s*g/i // English
-                ],
-                
-                // Sugars
-                sugars: [
-                    /josta sokereita.*?(\d+[,.]?\d*)\s*g/i,
-                    /sokeri.*?(\d+[,.]?\d*)\s*g/i,
-                    /sockerarter.*?(\d+[,.]?\d*)\s*g/i, // Swedish
-                    /sugars.*?(\d+[,.]?\d*)\s*g/i       // English
-                ],
-                
-                // Fiber
-                fiber: [
-                    /kuitu.*?(\d+[,.]?\d*)\s*g/i,
-                    /ravintokuitu.*?(\d+[,.]?\d*)\s*g/i,
-                    /fiber.*?(\d+[,.]?\d*)\s*g/i, // Swedish
-                    /fibre.*?(\d+[,.]?\d*)\s*g/i   // English
-                ],
-                
-                // Protein
-                proteins: [
-                    /proteiini.*?(\d+[,.]?\d*)\s*g/i,
-                    /protein.*?(\d+[,.]?\d*)\s*g/i, // Swedish/English
-                ],
-                
-                // Salt
-                salt: [
-                    /suola.*?(\d+[,.]?\d*)\s*g/i,
-                    /salt.*?(\d+[,.]?\d*)\s*g/i, // Swedish/English
-                ]
-            };
-            
-            // Extract values using all patterns
-            Object.keys(finnishPatterns).forEach(key => {
-                for (const pattern of finnishPatterns[key]) {
-                    const match = cleanText.match(pattern);
-                    if (match && match[1]) {
-                        // Replace comma with dot for decimal parsing
-                        let value = parseFloat(match[1].replace(',', '.'));
-                        
-                        // Only add if value is reasonable
-                        if (!isNaN(value) && value >= 0 && value < 1000) {
-                            nutritionData[key] = value;
-                            break; // Use the first match found
-                        }
-                    }
-                }
-            });
-            
-            // Special handling for per 100g values
-            if (cleanText.includes('100g') || cleanText.includes('100 g')) {
-                nutritionData.is_per_100g = true;
-            }
-            
-            return nutritionData;
-        }
 
+function parseFinnishNutritionText(text) {
+    const nutritionData = {};
+    
+    // Clean and normalize text - handle Finnish specific characters
+    const cleanText = normalizeOCRNumbers(text.toLowerCase())
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/[^\w\s\d.,äöå()/:-]/g, ' ') // Keep Finnish letters and common symbols
+        .replace(/\s+/g, ' ')
+        .trim();
+    
+    console.log('Cleaned OCR Text:', cleanText);
+    
+    // Enhanced Finnish nutrition label patterns with better regex
+    const finnishPatterns = {
+        // Energy/Calories - more flexible patterns
+        calories: [
+            /energia[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i,
+            /energi[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i,
+            /(\d+(?:[,.]?\d+)?)\s*kcal/i,
+            /energia[^\d]*?(\d+(?:[,.]?\d+)?)[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i // Extract second number (kcal)
+        ],
+        
+        // Fats - look for patterns with "josta" (of which) structure
+        fats: [
+            /rasva[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /fett[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /fat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Saturated fat - specific patterns for Finnish labels
+        saturated_fat: [
+            /josta\s+tyydyttynyt[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /josta\s+tyydyttyneit[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /varav\s+mattat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /tyydyttyn[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /saturated[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Carbohydrates
+        carbohydrates: [
+            /hiilihydraatit[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /hiilihydraatti[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /kolhydrat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /carbohydrat[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Sugars - specific patterns for "josta sokereita"
+        sugars: [
+            /josta\s+sokereita[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /josta\s+soker[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /varav\s+socker[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /sokeri[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /sugar[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Fiber
+        fiber: [
+            /ravintokuitu[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /kuitu[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /fiber[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /fibre[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Protein - look for various forms
+        proteins: [
+            /proteiini[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /protein[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /valkuais[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ],
+        
+        // Salt
+        salt: [
+            /suola[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i,
+            /salt[^\d]*?(\d+(?:[,.]?\d+)?)\s*g/i
+        ]
+    };
+    
+    // Extract values using all patterns
+    Object.keys(finnishPatterns).forEach(key => {
+        for (const pattern of finnishPatterns[key]) {
+            const match = cleanText.match(pattern);
+            if (match && match[1]) {
+                // Replace comma with dot for decimal parsing
+                let value = parseFloat(match[1].replace(',', '.'));
+                
+                // Only add if value is reasonable for nutrition
+                if (!isNaN(value) && value >= 0 && value <= 1000) {
+                    nutritionData[key] = value;
+                    console.log(`Found ${key}: ${value}`);
+                    break; // Use the first match found
+                }
+            }
+        }
+    });
+    
+    // Special case for calories - sometimes energy is in kJ followed by kcal
+    if (!nutritionData.calories) {
+        const calorieMatch = cleanText.match(/(\d+(?:[,.]?\d+)?)\s*kj[^\d]*?(\d+(?:[,.]?\d+)?)\s*kcal/i);
+        if (calorieMatch && calorieMatch[2]) {
+            const kcalValue = parseFloat(calorieMatch[2].replace(',', '.'));
+            if (!isNaN(kcalValue) && kcalValue > 0 && kcalValue <= 1000) {
+                nutritionData.calories = kcalValue;
+                console.log(`Found calories from kJ/kcal pattern: ${kcalValue}`);
+            }
+        }
+    }
+    
+    // Try to extract values from structured lines like "Protein: 10g"
+    const lines = cleanText.split(/[\n\r]/);
+    lines.forEach(line => {
+        // Look for colon-separated values
+        const colonMatch = line.match(/([a-zäöå]+)[:]\s*(\d+(?:[,.]?\d+)?)\s*g/i);
+        if (colonMatch) {
+            const nutrient = colonMatch[1].toLowerCase();
+            const value = parseFloat(colonMatch[2].replace(',', '.'));
+            
+            if (!isNaN(value) && value >= 0 && value <= 1000) {
+                if (nutrient.includes('protein') || nutrient.includes('valkuais')) {
+                    nutritionData.proteins = nutritionData.proteins || value;
+                } else if (nutrient.includes('rasva') || nutrient.includes('fat')) {
+                    nutritionData.fats = nutritionData.fats || value;
+                } else if (nutrient.includes('hiilihydraat') || nutrient.includes('carb')) {
+                    nutritionData.carbohydrates = nutritionData.carbohydrates || value;
+                } else if (nutrient.includes('suola') || nutrient.includes('salt')) {
+                    nutritionData.salt = nutritionData.salt || value;
+                }
+            }
+        }
+    });
+    
+    // Check if values are per 100g
+    if (cleanText.includes('100g') || cleanText.includes('100 g') || cleanText.includes('per 100')) {
+        nutritionData.is_per_100g = true;
+    }
+    
+    return nutritionData;
+}
 async function captureImage() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('captureCanvas');
@@ -1102,16 +1143,29 @@ async function processImageBlob(imageBlob) {
     try {
         console.log('Creating Tesseract worker...');
         
-        // FIXED: Remove the logger to avoid DataCloneError
-        const worker = await Tesseract.createWorker(['fin', 'swe', 'eng']);
+        // Create worker with multiple languages prioritizing Finnish
+        const worker = await Tesseract.createWorker(['fin', 'swe', 'eng'], 1, {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+                }
+            }
+        });
+        
+        // Set enhanced parameters for nutrition label recognition
+        await worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            tessedit_char_whitelist: '0123456789.,%/g()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
+            preserve_interword_spaces: '1'
+        });
         
         console.log('Worker created, starting recognition...');
         
         const { data: { text } } = await worker.recognize(imageBlob);
         
-        console.log('OCR completed, text found:', text);
+        console.log('OCR completed, raw text found:', text);
         
-        // FIXED: Use the correct function name
+        // Parse nutrition data with improved function
         const nutritionData = parseFinnishNutritionText(text);
         console.log('Parsed nutrition data:', nutritionData);
         
@@ -1155,46 +1209,62 @@ function showMessage(message, type) {
             }
         }
 function fillFormWithNutritionData(nutritionData) {
-            console.log('Filling form with:', nutritionData);
+    console.log('Filling form with:', nutritionData);
+    
+    // Add CSS for extracted values highlight
+    if (!$('#extracted-value-style').length) {
+        $('<style id="extracted-value-style">.extracted-value { background-color: #4CAF50 !important; color: white !important; border: 2px solid #45a049 !important; }</style>').appendTo('head');
+    }
+    
+    // Visual feedback for extracted values
+    $('input').removeClass('extracted-value');
+    
+    // Fill the form fields based on what was extracted
+    const fieldMappings = {
+        'calories': 'input[name="calories"]',
+        'fats': 'input[name="fats"]',
+        'saturated_fat': 'input[name="saturated"]',
+        'carbohydrates': 'input[name="carbs"]',
+        'sugars': 'input[name="sugars"]',
+        'fiber': 'input[name="fiber"]',
+        'proteins': 'input[name="proteins"]',
+        'salt': 'input[name="salt"]'
+    };
+    
+    let extractedCount = 0;
+    let extractedFields = [];
+    
+    Object.keys(fieldMappings).forEach(key => {
+        if (nutritionData[key] !== undefined) {
+            const $field = $(fieldMappings[key]);
+            $field.val(nutritionData[key]).addClass('extracted-value');
+            extractedCount++;
+            extractedFields.push(key);
             
-            // Visual feedback for extracted values
-            $('input').removeClass('extracted-value');
-            
-            // Fill the form fields based on what was extracted
-            const fieldMappings = {
-                'calories': 'input[name="calories"]',
-                'fats': 'input[name="fats"]',
-                'saturated_fat': 'input[name="saturated"]',
-                'carbohydrates': 'input[name="carbs"]',
-                'sugars': 'input[name="sugars"]',
-                'fiber': 'input[name="fiber"]',
-                'proteins': 'input[name="proteins"]',
-                'salt': 'input[name="salt"]'
-            };
-            
-            let extractedCount = 0;
-            
-            Object.keys(fieldMappings).forEach(key => {
-                if (nutritionData[key] !== undefined) {
-                    $(fieldMappings[key]).val(nutritionData[key]).addClass('extracted-value');
-                    extractedCount++;
-                }
-            });
-            
-            // Set base grams to 100 if we detected per 100g values
-            if (nutritionData.is_per_100g) {
-                $('input[name="grams"]').val('100').addClass('extracted-value');
-            }
-            
-            // Close modal and show success with count of extracted values
-            $('#cameraModal').modal('hide');
-            
-            if (extractedCount > 0) {
-                showMessage(`Successfully extracted ${extractedCount} values from the nutrition label!`, 'success');
-            } else {
-                showMessage('Could not extract nutrition data. Please try again or enter manually.', 'error');
-            }
+            // Add a small animation
+            $field.fadeOut(100).fadeIn(200);
         }
+    });
+    
+    // Set base grams to 100 if we detected per 100g values
+    if (nutritionData.is_per_100g) {
+        $('input[name="grams"]').val('100').addClass('extracted-value');
+    }
+    
+    // Close modal and show success with count of extracted values
+    $('#cameraModal').modal('hide');
+    
+    if (extractedCount > 0) {
+        showMessage(`Successfully extracted ${extractedCount} values: ${extractedFields.join(', ')}`, 'success');
+        
+        // Remove highlight after 5 seconds
+        setTimeout(() => {
+            $('.extracted-value').removeClass('extracted-value');
+        }, 5000);
+    } else {
+        showMessage('Could not extract nutrition data. Please try again with a clearer image or enter manually.', 'error');
+    }
+}
 async function openCamera() {
     try {
         // Request camera access
