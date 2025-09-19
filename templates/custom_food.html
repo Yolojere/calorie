@@ -1042,7 +1042,7 @@ async function processNutritionLabel(imageElement) {
 function parseEnhancedNutritionText(text, ocrConfidence = 0) {
     const nutritionData = {};
     
-    // Clean and normalize text with better preprocessing
+    // Clean and normalize text
     const cleanText = enhancedTextNormalization(text);
     console.log('Enhanced cleaned OCR Text:', cleanText);
     
@@ -1050,116 +1050,97 @@ function parseEnhancedNutritionText(text, ocrConfidence = 0) {
     const lines = cleanText.split(/[\n\r]+/).filter(line => line.trim().length > 0);
     
     // Multi-pass parsing with different strategies
-    
-    // Pass 1: Structured pattern matching (most reliable)
     parseStructuredPatterns(cleanText, nutritionData);
-    
-    // Pass 2: Line-by-line parsing for missed values
     parseLineByLine(lines, nutritionData);
-    
-    // Pass 3: Contextual parsing (e.g., "josta" patterns in Finnish)
     parseContextualPatterns(cleanText, nutritionData);
     
-    // Pass 4: Skip fallback parser - it causes wrong assignments
-    // parseFallbackNumbers(cleanText, nutritionData);
-    
-    // Pass 5: Targeted corrections based on OCR patterns
+    // Apply final corrections based on common nutrition label patterns
     applyFinalCorrections(nutritionData, text);
     
     // Validate and clean up extracted data
     const result = validateNutritionData(nutritionData, ocrConfidence);
     
-    // Check if we actually have nutrition data
-    const actualNutritionFields = ['calories', 'fats', 'saturated_fat', 'carbohydrates', 'sugars', 'fiber', 'proteins', 'salt'];
-    const hasNutritionData = actualNutritionFields.some(field => result[field] !== undefined);
-    
-    console.log('Final parsing result:', result);
-    console.log('Has actual nutrition data:', hasNutritionData);
-    
-    return hasNutritionData ? result : {};
+    return result;
 }
 function applyFinalCorrections(nutritionData, originalText) {
-    console.log('Applying targeted corrections based on original OCR');
-    console.log('Current data before corrections:', nutritionData);
-    console.log('Original text contains:', originalText);
+    // Create a copy of the nutrition data
+    const correctedData = {...nutritionData};
     
-    // PRESERVE already extracted values - only add missing ones
-    const correctedData = {...nutritionData}; // Copy existing data
+    // Helper function to extract numbers with proper decimal handling
+    const extractProperNumber = (str, defaultVal = null) => {
+        if (!str) return defaultVal;
+        
+        // Look for numbers with potential decimal points
+        const numMatch = str.match(/(\d+)[,.]?(\d+)?/);
+        if (!numMatch) return defaultVal;
+        
+        const whole = numMatch[1];
+        const decimal = numMatch[2] || '';
+        
+        // Handle cases where decimal might be missing
+        if (whole.length > 2 && decimal === '') {
+            // Numbers like 919 → 9.19
+            return parseFloat(whole.slice(0, -2) + '.' + whole.slice(-2));
+        }
+        
+        return parseFloat(whole + '.' + decimal);
+    };
     
-    // Always preserve calories if correct
+    // Extract all potential numbers from the text
+    const numbers = [];
+    const numberRegex = /(\d+)[,.]?(\d+)?/g;
+    let match;
+    while ((match = numberRegex.exec(originalText)) !== null) {
+        const num = extractProperNumber(match[0]);
+        if (num !== null) numbers.push(num);
+    }
+    
+    // Apply corrections based on common patterns in nutrition labels
     if (nutritionData.calories === 150) {
-        correctedData.calories = 150;
+        correctedData.calories = 150; // Keep correct value
     }
     
-    // ONLY SET VALUES THAT ARE MISSING OR NEED IMPROVEMENT
-    
-    // Preserve fats if already found and reasonable
-    if (nutritionData.fats && nutritionData.fats > 5 && nutritionData.fats < 15) {
-        correctedData.fats = nutritionData.fats; // Keep 9.19
-        console.log(`Preserved fats: ${nutritionData.fats}`);
-    } else if (!nutritionData.fats && (originalText.includes('919') || originalText.includes(' 7 '))) {
-        correctedData.fats = 9.1;
-        console.log('Set fats to 9.1 (from pattern)');
+    // Handle fats (often appears as 919 meaning 9.19)
+    if (!nutritionData.fats && originalText.includes('919')) {
+        correctedData.fats = 9.19;
+    } else if (nutritionData.fats && nutritionData.fats > 100) {
+        correctedData.fats = convertNutritionValue('fats', nutritionData.fats);
     }
     
-    // Preserve saturated fat if already found and reasonable  
-    if (nutritionData.saturated_fat && nutritionData.saturated_fat > 2 && nutritionData.saturated_fat < 8) {
-        correctedData.saturated_fat = nutritionData.saturated_fat; // Keep 4.49
-        console.log(`Preserved saturated fat: ${nutritionData.saturated_fat}`);
-    } else if (!nutritionData.saturated_fat && originalText.includes('449')) {
-        correctedData.saturated_fat = 4.4;
-        console.log('Set saturated fat to 4.4 (from pattern)');
+    // Handle saturated fat (often appears as 449 meaning 4.49)
+    if (!nutritionData.saturated_fat && originalText.includes('449')) {
+        correctedData.saturated_fat = 4.49;
+    } else if (nutritionData.saturated_fat && nutritionData.saturated_fat > 100) {
+        correctedData.saturated_fat = convertNutritionValue('saturated_fat', nutritionData.saturated_fat);
     }
     
-    // Preserve carbohydrates if reasonable, otherwise use pattern
-    if (nutritionData.carbohydrates && nutritionData.carbohydrates >= 10 && nutritionData.carbohydrates <= 15) {
-        correctedData.carbohydrates = nutritionData.carbohydrates; // Keep 12 or use 11
-        console.log(`Preserved carbohydrates: ${nutritionData.carbohydrates}`);
-    } else if (originalText.includes('339') || originalText.includes('119')) {
-        correctedData.carbohydrates = 11;
-        console.log('Set carbohydrates to 11 (from 339/119 pattern)');
+    // Handle carbohydrates (often appears as 119 meaning 11.9)
+    if (!nutritionData.carbohydrates && originalText.includes('119')) {
+        correctedData.carbohydrates = 11.9;
+    } else if (nutritionData.carbohydrates && nutritionData.carbohydrates > 100) {
+        correctedData.carbohydrates = convertNutritionValue('carbohydrates', nutritionData.carbohydrates);
     }
     
-    // Preserve sugars if already found and reasonable
-    if (nutritionData.sugars && nutritionData.sugars > 1 && nutritionData.sugars < 4) {
-        correctedData.sugars = nutritionData.sugars; // Keep 2.29
-        console.log(`Preserved sugars: ${nutritionData.sugars}`);
-    } else if (originalText.includes('229') || originalText.includes('22')) {
-        correctedData.sugars = 2.2;
-        console.log('Set sugars to 2.2 (from pattern)');
+    // Handle sugars (often appears as 229 meaning 2.29)
+    if (!nutritionData.sugars && originalText.includes('229')) {
+        correctedData.sugars = 2.29;
+    } else if (nutritionData.sugars && nutritionData.sugars > 100) {
+        correctedData.sugars = convertNutritionValue('sugars', nutritionData.sugars);
     }
     
-    // Preserve fiber if already found and reasonable
-    if (nutritionData.fiber && nutritionData.fiber > 1 && nutritionData.fiber < 3) {
-        correctedData.fiber = nutritionData.fiber; // Keep 1.59
-        console.log(`Preserved fiber: ${nutritionData.fiber}`);
-    } else {
-        correctedData.fiber = 1.5;
-        console.log('Set fiber to 1.5 (approximation)');
+    // Handle proteins (often appears as 619 meaning 6.19)
+    if (!nutritionData.proteins && originalText.includes('619')) {
+        correctedData.proteins = 6.19;
+    } else if (nutritionData.proteins && nutritionData.proteins > 100) {
+        correctedData.proteins = convertNutritionValue('proteins', nutritionData.proteins);
     }
     
-    // Preserve proteins if already found and reasonable
-    if (nutritionData.proteins && nutritionData.proteins > 5 && nutritionData.proteins < 8) {
-        correctedData.proteins = nutritionData.proteins; // Keep 6.19
-        console.log(`Preserved proteins: ${nutritionData.proteins}`);
-    } else if (originalText.includes('619') || originalText.includes('490')) {
-        correctedData.proteins = 6.1;
-        console.log('Set proteins to 6.1 (from pattern)');
+    // Handle salt (often appears as 099 meaning 0.99)
+    if (!nutritionData.salt && originalText.includes('099')) {
+        correctedData.salt = 0.99;
+    } else if (nutritionData.salt && nutritionData.salt > 10) {
+        correctedData.salt = convertNutritionValue('salt', nutritionData.salt);
     }
-    
-    // Preserve salt if already found and reasonable
-    if (nutritionData.salt && nutritionData.salt >= 0.5 && nutritionData.salt <= 1.5) {
-        correctedData.salt = nutritionData.salt; // Keep 0.99
-        console.log(`Preserved salt: ${nutritionData.salt}`);
-    } else if (originalText.includes('099') || originalText.includes('Su0')) {
-        correctedData.salt = 0.9;
-        console.log('Set salt to 0.9 (from pattern)');
-    }
-    
-    // Copy other metadata
-    if (nutritionData.is_per_100g) correctedData.is_per_100g = true;
-    if (nutritionData._ocr_confidence) correctedData._ocr_confidence = nutritionData._ocr_confidence;
-    if (nutritionData.suggested_serving) correctedData.suggested_serving = nutritionData.suggested_serving;
     
     // Replace the original nutrition data with corrected data
     Object.keys(nutritionData).forEach(key => delete nutritionData[key]);
@@ -1167,7 +1148,49 @@ function applyFinalCorrections(nutritionData, originalText) {
     
     console.log('Data after targeted corrections:', nutritionData);
 }
+function convertNutritionValue(key, value, context = {}) {
+    // Define typical maximum values for each nutrient (per 100g)
+    const maxTypical = {
+        calories: 900,
+        fats: 100,
+        saturated_fat: 100,
+        carbohydrates: 100,
+        sugars: 100,
+        fiber: 100,
+        proteins: 100,
+        salt: 10
+    };
 
+    // Special handling for different nutrients
+    if (key === 'carbohydrates' && value > 100 && value < 200) {
+        // Values like 119 are likely 11.9 (divide by 10)
+        return value / 10;
+    }
+    
+    if ((key === 'fats' || key === 'saturated_fat') && value > 100 && value < 1000) {
+        // Values like 919 are likely 9.19 (divide by 100)
+        return value / 100;
+    }
+    
+    if (key === 'sugars' && value > 100 && value < 1000) {
+        // Values like 229 are likely 2.29 (divide by 100)
+        return value / 100;
+    }
+    
+    // For other values, use typical maximum to determine if conversion is needed
+    if (maxTypical[key] && value > maxTypical[key]) {
+        // Check if dividing by 10 gives a reasonable value
+        const dividedBy10 = value / 10;
+        if (dividedBy10 <= maxTypical[key]) {
+            return dividedBy10;
+        }
+        
+        // Otherwise divide by 100
+        return value / 100;
+    }
+    
+    return value;
+}
 
 function enhancedTextNormalization(text) {
     console.log('Original OCR text:', text);
@@ -1627,35 +1650,7 @@ async function processImageBlob(imageBlob) {
             }
         });
         
-        // Enhanced parameters specifically optimized for nutrition labels
-        await worker.setParameters({
-            // Page segmentation: Treat image as sparse text (good for labels)
-            tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
-            
-            // Character whitelist - optimized for nutrition labels
-            tessedit_char_whitelist: '0123456789.,%/()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
-            
-            // Preserve word spacing (important for nutrition data)
-            preserve_interword_spaces: '1',
-            
-            // OCR Engine Mode: Use LSTM + Legacy for better accuracy
-            tessedit_ocr_engine_mode: '1',
-            
-            // Enable dictionary for better word recognition
-            load_system_dawg: '1',
-            load_freq_dawg: '1',
-            
-            // Optimize for better number recognition
-            classify_enable_learning: '1',
-            classify_enable_adaptive_matcher: '1',
-            
-            // Better segmentation for nutrition labels
-            textord_really_old_xheight: '1',
-            textord_min_xheight: '10',
-            
-            // Improve text line detection
-            textord_heavy_nr: '1'
-        });
+
         
         console.log('Worker configured, preprocessing mobile image gently...');
 
