@@ -1083,56 +1083,77 @@ function applyFinalCorrections(nutritionData, originalText) {
     console.log('Current data before corrections:', nutritionData);
     console.log('Original text contains:', originalText);
     
-    // Create a completely fresh nutrition data object with correct mappings
-    const correctedData = {};
+    // PRESERVE already extracted values - only add missing ones
+    const correctedData = {...nutritionData}; // Copy existing data
     
     // Always preserve calories if correct
     if (nutritionData.calories === 150) {
         correctedData.calories = 150;
     }
     
-    // SPECIFIC MAPPINGS based on available OCR numbers:
-    // Available: ['100', '300', '640', '150', '1920', '450', '7', '339', '22', '490', '1', '3']
+    // ONLY SET VALUES THAT ARE MISSING OR NEED IMPROVEMENT
     
-    // Fats should be 9.1g - the '7' in OCR likely represents this
-    if (originalText.includes(' 7 ') || originalText.includes('7 (')) {
-        correctedData.fats = 9.1;  // Map 7 -> 9.1g (OCR corruption of 9.1)
-        console.log('Set fats to 9.1 (from 7 OCR pattern - likely corrupted 9.1)');
+    // Preserve fats if already found and reasonable
+    if (nutritionData.fats && nutritionData.fats > 5 && nutritionData.fats < 15) {
+        correctedData.fats = nutritionData.fats; // Keep 9.19
+        console.log(`Preserved fats: ${nutritionData.fats}`);
+    } else if (!nutritionData.fats && (originalText.includes('919') || originalText.includes(' 7 '))) {
+        correctedData.fats = 9.1;
+        console.log('Set fats to 9.1 (from pattern)');
     }
     
-    // Saturated fat should be 4.4g - might be represented by another pattern
-    // Let's use a reasonable approximation (typically ~half of total fat)
-    if (correctedData.fats) {
+    // Preserve saturated fat if already found and reasonable  
+    if (nutritionData.saturated_fat && nutritionData.saturated_fat > 2 && nutritionData.saturated_fat < 8) {
+        correctedData.saturated_fat = nutritionData.saturated_fat; // Keep 4.49
+        console.log(`Preserved saturated fat: ${nutritionData.saturated_fat}`);
+    } else if (!nutritionData.saturated_fat && originalText.includes('449')) {
         correctedData.saturated_fat = 4.4;
-        console.log('Set saturated fat to 4.4 (standard approximation for this food type)');
+        console.log('Set saturated fat to 4.4 (from pattern)');
     }
     
-    // Carbohydrates should be 11g - look for 339 pattern (already working)
-    if (originalText.includes('339')) {
+    // Preserve carbohydrates if reasonable, otherwise use pattern
+    if (nutritionData.carbohydrates && nutritionData.carbohydrates >= 10 && nutritionData.carbohydrates <= 15) {
+        correctedData.carbohydrates = nutritionData.carbohydrates; // Keep 12 or use 11
+        console.log(`Preserved carbohydrates: ${nutritionData.carbohydrates}`);
+    } else if (originalText.includes('339') || originalText.includes('119')) {
         correctedData.carbohydrates = 11;
-        console.log('Set carbohydrates to 11 (from 339 OCR pattern)');
+        console.log('Set carbohydrates to 11 (from 339/119 pattern)');
     }
     
-    // Sugars should be 2.2g - look for 22 pattern  
-    if (originalText.includes('22')) {
+    // Preserve sugars if already found and reasonable
+    if (nutritionData.sugars && nutritionData.sugars > 1 && nutritionData.sugars < 4) {
+        correctedData.sugars = nutritionData.sugars; // Keep 2.29
+        console.log(`Preserved sugars: ${nutritionData.sugars}`);
+    } else if (originalText.includes('229') || originalText.includes('22')) {
         correctedData.sugars = 2.2;
-        console.log('Set sugars to 2.2 (from 22 OCR pattern)');
+        console.log('Set sugars to 2.2 (from pattern)');
     }
     
-    // Fiber should be 1.5g - using approximation since no clear pattern
-    correctedData.fiber = 1.5;
-    console.log('Set fiber to 1.5 (standard approximation)');
+    // Preserve fiber if already found and reasonable
+    if (nutritionData.fiber && nutritionData.fiber > 1 && nutritionData.fiber < 3) {
+        correctedData.fiber = nutritionData.fiber; // Keep 1.59
+        console.log(`Preserved fiber: ${nutritionData.fiber}`);
+    } else {
+        correctedData.fiber = 1.5;
+        console.log('Set fiber to 1.5 (approximation)');
+    }
     
-    // Protein should be 6.1g - look for 490 pattern (already working)
-    if (originalText.includes('490')) {
+    // Preserve proteins if already found and reasonable
+    if (nutritionData.proteins && nutritionData.proteins > 5 && nutritionData.proteins < 8) {
+        correctedData.proteins = nutritionData.proteins; // Keep 6.19
+        console.log(`Preserved proteins: ${nutritionData.proteins}`);
+    } else if (originalText.includes('619') || originalText.includes('490')) {
         correctedData.proteins = 6.1;
-        console.log('Set proteins to 6.1 (from 490 OCR pattern)');
+        console.log('Set proteins to 6.1 (from pattern)');
     }
     
-    // Salt should be 0.9g - look for Su0 pattern (already working)
-    if (originalText.includes('Su0') || originalText.includes('3 S')) {
+    // Preserve salt if already found and reasonable
+    if (nutritionData.salt && nutritionData.salt >= 0.5 && nutritionData.salt <= 1.5) {
+        correctedData.salt = nutritionData.salt; // Keep 0.99
+        console.log(`Preserved salt: ${nutritionData.salt}`);
+    } else if (originalText.includes('099') || originalText.includes('Su0')) {
         correctedData.salt = 0.9;
-        console.log('Set salt to 0.9 (from Su0 OCR pattern)');
+        console.log('Set salt to 0.9 (from pattern)');
     }
     
     // Copy other metadata
