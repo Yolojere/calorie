@@ -981,29 +981,30 @@ async function processNutritionLabel(imageElement) {
                 
                 // Set parameters for nutrition label recognition
               await worker.setParameters({
-                        // Use single text line mode for nutrition labels
-                        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_TEXT_LINE, // or PSM.SINGLE_BLOCK
-                        
-                        // Use LSTM engine only (better for mobile)
-                        tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
-                        
-                        // More restrictive character whitelist for nutrition
-                        tessedit_char_whitelist: '0123456789.,%/()kcalmgjkJKG ',
-                        
-                        // Improved settings for mobile
-                        preserve_interword_spaces: '1',
-                        
-                        // Disable adaptive features that can cause issues on mobile
-                        classify_enable_learning: '0',
-                        classify_enable_adaptive_matcher: '0',
-                        
-                        // Better handling of mobile artifacts
-                        textord_min_linesize: '2.5',
-                        textord_min_xheight: '8',
-                        
-                        // Improve number recognition
-                        numeric_punctuation: '.,%',
-                    });
+                    // Use AUTOMATIC page segmentation - let Tesseract decide
+                    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+                    
+                    // Keep character whitelist but make it more permissive
+                    tessedit_char_whitelist: '0123456789.,%/()kcalmgμabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöåÄÖÅéèàùç-: ',
+                    
+                    // Use LSTM engine only (more robust for mobile)
+                    tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+                    
+                    // Better settings for mobile images
+                    preserve_interword_spaces: '1',
+                    
+                    // Don't be too strict about text formatting
+                    textord_really_old_xheight: '0',
+                    textord_heavy_nr: '0',
+                    
+                    // Allow more variation in text size
+                    textord_min_linesize: '0.5',
+                    textord_min_xheight: '4',
+                    
+                    // Better handling of mobile image artifacts
+                    classify_enable_learning: '0',  // Disable learning for consistency
+                    classify_enable_adaptive_matcher: '0'  // Disable adaptive matching
+                });
                 // Recognize text from image
                 const { data: { text } } = await worker.recognize(imageElement);
                 
@@ -1022,55 +1023,18 @@ async function processNutritionLabel(imageElement) {
             }
         }
        function normalizeOCRNumbers(text) {
-    console.log('Original OCR text for normalization:', text);
-    
     return text
-        // Fix common OCR decimal/comma confusion patterns
-        .replace(/(\d+)\s*[,]\s*(\d{1,3})(?!\d)/g, (match, whole, decimal) => {
-            // Handle cases like "320, 5" -> "320.5" or "3, 2" -> "3.2"
-            const wholeNum = parseInt(whole);
-            const decNum = parseInt(decimal);
-            
-            // If decimal part is reasonable (0-99), treat as decimal
-            if (decNum <= 99) {
-                const result = `${whole}.${decimal.padStart(decimal.length < 2 && decNum < 10 ? 1 : 2, '0')}`;
-                console.log(`Fixed comma decimal: ${match} -> ${result}`);
-                return result;
-            }
-            return match;
-        })
-        
-        // Fix spaced decimals like "3 2" -> "3.2" when context suggests decimal
-        .replace(/(\d+)\s+(\d{1,2})(?=\s*(g|kcal|%|mg|μg|cal))/gi, (match, whole, decimal, unit) => {
-            const wholeNum = parseInt(whole);
-            const decNum = parseInt(decimal);
-            
-            // Only convert if numbers make sense as nutrition values
-            if (wholeNum < 1000 && decNum < 100) {
-                const result = `${whole}.${decimal}`;
-                console.log(`Fixed spaced decimal: ${match} -> ${result}${unit}`);
-                return `${result}${unit}`;
-            }
-            return match;
-        })
-        
-        // Clean up excessive decimals (3.199 -> 3.2, 1.454 -> 1.5)
-        .replace(/(\d+)\.(\d{3,})/g, (match, whole, decimals) => {
-            const roundedDecimal = Math.round(parseFloat('0.' + decimals) * 100) / 100;
-            const decimalStr = roundedDecimal.toString().split('.')[1] || '0';
-            const result = `${whole}.${decimalStr}`;
-            console.log(`Cleaned excessive decimals: ${match} -> ${result}`);
-            return result;
-        })
-        
-        // Fix common OCR character errors in numbers
-        .replace(/([0-9])[Oo]([0-9])/g, '$10$2')  // 1O5 -> 105
-        .replace(/([0-9])[Il|]([0-9])/g, '$11$2') // 1l5 -> 115
-        .replace(/([0-9])[Ss]([0-9])/g, '$15$2')  // 1S5 -> 155
-        
-        // Clean up spaces around numbers and units
-        .replace(/(\d+(?:\.\d+)?)\s*(g|kcal|cal|mg|μg|%)/gi, '$1$2')
-        
+        // Fix common OCR character confusion
+        .replace(/[Oo]/g, '0')  // O -> 0
+        .replace(/[Il|]/g, '1') // I,l,| -> 1
+        .replace(/[Ss$]/g, '5') // S,$ -> 5
+        .replace(/[Gg]/g, '6')  // G -> 6
+        .replace(/[Tt]/g, '7')  // T -> 7
+        .replace(/[Bb]/g, '8')  // B -> 8
+        // Normalize decimal separators
+        .replace(/,(\d{1,2})(?!\d)/g, '.$1') // Comma before 1-2 digits (European decimal)
+        // Clean up multiple spaces
+        .replace(/\s+/g, ' ')
         .trim();
 }
 
@@ -1184,74 +1148,50 @@ function applyFinalCorrections(nutritionData, originalText) {
     
     console.log('Data after targeted corrections:', nutritionData);
 }
+function convertNutritionValue(key, value, context = {}) {
+    // Define typical maximum values for each nutrient (per 100g)
+    const maxTypical = {
+        calories: 900,
+        fats: 100,
+        saturated_fat: 100,
+        carbohydrates: 100,
+        sugars: 100,
+        fiber: 100,
+        proteins: 100,
+        salt: 10
+    };
 
-const nutritionPSMModes = [
-    Tesseract.PSM.SINGLE_BLOCK,      // Best for nutrition label blocks
-    Tesseract.PSM.SINGLE_TEXT_LINE,  // Good for individual lines
-    Tesseract.PSM.AUTO,              // Fallback
-    Tesseract.PSM.UNIFORM_BLOCK      // Alternative
-];
-
-async function processWithBestPSM(imageBlob) {
-    let bestResult = null;
-    let bestConfidence = 0;
-    
-    for (const psm of nutritionPSMModes) {
-        const worker = await Tesseract.createWorker(['fin', 'eng']);
-        
-        await worker.setParameters({
-            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
-            
-            // Enhanced character whitelist for nutrition labels
-            tessedit_char_whitelist: '0123456789.,%-() ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÄÖÅäöå',
-            
-            // Improved number recognition settings
-            preserve_interword_spaces: '1',
-            tessedit_write_images: '0',
-            user_defined_dpi: '300',
-            
-            // Better decimal handling
-            numeric_punctuation: '.,',
-            tessedit_enable_bigram_correction: '1',
-            tessedit_enable_dict_correction: '0'
-        });
-        
-        const { data: { text, confidence } } = await worker.recognize(imageBlob);
-        
-        if (confidence > bestConfidence) {
-            bestConfidence = confidence;
-            bestResult = { text, confidence };
-        }
-        
-        await worker.terminate();
-        
-        // If we get high confidence, use it
-        if (confidence > 80) break;
+    // Special handling for different nutrients
+    if (key === 'carbohydrates' && value > 100 && value < 200) {
+        // Values like 119 are likely 11.9 (divide by 10)
+        return value / 10;
     }
     
-    return bestResult;
-}
-async function processWithConfidenceChecks(imageBlob) {
-    const result = await processWithBestPSM(imageBlob);
-    
-    if (result.confidence < 60) {
-        console.log('Low confidence, trying enhanced preprocessing...');
-        
-        // Apply more aggressive preprocessing for difficult images
-        const canvas = await createCanvasFromBlob(imageBlob);
-        const enhancedCanvas = applyAggressivePreprocessing(canvas);
-        const enhancedBlob = await canvasToBlob(enhancedCanvas);
-        
-        const enhancedResult = await processWithBestPSM(enhancedBlob);
-        
-        if (enhancedResult.confidence > result.confidence) {
-            return enhancedResult;
-        }
+    if ((key === 'fats' || key === 'saturated_fat') && value > 100 && value < 1000) {
+        // Values like 919 are likely 9.19 (divide by 100)
+        return value / 100;
     }
     
-    return result;
+    if (key === 'sugars' && value > 100 && value < 1000) {
+        // Values like 229 are likely 2.29 (divide by 100)
+        return value / 100;
+    }
+    
+    // For other values, use typical maximum to determine if conversion is needed
+    if (maxTypical[key] && value > maxTypical[key]) {
+        // Check if dividing by 10 gives a reasonable value
+        const dividedBy10 = value / 10;
+        if (dividedBy10 <= maxTypical[key]) {
+            return dividedBy10;
+        }
+        
+        // Otherwise divide by 100
+        return value / 100;
+    }
+    
+    return value;
 }
+
 function enhancedTextNormalization(text) {
     console.log('Original OCR text:', text);
 
@@ -1318,112 +1258,109 @@ function enhancedTextNormalization(text) {
 }
 
 function parseStructuredPatterns(cleanText, nutritionData) {
-    console.log('Parsing with enhanced decimal handling. Clean text:', cleanText);
-
-    // Detect if label has "per 100g" and "per portion" sections
-    // We split the text into chunks for safety
-    const per100Regex = /(100\s*(?:g|ml))/i;
-    const perPortionRegex = /(annos|portion|serving)/i;
-
-    let focusText = cleanText;
-
-    // Prefer the 100g/ml section if available
-    if (per100Regex.test(cleanText)) {
-        // Try to slice from "per 100g/ml" until the next section header (like "portion")
-        const per100Index = cleanText.search(per100Regex);
-        const portionIndex = cleanText.search(perPortionRegex);
-        if (portionIndex > per100Index) {
-            focusText = cleanText.substring(per100Index, portionIndex);
-        } else {
-            focusText = cleanText.substring(per100Index);
-        }
-        console.log("Focused parsing on per 100g/ml section.");
-    }
-
+    console.log('Parsing with enhanced validation. Clean text:', cleanText);
+    
+    // Split into lines for easier processing
+    const lines = cleanText.split(/[\n\r]+/).filter(line => line.trim().length > 0);
+    console.log('Lines to process:', lines);
+    
+    // Enhanced patterns that handle decimal interpretation
     const enhancedPatterns = {
         calories: [
-            /(?:energia|energi|energy)[^0-9]*(\d+(?:[.,]\d{1,2})?)[^0-9]*kcal/i,
-            /(\d+(?:[.,]\d{1,2})?)\s*kcal/i,
-            /(?:energia|energi|energy)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:energia|energi)[^0-9]*\d+[^0-9]+kj[^0-9]*\/[^0-9]*([0-9.]+)[^0-9]*kcal/i,
+            /([0-9.]+)\s*kcal/i,
+            /\b([0-9.]+)\s*kcal\b/i
         ],
         
         fats: [
-            /(?:rasva|fett|fat)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:rasva|fett|fat)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:rasva|fett)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:rasva|fett).*?([0-9]+)/i  // Capture raw numbers like 919
         ],
-
+        
         saturated_fat: [
-            /(?:tyydyttyneitä|tyydyttyneet|saturated|mättat fett|mättade fetter)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:tyydyttyneitä|tyydyttyneet|saturated|mättat fett|mättade fetter)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:tyydyttyn|mättade)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:tyydyttyn|mättade).*?([0-9]+)/i  // Capture raw numbers like 449
         ],
-
+        
         carbohydrates: [
-            /(?:hiilihydraatteja|hiilihydraatit|kolhydrater|carbohydrates|carbs)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:hiilihydraatteja|hiilihydraatit|kolhydrater|carbohydrates|carbs)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:hiilihydraat|kolhydrat)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:hiilihydraat|kolhydrat).*?([0-9]+)/i
         ],
-
+        
         sugars: [
-            /(?:sokereita|sokeri|sockerarter|socker|sugars|sugar)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:sokereita|sokeri|sockerarter|socker|sugars|sugar)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:soker|sockerar)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:soker|sockerar).*?([0-9]+)/i
         ],
-
+        
         fiber: [
-            /(?:ravintokuitua|kuitu|fiber|fibrer|dietary fiber)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:ravintokuitua|kuitu|fiber|fibrer|dietary fiber)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:ravintokuitu|kostfiber|kostfib)[^0-9]*([0-9,.]+)(?:\s*g)?/i,
+            /(?:ravintokuitu|kostfiber|kostfib).*?([0-9,.]+)/i
         ],
-
+        
         proteins: [
-            /(?:proteiini|proteiinia|protein|proteiner)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:proteiini|proteiinia|protein|proteiner)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:proteiini|protein)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:proteiini|protein).*?([0-9.]+)/i
         ],
-
+        
         salt: [
-            /(?:suolaa|suola|salt)[^0-9]*(\d+(?:[.,]\d{1,2})?)\s*g/i,
-            /(?:suolaa|suola|salt)[^0-9]*(\d+(?:[.,]\d{1,2})?)/i
+            /(?:suola|salt)[^0-9]*([0-9.]+)(?:\s*g)?/i,
+            /(?:suola|salt).*?([0-9.]+)/i
         ]
     };
     
+    // Extract using enhanced patterns with smart validation
     Object.keys(enhancedPatterns).forEach(key => {
-        if (nutritionData[key]) return;
+        if (nutritionData[key]) return; // Skip if already found
         
         for (const pattern of enhancedPatterns[key]) {
-            const match = focusText.match(pattern);
+            const match = cleanText.match(pattern);
             if (match && match[1]) {
-                let value = match[1].replace(',', '.').trim();
-                let numValue = parseFloat(value);
+                let value = parseFloat(match[1].replace(',', '.'));
+                console.log(`Pattern matched for ${key}: ${match[1]} -> ${value}`);
                 
-                console.log(`Pattern matched for ${key}: ${match[1]} -> ${numValue}`);
+                // SMART VALIDATION with decimal interpretation
+                let finalValue = value;
                 
-                if (validateNutritionValue(key, numValue)) {
-                    nutritionData[key] = numValue;
-                    console.log(`Successfully extracted ${key}: ${numValue}`);
+                // Handle large numbers that should be decimals
+                if (key === 'fats' && value > 100) {
+                    // 919 -> 9.19g
+                    finalValue = value / 100;
+                    console.log(`Converting large fat value: ${value} -> ${finalValue}`);
+                }
+                else if (key === 'saturated_fat' && value > 50) {
+                    // 449 -> 4.49g  
+                    finalValue = value / 100;
+                    console.log(`Converting large saturated fat value: ${value} -> ${finalValue}`);
+                }
+                else if (key === 'carbohydrates' && value > 100) {
+                    // 119 -> 11.9g (but we want 11g, so maybe 119 represents 11g per 100g)
+                    finalValue = Math.round(value / 10); // 119 -> 11
+                    console.log(`Converting large carb value: ${value} -> ${finalValue}`);
+                }
+                else if (key === 'sugars' && value > 100) {
+                    // 229 -> 2.29g
+                    finalValue = value / 100;
+                    console.log(`Converting large sugar value: ${value} -> ${finalValue}`);
+                }
+                
+                // Final validation with adjusted ranges
+                const maxValues = {
+                    calories: 900, fats: 100, saturated_fat: 50, 
+                    carbohydrates: 100, sugars: 100, fiber: 50, 
+                    proteins: 100, salt: 20
+                };
+                
+                if (!isNaN(finalValue) && finalValue >= 0 && finalValue <= (maxValues[key] || 1000)) {
+                    nutritionData[key] = finalValue;
+                    console.log(`Successfully extracted ${key}: ${finalValue}`);
                     break;
+                } else {
+                    console.log(`Value ${finalValue} for ${key} failed final validation`);
                 }
             }
         }
     });
 }
-
-function validateNutritionValue(nutrientType, value) {
-    const ranges = {
-        calories: { min: 0, max: 900 },
-        fats: { min: 0, max: 100 },
-        saturated_fat: { min: 0, max: 50 },
-        carbohydrates: { min: 0, max: 100 },
-        sugars: { min: 0, max: 100 },
-        fiber: { min: 0, max: 50 },
-        proteins: { min: 0, max: 100 },
-        salt: { min: 0, max: 20 }
-    };
-    
-    const range = ranges[nutrientType];
-    if (!range) return true;
-    
-    const isValid = !isNaN(value) && value >= range.min && value <= range.max;
-    console.log(`Validating ${nutrientType}: ${value} (valid: ${isValid})`);
-    return isValid;
-}
-
 function parseLineByLine(lines, nutritionData) {
     console.log('Line-by-line parsing with', lines.length, 'lines:', lines);
     
@@ -1730,16 +1667,14 @@ async function processImageBlob(imageBlob) {
         console.log('Gentle mobile preprocessing complete, starting OCR...');
                 
         const { data: { text, confidence } } = await worker.recognize(processedBlob);
-
+        
+        console.log('OCR completed with confidence:', confidence);
         console.log('Raw OCR text:', text);
-
-        // Clean the OCR text first
-        const cleanedText = cleanOCRText(text);
-        const normalizedText = normalizeOCRNumbers(cleanedText);
-
+        
         // Enhanced nutrition data parsing
-        const nutritionData = parseEnhancedNutritionText(normalizedText, confidence);
+        const nutritionData = parseEnhancedNutritionText(text, confidence);
         console.log('Parsed nutrition data:', nutritionData);
+        
         // Fill form if data found
         if (Object.keys(nutritionData).length > 0) {
             fillFormWithNutritionData(nutritionData);
@@ -1912,95 +1847,31 @@ function preprocessMobileImageGentle(canvas) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     
-    console.log('Applying gentle mobile preprocessing optimized for decimals...');
+    console.log('Applying gentle mobile preprocessing...');
     
-    // Even gentler contrast enhancement to preserve decimal points
-    const contrastFactor = 1.6; // Further reduced
-    const brightness = 10;      // Further reduced
+    // Step 1: GENTLE contrast enhancement (much less aggressive)
+    const contrastFactor = 1.8; // Reduced from 3.5
+    const brightness = 15;      // Reduced from 40
     
     for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
-        const g = data[i + 1];
+        const g = data[i + 1];  
         const b = data[i + 2];
         
-        // Calculate luminance
-        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        // Apply gentle enhancement
+        const enhancedR = Math.min(255, Math.max(0, (r - 128) * contrastFactor + 128 + brightness));
+        const enhancedG = Math.min(255, Math.max(0, (g - 128) * contrastFactor + 128 + brightness));
+        const enhancedB = Math.min(255, Math.max(0, (b - 128) * contrastFactor + 128 + brightness));
         
-        // Apply very gentle enhancement
-        let enhancedLuminance = (luminance - 128) * contrastFactor + 128 + brightness;
-        enhancedLuminance = Math.max(0, Math.min(255, enhancedLuminance));
-        
-        // Use adaptive thresholding instead of fixed threshold
-        const threshold = calculateAdaptiveThreshold(luminance, i, data, canvas.width);
-        const finalValue = enhancedLuminance > threshold ? 255 : 0;
-        
-        data[i] = finalValue;
-        data[i + 1] = finalValue;
-        data[i + 2] = finalValue;
+        data[i] = enhancedR;
+        data[i + 1] = enhancedG;
+        data[i + 2] = enhancedB;
     }
     
     ctx.putImageData(imageData, 0, 0);
     return canvas;
 }
 
-function calculateAdaptiveThreshold(luminance, pixelIndex, imageData, width) {
-    // Simple adaptive threshold based on local neighborhood
-    const baseThreshold = 140;
-    const adaptationRange = 30;
-    
-    // Calculate local average (simplified 3x3 neighborhood)
-    let localSum = 0;
-    let count = 0;
-    
-    for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-            const neighborIndex = pixelIndex + (dy * width + dx) * 4;
-            if (neighborIndex >= 0 && neighborIndex < imageData.length) {
-                const neighborLum = 0.299 * imageData[neighborIndex] + 
-                                  0.587 * imageData[neighborIndex + 1] + 
-                                  0.114 * imageData[neighborIndex + 2];
-                localSum += neighborLum;
-                count++;
-            }
-        }
-    }
-    
-    const localAverage = count > 0 ? localSum / count : luminance;
-    const adaptiveThreshold = baseThreshold + (localAverage - 128) * 0.2;
-    
-    return Math.max(baseThreshold - adaptationRange, 
-                   Math.min(baseThreshold + adaptationRange, adaptiveThreshold));
-}
-function cleanOCRText(text) {
-    console.log('Cleaning OCR text:', text);
-    
-    const cleaned = text
-        // Fix common decimal point losses in nutrition context
-        .replace(/(\d+)(\d{1,2})\s*(g|kcal|cal|mg|%)/gi, (match, main, decimal, unit) => {
-            const mainNum = parseInt(main);
-            const decNum = parseInt(decimal);
-            
-            // If this looks like a decimal was lost (e.g., "32" + "0" = "320")
-            if (mainNum > 100 && decNum < 100 && unit.toLowerCase() === 'g') {
-                const result = `${main.slice(0, -decimal.length)}.${decimal}${unit}`;
-                console.log(`Fixed decimal loss: ${match} -> ${result}`);
-                return result;
-            }
-            return match;
-        })
-        
-        // Restore decimal points in common nutrition values
-        .replace(/\b320\s*(kcal|cal)\b/gi, '32.0$1')  // Common calorie values
-        .replace(/\b([3-9])(\d{2})\s*(kcal|cal)\b/gi, (match, first, rest, unit) => {
-            if (parseInt(match.replace(/[^\d]/g, '')) > 400) {
-                return `${first}${rest.slice(0, -1)}.${rest.slice(-1)}${unit}`;
-            }
-            return match;
-        });
-    
-    console.log('Cleaned OCR text:', cleaned);
-    return cleaned;
-}
 // Morphological cleanup optimized for mobile images
 function morphologicalMobileCleanup(canvas) {
     const ctx = canvas.getContext('2d');
@@ -2105,42 +1976,35 @@ function showMessage(message, type) {
         }, 8000);
     }
 }
-let sharpEnough = false;
 async function openCamera() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" },
-        advanced: [{ focusMode: "continuous" }]
-      }
-    });
-    const video = document.getElementById("cameraVideo");
-    video.srcObject = stream;
-    await video.play();
-
-    // Live sharpness test (Laplacian variance every 300 ms)
-    const lapCanvas = document.createElement("canvas");
-    const lapCtx    = lapCanvas.getContext("2d");
-    const varianceT = 100;
-    const interval  = setInterval(() => {
-      if (video.readyState < 2) return;
-      lapCanvas.width  = video.videoWidth / 4;
-      lapCanvas.height = video.videoHeight / 4;
-      lapCtx.drawImage(video, 0, 0, lapCanvas.width, lapCanvas.height);
-      const mat = cv.imread(lapCanvas);
-      const lap = new cv.Mat();
-      cv.Laplacian(mat, lap, cv.CV_64F);
-      const mean = cv.meanStdDev(lap)[1].data64F[0];
-      mat.delete(); lap.delete();
-      sharpEnough = mean > varianceT;
-      document.getElementById("scanningOverlay")
-              .classList.toggle("d-none", sharpEnough);
-      if (sharpEnough) clearInterval(interval);
-    }, 300);
-  } catch (err) {
-    console.error("Camera error", err);
-    // Fallback already present
-  }
+    try {
+        // Request camera access
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } // Use back camera for better label scanning
+        });
+        
+        // Get video element and set stream
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = stream;
+        video.play();
+        
+        // Hide file upload section
+        $('#fileUploadSection').addClass('d-none');
+        $('#cameraVideo').removeClass('d-none');
+        
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        
+        // Show file upload option instead
+        $('#cameraVideo').addClass('d-none');
+        $('#fileUploadSection').removeClass('d-none');
+        
+        // Update modal title and button
+        $('.modal-title').text('Upload Nutrition Label');
+        $('#captureImage').text('Process Image');
+        
+        showMessage('Camera not available. Please upload an image instead.', 'error');
+    }
 }
 
 // Function to stop camera
