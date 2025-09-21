@@ -623,16 +623,23 @@ function showWorkoutResults(comparisonData, achievements) {
         </div>
     `;
     
-    // Close button
-    resultsHTML += `
+    // Close button <button LETS USE THIS IN FUTURE FOR SHARING !!! class="btn-results btn-primary-results" onclick="shareWorkout()">${t('shareResults')}</button> 
+            resultsHTML += `
             </div>
             <div class="results-actions">
-                <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">${t('close')}</button>
-                <button class="btn-results btn-primary-results" onclick="shareWorkout()">${t('shareResults')}</button>
+             
+                <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">
+                    ${t('close')}
+                </button>
+                <button 
+                    class="btn-results btn-primary-results" 
+                    onclick="openCopyWorkoutModal()">
+                    ${t('copy')}
+                </button>
             </div>
         </div>
-    `;
-    
+            `;
+                
     $('body').append(resultsHTML);
     
     // Auto-hide after 15 seconds if user doesn't interact
