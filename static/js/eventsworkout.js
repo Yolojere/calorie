@@ -35,8 +35,9 @@ function setupEventListeners() {
 
     // Copy workout
     $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
-        let activeDate = $(".workout-date.active").data("date") || $("#mobile-date-selector").val();
-        if (activeDate) currentSelectedDate = activeDate; 
+        // Capture the source date directly from the active element
+        const sourceDate = $(".workout-date.active").data("date");
+        $("#copyWorkoutModal").data("source-date", sourceDate);
         populateDateOptions();
         $("#copyWorkoutModal").modal("show");
     });
@@ -51,7 +52,14 @@ function setupEventListeners() {
         $("#save-template-mobile-btn").click(saveTemplate);
     }
 }
-
+function openCopyWorkoutModal() {
+  hideWorkoutResults();
+  // ensure currentSelectedDate is set appropriately
+  const activeDate = $(".workout-date.active").data("date");
+  currentSelectedDate = activeDate;
+  populateDateOptions();
+  $("#copyWorkoutModal").modal("show");
+}
 function setupRirDropdowns() {
     // Hide dropdown when clicking elsewhere
     $(document).click(function() {
