@@ -354,7 +354,7 @@ function copyWorkoutToDate(targetDate) {
     }
     isCopyingWorkout = true;
 
-    const sourceDate = currentSelectedDate;
+    const sourceDate = $("#copyWorkoutModal").data("source-date");
     if (sourceDate === targetDate) {
         alert("Ei pysty kopioimaan samalle päivälle!");
         isCopyingWorkout = false;
