@@ -30,6 +30,8 @@ import base64
 import requests
 from flask_wtf.csrf import CSRFProtect
 from authlib.integrations.flask_client import OAuth
+from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
+from paddleocr import PaddleOCR
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
@@ -99,6 +101,8 @@ github = oauth.register(
     api_base_url='https://api.github.com/',
     client_kwargs={'scope': 'user:email'}
 )
+# Initialize scanner once at startup
+nutrition_scanner = EnhancedSimpleScanner()
 # Update the normalize_key function
 def normalize_key(key):
     """Normalize food key while preserving non-ASCII characters"""
@@ -3866,7 +3870,44 @@ def oauth_authorize(provider):
     except Exception as e:
         flash(f'OAuth kirjautuminen epäonnistui: {str(e)}', 'danger')
         return redirect(url_for('login'))
+    
+@app.route('/scan_nutrition_label', methods=['POST'])
+def scan_nutrition_label():
+    try:
+        # Get image data
+        image_data = None
+        if 'file' in request.files and request.files['file'].filename != '':
+            image_data = request.files['file'].read()
+        elif 'image' in request.form:
+            base64_data = request.form['image']
+            if base64_data.startswith('data:'):
+                base64_data = base64_data.split(',')  
+            image_data = base64.b64decode(base64_data)
 
+        if not image_data:
+            return jsonify({'success': False, 'error': 'No image provided'}), 400
+
+        # Scan with EasyOCR
+        result = nutrition_scanner.scan_nutrition_label(image_data)
+
+        if result['success']:
+            # Format for your form
+            form_data = {}
+            for field in ['calories', 'fats', 'saturated', 'carbs', 'fiber', 'proteins', 'salt', 'sugars']:
+                if field in result['nutrition_data']:
+                    form_data[field] = round(result['nutrition_data'][field], 1)
+
+            return jsonify({
+                'success': True,
+                'form_data': form_data,
+                'per_100g': result.get('per_100g', True),
+                'message': f'EasyOCR found {len(form_data)} nutrition values'
+            })
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
     
 if __name__ == '__main__':
     try:
