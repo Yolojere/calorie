@@ -1251,7 +1251,7 @@ class EnhancedSimpleScanner:
                         'per_product_x': columns[1]
                     },
                     'version': 'v19.0_enhanced_simple_column_aware',
-                    'engines_available': {'easyocr': True, 'paddleocr': False}
+                    'engines_available': {'easyocr': True}
                 }
             }
 
