@@ -31,7 +31,6 @@ import requests
 from flask_wtf.csrf import CSRFProtect
 from authlib.integrations.flask_client import OAuth
 from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
-from paddleocr import PaddleOCR
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
