@@ -30,7 +30,6 @@ import base64
 import requests
 from flask_wtf.csrf import CSRFProtect
 from authlib.integrations.flask_client import OAuth
-from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
@@ -100,8 +99,14 @@ github = oauth.register(
     api_base_url='https://api.github.com/',
     client_kwargs={'scope': 'user:email'}
 )
-# Initialize scanner once at startup
-nutrition_scanner = EnhancedSimpleScanner()
+_nutrition_scanner = None
+def get_scanner():
+    """Lazy-load and cache the EasyOCR scanner."""
+    global _nutrition_scanner
+    if _nutrition_scanner is None:
+        from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
+        _nutrition_scanner = EnhancedSimpleScanner()
+    return _nutrition_scanner
 # Update the normalize_key function
 def normalize_key(key):
     """Normalize food key while preserving non-ASCII characters"""
@@ -3880,14 +3885,17 @@ def scan_nutrition_label():
         elif 'image' in request.form:
             base64_data = request.form['image']
             if base64_data.startswith('data:'):
-                base64_data = base64_data.split(',')  
+                base64_data = base64_data.split(',')[1]  # fix: take base64 after comma
             image_data = base64.b64decode(base64_data)
 
         if not image_data:
             return jsonify({'success': False, 'error': 'No image provided'}), 400
 
+        # Lazy-load scanner
+        scanner = get_scanner()
+
         # Scan with EasyOCR
-        result = nutrition_scanner.scan_nutrition_label(image_data)
+        result = scanner.scan_nutrition_label(image_data)
 
         if result['success']:
             # Format for your form
