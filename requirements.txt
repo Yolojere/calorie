@@ -33,11 +33,8 @@ pillow==10.4.0
 numpy==1.26.4
 opencv-python-headless==4.8.1.78
 
-# PyTorch ecosystem - using available versions from the CPU index
-torch==2.2.0+cpu
-torchvision==0.17.0+cpu
 
 # OCR dependencies - compatible versions
-scikit-image==0.21.0
 easyocr==1.7.0
 PyYAML==6.0.1
+
