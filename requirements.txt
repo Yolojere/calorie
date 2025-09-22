@@ -31,10 +31,10 @@ PyJWT==2.8.0
 # Image processing libraries - Python 3.12 compatible
 pillow==10.4.0
 numpy==1.26.4
-opencv-python-headless==4.8.1.78
 
 
 # OCR dependencies - compatible versions
 easyocr==1.7.0
 PyYAML==6.0.1
+
 
