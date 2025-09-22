@@ -1,4 +1,5 @@
-import easyocr
+import fuzzywuzzy
+from rapidocr_onnxruntime import RapidOCR
 import cv2
 import numpy as np
 import re
@@ -210,67 +211,147 @@ class EnhancedSimpleScanner:
 
         # Initialize ONLY EasyOCR (proven to work)
         try:
-            self.easy_reader = easyocr.Reader(['en'], gpu=False)
-            self.easyocr_available = True
-            print("✅ EasyOCR initialized successfully")
+            self.rapid_reader = RapidOCR()
+            self.rapidocr_available = True
+            print("✅ RapidOCR initialized successfully")
         except Exception as e:
-            print(f"❌ EasyOCR initialization failed: {e}")
-            self.easyocr_available = False
+            print(f"❌ RapidOCR initialization failed: {e}")
+            self.rapidocr_available = False
 
-        if not self.easyocr_available:
-            raise RuntimeError("❌ EasyOCR not available!")
+        if not self.rapidocr_available:
+            raise RuntimeError("❌ RapidOCR not available!")
 
-        print(f"📊 Enhanced OCR engine: EasyOCR with column awareness")
+        print(f"📊 Enhanced OCR engine: RapidOCR with column awareness")
 
         # ENHANCED field definitions with expanded sugar keywords
         self.nutrition_fields = {
-            'calories': {
-                'keywords': ['energia', 'energi', 'energy'],
-                'expected_range': (50, 600),
-                'priority': 1
-            },
-            'fats': {
-                'keywords': ['rasva', 'rasvaa', 'fett', 'fat', 'rasvad'],
-                'exclude_keywords': ['tyydytt', 'mättat', 'saturated'],
-                'expected_range': (0, 100),
-                'priority': 2
-            },
-            'saturated_fats': {
-                'keywords': ['tyydytt', 'mättat', 'saturated', 'mattad', 'mattat', 'tyydyttynyttä', 'tyydyttyneitä'],
-                'context_keywords': ['josta', 'varav', 'millest', 'of which', 'siitä'],
-                'expected_range': (0, 50),
-                'priority': 4,
-                'special_handling': True
-            },
-            'carbs': {
-                'keywords': ['hiilihydraat', 'kolhydrat', 'carb'],
-                'exclude_keywords': ['sokeri', 'socker', 'sugar'],
-                'expected_range': (0, 120),
-                'priority': 3
-            },
-            'fiber': {
-                'keywords': ['ravintokuitu', 'kostfiber', 'kuitu', 'fiber'],
-                'expected_range': (0, 80),
-                'priority': 5
-            },
-            'proteins': {
-                'keywords': ['proteiini', 'protein'],
-                'expected_range': (0, 85),
-                'priority': 3
-            },
-            'sugars': {
-                'keywords': ['sokeri', 'socker', 'sugar', 'suhkr', 'suhkru', 'sockerarter', 'sokereita', 'soker'],  # EXPANDED!
-                'context_keywords': ['josta', 'varav', 'millest', 'of which', 'joista'],  # EXPANDED!
-                'expected_range': (0, 80),
-                'priority': 6
-            },
-            'salt': {
-                'keywords': ['suola', 'salt'],
-                'expected_range': (0, 5),
-                'priority': 7
-            }
+        'calories': {
+            'keywords': ['energia', 'energi', 'energy', 'kcal', 'kj', 'kalori'],
+            'expected_range': (50, 600),
+            'priority': 1
+        },
+        'fats': {
+            'keywords': ['rasva', 'rasvaa', 'fett', 'fat', 'rasvad', 'липиды', 'tuki'],
+            'exclude_keywords': ['tyydytt', 'mättat', 'saturated', 'kullast'],
+            'expected_range': (0, 100),
+            'priority': 2
+        },
+        'saturated_fats': {
+            'keywords': [
+                'saturated', 'tyydytt', 'mattat', 'gesattigt', 'saturés',
+                'mattede', 'kullastunud', 'piesätinäti', 'насыщен',
+                'saturat', 'mättade', 'насищен', 'tydytty', 'mättad',
+                'tyydyttynyt', 'tyydyttyneet', 'tyydyttyneitä', 'mattad'
+            ],
+            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'siitä', 'whereof', 'davon'],
+            'expected_range': (0, 50),
+            'priority': 4,
+            'special_handling': True
+        },
+        'carbs': {
+            'keywords': ['hiilihydraat', 'kolhydrat', 'carb', 'susivesik', 'углевод', 'angliavandeniai'],
+            'exclude_keywords': ['sokeri', 'socker', 'sugar', 'suhkr'],
+            'expected_range': (0, 120),
+            'priority': 3
+        },
+        'fiber': {
+            'keywords': [
+                'fiber', 'fibre', 'kuitu', 'kostfiber', 'ballaststoff', 'fibres',
+                'kiudaine', 'skiedrviela', 'skaidula', 'клетчатка',
+                'ravintokuitu', 'kostfibr', 'dietary fiber', 'kuidained', 'kiudained'
+            ],
+            'expected_range': (0, 80),
+            'priority': 5
+        },
+        'proteins': {
+            'keywords': ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym'],
+            'expected_range': (0, 85),
+            'priority': 3
+        },
+        'sugars': {
+            'keywords': [
+                'sugar', 'sokeri', 'socker', 'sucre', 'azucar', 'zucker', 'suhkr',
+                'sockerarter', 'sokereita', 'suhkrud', 'cukru', 'cukurs',
+                'sugars', 'zuccheri', 'açúcar', 'glucides', 'сахар', 'cukrų'
+            ],
+            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof'],
+            'expected_range': (0, 80),
+            'priority': 6
+        },
+        'salt': {
+            'keywords': ['suola', 'salt', 'sool', 'sal', 'соль', 'druska'],
+            'expected_range': (0, 5),
+            'priority': 7
         }
+    }
 
+    def improve_column_detection(self, ocr_results):
+        """Enhanced column detection with better per-portion recognition"""
+        per_100g_indicators = [
+            '100g', '100 g', '/100g', 'per 100g', 'pro 100g',
+            '100ml', '100 ml', '/100ml', 'per 100ml',
+            '100 g:ssa', '100 ml:ssa'  # Added Finnish variations
+        ]
+        
+        portion_indicators = [
+            'portion', 'serving', 'annos', 'del', 'porsjon',
+            'portsjon', 'por', 'pkg', 'package', 'pak'
+        ]
+        
+        # Look for column headers more aggressively
+        for item in ocr_results:
+            text_lower = item['text'].lower().replace(' ', '')
+            
+            # Check for 100g variations
+            for indicator in per_100g_indicators:
+                if indicator.replace(' ', '') in text_lower:
+                    # Found per 100g column
+                    return item['x']
+                    
+            # Check for portion variations  
+            for indicator in portion_indicators:
+                if indicator in text_lower:
+                    # Found per portion column
+                    return item['x']
+        
+        return None
+
+    def boost_confidence_for_realistic_values(self, field, value, confidence):
+        """Boost confidence for nutritionally realistic values"""
+        
+        realistic_ranges = {
+            'calories': (50, 800),      # kcal per 100g
+            'fats': (0, 100),           # g per 100g  
+            'saturated_fats': (0, 50),  # g per 100g
+            'carbs': (0, 100),          # g per 100g
+            'sugars': (0, 50),          # g per 100g
+            'fiber': (0, 30),           # g per 100g
+            'proteins': (0, 50),        # g per 100g
+            'salt': (0, 5)              # g per 100g
+        }
+        
+        if field in realistic_ranges:
+            min_val, max_val = realistic_ranges[field]
+            if min_val <= value <= max_val:
+                return min(confidence * 1.2, 1.0)  # 20% confidence boost
+            
+        return confidence    
+
+    def calculate_keyword_distance(self, text_item, keyword_item):
+        """Calculate distance between nutrition value and its keyword"""
+        
+        # Vertical distance (same row preference)
+        y_distance = abs(text_item['y'] - keyword_item['y'])
+        
+        # Horizontal distance (reasonable separation)
+        x_distance = abs(text_item['x'] - keyword_item['x'])
+        
+        # Prefer items in same row (low y_distance) but reasonable x separation
+        if y_distance < 30:  # Same row
+            return x_distance
+        else:
+            return y_distance * 3 + x_distance  # Penalty for different rows
+    
     def preprocess_enhanced(self, image):
         """Enhanced preprocessing"""
         from PIL import Image, ImageEnhance
@@ -303,6 +384,7 @@ class EnhancedSimpleScanner:
         if self.debug:
             print(f"🔍 {message}")
 
+
     def extract_text_enhanced(self, image_data):
         """Enhanced OCR extraction"""
         try:
@@ -326,31 +408,40 @@ class EnhancedSimpleScanner:
             self.log_debug(f"✅ Image preprocessed: {image_array.shape}")
 
             try:
-                ocr_results = self.easy_reader.readtext(image_array)
+                # RapidOCR returns (results, elapse) tuple
+                ocr_result = self.rapid_reader(image_array)
                 
                 processed_results = []
-                for bbox, text, confidence in ocr_results:
-                    if confidence >= 0.35:
-                        processed_results.append({
-                            'text': text,
-                            'confidence': confidence,
-                            'bbox': bbox,
-                            'x': bbox[0][0],
-                            'y': bbox[0][1],
-                            'width': bbox[1][0] - bbox[0][0],
-                            'height': bbox[2][1] - bbox[0][1],
-                        })
+                if ocr_result and len(ocr_result) >= 1:
+                    ocr_results = ocr_result[0]  # Extract results from tuple
+                    if ocr_results:
+                        for result in ocr_results:
+                            # RapidOCR format: [bbox_points, text, confidence]
+                            if len(result) >= 3:
+                                bbox_points, text, confidence = result[0], result[1], float(result[2])
+                                if confidence >= 0.35:
+                                    # Convert bbox_points to the format expected by the rest of the code
+                                    bbox = bbox_points  # bbox_points is already in the right format
+                                    processed_results.append({
+                                        'text': text,
+                                        'confidence': confidence,
+                                        'bbox': bbox,
+                                        'x': bbox[0][0],
+                                        'y': bbox[0][1],
+                                        'width': bbox[1][0] - bbox[0][0],
+                                        'height': bbox[2][1] - bbox[0][1],
+                                    })
 
                 processed_results.sort(key=lambda x: (x['y'], x['x']))
-                self.log_debug(f"EasyOCR extracted {len(processed_results)} items")
+                self.log_debug(f"RapidOCR extracted {len(processed_results)} items")
                 return processed_results
 
             except Exception as e:
-                self.log_debug(f"❌ EasyOCR failed: {e}")
+                self.log_debug(f"❌ RapidOCR failed: {e}")
                 return []
 
         except Exception as e:
-            self.log_debug(f"❌ OCR extraction error: {e}")
+            self.log_debug(f"❌ Image preprocessing failed: {e}")
             return []
 
     def identify_columns(self, extracted_text):
@@ -361,7 +452,7 @@ class EnhancedSimpleScanner:
         per_100g_indicators = [
             '100g', '100 g', 'per 100', 'kohti', '/100g', '/ 100g', '100g:',
             'per 100g', 'per 100 g', 'á 100g', 'á 100 g',  # New patterns
-            '100 gramm', '100gr', '/100gr'  # Additional variations
+            '100 gramm', '100gr', '/100gr', '100 ml', '100ml', '/100 ml'  # Additional variations
         ]
         per_product_indicators = ['per tuote', 'per product', 'per portion', 'annos', 'portion', 'per paketti', 'per serving']
         
@@ -388,19 +479,21 @@ class EnhancedSimpleScanner:
         return per_100g_x, per_product_x
 
     def extract_numbers_enhanced(self, text: str) -> List[Tuple[float, str]]:
-        """ENHANCED number extraction"""
+        """PRODUCTION-READY number extraction with 100% accuracy target"""
         text = text.strip()
         self.log_debug(f"Enhanced number extraction from: '{text}'")
         
         found_numbers = []
 
-        # Finnish decimal comma with enhanced precision
+        # ENHANCED decimal patterns - Finnish, European, and international
         decimal_patterns = [
-            r'(\d+),(\d+)\s*g\b',       # "9,66 g" -> 9.66
-            r'(\d+),(\d+)g\b',          # "9,66g" -> 9.66
-            r'(\d+),(\d{1,3})(?=\s|$)', # "9,66" -> 9.66 (up to 3 decimals)
-            r'(\d+)\.(\d+)\s*g\b',      # "9.66 g" -> 9.66
-            r'(\d+)\.(\d+)g\b',         # "9.66g" -> 9.66
+            r'(\d+),(\d+)\s*g\b',           # "9,66 g" -> 9.66
+            r'(\d+),(\d+)g\b',              # "9,66g" -> 9.66  
+            r'(\d+),(\d{1,3})(?=\s|$)',     # "9,66" -> 9.66
+            r'(\d+)\.(\d+)\s*g\b',          # "9.66 g" -> 9.66
+            r'(\d+)\.(\d+)g\b',             # "9.66g" -> 9.66
+            r'(\d+),(\d+)\s*mg\b',          # "900,5 mg" -> 900.5
+            r'(\d+)\.(\d+)\s*mg\b',         # "900.5 mg" -> 900.5
         ]
         
         for pattern in decimal_patterns:
@@ -410,48 +503,57 @@ class EnhancedSimpleScanner:
                     whole = match.group(1)
                     decimal = match.group(2)
                     value = float(f"{whole}.{decimal}")
-                    unit = 'g'
+                    unit = 'mg' if 'mg' in match.group(0) else 'g'
                     found_numbers.append((value, unit))
                     self.log_debug(f"  ✅ Found enhanced decimal: {value} {unit}")
                 except ValueError:
                     continue
 
-        # Energy formats
+        # ENHANCED energy patterns - comprehensive coverage
         energy_patterns = [
-            r'(\d+),(\d+)\s*kcal\b',       # "206,71 kcal" -> 206.71
-            r'(\d+)\.(\d+)\s*kcal\b',      # "206.71 kcal" -> 206.71
-            r'(\d+)\s*kj\s*/\s*(\d+)\s*kcal',
-            r'(\d+)\s*kj/(\d+)\s*kcal',
-            r'(\d+[.,]?\d*)\s*kcal\b',
-            r'\((\d+)\)',
+            r'(\d+),(\d+)\s*kcal\b',                    # "206,71 kcal"
+            r'(\d+)\.(\d+)\s*kcal\b',                   # "206.71 kcal"  
+            r'(\d+)\s*kj\s*/\s*(\d+)\s*kcal',          # "861 kJ/206 kcal"
+            r'(\d+)\s*kj/(\d+)\s*kcal',                # "861kJ/206kcal"
+            r'(\d+)\s*kj\s*\(\s*(\d+)\s*kcal\s*\)',    # "861 kJ (206 kcal)"
+            r'(\d+[.,]?\d*)\s*kcal\b',                 # "206 kcal", "206.5kcal"
+            r'\((\d+)\)',                              # "(206)" in energy context
+            r'(\d+)\s*kj\s*/\s*(\d+[.,]\d*)\s*kcal',   # Mixed decimal
         ]
         
         for pattern in energy_patterns:
             matches = re.finditer(pattern, text, re.IGNORECASE)
             for match in matches:
                 try:
-                    if ',' in match.group(0) and 'kcal' in match.group(0).lower():
-                        # Handle "206,71 kcal" format
+                    if len(match.groups()) >= 2 and ('kj' in pattern.lower() or 'kcal' in pattern.lower()):
+                        # Handle kJ/kcal patterns - take the kcal value
+                        kcal_str = match.group(2).replace(',', '.')
+                        kcal_value = float(kcal_str)
+                    elif ',' in match.group(0) and 'kcal' in match.group(0).lower():
+                        # Handle decimal comma in kcal
                         if len(match.groups()) >= 2:
                             kcal_value = float(f"{match.group(1)}.{match.group(2)}")
                         else:
                             kcal_value = float(match.group(1).replace(',', '.'))
-                    elif len(match.groups()) >= 2 and ('kj' in pattern.lower()):
-                        kcal_value = float(match.group(2).replace(',', '.'))
                     else:
                         kcal_value = float(match.group(1).replace(',', '.'))
                     
-                    if 50 <= kcal_value <= 600:
+                    if 30 <= kcal_value <= 800:  # Expanded reasonable range
                         found_numbers.append((kcal_value, 'kcal'))
                         self.log_debug(f"  ✅ Found enhanced energy: {kcal_value} kcal")
-                except ValueError:
+                except (ValueError, IndexError):
                     continue
 
-        # Standard numbers with enhanced patterns
+        # ENHANCED standard number patterns
         number_patterns = [
-            r'<(\d+(?:[.,]\d+)?)\s*g\b',      # "<0.1g" -> 0.1
-            r'(\d+(?:[.,]\d+)?)\s*g\b',       # "11g", "0.9 g"
-            r'\b(\d+(?:[.,]\d+)?)(?=\s|$)',   # Standalone numbers
+            r'<\s*(\d+(?:[.,]\d+)?)\s*g\b',           # "<0.1 g" -> 0.1
+            r'(\d+(?:[.,]\d+)?)\s*g\b',               # "11 g", "0.9g"
+            r'(\d+(?:[.,]\d+)?)\s*mg\b',              # "900 mg"
+            r'(\d+(?:[.,]\d+)?)g\b',                  # "11g" (no space)
+            r'(\d+(?:[.,]\d+)?)mg\b',                 # "900mg" (no space)
+            r'\.(\d+(?:[.,]\d+)?)\s*g\b',             # ".6,5g" -> 6.5
+            r'\.(\d+(?:[.,]\d+)?)g\b',                # ".6g" -> 6
+            r'\b(\d+(?:[.,]\d+)?)(?=\s|$)',           # Standalone numbers
         ]
 
         for pattern in number_patterns:
@@ -460,184 +562,234 @@ class EnhancedSimpleScanner:
                 try:
                     number_str = match.group(1).replace(',', '.')
                     value = float(number_str)
+                    
+                    # Determine unit
                     unit = 'g'
+                    if 'mg' in match.group(0):
+                        unit = 'mg'
                     
                     if value >= 0:
                         found_numbers.append((value, unit))
                         self.log_debug(f"  ✅ Found enhanced number: {value} {unit}")
-                except ValueError:
+                except (ValueError, IndexError):
                     continue
 
         return found_numbers
+
     def fuzzy_column_match(text, indicators):
         text_clean = re.sub(r'[^a-z0-9\s]', '', text.lower())
         for indicator in indicators:
-            if indicator in text_clean or fuzz.partial_ratio(indicator, text_clean) > 80:
+            if indicator in text_clean or fuzzywuzzy.partial_ratio(indicator, text_clean) > 80:
                 return True
         return False
-    def find_saturated_fat_enhanced(self, extracted_text, columns) -> List[NutritionValue]:
-        """Enhanced saturated fat detection with column awareness"""
+
+    def find_saturated_fat_enhanced(self, extracted_text, columns, nutrition_values=None) -> List[NutritionValue]:
+        """Improved saturated fat detection with anchoring, ratio filtering, and OCR normalization"""
         saturated_fat_candidates = []
         per_100g_x, per_product_x = columns
-        
+
         self.log_debug(f"\n🧈 ENHANCED SATURATED FAT DETECTION")
-        
-        saturated_keywords = ['tyydytt', 'mättat', 'saturated', 'mattad', 'mattat', 'tyydyttynyttä', 'tyydyttyneitä', 'tyyd', 'gesätt']
+
+        saturated_keywords = [
+            'tyydytt', 'tyydyttynyt', 'tyydyttynyttä', 'tyydyttyneet',
+            'mättat', 'mattat', 'mattad', 'mattfat',
+            'saturated', 'sat.', 'satrtd',  # OCR-mangled
+            'josta tyydytt', 'varav mättat'
+        ]
         context_keywords = ['josta', 'varav', 'millest', 'of which', 'siitä']
-        
+
         for i, item in enumerate(extracted_text):
             text_lower = item['text'].lower()
-            
+
             # Check for saturated fat keywords
             saturated_keyword_found = None
             for keyword in saturated_keywords:
                 if keyword in text_lower:
                     saturated_keyword_found = keyword
                     break
-            
+
             if not saturated_keyword_found:
                 continue
-                
+
             self.log_debug(f"🧈 Found saturated keyword '{saturated_keyword_found}' in: '{item['text']}'")
-            
-            # Enhanced context checking
+
+            # Check if this is likely a saturated fat entry
+            is_likely_saturated = False
+
             has_context = any(ctx in text_lower for ctx in context_keywords)
-            
-            if not has_context:
-                # Check nearby text
-                for j in range(max(0, i-3), min(len(extracted_text), i+4)):
-                    if j != i:
-                        nearby_text = extracted_text[j]['text'].lower()
-                        if any(ctx in nearby_text for ctx in context_keywords):
-                            has_context = True
-                            break
-            
-            # Accept specific keywords without context
-            if not has_context and saturated_keyword_found in ['tyydytt', 'mättat', 'saturated']:
-                has_context = True
-            
-            if has_context:
-                # Enhanced search with column preference
-                for search_radius in [120, 250, 400]:
-                    found_candidates = []
-                    
-                    for j, candidate_item in enumerate(extracted_text):
-                        if i == j:
-                            continue
-                        
-                        y_dist = abs(candidate_item['y'] - item['y'])
-                        x_dist = abs(candidate_item['x'] - item['x'])
-                        
-                        if y_dist <= 30:
-                            distance = x_dist
-                        elif y_dist <= search_radius and x_dist <= search_radius:
-                            distance = (x_dist**2 + y_dist**2)**0.5
-                        else:
-                            continue
-                        
-                        # Determine column type
-                        column_type = 'unknown'
-                        if per_100g_x and per_product_x:
-                            dist_to_100g = abs(candidate_item['x'] - per_100g_x)
-                            dist_to_product = abs(candidate_item['x'] - per_product_x)
-                            column_type = 'per_100g' if dist_to_100g < dist_to_product else 'per_product'
-                        
-                        numbers_in_candidate = self.extract_numbers_enhanced(candidate_item['text'])
-                        for value, unit in numbers_in_candidate:
-                            final_value = value
-                            if unit == 'mg':
-                                final_value = value / 1000
-                            
-                            if 0 <= final_value <= 50:
-                                # Column preference: strongly prefer per_100g values
-                                confidence = candidate_item['confidence']
-                                if column_type == 'per_100g':
-                                    confidence += 0.2
-                                elif column_type == 'per_product':
-                                    confidence -= 0.1
-                                
-                                found_candidates.append((final_value, unit, distance, confidence, 
-                                                       candidate_item['text'], column_type))
-                    
-                    if found_candidates:
-                        found_candidates.sort(key=lambda x: (-x[3], x[2]))  # Sort by confidence desc, distance asc
-                        final_value, unit, distance, confidence, source_text, column_type = found_candidates[0]
-                        
-                        saturated_fat_candidates.append(NutritionValue(
-                            field_type='saturated_fats',
-                            value=final_value,
-                            unit=unit,
-                            confidence=confidence,
-                            source_text=source_text,
-                            x_pos=item['x'],
-                            y_pos=item['y'],
-                            is_claimed=False,
-                            column_type=column_type
-                        ))
-                        
-                        self.log_debug(f"🧈 ENHANCED CANDIDATE: {final_value}{unit} (dist: {distance:.1f}, conf: {confidence:.3f}, column: {column_type})")
-                        break  # Found one, stop expanding search
-        
+            has_fat_context = any(fat_kw in text_lower for fat_kw in ['rasva', 'fat', 'fett'])
+
+            if has_fat_context:
+                is_likely_saturated = True
+                self.log_debug(f"🧈 Fat context found - very likely saturated fat")
+            elif has_context:
+                is_likely_saturated = True
+                self.log_debug(f"🧈 Context keyword found - likely saturated fat")
+
+            # NEW: Anchor to total fat (check rows above)
+            if not is_likely_saturated:
+                for j in range(max(0, i-3), i):
+                    if any(f in extracted_text[j]['text'].lower() for f in ['rasva', 'fett', 'fat']):
+                        is_likely_saturated = True
+                        self.log_debug("🧈 Anchored under total fat")
+                        break
+
+            if not is_likely_saturated and saturated_keyword_found in [
+                'tyydytt', 'mättat', 'saturated', 'tyydyttynyttä', 'tyydyttyneet'
+            ]:
+                is_likely_saturated = True
+                self.log_debug(f"🧈 Specific keyword accepted without context")
+
+            if is_likely_saturated:
+                # Look for numbers to the right of the keyword
+                for j, candidate_item in enumerate(extracted_text):
+                    if j == i or candidate_item['x'] <= item['x']:
+                        continue
+
+                    y_dist = abs(candidate_item['y'] - item['y'])
+                    if y_dist > 40:  # same row or close
+                        continue
+
+                    numbers = self.extract_numbers_enhanced(candidate_item['text'])
+                    for value, unit in numbers:
+                        # 🔧 Normalize values
+                        if unit in ['', None]:
+                            if 0 < value < 100:
+                                unit = 'g'
+                        if unit == 'mg' and value > 10:
+                            value = value / 1000
+                            unit = 'g'
+
+                        if 0 <= value <= 50:  # reasonable range
+                            # Determine column type
+                            column_type = 'unknown'
+                            if per_100g_x and per_product_x:
+                                dist_to_100g = abs(candidate_item['x'] - per_100g_x)
+                                dist_to_product = abs(candidate_item['x'] - per_product_x)
+                                column_type = 'per_100g' if dist_to_100g < dist_to_product else 'per_product'
+
+                            confidence = candidate_item['confidence']
+
+                            # 🔧 Confidence bonuses
+                            if column_type == 'per_100g':
+                                confidence += 0.2
+                            elif column_type == 'per_product':
+                                confidence -= 0.05
+                            if candidate_item['x'] > item['x']:
+                                confidence += 0.1
+
+                            saturated_fat_candidates.append(NutritionValue(
+                                field_type='saturated_fats',
+                                value=value,
+                                unit=unit,
+                                confidence=confidence,
+                                source_text=candidate_item['text'],
+                                x_pos=item['x'],
+                                y_pos=item['y'],
+                                is_claimed=False,
+                                column_type=column_type
+                            ))
+                            self.log_debug(f"🧈 Candidate: {value}{unit} (conf {confidence:.3f}, col {column_type})")
+
+        # 🔧 Ratio sanity check: must not exceed total fats
+        if nutrition_values and 'fats' in nutrition_values and nutrition_values['fats']:
+            total_fats = nutrition_values['fats'][0].value
+            before_filter = len(saturated_fat_candidates)
+            saturated_fat_candidates = [c for c in saturated_fat_candidates if c.value <= total_fats * 1.1]
+            after_filter = len(saturated_fat_candidates)
+            if before_filter != after_filter:
+                self.log_debug(f"🧈 Filtered {before_filter - after_filter} candidates above total fats ({total_fats}g)")
+
         saturated_fat_candidates.sort(key=lambda x: (-x.confidence, x.column_type == 'per_100g'))
         self.log_debug(f"🧈 Found {len(saturated_fat_candidates)} enhanced saturated fat candidates")
-        
+
         return saturated_fat_candidates
 
     def find_sugar_enhanced(self, extracted_text, columns) -> List[NutritionValue]:
-        """ENHANCED sugar detection with expanded keywords"""
+        """PRODUCTION-READY sugar detection with maximum coverage"""
         sugar_candidates = []
         per_100g_x, per_product_x = columns
         
-        self.log_debug(f"\n🍭 ENHANCED SUGAR DETECTION")
+        self.log_debug(f"\n🍭 PRODUCTION-READY SUGAR DETECTION")
         
-        sugar_keywords = ['sokeri', 'socker', 'sugar', 'suhkr', 'suhkru', 'sockerarter', 'sokereita', 'soker']
-        context_keywords = ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä']
+        # EXPANDED sugar keywords for production
+        sugar_keywords = [
+            'sugar', 'sokeri', 'socker', 'sucre', 'azucar', 'zucker', 'suhkr',
+            'sockerarter', 'sokereita', 'suhkrud', 'cukru', 'cukurs',
+            'sugars', 'zuccheri', 'açúcar', 'glucides', 'сахар', 'cukrų',
+            'millest suhkr', 'varav socker', 'josta sokere'  # Common phrases
+        ]
+        
+        # EXPANDED context keywords 
+        context_keywords = ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof', 'davon']
         
         for i, item in enumerate(extracted_text):
             text_lower = item['text'].lower()
             
-            # Check for sugar keywords
+            # Check for sugar keywords with fuzzy matching
             sugar_keyword_found = None
             for keyword in sugar_keywords:
+            # Exact match first
                 if keyword in text_lower:
-                    sugar_keyword_found = keyword
-                    break
+                    # Exclude false positives
+                    exclude_contexts = ['energia', 'energi', 'energy', 'sal', 'protein', 'fat', 'fett', 'rasva']
+                    if not any(excl in text_lower for excl in exclude_contexts):
+                        sugar_keyword_found = keyword
+                        break
+                
+                # Precise fuzzy matching only for longer keywords
+                elif len(keyword) >= 6:  # Increased from 4 to 6
+                    for word in text_lower.split('/'):  # Split on / for compound words
+                        if len(word) >= 4 and (keyword in word or word in keyword):
+                            if not any(excl in text_lower for excl in ['energia', 'energi', 'protein', 'fat']):
+                                sugar_keyword_found = keyword
+                                break
             
             if not sugar_keyword_found:
                 continue
                 
             self.log_debug(f"🍭 Found sugar keyword '{sugar_keyword_found}' in: '{item['text']}'")
             
-            # Enhanced context checking (more lenient for sugars)
+            # PRODUCTION: More lenient context checking
             has_context = any(ctx in text_lower for ctx in context_keywords)
             
             if not has_context:
-                # Check nearby text
-                for j in range(max(0, i-3), min(len(extracted_text), i+4)):
+                # Check nearby text (expanded radius)
+                for j in range(max(0, i-5), min(len(extracted_text), i+6)):  # Expanded from 3 to 5
                     if j != i:
                         nearby_text = extracted_text[j]['text'].lower()
                         if any(ctx in nearby_text for ctx in context_keywords):
                             has_context = True
                             break
             
-            # Accept sugar keywords more liberally
+            # PRODUCTION: Accept sugar keywords more liberally
             if not has_context:
-                has_context = True  # Allow sugars without strict context requirements
-                self.log_debug(f"🍭 Accepting sugar keyword without strict context")
+                # Auto-accept specific high-confidence sugar keywords
+                auto_accept_keywords = ['sockerarter', 'sokereita', 'suhkrud', 'sugars']
+                if any(auto_kw in sugar_keyword_found for auto_kw in auto_accept_keywords):
+                    has_context = True
+                    self.log_debug(f"🍭 Auto-accepting high-confidence sugar keyword")
+                else:
+                    has_context = True  # PRODUCTION: Accept all sugar keywords
+                    self.log_debug(f"🍭 Production mode: accepting all sugar keywords")
             
             if has_context:
-                # Enhanced search with column preference
-                for search_radius in [120, 250, 400]:
+                # ENHANCED search with multiple radii
+                for search_radius in [60, 150, 300, 500]:  # Expanded search
                     found_candidates = []
                     
                     for j, candidate_item in enumerate(extracted_text):
                         if i == j:
                             continue
                         
+                        # NEW: Prefer values to the right of the keyword
+                        if candidate_item['x'] <= item['x']:
+                            continue
+                        
                         y_dist = abs(candidate_item['y'] - item['y'])
                         x_dist = abs(candidate_item['x'] - item['x'])
                         
-                        if y_dist <= 40:  # Slightly larger search for sugars
+                        if y_dist <= 50:  # Expanded same-row tolerance
                             distance = x_dist
                         elif y_dist <= search_radius and x_dist <= search_radius:
                             distance = (x_dist**2 + y_dist**2)**0.5
@@ -657,16 +809,20 @@ class EnhancedSimpleScanner:
                             if unit == 'mg':
                                 final_value = value / 1000
                             
-                            if 0 <= final_value <= 80:  # Sugar range
-                                # Column preference: strongly prefer per_100g values
+                            if 0 <= final_value <= 100:  # Expanded sugar range for production
+                                # PRODUCTION: Strong column preference
                                 confidence = candidate_item['confidence']
                                 if column_type == 'per_100g':
-                                    confidence += 0.2
+                                    confidence += 0.3  # Increased bonus
                                 elif column_type == 'per_product':
-                                    confidence -= 0.1
+                                    confidence -= 0.05  # Reduced penalty
+                                
+                                # PRODUCTION: Realistic value bonus
+                                if 0.1 <= final_value <= 50:  # Realistic sugar range
+                                    confidence += 0.1
                                 
                                 found_candidates.append((final_value, unit, distance, confidence, 
-                                                       candidate_item['text'], column_type))
+                                                    candidate_item['text'], column_type))
                     
                     if found_candidates:
                         found_candidates.sort(key=lambda x: (-x[3], x[2]))
@@ -684,13 +840,114 @@ class EnhancedSimpleScanner:
                             column_type=column_type
                         ))
                         
-                        self.log_debug(f"🍭 ENHANCED SUGAR CANDIDATE: {final_value}{unit} (dist: {distance:.1f}, conf: {confidence:.3f}, column: {column_type})")
-                        break
+                        self.log_debug(f"🍭 PRODUCTION SUGAR CANDIDATE: {final_value}{unit} (dist: {distance:.1f}, conf: {confidence:.3f}, column: {column_type})")
+                        break  # Found one, stop expanding search
         
         sugar_candidates.sort(key=lambda x: (-x.confidence, x.column_type == 'per_100g'))
-        self.log_debug(f"🍭 Found {len(sugar_candidates)} enhanced sugar candidates")
+        self.log_debug(f"🍭 Found {len(sugar_candidates)} production sugar candidates")
         
         return sugar_candidates
+
+    def find_proteins_enhanced(self, extracted_text, columns):
+        """PRODUCTION protein detection"""
+        protein_candidates = []
+        per_100g_x, per_product_x = columns
+        
+        protein_keywords = ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym']
+        
+        for i, item in enumerate(extracted_text):
+            text_lower = item['text'].lower()
+            
+            # Check for protein keywords
+            if any(keyword in text_lower for keyword in protein_keywords):
+                self.log_debug(f"📍 Found proteins keyword in: '{item['text']}'")
+                
+                # Search for numbers in nearby items
+                for j, candidate_item in enumerate(extracted_text):
+                    if i == j:
+                        continue
+                    
+                    # NEW: Prefer values to the right of the keyword
+                    if candidate_item['x'] <= item['x']:
+                        continue
+                    
+                    # Same row priority
+                    y_dist = abs(candidate_item['y'] - item['y'])
+                    x_dist = abs(candidate_item['x'] - item['x'])
+                    
+                    if y_dist <= 50 or (y_dist <= 200 and x_dist <= 400):
+                        numbers = self.extract_numbers_enhanced(candidate_item['text'])
+                        for value, unit in numbers:
+                            final_value = value
+                            if unit == 'mg':
+                                final_value = value / 1000
+                            
+                            if 0 <= final_value <= 85:  # Protein range
+                                # Determine column
+                                column_type = 'unknown'
+                                confidence_bonus = 0
+                                
+                                if per_100g_x and per_product_x:
+                                    dist_to_100g = abs(candidate_item['x'] - per_100g_x)
+                                    dist_to_product = abs(candidate_item['x'] - per_product_x)
+                                    if dist_to_100g < dist_to_product:
+                                        column_type = 'per_100g'
+                                        confidence_bonus = 0.2
+                                
+                                protein_candidates.append(NutritionValue(
+                                    field_type='proteins',
+                                    value=final_value,
+                                    unit=unit,
+                                    confidence=candidate_item['confidence'] + confidence_bonus,
+                                    source_text=candidate_item['text'],
+                                    x_pos=candidate_item['x'],
+                                    y_pos=candidate_item['y'],
+                                    is_claimed=False,
+                                    column_type=column_type
+                                ))
+                                
+                                self.log_debug(f"    ✅ PROTEIN CANDIDATE: {final_value}{unit} (conf: {candidate_item['confidence'] + confidence_bonus:.3f}, column: {column_type})")
+        
+        return protein_candidates[:3]  # Limit to top 3    
+
+    def boost_realistic_candidates(self, candidates):
+        """PRODUCTION: Boost confidence for realistic nutrition values"""
+        
+        realistic_ranges = {
+            'calories': (50, 600),
+            'fats': (0, 100),
+            'saturated_fats': (0, 50),
+            'carbs': (0, 120),
+            'sugars': (0, 80),
+            'fiber': (0, 80),
+            'proteins': (0, 85),
+            'salt': (0, 5)
+        }
+        
+        for candidate in candidates:
+            field = candidate.field_type
+            value = candidate.value
+            
+            if field in realistic_ranges:
+                min_val, max_val = realistic_ranges[field]
+                if min_val <= value <= max_val:
+                    # PRODUCTION: Strong boost for realistic values
+                    candidate.confidence = min(candidate.confidence + 0.2, 1.0)
+                    
+                    # Additional boost for common ranges
+                    common_ranges = {
+                        'proteins': (1, 50),
+                        'fiber': (0.5, 30),
+                        'sugars': (0.1, 30),
+                        'saturated_fats': (0.1, 20)
+                    }
+                    
+                    if field in common_ranges:
+                        common_min, common_max = common_ranges[field]
+                        if common_min <= value <= common_max:
+                            candidate.confidence = min(candidate.confidence + 0.1, 1.0)
+        
+        return candidates
 
     def find_nutrition_values_enhanced(self, extracted_text, columns) -> Dict[str, List[NutritionValue]]:
         """Improved value finding with better fat detection"""
@@ -756,6 +1013,10 @@ class EnhancedSimpleScanner:
                         if i == j:
                             continue
                         
+                        # NEW: Prefer values to the right of the keyword
+                        if candidate_item['x'] <= item['x']:
+                            continue
+                        
                         y_dist = abs(candidate_item['y'] - item['y'])
                         x_dist = abs(candidate_item['x'] - item['x'])
                         
@@ -813,52 +1074,75 @@ class EnhancedSimpleScanner:
                     self.log_debug(f"   ✅ ENHANCED CANDIDATE: {field_name}={final_value}{best_unit} (conf: {best_confidence:.3f}, column: {column_type})")
         
         return nutrition_values
+
     def find_fat_specific(self, extracted_text, index, columns):
-        """Specialized fat detection to avoid incorrect values"""
+        """PRODUCTION-READY specialized fat detection"""
         per_100g_x, per_product_x = columns
         item = extracted_text[index]
         fat_candidates = []
         
-        self.log_debug(f"🧈 SPECIALIZED FAT DETECTION for: '{item['text']}'")
+        self.log_debug(f"🧈 PRODUCTION FAT DETECTION for: '{item['text']}'")
         
-        # Look for numbers in the same row first
+        # PRODUCTION: Prioritize same row detection
         same_row_items = []
         for j, candidate_item in enumerate(extracted_text):
             if j == index:
                 continue
-            if abs(candidate_item['y'] - item['y']) < 20:  # Same row
+            # NEW: Prefer values to the right of the keyword
+            if candidate_item['x'] <= item['x']:
+                continue
+            if abs(candidate_item['y'] - item['y']) < 30:  # Expanded same row tolerance
                 same_row_items.append(candidate_item)
         
-        # Prioritize same row items
+        # PRODUCTION: Enhanced same row processing
         for candidate_item in same_row_items:
             numbers = self.extract_numbers_enhanced(candidate_item['text'])
             for value, unit in numbers:
-                if 0 <= value <= 100:  # Reasonable fat range
-                    # Determine column type
+                final_value = value
+                if unit == 'mg':
+                    final_value = value / 1000
+                    
+                if 0 <= final_value <= 100:  # Fat range
+                    # Determine column type with enhanced logic
                     column_type = 'unknown'
+                    confidence_bonus = 0
+                    
                     if per_100g_x and per_product_x:
                         dist_to_100g = abs(candidate_item['x'] - per_100g_x)
                         dist_to_product = abs(candidate_item['x'] - per_product_x)
-                        column_type = 'per_100g' if dist_to_100g < dist_to_product else 'per_product'
+                        if dist_to_100g < dist_to_product:
+                            column_type = 'per_100g'
+                            confidence_bonus = 0.25  # Strong preference
+                        else:
+                            column_type = 'per_product'
+                            confidence_bonus = -0.05
+                    
+                    # PRODUCTION: Realistic value bonus
+                    if 0.1 <= final_value <= 50:  # Realistic fat range
+                        confidence_bonus += 0.1
                     
                     fat_candidates.append(NutritionValue(
                         field_type='fats',
-                        value=value,
+                        value=final_value,
                         unit=unit,
-                        confidence=candidate_item['confidence'],
+                        confidence=candidate_item['confidence'] + confidence_bonus,
                         source_text=candidate_item['text'],
                         x_pos=candidate_item['x'],
                         y_pos=candidate_item['y'],
                         is_claimed=False,
                         column_type=column_type
                     ))
-                    self.log_debug(f"🧈 Same row fat candidate: {value}{unit} (col: {column_type})")
+                    self.log_debug(f"🧈 PRODUCTION fat candidate: {final_value}{unit} (col: {column_type}, conf: {candidate_item['confidence'] + confidence_bonus:.3f})")
         
-        # If no same row candidates found, expand search
+        # PRODUCTION: If no same row candidates, expand search systematically
         if not fat_candidates:
-            for search_radius in [50, 100, 150]:
+            for search_radius in [60, 120, 200, 350]:  # Expanded search radii
                 for j, candidate_item in enumerate(extracted_text):
                     if j == index:
+                        continue
+                    
+                    # NEW: Prefer values to the right of the keyword
+                    if candidate_item['x'] <= item['x']:
                         continue
                     
                     y_dist = abs(candidate_item['y'] - item['y'])
@@ -867,27 +1151,47 @@ class EnhancedSimpleScanner:
                     if y_dist <= search_radius and x_dist <= search_radius:
                         numbers = self.extract_numbers_enhanced(candidate_item['text'])
                         for value, unit in numbers:
-                            if 0 <= value <= 100:  # Reasonable fat range
-                                # Determine column type
+                            final_value = value
+                            if unit == 'mg':
+                                final_value = value / 1000
+                                
+                            if 0 <= final_value <= 100:  # Fat range
+                                # Column detection with bonuses
                                 column_type = 'unknown'
+                                confidence_bonus = 0
+                                
                                 if per_100g_x and per_product_x:
                                     dist_to_100g = abs(candidate_item['x'] - per_100g_x)
                                     dist_to_product = abs(candidate_item['x'] - per_product_x)
-                                    column_type = 'per_100g' if dist_to_100g < dist_to_product else 'per_product'
+                                    if dist_to_100g < dist_to_product:
+                                        column_type = 'per_100g'
+                                        confidence_bonus = 0.25
+                                    else:
+                                        column_type = 'per_product'
+                                        confidence_bonus = -0.05
+                                
+                                # Distance penalty (closer is better)
+                                distance = (x_dist**2 + y_dist**2)**0.5
+                                distance_bonus = max(0, 0.1 - distance/1000)
                                 
                                 fat_candidates.append(NutritionValue(
                                     field_type='fats',
-                                    value=value,
+                                    value=final_value,
                                     unit=unit,
-                                    confidence=candidate_item['confidence'],
+                                    confidence=candidate_item['confidence'] + confidence_bonus + distance_bonus,
                                     source_text=candidate_item['text'],
                                     x_pos=candidate_item['x'],
                                     y_pos=candidate_item['y'],
                                     is_claimed=False,
                                     column_type=column_type
                                 ))
-                                self.log_debug(f"🧈 Nearby fat candidate: {value}{unit} (col: {column_type})")
+                                self.log_debug(f"🧈 PRODUCTION expanded fat: {final_value}{unit} (dist: {distance:.1f}, col: {column_type})")
+                
+                if fat_candidates:  # Found some, stop expanding
+                    break
         
+        # Sort by confidence (includes all bonuses)
+        fat_candidates.sort(key=lambda x: (-x.confidence, x.column_type == 'per_100g'))
         return fat_candidates
 
     def find_saturated_fat_enhanced(self, extracted_text, columns) -> List[NutritionValue]:
@@ -960,6 +1264,10 @@ class EnhancedSimpleScanner:
                     if j == i:
                         continue
                     
+                    # NEW: Prefer values to the right of the keyword
+                    if candidate_item['x'] <= item['x']:
+                        continue
+                    
                     if abs(candidate_item['y'] - item['y']) < 25:  # Same row
                         numbers = self.extract_numbers_enhanced(candidate_item['text'])
                         for value, unit in numbers:
@@ -1002,6 +1310,10 @@ class EnhancedSimpleScanner:
                         if j == i:
                             continue
                         
+                        # NEW: Prefer values to the right of the keyword
+                        if candidate_item['x'] <= item['x']:
+                            continue
+                        
                         y_dist = abs(candidate_item['y'] - item['y'])
                         x_dist = abs(candidate_item['x'] - item['x'])
                         
@@ -1029,9 +1341,9 @@ class EnhancedSimpleScanner:
                                 # Column preference: strongly prefer per_100g values
                                 confidence = candidate_item['confidence']
                                 if column_type == 'per_100g':
-                                    confidence += 0.2
+                                    confidence += 0.15
                                 elif column_type == 'per_product':
-                                    confidence -= 0.1
+                                    confidence -= 0.05
                                 
                                 found_candidates.append((final_value, unit, distance, confidence, 
                                                     candidate_item['text'], column_type))
@@ -1059,6 +1371,7 @@ class EnhancedSimpleScanner:
         self.log_debug(f"🧈 Found {len(saturated_fat_candidates)} enhanced saturated fat candidates")
         
         return saturated_fat_candidates
+
     def _is_reasonable_value_enhanced(self, field_name, value, unit='g'):
         """Enhanced value validation"""
         if field_name not in self.nutrition_fields:
@@ -1082,14 +1395,15 @@ class EnhancedSimpleScanner:
         return is_reasonable
 
     def select_best_values_enhanced(self, nutrition_values: Dict[str, List[NutritionValue]]) -> Dict[str, NutritionValue]:
-        """ENHANCED value selection with column preference"""
+        """ENHANCED value selection with column preference and saturated fat ratio enforcement"""
         selected_values = {}
         all_values = []
-        
+
+        # Flatten all values for duplicate checking
         for field_name, values_list in nutrition_values.items():
             for value in values_list:
                 all_values.append(value)
-        
+
         field_priorities = [
             ('calories', 1),
             ('fats', 2),
@@ -1100,42 +1414,50 @@ class EnhancedSimpleScanner:
             ('sugars', 6),
             ('salt', 7)
         ]
-        
+
+        # Keep track of total fats to enforce ratio
+        total_fat_val = None
+        if 'fats' in nutrition_values and nutrition_values['fats']:
+            total_fat_val = nutrition_values['fats'][0].value
+
         self.log_debug(f"\n🎯 ENHANCED SELECTION: Processing {len(field_priorities)} fields by priority")
-        
+
         for field_name, priority in field_priorities:
             if field_name not in nutrition_values or not nutrition_values[field_name]:
                 continue
-            
+
             available_values = [v for v in nutrition_values[field_name] if not v.is_claimed]
-            
             if not available_values:
                 continue
-            
-            # Enhanced preference: per_100g column + non-zero values
-            if field_name in ['fats', 'carbs', 'proteins']:
-                # First try: per_100g non-zero values
+
+            # Saturated fat ratio enforcement
+            if field_name == 'saturated_fats' and total_fat_val is not None:
+                available_values = [v for v in available_values if v.value <= total_fat_val * 1.1]
+                if not available_values:
+                    self.log_debug("🧈 No saturated fat candidates <= total fats, skipping")
+                    continue
+
+            # Preference: per_100g + non-zero values for key nutrients
+            if field_name in ['fats', 'carbs', 'proteins', 'saturated_fats']:
                 per_100g_non_zero = [v for v in available_values if v.column_type == 'per_100g' and v.value > 0.01]
                 if per_100g_non_zero:
                     available_values = per_100g_non_zero
                     self.log_debug(f"   📍 Preferring per_100g non-zero values for {field_name}")
                 else:
-                    # Fallback: any non-zero values
                     non_zero_values = [v for v in available_values if v.value > 0.01]
                     if non_zero_values:
                         available_values = non_zero_values
                         self.log_debug(f"   📍 Preferring non-zero values for {field_name}")
-            
-            # Sort by confidence (which includes column bonuses)
+
+            # Sort by confidence desc, column preference
             available_values.sort(key=lambda x: (-x.confidence, x.column_type == 'per_100g'))
             best_value = available_values[0]
-            
-            # Enhanced duplicate checking
+
+            # Duplicate checking with tolerance
             duplicate_found = False
-            
-            if field_name == 'saturated_fats':
-                tolerance = 0.001
-                for claimed_value in [v for v in all_values if v.is_claimed]:
+            tolerance = 0.001 if field_name != 'calories' else 1.0
+            for claimed_value in [v for v in all_values if v.is_claimed]:
+                if field_name == 'saturated_fats':
                     if claimed_value.field_type == 'fats' and best_value.value <= claimed_value.value * 1.1:
                         duplicate_found = False
                         self.log_debug(f"   ✅ Allowing saturated_fats {best_value.value} vs fats {claimed_value.value} (reasonable ratio)")
@@ -1143,18 +1465,16 @@ class EnhancedSimpleScanner:
                     elif abs(best_value.value - claimed_value.value) <= tolerance:
                         duplicate_found = True
                         break
-            else:
-                tolerance = 0.01 if field_name != 'calories' else 1.0
-                for claimed_value in [v for v in all_values if v.is_claimed]:
+                else:
                     if abs(best_value.value - claimed_value.value) <= tolerance:
                         duplicate_found = True
                         break
-            
+
             if not duplicate_found:
                 best_value.is_claimed = True
                 selected_values[field_name] = best_value
                 self.log_debug(f"   ✅ SELECTED {field_name}: {best_value.value} (conf: {best_value.confidence:.3f}, column: {best_value.column_type}) - CLAIMED")
-        
+
         return selected_values
 
     def validate_enhanced_results(self, selected_values: Dict[str, NutritionValue]) -> Dict[str, float]:
@@ -1250,8 +1570,8 @@ class EnhancedSimpleScanner:
                         'per_100g_x': columns[0],
                         'per_product_x': columns[1]
                     },
-                    'version': 'v19.0_enhanced_simple_column_aware',
-                    'engines_available': {'easyocr': True}
+                    'version': 'v19.0_enhanced_simple_column_aware_rapidocr',
+                    'engines_available': {'rapidocr': True}
                 }
             }
 
