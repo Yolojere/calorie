@@ -3874,43 +3874,47 @@ def oauth_authorize(provider):
 @app.route('/scan_nutrition_label', methods=['POST'])
 def scan_nutrition_label():
     try:
-        # Get image data
+        # Load image_data (unchanged)…
         image_data = None
-        if 'file' in request.files and request.files['file'].filename != '':
+        if 'file' in request.files and request.files['file'].filename:
             image_data = request.files['file'].read()
-        elif 'image' in request.form:
-            base64_data = request.form['image']
-            if base64_data.startswith('data:'):
-                base64_data = base64_data.split(',')[1]  # fix: take base64 after comma
-            image_data = base64.b64decode(base64_data)
-
+        else:
+            raw = request.form.get('image', '')
+            if raw.startswith('data:'):
+                raw = raw.split(',',1)[1]
+            image_data = base64.b64decode(raw) if raw else None
         if not image_data:
-            return jsonify({'success': False, 'error': 'No image provided'}), 400
+            return jsonify(success=False, error='No image provided'), 400
 
-        # Lazy-load scanner
+        # OCR scan
         scanner = get_scanner()
-
-        # Scan with EasyOCR
         result = scanner.scan_nutrition_label(image_data)
 
-        if result['success']:
-            # Format for your form
-            form_data = {}
-            for field in ['calories', 'fats', 'saturated', 'carbs', 'fiber', 'proteins', 'salt', 'sugars']:
-                if field in result['nutrition_data']:
-                    form_data[field] = round(result['nutrition_data'][field], 1)
+        # Normalize keys
+        form_data = {}
+        if result.get('success'):
+            data = result['nutrition_data']
+            # Map alternate saturated keys
+            if 'saturatedfats' in data and 'saturated' not in data:
+                data['saturated'] = data['saturatedfats']
+            if 'saturated_fats' in data and 'saturated' not in data:
+                data['saturated'] = data['saturated_fats']
+            # Build output
+            for key in ['calories','fats','saturated','carbs','fiber','proteins','salt','sugars']:
+                if key in data:
+                    form_data[key] = round(data[key],1)
 
-            return jsonify({
-                'success': True,
-                'form_data': form_data,
-                'per_100g': result.get('per_100g', True),
-                'message': f'EasyOCR found {len(form_data)} nutrition values'
-            })
-        else:
-            return jsonify(result), 500
+        # Return form_data + raw_text for debugging
+        return jsonify(
+            success=result.get('success', False),
+            form_data=form_data,
+            raw_text=result.get('raw_text', []),
+            per_100g=result.get('per_100g', True),
+            message=result.get('message','')
+        ), (200 if result.get('success') else 500)
 
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify(success=False, error=str(e)), 500
     
 if __name__ == '__main__':
     try:
