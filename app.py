@@ -1329,10 +1329,17 @@ def get_favourite_grams():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
     
+from flask import request, jsonify
+from flask_login import login_required, current_user
+from psycopg2.extras import DictCursor
+
 @app.route('/search_foods', methods=['POST'])
 @login_required
 def search_foods():
     query = request.form.get('query', '').strip().lower()
+    limit = int(request.form.get('limit', 25))
+    offset = int(request.form.get('offset', 0))
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
@@ -1354,9 +1361,9 @@ def search_foods():
             LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
             WHERE {visibility_clause}
             ORDER BY usage DESC, name ASC
-            LIMIT 15
+            LIMIT %s OFFSET %s
         """
-        cursor.execute(sql, params)
+        cursor.execute(sql, params + [limit, offset])
     else:
         sql = f"""
             SELECT f.*, COALESCE(u.count, 0) AS usage
@@ -1372,7 +1379,7 @@ def search_foods():
                 END,
                 usage DESC,
                 name ASC
-            LIMIT 15
+            LIMIT %s OFFSET %s
         """
         cursor.execute(sql, params + [
             f"{query}%",   # starts with
@@ -1380,6 +1387,8 @@ def search_foods():
             query,         # EAN exact
             f"{query}%",   # order by startswith
             f"%{query}%",  # order by contains
+            limit,
+            offset
         ])
 
     foods = cursor.fetchall()
@@ -1397,7 +1406,7 @@ def search_foods():
             "bigserving_size": f.get("bigserving"),
             "usage": f.get("usage"),
             "ean": f.get("ean"),
-            "groups": ["breakfast", "lunch", "dinner", "snack"],  # still included
+            "groups": ["breakfast", "lunch", "dinner", "snack"],
         }
         result.append(d)
 
