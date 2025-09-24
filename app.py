@@ -3236,22 +3236,38 @@ def copy_session():
     source_date = request.form.get("source_date")
     target_date = request.form.get("target_date")
     user_id = current_user.id
-    # Add debug logging
-    print(f"Copying workout from {source_date} to {target_date} for user {user_id}")
+    
+    # Enhanced debug logging
+    print(f"Copy request: {source_date} -> {target_date} for user {user_id}")
+    
+    # Validate dates
+    if not source_date or not target_date:
+        print("Missing source_date or target_date")
+        return jsonify({"success": False, "error": "Missing source or target date"})
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
     try:
-        # Fetch source session
+        # Check if source session exists
         cursor.execute(
             "SELECT * FROM workout_sessions WHERE user_id = %s AND date = %s",
             (user_id, source_date)
         )
         source_session = cursor.fetchone()
+        
         if not source_session:
+            print(f"Source session not found for date {source_date}")
             return jsonify({"success": False, "error": "Source session not found"})
 
+        print(f"Found source session: {source_session['id']}")
+
+        # Delete existing target session if it exists
+        cursor.execute(
+            "DELETE FROM workout_sessions WHERE user_id = %s AND date = %s",
+            (user_id, target_date)
+        )
+        
         # Use source muscle_group (or fallback)
         muscle_group = source_session["muscle_group"] or "All"
 
@@ -3262,6 +3278,7 @@ def copy_session():
             (user_id, target_date, source_session["name"], source_session["focus_type"], muscle_group)
         )
         new_session_id = cursor.fetchone()["id"]
+        print(f"Created new session: {new_session_id}")
 
         # Copy sets
         cursor.execute(
@@ -3269,20 +3286,25 @@ def copy_session():
             (source_session["id"],)
         )
         sets = cursor.fetchall()
+        
+        sets_copied = 0
         for s in sets:
             cursor.execute(
                 "INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments) "
                 "VALUES (%s, %s, %s, %s, %s, %s)",
                 (new_session_id, s["exercise_id"], s["reps"], s["weight"], s["rir"], s["comments"])
             )
+            sets_copied += 1
 
+        print(f"Copied {sets_copied} sets")
         conn.commit()
         cursor.close()
         conn.close()
 
-        return jsonify({"success": True})
+        return jsonify({"success": True, "message": f"Copied {sets_copied} sets"})
 
     except Exception as e:
+        print(f"Error copying session: {str(e)}")
         conn.rollback()
         cursor.close()
         conn.close()
@@ -3924,7 +3946,144 @@ def scan_nutrition_label():
 
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500
+@app.route("/workout/similar_names", methods=["POST"])
+@login_required
+def get_similar_workout_names():
+    data = request.get_json()
+    query = data.get("query", "").strip()
     
+    if len(query) < 2:  # Only search after 2+ characters
+        return jsonify({"suggestions": []})
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Find similar workout names using ILIKE for case-insensitive partial matching
+        cursor.execute("""
+            SELECT DISTINCT name, date, focus_type, id
+            FROM workout_sessions 
+            WHERE user_id = %s 
+            AND name ILIKE %s 
+            AND name != %s
+            ORDER BY date DESC
+            LIMIT 5
+        """, (current_user.id, f"%{query}%", query))
+        
+        suggestions = []
+        for row in cursor.fetchall():
+            suggestions.append({
+                "name": row[0],
+                "date": row[1].strftime("%Y-%m-%d"),
+                "focus_type": row[2],
+                "session_id": row[3]
+            })
+        
+        return jsonify({"suggestions": suggestions})
+        
+    except Exception as e:
+        return jsonify({"suggestions": [], "error": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/workout/copy_from_session", methods=["POST"])
+@login_required
+def copy_from_session():
+    session_id = request.form.get("session_id")
+    target_date = request.form.get("target_date")
+    
+    print(f"DEBUG: session_id={session_id}, target_date={target_date}")
+    
+    if not session_id or not target_date:
+        return jsonify({"success": False, "error": "Missing session_id or target_date"})
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Get the source session with debug info
+        cursor.execute("""
+            SELECT * FROM workout_sessions 
+            WHERE id = %s AND user_id = %s
+        """, (session_id, current_user.id))
+        
+        source_session = cursor.fetchone()
+        print(f"DEBUG: Source session found: {source_session}")
+        
+        if not source_session:
+            return jsonify({"success": False, "error": "Source session not found"})
+        
+        # Delete existing target session if it exists
+        cursor.execute("""
+            DELETE FROM workout_sessions 
+            WHERE user_id = %s AND date = %s
+        """, (current_user.id, target_date))
+        
+        deleted_count = cursor.rowcount
+        print(f"DEBUG: Deleted {deleted_count} existing sessions for target date")
+        
+        # Create new session for target date
+        cursor.execute("""
+            INSERT INTO workout_sessions (user_id, date, name, focus_type)
+            VALUES (%s, %s, %s, %s) RETURNING id
+        """, (
+            current_user.id, 
+            target_date, 
+            source_session["name"], 
+            source_session["focus_type"]
+        ))
+        
+        new_session_result = cursor.fetchone()
+        new_session_id = new_session_result["id"]
+        print(f"DEBUG: Created new session with ID: {new_session_id}")
+        
+        # Get sets from source session
+        cursor.execute("""
+            SELECT exercise_id, reps, weight, rir, comments
+            FROM workout_sets 
+            WHERE session_id = %s
+        """, (session_id,))
+        
+        source_sets = cursor.fetchall()
+        print(f"DEBUG: Found {len(source_sets)} sets to copy")
+        
+        # Copy all sets from source session
+        sets_copied = 0
+        for set_data in source_sets:
+            cursor.execute("""
+                INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                new_session_id, 
+                set_data["exercise_id"], 
+                set_data["reps"], 
+                set_data["weight"], 
+                set_data["rir"], 
+                set_data["comments"]
+            ))
+            sets_copied += 1
+        
+        print(f"DEBUG: Successfully copied {sets_copied} sets")
+        conn.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": f"Copied {sets_copied} sets to {target_date}",
+            "debug": {
+                "source_session_id": session_id,
+                "new_session_id": new_session_id,
+                "sets_copied": sets_copied
+            }
+        })
+        
+    except Exception as e:
+        print(f"DEBUG: Error in copy_from_session: {str(e)}")
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
