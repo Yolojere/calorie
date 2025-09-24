@@ -232,7 +232,7 @@ class EnhancedSimpleScanner:
         },
         'fats': {
             'keywords': ['rasva', 'rasvaa', 'fett', 'fat', 'rasvad', 'липиды', 'tuki'],
-            'exclude_keywords': ['tyydytt', 'mättat', 'saturated', 'kullast','-jois', '-jost'],
+            'exclude_keywords': ['tyydytt', 'mättat', 'saturated', 'kullast'],
             'expected_range': (0, 100),
             'priority': 2
         },
@@ -241,16 +241,16 @@ class EnhancedSimpleScanner:
                 'saturated', 'tyydytt', 'mattat', 'gesattigt', 'saturés',
                 'mattede', 'kullastunud', 'piesätinäti', 'насыщен',
                 'saturat', 'mättade', 'насищен', 'tydytty', 'mättad',
-                'tyydyttynyt', 'tyydyttyneet', 'tyydyttyneitä', 'mattad', 'millest', 'rasvha'
+                'tyydyttynyt', 'tyydyttyneet', 'tyydyttyneitä', 'mattad'
             ],
-            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'siitä', 'whereof', 'davon','-jois', '-jost'],
+            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'siitä', 'whereof', 'davon'],
             'expected_range': (0, 50),
             'priority': 4,
             'special_handling': True
         },
         'carbs': {
-            'keywords': ['hiilihydraat', 'hiilih', 'hiilihydr', 'kolhydrat', 'carb', 'susivesik', 'углевод', 'angliavandeniai'],
-            'exclude_keywords': ['sokeri', 'socker', 'sugar', 'suhkr', '-jois', '-jost'],
+            'keywords': ['hiilihydraat', 'kolhydrat', 'carb', 'susivesik', 'углевод', 'angliavandeniai'],
+            'exclude_keywords': ['sokeri', 'socker', 'sugar', 'suhkr'],
             'expected_range': (0, 120),
             'priority': 3
         },
@@ -258,13 +258,13 @@ class EnhancedSimpleScanner:
             'keywords': [
                 'fiber', 'fibre', 'kuitu', 'kostfiber', 'ballaststoff', 'fibres',
                 'kiudaine', 'skiedrviela', 'skaidula', 'клетчатка',
-                'ravintokuitu', 'kostfibr', 'dietary fiber', 'kuidained', 'kiudained', 'uitu/', 'fibre'
+                'ravintokuitu', 'kostfibr', 'dietary fiber', 'kuidained', 'kiudained'
             ],
             'expected_range': (0, 80),
             'priority': 5
         },
         'proteins': {
-            'keywords': ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym','tein/', 'iini/', 'eiwitten'],
+            'keywords': ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym'],
             'expected_range': (0, 85),
             'priority': 3
         },
@@ -272,15 +272,14 @@ class EnhancedSimpleScanner:
             'keywords': [
                 'sugar', 'sokeri', 'socker', 'sucre', 'azucar', 'zucker', 'suhkr',
                 'sockerarter', 'sokereita', 'suhkrud', 'cukru', 'cukurs',
-                'sugars', 'zuccheri', 'açúcar', 'glucides', 'сахар', 'cukrų', 'soker', 'rit/','ria/'
-                'keri/'
+                'sugars', 'zuccheri', 'açúcar', 'glucides', 'сахар', 'cukrų'
             ],
-            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof', '-jois', '-jost'],
+            'context_keywords': ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof'],
             'expected_range': (0, 80),
             'priority': 6
         },
         'salt': {
-            'keywords': ['suola', 'salt', 'sool', 'sal', 'соль', 'druska', 'ola/', 'sel', 'zout'],
+            'keywords': ['suola', 'salt', 'sool', 'sal', 'соль', 'druska'],
             'expected_range': (0, 5),
             'priority': 7
         }
@@ -595,9 +594,9 @@ class EnhancedSimpleScanner:
             'tyydytt', 'tyydyttynyt', 'tyydyttynyttä', 'tyydyttyneet',
             'mättat', 'mattat', 'mattad', 'mattfat',
             'saturated', 'sat.', 'satrtd',  # OCR-mangled
-            'josta tyydytt', 'varav mättat', 'nyttä/','neitä/'
+            'josta tyydytt', 'varav mättat'
         ]
-        context_keywords = ['josta', 'varav', 'millest', 'of which', 'siitä', '-jois', '-jost']
+        context_keywords = ['josta', 'varav', 'millest', 'of which', 'siitä']
 
         for i, item in enumerate(extracted_text):
             text_lower = item['text'].lower()
@@ -636,7 +635,7 @@ class EnhancedSimpleScanner:
                         break
 
             if not is_likely_saturated and saturated_keyword_found in [
-                'tyydytt', 'mättat', 'saturated', 'tyydyttynyttä', 'tyydyttyneet', 'josta tyyd', 'joista tyyd'
+                'tyydytt', 'mättat', 'saturated', 'tyydyttynyttä', 'tyydyttyneet'
             ]:
                 is_likely_saturated = True
                 self.log_debug(f"🧈 Specific keyword accepted without context")
@@ -722,7 +721,7 @@ class EnhancedSimpleScanner:
         ]
         
         # EXPANDED context keywords 
-        context_keywords = ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof', 'davon', '-jost', '-joist']
+        context_keywords = ['josta', 'varav', 'millest', 'of which', 'joista', 'siitä', 'whereof', 'davon']
         
         for i, item in enumerate(extracted_text):
             text_lower = item['text'].lower()
@@ -766,7 +765,7 @@ class EnhancedSimpleScanner:
             # PRODUCTION: Accept sugar keywords more liberally
             if not has_context:
                 # Auto-accept specific high-confidence sugar keywords
-                auto_accept_keywords = ['sockerarter', 'sokereita', 'suhkrud', 'sugars', 'soker', '-josta sok', '-joista sok']
+                auto_accept_keywords = ['sockerarter', 'sokereita', 'suhkrud', 'sugars']
                 if any(auto_kw in sugar_keyword_found for auto_kw in auto_accept_keywords):
                     has_context = True
                     self.log_debug(f"🍭 Auto-accepting high-confidence sugar keyword")
@@ -850,87 +849,66 @@ class EnhancedSimpleScanner:
         return sugar_candidates
 
     def find_proteins_enhanced(self, extracted_text, columns):
-            """FIXED protein detection that avoids portion size confusion"""
-            protein_candidates = []
-            per_100g_x, per_product_x = columns
+        """PRODUCTION protein detection"""
+        protein_candidates = []
+        per_100g_x, per_product_x = columns
+        
+        protein_keywords = ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym']
+        
+        for i, item in enumerate(extracted_text):
+            text_lower = item['text'].lower()
             
-            protein_keywords = ['proteiini', 'protein', 'valk', 'белок', 'olbaltum', 'baltym']
-            
-            # CRITICAL: Confusion patterns to avoid
-            confusion_patterns = [
-                r'per\s+100\s*g',     # "per 100g"
-                r'100\s*g',           # "100g" 
-                r'100\s*ml',          # "100ml"
-                r'portion',           # "portion"
-                r'serving',           # "serving"
-                r'kohti',             # Finnish "per"
-            ]
-            
-            for i, item in enumerate(extracted_text):
-                text_lower = item['text'].lower()
+            # Check for protein keywords
+            if any(keyword in text_lower for keyword in protein_keywords):
+                self.log_debug(f"📍 Found proteins keyword in: '{item['text']}'")
                 
-                # Check for protein keywords
-                if any(keyword in text_lower for keyword in protein_keywords):
+                # Search for numbers in nearby items
+                for j, candidate_item in enumerate(extracted_text):
+                    if i == j:
+                        continue
                     
-                    # CRITICAL CHECK: Skip if this text contains confusion patterns
-                    is_confused = False
-                    for pattern in confusion_patterns:
-                        if re.search(pattern, text_lower):
-                            is_confused = True
-                            print(f"🚫 SKIPPING protein confusion: '{item['text']}' contains '{pattern}'")
-                            break
+                    # NEW: Prefer values to the right of the keyword
+                    if candidate_item['x'] <= item['x']:
+                        continue
                     
-                    if is_confused:
-                        continue  # Skip this potential protein match
+                    # Same row priority
+                    y_dist = abs(candidate_item['y'] - item['y'])
+                    x_dist = abs(candidate_item['x'] - item['x'])
                     
-                    # Look for protein values (with enhanced confusion checking)
-                    for j, candidate_item in enumerate(extracted_text):
-                        if i == j or candidate_item['x'] <= item['x']:
-                            continue
-                        
-                        # DOUBLE CHECK: Also check candidate for confusion patterns
-                        candidate_lower = candidate_item['text'].lower()
-                        if any(re.search(pattern, candidate_lower) for pattern in confusion_patterns):
-                            continue
-                        
-                        y_dist = abs(candidate_item['y'] - item['y'])
-                        x_dist = abs(candidate_item['x'] - item['x'])
-                        
-                        if y_dist <= 60 or (y_dist <= 200 and x_dist <= 400):
-                            numbers = self.extract_numbers_enhanced_FIXED(candidate_item['text'], 'proteins')
+                    if y_dist <= 50 or (y_dist <= 200 and x_dist <= 400):
+                        numbers = self.extract_numbers_enhanced(candidate_item['text'])
+                        for value, unit in numbers:
+                            final_value = value
+                            if unit == 'mg':
+                                final_value = value / 1000
                             
-                            for value, unit in numbers:
-                                final_value = value
-                                if unit == 'mg' and value > 100:
-                                    final_value = value / 1000
+                            if 0 <= final_value <= 85:  # Protein range
+                                # Determine column
+                                column_type = 'unknown'
+                                confidence_bonus = 0
                                 
-                                # Realistic protein range (not 100g!)
-                                if 0.1 <= final_value <= 85:
-                                    column_type = 'unknown'
-                                    confidence_bonus = 0
-                                    
-                                    if per_100g_x and per_product_x:
-                                        dist_to_100g = abs(candidate_item['x'] - per_100g_x)
-                                        dist_to_product = abs(candidate_item['x'] - per_product_x)
-                                        if dist_to_100g < dist_to_product:
-                                            column_type = 'per_100g'
-                                            confidence_bonus = 0.3
-                                    
-                                    protein_candidates.append({
-                                        'field_type': 'proteins',
-                                        'value': final_value,
-                                        'unit': unit,
-                                        'confidence': candidate_item['confidence'] + confidence_bonus,
-                                        'source_text': candidate_item['text'],
-                                        'x_pos': candidate_item['x'],
-                                        'y_pos': candidate_item['y'],
-                                        'column_type': column_type
-                                    })
-                                    
-                                    print(f"✅ VALID protein: {final_value}{unit} from '{candidate_item['text']}'")
-            
-            protein_candidates.sort(key=lambda x: (-x['confidence'], x['column_type'] == 'per_100g'))
-            return protein_candidates[:3]
+                                if per_100g_x and per_product_x:
+                                    dist_to_100g = abs(candidate_item['x'] - per_100g_x)
+                                    dist_to_product = abs(candidate_item['x'] - per_product_x)
+                                    if dist_to_100g < dist_to_product:
+                                        column_type = 'per_100g'
+                                        confidence_bonus = 0.2
+                                
+                                protein_candidates.append(NutritionValue(
+                                    field_type='proteins',
+                                    value=final_value,
+                                    unit=unit,
+                                    confidence=candidate_item['confidence'] + confidence_bonus,
+                                    source_text=candidate_item['text'],
+                                    x_pos=candidate_item['x'],
+                                    y_pos=candidate_item['y'],
+                                    is_claimed=False,
+                                    column_type=column_type
+                                ))
+                                
+                                self.log_debug(f"    ✅ PROTEIN CANDIDATE: {final_value}{unit} (conf: {candidate_item['confidence'] + confidence_bonus:.3f}, column: {column_type})")
+        
+        return protein_candidates[:3]  # Limit to top 3    
 
     def boost_realistic_candidates(self, candidates):
         """PRODUCTION: Boost confidence for realistic nutrition values"""
