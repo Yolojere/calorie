@@ -34,13 +34,19 @@ function setupEventListeners() {
     });
 
     // Copy workout
-    $("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
-        // Capture the source date directly from the active element
-        const sourceDate = $(".workout-date.active").data("date");
-        $("#copyWorkoutModal").data("source-date", sourceDate);
-        populateDateOptions();
-        $("#copyWorkoutModal").modal("show");
-    });
+$("#copy-workout-btn, #copy-workout-mobile-btn").click(function() {
+    // Use currentSelectedDate instead of DOM element
+    const sourceDate = currentSelectedDate; // ✅ Reliable source
+    
+    if (!sourceDate) {
+        alert("Valitse ensin treeni kopioitavaksi");
+        return;
+    }
+    
+    $("#copyWorkoutModal").data("source-date", sourceDate);
+    populateDateOptions();
+    $("#copyWorkoutModal").modal("show");
+});
     
     $(document).on("click", ".date-option", function() {
         copyWorkoutToDate($(this).data("date"));
@@ -54,17 +60,13 @@ function setupEventListeners() {
 }
 function openCopyWorkoutModal() {
     hideWorkoutResults();
-    
-    const activeDate = $(".workout-date.active").data("date");
+    const activeDate = currentSelectedDate;
     if (!activeDate) {
         alert("Valitse ensin treeni kopioitavaksi");
         return;
     }
     
-    currentSelectedDate = activeDate;
-    
-    // Force set the source date
-    $("#copyWorkoutModal").attr("data-source-date", activeDate);
+    // Store source date consistently
     $("#copyWorkoutModal").data("source-date", activeDate);
     
     populateDateOptions();
@@ -573,3 +575,193 @@ function setupCalendarEvents() {
         }
     });
 }
+// Smart workout name suggestions
+let suggestionTimeout;
+
+// Handle input in the inline workout name editor
+$(document).on('input', '.workout-name-input:visible', function() {
+    const query = $(this).val().trim();
+    const suggestionsContainer = $('#workout-name-suggestions-inline');
+    
+    // Clear previous timeout
+    clearTimeout(suggestionTimeout);
+    
+    if (query.length < 2) {
+        suggestionsContainer.hide().empty();
+        return;
+    }
+    
+    // Debounce the search
+    suggestionTimeout = setTimeout(() => {
+        fetchWorkoutSuggestionsInline(query);
+    }, 300);
+});
+
+function fetchWorkoutSuggestionsInline(query) {
+    $.ajax({
+        url: '/workout/similar_names',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ query: query }),
+        success: function(response) {
+            displayWorkoutSuggestionsInline(response.suggestions);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching suggestions:', error);
+            $('#workout-name-suggestions-inline').hide().empty();
+        }
+    });
+}
+
+function displayWorkoutSuggestionsInline(suggestions) {
+    const container = $('#workout-name-suggestions-inline');
+    
+    if (suggestions.length === 0) {
+        container.hide().empty();
+        return;
+    }
+    
+    let html = '';
+    suggestions.forEach(suggestion => {
+        html += `
+            <div class="suggestion-item" data-session-id="${suggestion.session_id}" data-name="${suggestion.name}">
+                <div class="suggestion-name">${suggestion.name}</div>
+                <div class="suggestion-details">
+                    ${formatDateForDisplay(suggestion.date)} • ${suggestion.focus_type}
+                </div>
+                <div class="copy-workout-hint">Kopioi pohjaksi</div>
+            </div>
+        `;
+    });
+    
+    container.html(html).show();
+}
+
+// Handle suggestion clicks for inline editor
+$(document).on('click', '#workout-name-suggestions-inline .suggestion-item', function() {
+    const sessionId = $(this).data('session-id');
+    const workoutName = $(this).data('name');
+    
+    // Fill in the workout name
+    $('.workout-name-input:visible').val(workoutName);
+    
+    // Hide suggestions
+    $('#workout-name-suggestions-inline').hide().empty();
+    
+    // Save the name immediately
+    saveEditWorkoutName();
+    
+    // Show confirmation modal for copying the workout
+    showCopyWorkoutConfirmationInline(sessionId, workoutName);
+});
+
+function showCopyWorkoutConfirmationInline(sessionId, workoutName) {
+    const currentDate = $('.workout-date.active').data('date') || new Date().toISOString().split('T')[0];
+    
+    // Create confirmation modal
+    const modalHtml = `
+        <div class="modal fade" id="copyWorkoutConfirmationModalInline" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark text-light">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${t('copy_previous_workout')}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${t('copy_workout_question').replace('{workoutName}', workoutName).replace('{date}', formatDateForDisplay(currentDate))}</p>
+                        <p class="text-muted">${t('copy_workout_description')}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${t('no')}</button>
+                        <button type="button" class="btn btn-primary" id="confirm-copy-workout-inline" 
+                                data-session-id="${sessionId}" data-target-date="${currentDate}">
+                            ${t('yes')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove any existing modal and add new one
+    $('#copyWorkoutConfirmationModalInline').remove();
+    $('body').append(modalHtml);
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('copyWorkoutConfirmationModalInline')).show();
+}
+
+
+// Handle copy confirmation for inline editor
+$(document).on('click', '#confirm-copy-workout-inline', function() {
+    const sessionId = $(this).data('session-id');
+    const targetDate = $(this).data('target-date');
+    
+    copyWorkoutFromSessionInline(sessionId, targetDate);
+});
+
+function copyWorkoutFromSessionInline(sessionId, targetDate) {
+    const $btn = $('#confirm-copy-workout-inline');
+    const originalText = $btn.text();
+    $btn.text('Copying...').prop('disabled', true);
+    
+    $.ajax({
+        url: '/workout/copy_from_session',
+        method: 'POST',
+        data: {
+            session_id: sessionId,
+            target_date: targetDate
+        },
+        success: function(response) {
+            console.log('Copy response:', response); // Debug log
+            
+            if (response.success) {
+                // Close modal
+                $('#copyWorkoutConfirmationModalInline').modal('hide');
+                
+                // Clear cache for target date
+                if (typeof getCachedData === 'function') {
+                    const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+                    if (cachedSessions[targetDate]) {
+                        delete cachedSessions[targetDate];
+                        setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
+                    }
+                }
+                
+                // Reload current session
+                if (typeof getSessionWithCache === 'function') {
+                    getSessionWithCache(targetDate, function(data) {
+                        renderWorkoutSession(data.session, data.exercises);
+                    });
+                } else {
+                    location.reload();
+                }
+                
+                alert(`Workout copied successfully! ${response.debug ? response.debug.sets_copied : ''} sets copied.`);
+            } else {
+                alert('Error copying workout: ' + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Copy error:', xhr.responseText);
+            alert('Network error occurred while copying workout');
+        },
+        complete: function() {
+            $btn.text(originalText).prop('disabled', false);
+        }
+    });
+}
+
+// Hide suggestions when clicking outside the inline editor
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.workout-name-input, #workout-name-suggestions-inline').length) {
+        $('#workout-name-suggestions-inline').hide();
+    }
+});
+
+// Hide suggestions when input loses focus (with delay to allow clicks)
+$(document).on('blur', '.workout-name-input', function() {
+    setTimeout(() => {
+        $('#workout-name-suggestions-inline').hide();
+    }, 200);
+});
