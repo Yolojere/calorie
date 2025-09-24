@@ -110,7 +110,7 @@ function setupMobileDateSelector() {
     
     $("#mobile-date-selector").change(function() {
         const selectedDate = $(this).val();
-        currentSelectedDate = selectedDate;
+        selectDate(selectedDate);
         // Use cached version of session loading
         getSessionWithCache(selectedDate, function(data) {
             renderWorkoutSession(data.session, data.exercises);
