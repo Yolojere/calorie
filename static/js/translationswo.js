@@ -363,6 +363,16 @@ const translations = {
     error: "Virhe",
     error_loading_template: "Virhe ladattaessa pohjaa",
     workoutCopiedSuccess: "Treeni tallennettu onnistuneesti!",
+    copy_previous_workout: "Kopioidaanko viime treeni?",
+    copy_workout_question: "Kopioidaanko \"{workoutName}\" tälle päivälle ({date})?",
+    copy_workout_description: "Kopioi kaikki sarjat ja toistot viime treenistä.",
+    yes: "Kyllä",
+    no: "Ei",
+    
+    // You might also want to add these for other parts
+    workout_copied_successfully: "Treeni kopioitu onnistuneesti!",
+    copy_workout_error: "Virhe kopioitaessa treeniä",
+    network_error: "Verkkovirhe tapahtui kopioitaessa treeniä",
 
      // Exercises (static + dynamic ready)
      // CHEST
