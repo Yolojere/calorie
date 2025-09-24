@@ -53,22 +53,12 @@ function setupEventListeners() {
     }
 }
 function openCopyWorkoutModal() {
-    hideWorkoutResults();
-    
-    const activeDate = $(".workout-date.active").data("date");
-    if (!activeDate) {
-        alert("Valitse ensin treeni kopioitavaksi");
-        return;
-    }
-    
-    currentSelectedDate = activeDate;
-    
-    // Force set the source date
-    $("#copyWorkoutModal").attr("data-source-date", activeDate);
-    $("#copyWorkoutModal").data("source-date", activeDate);
-    
-    populateDateOptions();
-    $("#copyWorkoutModal").modal("show");
+  hideWorkoutResults();
+  // ensure currentSelectedDate is set appropriately
+  const activeDate = $(".workout-date.active").data("date");
+  currentSelectedDate = activeDate;
+  populateDateOptions();
+  $("#copyWorkoutModal").modal("show");
 }
 function setupRirDropdowns() {
     // Hide dropdown when clicking elsewhere
