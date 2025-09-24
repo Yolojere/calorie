@@ -355,13 +355,23 @@ function copyWorkoutToDate(targetDate) {
     isCopyingWorkout = true;
 
     const sourceDate = $("#copyWorkoutModal").data("source-date");
+    
+    if (!sourceDate) {
+        console.error("No source date available for copying");
+        isCopyingWorkout = false;
+        return;
+    }
 
     const $btn = $("#copy-workout-btn, #copy-workout-mobile-btn");
     const originalContent = $btn.html();
     $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Copying...');
     $btn.prop('disabled', true);
 
-        getSessionWithCache(targetDate, function(data) {
+    // Show loading overlay
+    showLoadingOverlay("Kopioidaan treeni...");
+
+    // Check if target date has existing workout
+    getSessionWithCache(targetDate, function(data) {
         if (data.session && data.exercises && data.exercises.length > 0) {
             if (!confirm("Tällä päivällä on jo merkattu treeni. Kopioidaanko sen päälle?")) {
                 hideLoadingOverlay();
@@ -372,50 +382,59 @@ function copyWorkoutToDate(targetDate) {
             }
         }
 
-    // Show a loading overlay for better UX
-    showLoadingOverlay("Kopioidaan treeni...");
-    
-
-    $.post("/workout/copy_session", {
-        source_date: sourceDate,
-        target_date: targetDate
-    })
-    .done(function(response) {
-        if (response.success) {
-            // Clear cache for target date more aggressively
-            const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-            delete cachedSessions[targetDate];
-            setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-            
-            // Force a fresh server fetch instead of using cache
-            $.post("/workout/get_session", { date: targetDate }, function(data) {
-                // Update cache with fresh data
-                const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-                updatedSessions[targetDate] = data;
-                setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
+        // Perform the copy
+        $.post("/workout/copy_session", {
+            source_date: sourceDate,
+            target_date: targetDate
+        })
+        .done(function(response) {
+            if (response.success) {
+                // Aggressively clear cache for target date
+                const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+                delete cachedSessions[targetDate];
+                setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
                 
-                renderWorkoutSession(data.session, data.exercises, { collapseGroups: true });
-            });
-            
-            $("#copyWorkoutModal").modal("hide");
-            // Show success toast
-    const toastEl = document.getElementById('copySuccessToast');
-    const toast = new bootstrap.Toast(toastEl, { delay: 3000 }); // auto-hide after 3s
-    toast.show();
-
-        } else {
-            showErrorMessage("Error: " + response.error);
-        }
-    })
-    .fail(function(xhr, status, error) {
-        showErrorMessage("Network error. Please try again.");
-        console.error("Copy workout error:", status, error);
-    })
-    .always(function() {
-        hideLoadingOverlay();
-        $btn.html(originalContent);
-        $btn.prop('disabled', false);
-        isCopyingWorkout = false;
+                // Also clear any other related cache entries
+                localStorage.removeItem(`workout_${targetDate}`);
+                localStorage.removeItem(`session_${targetDate}`);
+                
+                // Force fresh server fetch
+                $.post("/workout/get_session", { date: targetDate })
+                .done(function(freshData) {
+                    // Update cache with fresh data
+                    const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+                    updatedSessions[targetDate] = freshData;
+                    setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
+                    
+                    // Re-render if this is the currently selected date
+                    if (targetDate === currentSelectedDate) {
+                        renderWorkoutSession(freshData.session, freshData.exercises, { collapseGroups: true });
+                    }
+                })
+                .fail(function() {
+                    console.error("Failed to fetch fresh session data");
+                });
+                
+                $("#copyWorkoutModal").modal("hide");
+                
+                // Show success toast
+                const toastEl = document.getElementById('copySuccessToast');
+                const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+                toast.show();
+                
+            } else {
+                showErrorMessage("Error: " + response.error);
+            }
+        })
+        .fail(function(xhr, status, error) {
+            showErrorMessage("Network error. Please try again.");
+            console.error("Copy workout error:", xhr.responseText, status, error);
+        })
+        .always(function() {
+            hideLoadingOverlay();
+            $btn.html(originalContent);
+            $btn.prop('disabled', false);
+            isCopyingWorkout = false;
         });
     });
 }
