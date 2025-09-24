@@ -260,3 +260,15 @@ $('#saveWorkoutModal').on('show.bs.modal', function(){
     const autosuggest = localStorage.getItem(key) || "My Session";
     $("#workout-name-input").val(autosuggest);
 });
+function selectDate(dateString) {
+    currentSelectedDate = dateString; // ✅ Update global state
+    
+    // Update visual indicators
+    $(".workout-date").removeClass("active");
+    $(`.workout-date[data-date="${dateString}"]`).addClass("active");
+    
+    // Load session for the selected date
+    getSessionWithCache(dateString, function(data) {
+        renderWorkoutSession(data.session, data.exercises);
+    });
+}
