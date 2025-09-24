@@ -32,6 +32,7 @@ function renderWeekDates(dates) {
         $(".workout-date").removeClass("active");
         $(this).addClass("active");
         const selectedDate = $(this).data("date");
+        selectDate(selectedDate);
 
         // Use cached version of session loading
         getSessionWithCache(selectedDate, function(data) {
@@ -762,8 +763,10 @@ $(document).on("click", ".month-nav.next", function() {
 
 // Init on modal open
 $('#copyWorkoutModal').on('shown.bs.modal', function() {
-    // FIXED: Always ensure we have a valid current month
-    const today = new Date();
+        const sourceDate = $(".workout-date.active").data("date");
+    if (sourceDate) {
+        $("#copyWorkoutModal").data("source-date", sourceDate);
+    }
     if (!window.calendarState.currentMonth) {
         window.calendarState.currentMonth = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
     }
