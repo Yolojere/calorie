@@ -671,8 +671,8 @@ function showCopyWorkoutConfirmationInline(sessionId, workoutName) {
                         <p class="text-muted">${t('copy_workout_description')}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${t('no')}</button> 
-                        <button type="button" class="btn btn-primary" id="confirm-copy-workout-inline" 
+                        <button type="button" class="btn btn-jere" data-bs-dismiss="modal">${t('no')}</button> 
+                        <button type="button" class="btn btn-jere" id="confirm-copy-workout-inline" 
                                 data-session-id="${sessionId}" data-target-date="${currentDate}">
                             ${t('yes')}
                         </button>
