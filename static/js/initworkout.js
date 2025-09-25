@@ -191,7 +191,7 @@ function getWorkoutNameKey(date) {
 
 // Render workout name in header
 function renderWorkoutName(date) {
-    const name = localStorage.getItem(getWorkoutNameKey(date)) || "My Session";
+    const name = localStorage.getItem(getWorkoutNameKey(date)) || "Nimetön Treeni :(";
     $(".workout-name-display").text(name).show();
     $(".workout-name-input").val(name).hide();
 }
@@ -208,7 +208,7 @@ $(document).on("keydown", ".workout-name-input", function(e){
 function saveEditWorkoutName() {
     const $input = $(".workout-name-input");
     const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
-    let val = $input.val().trim() || "My Session";
+    let val = $input.val().trim() || "Nimetön Treeni :(";
     localStorage.setItem(getWorkoutNameKey(date), val);
     $(".workout-name-display").text(val).show();
     $input.hide();
