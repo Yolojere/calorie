@@ -526,14 +526,14 @@ function loadWorkoutName() {
         workoutName.textContent = savedName;
         input.value = savedName;
     } else {
-        workoutName.textContent = "My Session";
-        input.value = "My Session";
+        workoutName.textContent = "Nimetön Treeni :(";
+        input.value = "Nimetön Treeni :(";
     }
 }
 
 // Save workout name for current date
 function saveEdit() {
-    const newName = input.value.trim() || "Unnamed Workout";
+    const newName = input.value.trim() || "Nimetön Treeni :(";
     workoutName.textContent = newName;
 
     const key = "workoutName_" + getDateKey();
@@ -657,8 +657,7 @@ $(document).on('click', '#workout-name-suggestions-inline .suggestion-item', fun
 
 function showCopyWorkoutConfirmationInline(sessionId, workoutName) {
     const currentDate = $('.workout-date.active').data('date') || new Date().toISOString().split('T')[0];
-    
-    // Create confirmation modal
+
     const modalHtml = `
         <div class="modal fade" id="copyWorkoutConfirmationModalInline" tabindex="-1">
             <div class="modal-dialog">
@@ -672,7 +671,7 @@ function showCopyWorkoutConfirmationInline(sessionId, workoutName) {
                         <p class="text-muted">${t('copy_workout_description')}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${t('no')}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${t('no')}</button> 
                         <button type="button" class="btn btn-primary" id="confirm-copy-workout-inline" 
                                 data-session-id="${sessionId}" data-target-date="${currentDate}">
                             ${t('yes')}
