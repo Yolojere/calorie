@@ -22,7 +22,7 @@ function generateDateOptionsForTemplate() {
 // format date for display
 function formatDateForDisplay(dateStr) {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', { 
+    return date.toLocaleDateString('fi-FI', { 
         weekday: 'short', 
         month: 'short', 
         day: 'numeric' 
