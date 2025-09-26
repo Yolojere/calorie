@@ -5,6 +5,10 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TrackYou foods</title>
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
         <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
@@ -1274,6 +1278,19 @@
                 max-height: 100%;  /* maintain aspect ratio */
                 object-fit: contain;
             }
+
+            /* date selector */
+            #date-selector:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+#date-selector.loading {
+    background-image: url("data:image/svg+xml,%3csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m.5 8a7.5 7.5 0 0 1 7.5-7.5' stroke='%23fff' stroke-opacity='0.75' stroke-linecap='round' stroke-width='2'/%3e%3cpath d='m.5 8a7.5 7.5 0 0 1 7.5-7.5' stroke='%23fff' stroke-opacity='0.25' stroke-linecap='round' stroke-width='2' transform='rotate(90 8 8)'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    animation: spin 1s linear infinite;
+}
             /* Tooltip container */
     .tooltip {
     opacity: 1 !important; /* prevent Bootstrap fade weirdness */
@@ -3218,6 +3235,8 @@
                 const ADMIN_KEY_COMBO = ['i', 'd', 'd', 'q', 'd'];
                 
                 // ===== STATE VARIABLES =====
+                let isLoadingDates = false;
+                let currentDates = DATES;
                 let currentSelectedDate = CURRENT_DATE;
                 let codeReader = null;
                 let currentFood = null;
@@ -3343,7 +3362,7 @@
                 
                 // Session management
                 $('#clear-session').click(clearSession);
-                $('#date-selector').on('change', handleDateChange);
+                $('#date-selector').on('change', handleDateSelectorChange);
                 
                 // Item selection
                 $(document).on('click', '.group-items .list-group-item', handleItemSelection);
@@ -3380,7 +3399,117 @@
                 $(window).resize(handleWindowResize);
                 
                 // ===== HELPER FUNCTIONS =====
+                // Enhanced change handler that pre-loads dates
+                function handleSmartDateChange() {
+                    const selector = $('#date-selector');
+                    const selectedIndex = selector.prop('selectedIndex');
+                    const totalOptions = selector.find('option').length;
+                    
+                    // Pre-load more dates when user gets close to edges (within 2 positions)
+                    if (selectedIndex <= 2 && !isLoadingDates) {
+                        loadMoreDates('past');
+                    } else if (selectedIndex >= totalOptions - 3 && !isLoadingDates) {
+                        loadMoreDates('future');  
+                    }
+                    
+                    // Handle the actual date change
+                    handleDateChange.call(this);
+                }
+                function handleDateSelectorChange() {
+                const selector = $('#date-selector');
+                const selectedIndex = selector.prop('selectedIndex');
+                const totalOptions = selector.find('option').length;
                 
+                // Check if user selected first option (need to load past dates)
+                if (selectedIndex === 0 && !isLoadingDates) {
+                    loadMoreDates('past');
+                }
+                // Check if user selected last option (need to load future dates)  
+                else if (selectedIndex === totalOptions - 1 && !isLoadingDates) {
+                    loadMoreDates('future');
+                }
+                
+                // Handle the actual date change
+                handleDateChange.call(this);
+            }
+
+            // New function to load more dates
+            function loadMoreDates(direction) {
+                if (isLoadingDates) return;
+                
+                isLoadingDates = true;
+                const selector = $('#date-selector');
+                const currentSelectedValue = selector.val();
+                
+                // Show loading indicator
+                selector.prop('disabled', true);
+                
+                // Get current dates from the selector
+                const currentDatesArray = [];
+                selector.find('option').each(function() {
+                    const value = $(this).val();
+                    const text = $(this).text();
+                    currentDatesArray.push([value, text]);
+                });
+                
+                $.ajax({
+                    url: '/load_more_dates',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        direction: direction,
+                        current_dates: currentDatesArray
+                    }),
+                    success: function(response) {
+                        if (response.success && response.new_dates) {
+                            updateDateSelector(response.new_dates, response.position, currentSelectedValue);
+                            currentDates = getCurrentDatesFromSelector(); // Update our state
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load more dates:', error);
+                        console.error('Response:', xhr.responseText);
+                    },
+                    complete: function() {
+                        isLoadingDates = false;
+                        selector.prop('disabled', false);
+                    }
+                });
+            }
+
+            //  Function to update the date selector with new dates
+           function updateDateSelector(newDates, position, selectedValue) {
+    const selector = $('#date-selector');
+    
+    if (position === 'prepend') {
+        newDates.forEach(dateInfo => {
+            const option = $('<option></option>')
+                .attr('value', dateInfo[0])  // Use dateInfo[0] for value
+                .text(dateInfo[1]);         // Use dateInfo[1] for text
+            selector.prepend(option);
+        });
+    } else if (position === 'append') {
+        newDates.forEach(dateInfo => {
+            const option = $('<option></option>')
+                .attr('value', dateInfo[0])  // Use dateInfo[0] for value  
+                .text(dateInfo[1]);         // Use dateInfo[1] for text
+            selector.append(option);
+        });
+    }
+    
+    selector.val(selectedValue);
+}
+
+            // Helper function to get current dates from selector
+               function getCurrentDatesFromSelector() {
+    const dates = [];
+    $('#date-selector option').each(function() {
+        const $option = $(this);
+        dates.push([$option.val(), $option.text()]);  // Separate val() and text()
+    });
+    return dates;
+}
+                            
                 function handleWindowResize() {
                     positionNutritionGrid();
                     updateGridFontSizes();
