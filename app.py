@@ -962,6 +962,86 @@ def normalize_food_keys():
         conn.close()
 
 # Routes
+def generate_date_range(center_date_str, range_days=3):
+    """Generate a list of dates centered around the given date"""
+    from datetime import datetime, timedelta
+    
+    # Parse the center date
+    if isinstance(center_date_str, str):
+        center_date = datetime.strptime(center_date_str, "%Y-%m-%d")
+    else:
+        center_date = center_date_str
+    
+    dates = []
+    for i in range(-range_days, range_days + 1):
+        date_obj = center_date + timedelta(days=i)
+        date_str = date_obj.strftime("%Y-%m-%d")
+        formatted_date = format_date_finnish(date_str)
+        dates.append((date_str, formatted_date))
+    
+    return dates
+@app.route('/load_more_dates', methods=['POST'])
+@login_required
+def load_more_dates():
+    """Load more dates for the date selector"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+            
+        direction = data.get('direction')
+        current_dates = data.get('current_dates', [])
+        
+        if not current_dates:
+            return jsonify({'error': 'No current dates provided'}), 400
+            
+        if direction == 'past':
+            # Get the earliest date - extract just the date string part
+            earliest_date_data = current_dates[0]
+            earliest_date_str = earliest_date_data[0] if isinstance(earliest_date_data, list) else earliest_date_data
+            
+            earliest_date = datetime.strptime(earliest_date_str, "%Y-%m-%d")
+            
+            new_dates = []
+            for i in range(1, 4):  # Add 3 dates before
+                date_obj = earliest_date - timedelta(days=i)
+                date_str = date_obj.strftime("%Y-%m-%d")
+                formatted_date = format_date_finnish(date_str)
+                new_dates.insert(0, [date_str, formatted_date])
+                
+            return jsonify({
+                'success': True,
+                'new_dates': new_dates,
+                'position': 'prepend'
+            })
+            
+        elif direction == 'future':
+            # Get the latest date - extract just the date string part
+            latest_date_data = current_dates[-1]
+            latest_date_str = latest_date_data[0] if isinstance(latest_date_data, list) else latest_date_data
+            
+            latest_date = datetime.strptime(latest_date_str, "%Y-%m-%d")
+            
+            new_dates = []
+            for i in range(1, 4):  # Add 3 dates after
+                date_obj = latest_date + timedelta(days=i)
+                date_str = date_obj.strftime("%Y-%m-%d")
+                formatted_date = format_date_finnish(date_str)
+                new_dates.append([date_str, formatted_date])
+                
+            return jsonify({
+                'success': True,
+                'new_dates': new_dates,
+                'position': 'append'
+            })
+        else:
+            return jsonify({'error': 'Invalid direction'}), 400
+            
+    except Exception as e:
+        print(f"Error in load_more_dates: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 @app.route('/')
 @login_required
 def index():
@@ -975,13 +1055,8 @@ def index():
     food_usage = get_food_usage(current_user.id)
     group_breakdown = calculate_group_breakdown(eaten_items)
 
-    # Generate dates for selector - 3 days past, today, 3 days future
-    dates = []
-    today = datetime.now()
-    for i in range(-3, 4):
-        date_str = (today + timedelta(days=i)).strftime("%Y-%m-%d")
-        formatted_date = format_date_finnish(date_str)
-        dates.append((date_str, formatted_date))
+    # Generate initial dates for selector - 3 days past, today, 3 days future
+    dates = generate_date_range(current_date, range_days=3)
 
     current_date_formatted = format_date(current_date)
 
