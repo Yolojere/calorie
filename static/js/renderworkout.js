@@ -546,9 +546,57 @@ function showWorkoutResults(comparisonData, achievements) {
     const volumeChange = comparisonData.volumeChange || 0;
     const personalRecords = achievements.personalRecords || [];
     const improvements = achievements.improvements || [];
+    const newExercises = achievements.newExercises || 0;
+    const volumeImprovements = achievements.volumeImprovements || 0;
+    const setsImprovements = achievements.setsImprovements || 0;
+    const meaningfulPRs = personalRecords.filter(pr => pr.previousBest && (pr.previousBest.weight > 0 || pr.previousBest.reps > 0));
+    const prCount = meaningfulPRs.length;
+    const improvementCount = improvements.length;
     
+    // Dynamic PR messages based on count
+    function getPRMessage(count) {
+        if (count === 0) return '';
+        
+        const messages = {
+            1: ['solid', 'notbad', 'takeit'],
+            2: ['incredible', 'onfire', 'majestic'], 
+            3: ['incredible', 'onfire', 'majestic'],
+            4: ['incredible', 'onfire', 'majestic'],
+            5: ['woah', 'holdup', 'winner', 'king']
+        };
+        
+        let messageGroup;
+        if (count === 1) messageGroup = messages[1];
+        else if (count >= 2 && count <= 4) messageGroup = messages[2];
+        else messageGroup = messages[5];
+        
+        const randomIndex = Math.floor(Math.random() * messageGroup.length);
+        return t(messageGroup[randomIndex]);
+    }
+    
+    // Dynamic improvement messages based on count
+    function getImprovementMessage(count) {
+        if (count === 0) return '';
+        
+        const messages = {
+            1: ['keepup', 'pushing'],
+            2: ['thereitis', 'resultspeak', 'motivated'],
+            3: ['thereitis', 'resultspeak', 'motivated'],
+            4: ['thereitis', 'resultspeak', 'motivated'],
+            5: ['whatinthe']
+        };
+        
+        let messageGroup;
+        if (count === 1) messageGroup = messages[1];
+        else if (count >= 2 && count <= 4) messageGroup = messages[2];
+        else messageGroup = messages[5];
+        
+        const randomIndex = Math.floor(Math.random() * messageGroup.length);
+        return t(messageGroup[randomIndex]);
+    }
+
     let resultsHTML = `
-        <div class="workout-results-modal" id="workout-results">
+        <div class="workout-results-modal style-glass" id="workout-results">
             <div class="results-header">
                 <h2 class="results-title">${t('workoutComplete')}</h2>
                 <div class="results-subtitle">${t('performanceAnalysis')}</div>
@@ -556,33 +604,47 @@ function showWorkoutResults(comparisonData, achievements) {
             <div class="results-body">
     `;
     
-    // Show PR celebrations if any
+    // Show new exercises toast instead of meaningless PRs
+    if (newExercises > 0) {
+        console.log("DEBUG Toast: Adding toast to HTML");
+        resultsHTML += `
+            <div class="new-exercises-toast">
+                <div class="toast-icon">🔍</div>
+                <div class="toast-text">${newExercises} ${t('newExercisesDetected')}</div>
+                <div class="toast-subtext">${t('greatJobTryingNew')}</div>
+            </div>`;
+    }
+    
+    // Show PR celebrations only for meaningful PRs (not first-time 0kg comparisons)
     if (personalRecords.length > 0) {
-    personalRecords.forEach(pr => {
-        if (pr.type === 'bestSet') {
-            resultsHTML += `
-                <div class="pr-celebration">
-                    <div class="pr-trophy">🏆</div>
-                    <div class="pr-text">${t('newBestSet')}</div>
-                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} toistoa</div>
-                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} toistoa</div>
-                </div>`;
-        } else if (pr.type === 'heaviestWeight') {
-            resultsHTML += `
-                <div class="pr-celebration">
-                    <div class="pr-trophy">🏆</div>
-                    <div class="pr-text">${t('heaviestWeight')}</div>
-                    <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
-                    <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg</div>
-                </div>`;
-        }
-    });
-}
+        personalRecords.forEach(pr => {
+            // Only show PRs where previousBest is meaningful (not 0)
+            if (pr.previousBest.weight > 0 || pr.previousBest.reps > 0) {
+                if (pr.type === 'bestSet') {
+                    resultsHTML += `
+                        <div class="pr-celebration">
+                            <div class="pr-trophy">🏅</div>
+                            <div class="pr-text">${t('newBestSet')}</div>
+                            <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} toistoa</div>
+                            <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} toistoa</div>
+                        </div>`;
+                } else if (pr.type === 'heaviestWeight') {
+                    resultsHTML += `
+                        <div class="pr-celebration">
+                            <div class="pr-trophy">🏆</div>
+                            <div class="pr-text">${t('heaviestWeight')}</div>
+                            <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
+                            <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg</div>
+                        </div>`;
+                }
+            }
+        });
+    }
     
     // Achievement cards
     resultsHTML += `
-        <div class="achievement-grid">
-            <div class="achievement-card">
+    <div class="achievement-grid glass">
+        <div class="achievement-card glass">
                 <div class="achievement-icon">💪</div>
                 <div class="achievement-title">${t('totalVolume')}</div>
                 <div class="achievement-value">${totalVolume.toLocaleString()} kg</div>
@@ -600,35 +662,41 @@ function showWorkoutResults(comparisonData, achievements) {
                     <i class="fas fa-${comparisonData.setsChange > 0 ? 'plus' : 'check'}"></i>
                     ${comparisonData.setsChange > 0 ? '+' : ''}${comparisonData.setsChange || 0} ${t('fromLastWorkout')}
                 </div>
+                <div class="achievement-note">${t('comparedSameFocusType')}</div>
             </div>
             
-            <div class="achievement-card">
+         <div class="achievement-card">
                 <div class="achievement-icon">⚡</div>
-               <div class="achievement-title">${t('personalRecords')}</div>
-                <div class="achievement-value">${personalRecords.length}</div>
+                <div class="achievement-title">${t('personalRecords')}</div>
+                <div class="achievement-value">${prCount}</div>
                 <div class="achievement-change improvement">
-                    <i class="fas fa-trophy"></i>
-                    ${personalRecords.length > 0 ? t('newRecordsToday') : t('keepPushing')}
+                    <i class="fas fa-star"></i>
+                    ${getPRMessage(prCount)}
                 </div>
             </div>
             
             <div class="achievement-card">
                 <div class="achievement-icon">📈</div>
                 <div class="achievement-title">${t('improvements')}</div>
-                <div class="achievement-value">${improvements.length}</div>
+                <div class="achievement-value">${improvementCount}</div>
                 <div class="achievement-change improvement">
                     <i class="fas fa-trending-up"></i>
-                    ${improvements.length > 0 ? t('setsImproved') : t('greatEffort')}
+                    <div class="improvement-details">
+                        ${volumeImprovements > 0 ? `<div class="improvement-bullet">• ${t('volumeImproved')} (${volumeImprovements})</div>` : ''}
+                        ${setsImprovements > 0 ? `<div class="improvement-bullet">• ${t('setsImproved')} (${setsImprovements})</div>` : ''}
+                        ${newExercises > 0 ? `<div class="improvement-bullet">• ${t('newExercises')} (${newExercises})</div>` : ''}
+                        <div class="improvement-header">${getImprovementMessage(improvementCount)}</div>
+                    </div>
                 </div>
             </div>
         </div>
     `;
     
-    // Close button <button LETS USE THIS IN FUTURE FOR SHARING !!! class="btn-results btn-primary-results" onclick="shareWorkout()">${t('shareResults')}</button> 
-            resultsHTML += `
+    
+    // Close button
+    resultsHTML += `
             </div>
             <div class="results-actions">
-             
                 <button class="btn-results btn-secondary-results" onclick="hideWorkoutResults()">
                     ${t('close')}
                 </button>
@@ -639,23 +707,16 @@ function showWorkoutResults(comparisonData, achievements) {
                 </button>
             </div>
         </div>
-            `;
+    `;
                 
     $('body').append(resultsHTML);
     
-    // Auto-hide after 15 seconds if user doesn't interact
+    // Auto-hide after 45 seconds if user doesn't interact
     setTimeout(() => {
         if ($('#workout-results').is(':visible')) {
             hideWorkoutResults();
         }
-    }, 45000);
-}
-
-// Hide workout results
-function hideWorkoutResults() {
-    $('#workout-results').fadeOut(300, function() {
-        $(this).remove();
-    });
+    }, 155000);
 }
 
 // Update set rows with progress indicators
@@ -665,17 +726,19 @@ function updateSetRowsWithProgress(comparisonData) {
     comparisonData.setComparisons.forEach(comparison => {
         const $setRow = $(`.set-row[data-set-id="${comparison.setId}"]`);
         if ($setRow.length === 0) return;
+        
+        // Handle first-time exercises differently
         if (comparison.noPrevious) {
-        $setRow.find('.set-progress-indicator').remove();
-        const indicator = $(`<div class="set-progress-indicator first-session">${t('firstSession')}</div>`);
-        $setRow.find('.volume-display').css('position', 'relative').append(indicator);
-        return;
-    }
-        // Add progress indicator
+            $setRow.find('.set-progress-indicator').remove();
+            const indicator = $(`<div class="set-progress-indicator first-session">${t('firstSession')}</div>`);
+            $setRow.find('.volume-display').css('position', 'relative').append(indicator);
+            return;
+        }
+        
+        // Add progress indicator for exercises with previous data
         const progressClass = comparison.volumeChange > 0 ? 'progress-up' : 
-                             comparison.volumeChange < 0 ? 'progress-down' : 'progress-new';
-        const changeText = comparison.isNew ? 'NEW' : 
-                          comparison.volumeChange > 0 ? `+${comparison.volumeChange.toFixed(1)}kg` :
+                             comparison.volumeChange < 0 ? 'progress-down' : 'progress-equal';
+        const changeText = comparison.volumeChange > 0 ? `+${comparison.volumeChange.toFixed(1)}kg` :
                           comparison.volumeChange < 0 ? `${comparison.volumeChange.toFixed(1)}kg` : '=';
         
         // Remove existing indicators
@@ -700,6 +763,22 @@ function updateSetRowsWithProgress(comparisonData) {
         ).tooltip();
     });
 }
+
+
+// Hide analysis overlay
+function hideWorkoutAnalysis() {
+    $('#workout-analysis').fadeOut(300, function() {
+        $(this).remove();
+    });
+}
+
+// Hide workout results
+function hideWorkoutResults() {
+    $('#workout-results').fadeOut(300, function() {
+        $(this).remove();
+    });
+}
+
 
 // Share workout (optional feature)
 function shareWorkout() {
