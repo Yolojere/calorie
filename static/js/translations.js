@@ -642,6 +642,7 @@ const translations = {
     salt_upper: "SUOLA",
 
     // Placeholders - NEW
+    enter_tdee: "Aseta kokonaiskulutus",
     search_food_placeholder: "Hae ruokaa tai skannaa viivakoodi...",
     insert_yourself: "Syötä itse",
     enter_template_name: "Syötä pohjan nimi",
