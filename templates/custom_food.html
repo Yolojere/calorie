@@ -542,16 +542,35 @@
 </head>
 <body>
     <!-- Toast Container -->
-<div class="toast-container">
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <!-- Success -->
     <div id="successToast" class="toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
             <i class="fas fa-check-circle me-2"></i>
             <strong class="me-auto">Onnistui!</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body">
-            Uusi tuote lisätty tietokantaan!
+        <div class="toast-body">Uusi tuote lisätty tietokantaan!</div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorToast" class="toast toast-danger" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong class="me-auto">Virhe!</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
+        <div class="toast-body">Jokin meni pieleen!</div>
+    </div>
+
+    <!-- Info -->
+    <div id="infoToast" class="toast toast-info" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong class="me-auto">Tieto</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">Info-viesti tähän.</div>
     </div>
 </div>
     <!-- Updated Navbar -->
@@ -893,7 +912,7 @@
                                         <span class="visually-hidden">Prosessoi...</span>
                                     </div>
                                     <div>Prosessoi ravintoarvoja...</div>
-                                    <div class="small mt-2">This may take a few seconds</div>
+                                    <div class="small mt-2">Hetki pieni</div>
                                 </div>
                             </div>
                         </div>
@@ -1239,37 +1258,54 @@ $(document).ready(function() {
             }
         }
 
-        function showMessage(message, type) {
-            const messageElement = type === 'success' ? $('#success-message') : $('#error-message');
-            
-            if (type === 'info') {
-                let infoMessage = $('#info-message');
-                if (!infoMessage.length) {
-                    infoMessage = $('<div id="info-message" class="alert alert-info d-none" style="background-color: #0c5460; color: #b8daff; border-color: #0c5460;"></div>');
-                    $('#success-message').after(infoMessage);
-                }
-                infoMessage.html(message).removeClass('d-none');
-                setTimeout(() => infoMessage.addClass('d-none'), 8000);
-                return;
-            }
+ function showMessage(message, type = 'success') {
+    let toastId, headerIcon, headerText, headerClass;
 
-            messageElement.html(message).removeClass('d-none');
-            
-            if (type === 'success') {
-                $('#error-message').addClass('d-none');
-            } else {
-                $('#success-message').addClass('d-none');
-            }
+    switch (type) {
+        case 'success':
+            toastId = '#successToast';
+            headerIcon = '<i class="fas fa-check-circle me-2"></i>';
+            headerText = 'Onnistui!';
+            headerClass = 'toast-success';
+            break;
 
-            // Scroll to message
-            $('html, body').animate({
-                scrollTop: messageElement.offset().top - 100
-            }, 500);
+        case 'error':
+            toastId = '#errorToast';
+            headerIcon = '<i class="fas fa-times-circle me-2"></i>';
+            headerText = 'Virhe!';
+            headerClass = 'toast-danger';
+            break;
 
-            if (type === 'success') {
-                setTimeout(() => messageElement.addClass('d-none'), 8000);
-            }
-        }
+        case 'info':
+        default:
+            toastId = '#infoToast';
+            headerIcon = '<i class="fas fa-info-circle me-2"></i>';
+            headerText = 'Tieto';
+            headerClass = 'toast-info';
+            break;
+    }
+
+    const toastEl = $(toastId);
+
+    // If toast element doesn't exist, bail out gracefully
+    if (!toastEl.length) {
+        console.warn(`Toast element ${toastId} not found`);
+        return;
+    }
+
+    // Update content
+    toastEl.find('.toast-header strong').html(headerText);
+    toastEl.find('.toast-header i').replaceWith(headerIcon);
+    toastEl.find('.toast-body').html(message);
+
+    // Reset classes in case it’s reused for different types
+    toastEl.removeClass('toast-success toast-danger toast-info').addClass(headerClass);
+
+    // Show via Bootstrap API
+    const bsToast = new bootstrap.Toast(toastEl[0], { delay: 5000 });
+    bsToast.show();
+}
+
 
         function showError(message) {
             showMessage(message, 'error');
