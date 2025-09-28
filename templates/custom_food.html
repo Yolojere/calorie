@@ -959,88 +959,55 @@ function processImageFile(file) {
 
 function processNutritionImage(imageData) {
     showScanningOverlay(true);
-
-    const formData = new FormData();
-    formData.append('file', imageData, 'nutrition_label.jpg');
+    const fd = new FormData();
+    fd.append('file', imageData, 'label.jpg');
 
     $.ajax({
         url: '/scan_nutrition_label',
         type: 'POST',
-        data: formData,
+        data: fd,
         processData: false,
         contentType: false,
         timeout: 30000,
-        success: function(response) {
-            handleScanResults(response);
-        },
-        error: function(xhr, status, error) {
-            console.error('Scan error:', error);
-            let errorMessage = 'Error scanning nutrition label';
-
-            try {
-                const errorResponse = JSON.parse(xhr.responseText);
-                errorMessage = errorResponse.error || errorMessage;
-            } catch (e) {
-                console.error('Could not parse error response:', e);
-            }
-
-            showMessage(errorMessage, 'error');
+        success: handleScanResults,
+        error: function(xhr) {
+            console.error('Scan error:', xhr.responseText);
+            showMessage(JSON.parse(xhr.responseText).error || 'Scan failed', 'error');
         },
         complete: function() {
             showScanningOverlay(false);
-            const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
-            if (modal) {
-                modal.hide();
-            }
+            bootstrap.Modal.getInstance($('#cameraModal')[0])?.hide();
         }
     });
 }
 
 function handleScanResults(response) {
+    console.log('OCR response.form_data:', response.form_data);
     if (response.success && response.form_data) {
-        let fieldsPopulated = 0;
-        let populatedFields = [];
-
-        Object.keys(response.form_data).forEach(field => {
-            const value = response.form_data[field];
+        const populated = [];
+        Object.entries(response.form_data).forEach(([field,value]) => {
             const input = document.querySelector(`input[name="${field}"]`);
-
-            if (input && value !== null && value !== undefined) {
-                const displayValue = typeof value === 'number' ? 
-                    Math.round(value * 100) / 100 : value;
-
-                input.value = displayValue;
+            if (input && value != null) {
+                input.value = Math.round(value*100)/100;
                 input.classList.add('field-populated');
-                fieldsPopulated++;
-                populatedFields.push(field);
-
-                setTimeout(() => {
-                    input.classList.remove('field-populated');
-                }, 2000);
+                setTimeout(()=>input.classList.remove('field-populated'),2000);
+                populated.push(field);
             }
         });
-
-        let message = `Successfully scanned nutrition label! `;
-        if (fieldsPopulated > 0) {
-            message += `Populated ${fieldsPopulated} fields: ${populatedFields.join(', ')}.`;
-        } else {
-            message += 'No nutrition values could be automatically extracted.';
+        showMessage(
+            populated.length
+                ? `Populated ${populated.length}: ${populated.join(', ')}`
+                : 'No fields auto-extracted',
+            'success'
+        );
+        if (!populated.length && response.raw_text?.length) {
+            showMessage(
+                'Raw OCR text: ' + response.raw_text.slice(0,10).join(', '),
+                'info'
+            );
         }
-
-        if (response.per_100g) {
-            message += ' Values appear to be per 100g.';
-        }
-
-        showMessage(message, 'success');
-
-        if (fieldsPopulated === 0 && response.raw_text && response.raw_text.length > 0) {
-            const rawTextPreview = response.raw_text.slice(0, 10).join(', ');
-            showMessage(`Raw text detected: ${rawTextPreview}... Please check the image quality and try again.`, 'info');
-        }
-
     } else {
-        const errorMessage = response.error || 'Could not extract nutrition information from the image.';
-        showMessage(errorMessage, 'error');
+        showMessage(response.error || 'Extraction failed','error');
     }
 }
 
@@ -1088,19 +1055,33 @@ function showMessage(message, type) {
 
 async function openCamera() {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' }
-        });
+        // Enhanced constraints for better OCR results
+        const constraints = {
+            video: {
+                facingMode: 'environment', // Use rear camera
+                width: { min: 1280, ideal: 1920, max: 3840 }, // Higher resolution
+                height: { min: 720, ideal: 1080, max: 2160 },
+                aspectRatio: { ideal: 16/9 },
+                frameRate: { ideal: 30, max: 60 }, // Smooth preview
+                focusMode: 'continuous', // Auto-focus
+                exposureMode: 'continuous', // Auto-exposure
+                whiteBalanceMode: 'continuous' // Auto white balance
+            }
+        };
 
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
         const video = document.getElementById('cameraVideo');
         video.srcObject = stream;
+        
+        // Wait for video to load to get actual dimensions
+        video.addEventListener('loadedmetadata', () => {
+            console.log(`Actual resolution: ${video.videoWidth}x${video.videoHeight}`);
+        });
+        
         video.play();
-
-        $('#fileUploadSection').addClass('d-none');
-        $('#cameraVideo').removeClass('d-none');
-
     } catch (error) {
-        console.error('Error accessing camera:', error);
+        console.error('Enhanced camera failed, falling back...', error);
 
         $('#cameraVideo').addClass('d-none');
         $('#fileUploadSection').removeClass('d-none');
@@ -1111,7 +1092,267 @@ async function openCamera() {
         showMessage('Camera not available. Please upload an image instead.', 'error');
     }
 }
+function preprocessImage(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Step 1: Convert to grayscale with optimal weights for text
+    for (let i = 0; i < data.length; i += 4) {
+        const gray = Math.round(
+            0.299 * data[i] +     // Red
+            0.587 * data[i + 1] + // Green  
+            0.114 * data[i + 2]   // Blue
+        );
+        data[i] = data[i + 1] = data[i + 2] = gray;
+    }
+    
+    // Step 2: Enhance contrast for better text recognition
+    const factor = 1.5; // Contrast multiplier
+    const intercept = 128 * (1 - factor);
+    
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.min(255, Math.max(0, data[i] * factor + intercept));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] * factor + intercept));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] * factor + intercept));
+    }
+    
+    // Step 3: Apply unsharp masking for sharpness
+    const sharpened = applyUnsharpMask(imageData, canvas.width, canvas.height);
+    
+    ctx.putImageData(sharpened, 0, 0);
+    return canvas;
+}
 
+function applyUnsharpMask(imageData, width, height, radius = 1, amount = 1.5, threshold = 0) {
+    const data = imageData.data;
+    const output = new ImageData(width, height);
+    const outputData = output.data;
+    
+    // Create Gaussian blur for unsharp mask
+    const blurred = gaussianBlur(imageData, width, height, radius);
+    
+    for (let i = 0; i < data.length; i += 4) {
+        for (let channel = 0; channel < 3; channel++) {
+            const original = data[i + channel];
+            const blur = blurred.data[i + channel];
+            const diff = original - blur;
+            
+            if (Math.abs(diff) > threshold) {
+                outputData[i + channel] = Math.min(255, Math.max(0, 
+                    original + diff * amount));
+            } else {
+                outputData[i + channel] = original;
+            }
+        }
+        outputData[i + 3] = 255; // Alpha
+    }
+    
+    return output;
+}
+
+function gaussianBlur(imageData, width, height, radius) {
+    // Simplified Gaussian blur implementation
+    const data = imageData.data;
+    const output = new ImageData(width, height);
+    const outputData = output.data;
+    
+    const sigma = radius / 3;
+    const kernel = [];
+    const kernelSize = Math.ceil(radius) * 2 + 1;
+    let kernelSum = 0;
+    
+    // Generate Gaussian kernel
+    for (let i = 0; i < kernelSize; i++) {
+        const x = i - Math.floor(kernelSize / 2);
+        const value = Math.exp(-(x * x) / (2 * sigma * sigma));
+        kernel[i] = value;
+        kernelSum += value;
+    }
+    
+    // Normalize kernel
+    for (let i = 0; i < kernelSize; i++) {
+        kernel[i] /= kernelSum;
+    }
+    
+    // Apply horizontal blur
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            for (let channel = 0; channel < 3; channel++) {
+                let sum = 0;
+                for (let k = 0; k < kernelSize; k++) {
+                    const px = Math.min(width - 1, Math.max(0, x + k - Math.floor(kernelSize / 2)));
+                    const idx = (y * width + px) * 4 + channel;
+                    sum += data[idx] * kernel[k];
+                }
+                outputData[(y * width + x) * 4 + channel] = sum;
+            }
+            outputData[(y * width + x) * 4 + 3] = 255;
+        }
+    }
+    
+    return output;
+}
+function captureImage() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('captureCanvas');
+    const context = canvas.getContext('2d');
+
+    if (!stream) {
+        processUploadedFile();
+        return;
+    }
+
+    // Set high resolution for capture
+    const captureWidth = Math.min(video.videoWidth, 2400);
+    const captureHeight = Math.min(video.videoHeight, 1800);
+    
+    canvas.width = captureWidth;
+    canvas.height = captureHeight;
+    
+    // High quality settings
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    
+    // Draw image
+    context.drawImage(video, 0, 0, captureWidth, captureHeight);
+    
+    // Apply preprocessing
+    preprocessImage(canvas);
+    
+    // Export as high-quality PNG (better for OCR than JPEG)
+    canvas.toBlob(function(blob) {
+        processNutritionImage(blob);
+    }, 'image/png', 1.0);
+}
+function assessImageQuality(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    let totalVariance = 0;
+    let brightness = 0;
+    let pixelCount = 0;
+    
+    // Calculate image metrics
+    for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        brightness += gray;
+        pixelCount++;
+    }
+    
+    brightness /= pixelCount;
+    
+    // Calculate variance (sharpness indicator)
+    for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        totalVariance += Math.pow(gray - brightness, 2);
+    }
+    
+    const variance = totalVariance / pixelCount;
+    const sharpness = Math.sqrt(variance);
+    
+    // Quality assessment
+    const quality = {
+        brightness: brightness,
+        sharpness: sharpness,
+        isGoodBrightness: brightness > 50 && brightness < 200,
+        isSharp: sharpness > 30,
+        overallQuality: 'poor'
+    };
+    
+    if (quality.isGoodBrightness && quality.isSharp) {
+        quality.overallQuality = 'excellent';
+    } else if (quality.isGoodBrightness || quality.isSharp) {
+        quality.overallQuality = 'good';
+    }
+    
+    return quality;
+}
+
+// Add quality feedback to capture button
+function updateCaptureButton() {
+    const video = document.getElementById('cameraVideo');
+    const tempCanvas = document.createElement('canvas');
+    const ctx = tempCanvas.getContext('2d');
+    
+    tempCanvas.width = 320;
+    tempCanvas.height = 240;
+    ctx.drawImage(video, 0, 0, 320, 240);
+    
+    const quality = assessImageQuality(tempCanvas);
+    const captureBtn = document.getElementById('captureImage');
+    
+    let message = '';
+    let color = '';
+    
+    switch(quality.overallQuality) {
+        case 'excellent':
+            message = 'Perfect! Tap to scan';
+            color = '#28a745';
+            break;
+        case 'good':
+            message = 'Good quality - Tap to scan';
+            color = '#ffc107';
+            break;
+        case 'poor':
+            message = 'Move closer or improve lighting';
+            color = '#dc3545';
+            break;
+    }
+    
+    captureBtn.textContent = message;
+    captureBtn.style.backgroundColor = color;
+}
+
+// Update quality feedback every second
+let qualityInterval;
+$('#cameraModal').on('shown.bs.modal', function() {
+    qualityInterval = setInterval(updateCaptureButton, 1000);
+});
+
+$('#cameraModal').on('hidden.bs.modal', function() {
+    if (qualityInterval) {
+        clearInterval(qualityInterval);
+    }
+});
+function processImageFile(file) {
+    if (!file.type.startsWith('image/')) {
+        showMessage('Please select a valid image file.', 'error');
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showMessage('Image file is too large. Please select a file smaller than 10MB.', 'error');
+        return;
+    }
+
+    // Optimize uploaded image
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calculate optimal size (maintain aspect ratio, max 2400px width)
+        const maxWidth = 2400;
+        const scale = Math.min(1, maxWidth / img.width);
+        
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        // High quality scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Apply preprocessing
+        preprocessImage(canvas);
+        
+        canvas.toBlob(processNutritionImage, 'image/png', 1.0);
+    };
+    
+    img.src = URL.createObjectURL(file);
+}
 function stopCamera() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
