@@ -295,7 +295,7 @@ class EnhancedSimpleScanner:
         
         portion_indicators = [
             'portion', 'serving', 'annos', 'del', 'porsjon',
-            'portsjon', 'por', 'pkg', 'package', 'pak'
+            'portsjon', 'por', 'pkg', 'package', 'pak', '30 g', '40 g', '50 g', '60 g', '70 g', '80 g', '90 g', '20 g', '10 g'
         ]
         
         # Look for column headers more aggressively
@@ -386,7 +386,7 @@ class EnhancedSimpleScanner:
 
 
     def extract_text_enhanced(self, image_data):
-        """Enhanced OCR extraction"""
+        # Use new preprocessing
         try:
             image = None
             if isinstance(image_data, str):
@@ -398,30 +398,22 @@ class EnhancedSimpleScanner:
                 image = Image.open(io.BytesIO(image_data))
             else:
                 image = image_data
-
             if image is None:
                 return []
-
-            # Enhanced preprocessing
             preprocessed_image = self.preprocess_enhanced(image)
             image_array = np.array(preprocessed_image)
             self.log_debug(f"✅ Image preprocessed: {image_array.shape}")
-
             try:
-                # RapidOCR returns (results, elapse) tuple
                 ocr_result = self.rapid_reader(image_array)
-                
                 processed_results = []
                 if ocr_result and len(ocr_result) >= 1:
-                    ocr_results = ocr_result[0]  # Extract results from tuple
+                    ocr_results = ocr_result[0]
                     if ocr_results:
                         for result in ocr_results:
-                            # RapidOCR format: [bbox_points, text, confidence]
                             if len(result) >= 3:
                                 bbox_points, text, confidence = result[0], result[1], float(result[2])
-                                if confidence >= 0.35:
-                                    # Convert bbox_points to the format expected by the rest of the code
-                                    bbox = bbox_points  # bbox_points is already in the right format
+                                if confidence >= 0.3:
+                                    bbox = bbox_points
                                     processed_results.append({
                                         'text': text,
                                         'confidence': confidence,
@@ -431,15 +423,12 @@ class EnhancedSimpleScanner:
                                         'width': bbox[1][0] - bbox[0][0],
                                         'height': bbox[2][1] - bbox[0][1],
                                     })
-
                 processed_results.sort(key=lambda x: (x['y'], x['x']))
                 self.log_debug(f"RapidOCR extracted {len(processed_results)} items")
                 return processed_results
-
             except Exception as e:
                 self.log_debug(f"❌ RapidOCR failed: {e}")
                 return []
-
         except Exception as e:
             self.log_debug(f"❌ Image preprocessing failed: {e}")
             return []
@@ -479,7 +468,7 @@ class EnhancedSimpleScanner:
         return per_100g_x, per_product_x
 
     def extract_numbers_enhanced(self, text: str) -> List[Tuple[float, str]]:
-        """PRODUCTION-READY number extraction with 100% accuracy target"""
+        text = re.sub(r"[^\d.,mgkcal ]", "", text)  # Clean noisy symbols and non-numeric chars
         text = text.strip()
         self.log_debug(f"Enhanced number extraction from: '{text}'")
         
