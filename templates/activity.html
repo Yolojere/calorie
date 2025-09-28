@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="app_title">TrackYou Activity</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -102,6 +106,7 @@ body {
     padding: 6px 10px;
     height: 36px;
 }
+
 /* === BUTTONS === */
 .btn, .btn-accent, .btn-outline-light, a.accent-color {
     display: inline-block;
@@ -132,6 +137,42 @@ body {
     font-size: 13px;
     border-radius: 20px;
 }
+
+/* === MODE SELECTOR BUTTONS === */
+.mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(40, 40, 60, 0.7);
+    border: 1px solid rgba(100, 100, 200, 0.3);
+    color: #e0e0e0;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.mode-btn.active {
+    background: rgb(255, 255, 255);
+    border-color: #1f1f1f;
+    border: solid 1px;
+    color: #000000 !important;
+    box-shadow: 0 0 15px rgba(70, 69, 70, 0.3);
+}
+
+.mode-btn:hover:not(.active) {
+    background: rgba(60, 60, 80, 0.8);
+    border-color: rgba(120, 120, 200, 0.5);
+}
+
 /* Tooltip container */
 .tooltip {
   opacity: 1 !important; /* prevent Bootstrap fade weirdness */
@@ -162,26 +203,27 @@ body {
 .tooltip.bs-tooltip-end .tooltip-arrow::before {
   border-right-color: #1b1b1b;
 }
+
 /* ===== DROPDOWNS & MODALS ===== */
-    .dropdown-menu {
-        background-color: #1e1e1e;
-        border: 1px solid #333;
-        right: 0 !important;
-        width: 120px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        position: absolute;
-    }
+.dropdown-menu {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    right: 0 !important;
+    width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+}
 
-    .dropdown-item {
-        color: #fff;
-    }
+.dropdown-item {
+    color: #fff;
+}
 
-    .dropdown-item:hover {
-        background-color: #333;
-        color: #ffffff;
-    }
+.dropdown-item:hover {
+    background-color: #333;
+    color: #ffffff;
+}
 
 /* Override btn-primary to match theme */
 .btn-flash-success {
@@ -230,99 +272,99 @@ body {
     box-shadow: 0 5px 20px rgba(92, 92, 92, 0.4);
 }
 
- /* ===== NAV LINK BOX ===== */
-                .nav-link-box {
-            display: inline-block;
-            background-color: #1b1b1b;
-            color: #ffffff;
-            border: 1px solid #444 !important;
-            border-radius: 20px;
-            padding: 0;
-            margin: 0 3px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 35px;
-            height: 35px;
-            
+/* ===== NAV LINK BOX ===== */
+.nav-link-box {
+    display: inline-block;
+    background-color: #1b1b1b;
+    color: #ffffff;
+    border: 1px solid #444 !important;
+    border-radius: 20px;
+    padding: 0;
+    margin: 0 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    
+}
+
+.nav-link-box:hover {
+    background-color: #f0f0f0 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    color: black !important;
+}
+
+.nav-link-box i {
+    font-size: 14px !important;
+    margin: 0 !important;
+}
+.nav-logo-box {
+    display:inline-block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50px;
+    padding: 2px;
+    margin: 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    z-index: 1050 !important;
+    }
+    .nav-logo-box img.nav-logo {
+max-width: 100%;   /* scale the logo down */
+max-height: 100%;  /* maintain aspect ratio */
+object-fit: contain;
+}
+.btn-beta {
+        display: inline-block;
+        background-color: #8b34f6;
+        color: #ffffff;
+        border: 1px solid #000000 !important;
+        border-radius: 30px;
+        text-align: center;
+        padding: 2px 20px;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0px 1px 5px rgb(179, 179, 180);
+        cursor:auto !important;
+    }
+
+/* ===== MOBILE NAVIGATION ===== */
+.mobile-settings-btn {
+    display: inline-block;
+    background-color: #1b1b1b;
+    color: rgb(255, 255, 255) !important;
+    border-radius: 50%;
+    padding: 10px !important;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    margin-left: 10px
         }
 
-        .nav-link-box:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            color: black !important;
-        }
+    .mobile-settings-btn:hover {
+    background-color: #f0f0f0 !important;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    color: #000 !important;
+}
 
-        .nav-link-box i {
-            font-size: 14px !important;
-            margin: 0 !important;
-        }
-             .nav-logo-box {
-                display:inline-block;
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                border-radius: 50px;
-                padding: 2px;
-                margin: 0 3px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 55px;
-                height: 55px;
-                z-index: 1050 !important;
-                }
-                .nav-logo-box img.nav-logo {
-            max-width: 100%;   /* scale the logo down */
-            max-height: 100%;  /* maintain aspect ratio */
-            object-fit: contain;
-        }
-        .btn-beta {
-                display: inline-block;
-                background-color: #8b34f6;
-                color: #ffffff;
-                border: 1px solid #000000 !important;
-                border-radius: 30px;
-                text-align: center;
-                padding: 2px 20px;
-                font-size: 12px;
-                font-weight: bold;
-                box-shadow: 0px 1px 5px rgb(179, 179, 180);
-                cursor:auto !important;
-            }
-        
-        /* ===== MOBILE NAVIGATION ===== */
-        .mobile-settings-btn {
-            display: inline-block;
-            background-color: #1b1b1b;
-            color: rgb(255, 255, 255) !important;
-            border-radius: 50%;
-            padding: 10px !important;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-left: 10px
-                }
-        
-            .mobile-settings-btn:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            color: #000 !important;
-        }
-
-        .mobile-settings-btn i {
-            font-size: 20px !important;
-            margin: 0 !important;
-        }
+.mobile-settings-btn i {
+    font-size: 20px !important;
+    margin: 0 !important;
+}
 
 /* === ACTIVITY TRACKER CARDS === */
 .activity-container {
@@ -409,7 +451,7 @@ body {
     flex: 1;
     padding: 15px;
     border-radius: 10px;
-    background: 121212(40, 40, 60, 0.7);
+    background: rgba(40, 40, 60, 0.7);
     border: 1px solid rgba(100, 100, 200, 0.3);
     color: #e0e0e0;
     text-align: center;
@@ -560,6 +602,7 @@ body {
 .analyzing-text {
     animation: fadePulse 1.8s ease-in-out infinite;
 }
+
 /* Responsive */
 @media (max-width: 768px) {
     .container-page {
@@ -579,13 +622,23 @@ body {
     .header h1 {
         font-size: 2rem;
     }
+    
+    .mode-selector {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .mode-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
 }
 
 </style>
 
 </head>
 <body>
-        <!-- Loading Overlay -->
+    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <img src="static/images/trackyoulogo.png" 
              alt="TrackYou Logo" 
@@ -597,149 +650,149 @@ body {
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
-            <div class="container">
-                <div class="nav-logo-box">
-                    <a href="/">
-        <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
+        <div class="container">
+            <div class="nav-logo-box">
+                <a href="/">
+                    <img src="static/images/trackyoulogo.png" alt="TrackYou Logo" class="nav-logo">
                 </a>
-    </div>
-                <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;" data-i18n="track_you">Track You</a>
-                <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
-                    - Track, measure, repeat -
-                </a>
-                <button class="btn-beta" data-i18n="beta">BETA</button>
-                <!-- Mobile Settings Dropdown (right-aligned) -->
-                <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
-                    <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-wrench-adjustable"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" 
-                        aria-labelledby="navbarDropdownMobile"
-                        style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 10;">
+            </div>
+            <a class="navbar-brand d-md-inline" href="/" style="font-size: 13px; font-weight:600;" data-i18n="track_you">Track You</a>
+            <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
+                - Track, measure, repeat -
+            </a>
+            <button class="btn-beta" data-i18n="beta">BETA</button>
+            <!-- Mobile Settings Dropdown (right-aligned) -->
+            <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
+                <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-wrench-adjustable"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" 
+                    aria-labelledby="navbarDropdownMobile"
+                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 10;">
+                    <li>
+                        <a class="dropdown-item" 
+                        href="/"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home" data-i18n="home">Home</span>
+                        </a>
+                    </li>
                         <li>
-                            <a class="dropdown-item" 
-                            href="/"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home" data-i18n="home">Home</span>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('workout') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts" data-i18n="workouts">Workouts</span>
+                        </a>
+                        </li>
+                        <li>
+                                    <a class="dropdown-item" 
+                        href="/history"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-chart-pie me-2"></i><span data-i18n="history" data-i18n="history">History</span>
+                        </a>
+                    </li>
+                        <li>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('activity') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-fire me-2"></i><span data-i18n="activity" data-i18n="activity">Activity</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                        href="/custom_food"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food" data-i18n="add_food">Add Food</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('profile') }}"
+                        style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                            <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" 
+                        href="{{ url_for('logout') }}"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link nav-link-box" href="/" 
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" data-i18n="tooltip_home" >
+                            <i class="fa-solid fa-house-chimney-window"></i>
+                        </a>
+                        <li class="nav-item">
+                            <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts" data-i18n="tooltip_workouts">
+                                <i class="fa-solid fa-dumbbell"></i>
                             </a>
                         </li>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link add-link nav-link-box" href="/custom_food"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food" data-i18n="tooltip_add_food">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link history-link nav-link-box" href="/history"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history" data-i18n="tooltip_history">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-box" href="/activity"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity" data-i18n="tooltip_activity">
+                            <i class="fas fa-fire"></i>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle nav-link-box" 
+                        href="#" 
+                        id="navbarDropdownDesktop" 
+                        role="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings" data-i18n="tooltip_settings"
+                        style="position: relative;">
+                            <i class="bi bi-wrench-adjustable"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" 
+                            aria-labelledby="navbarDropdownDesktop"
+                            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                            
                             <li>
-                            <a class="dropdown-item" 
-                            href="{{ url_for('workout') }}"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts" data-i18n="workouts">Workouts</span>
-                            </a>
+                                <a class="dropdown-item" 
+                                href="{{ url_for('profile') }}"
+                                style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                    <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
+                                </a>
                             </li>
                             <li>
-                                        <a class="dropdown-item" 
-                            href="/history"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history" data-i18n="history">History</span>
-                            </a>
-                        </li>
-                            <li>
-                            <a class="dropdown-item" 
-                            href="{{ url_for('activity') }}"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i><span data-i18n="activity" data-i18n="activity">Activity</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="/custom_food"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food" data-i18n="add_food">Add Food</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="{{ url_for('profile') }}"
-                            style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="{{ url_for('logout') }}"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
-                            </a>
-                        </li>
-                        
-                    </ul>
-                </div>
-                
-                <!-- Desktop Navigation -->
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link home-link nav-link-box" href="/" 
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" data-i18n="tooltip_home" >
-                                <i class="fa-solid fa-house-chimney-window"></i>
-                            </a>
-                            <li class="nav-item">
-        <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts" data-i18n="tooltip_workouts">
-            <i class="fa-solid fa-dumbbell"></i>
-        </a>
-    </li>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link add-link nav-link-box" href="/custom_food"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food" data-i18n="tooltip_add_food">
-                                <i class="fa-solid fa-file-circle-plus"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link history-link nav-link-box" href="/history"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history" data-i18n="tooltip_history">
-                                <i class="fa-solid fa-chart-pie"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link nav-link-box" href="/activity"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity" data-i18n="tooltip_activity">
-                                <i class="fas fa-fire"></i>
-                            </a>
-                        </li>
-                        
-                        {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle nav-link-box" 
-                            href="#" 
-                            id="navbarDropdownDesktop" 
-                            role="button" 
-                            data-bs-toggle="dropdown" 
-                            aria-expanded="false"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings" data-i18n="tooltip_settings"
-                            style="position: relative;">
-                                <i class="bi bi-wrench-adjustable"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" 
-                                aria-labelledby="navbarDropdownDesktop"
-                                style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
-                                
-                                <li>
-                                    <a class="dropdown-item" 
-                                    href="{{ url_for('profile') }}"
-                                    style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" 
-                                    href="{{ url_for('logout') }}"
-                                    style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
+                                <a class="dropdown-item" 
+                                href="{{ url_for('logout') }}"
+                                style="color: #e0e0e0; padding: 8px 15px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
-        </nav>
+        </div>
+    </nav>
 
     <!-- Activity Tracker Content -->
     <div class="activity-container">
@@ -771,10 +824,10 @@ body {
                         <input type="number" class="form-control" id="age" min="1" max="120" value="" placeholder="Enter age" data-i18n="enter_age">
                     </div>
                     <div class="col-md-4 mb-3">
-    <label class="form-label"><i class="fas fa-weight-scale me-2"></i><span data-i18n="weight_kg">Weight (kg)</span></label>
-    <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" 
-           value="{% if current_weight %}{{ current_weight }}{% endif %}" placeholder="Enter weight" data-i18n="enter_weight">
-</div>
+                        <label class="form-label"><i class="fas fa-weight-scale me-2"></i><span data-i18n="weight_kg">Weight (kg)</span></label>
+                        <input type="number" class="form-control" id="weight" min="1" max="300" step="0.1" 
+                               value="{% if current_weight %}{{ current_weight }}{% endif %}" placeholder="Enter weight" data-i18n="enter_weight">
+                    </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label"><i class="fas fa-ruler me-2"></i><span data-i18n="height_cm">Height (cm)</span></label>
                         <input type="number" class="form-control" id="height" min="50" max="250" value="" placeholder="Enter height" data-i18n="enter_height">
@@ -786,129 +839,159 @@ body {
         <!-- Activity Tracking Card -->
         <div class="glass-card">
             <div class="card-header">
-                <i class="fas fa-running me-2"></i><span data-i18n="daily_activity_tracking">Daily Activity Tracking</span>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-running me-2"></i><span data-i18n="daily_activity_tracking">Daily Activity Tracking</span>
+                    </div>
+                    <div class="mode-selector">
+                        <div class="mode-btn active" data-mode="easy">
+                            <span data-i18n="easy">Easy</span>
+                        </div>
+                        <div class="mode-btn" data-mode="advanced">
+                            <span data-i18n="advanced">Advanced</span>
+                        </div>
+                        <div class="mode-btn" data-mode="custom">
+                            <span data-i18n="custom">Custom</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <!-- Sleep -->
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fas fa-bed"></i>
+                <!-- Easy Mode (current layout) -->
+                <div id="easy-mode" class="mode-content">
+                    <div class="row">
+                        <!-- Sleep -->
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="activity-card">
+                                <div class="activity-icon">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <h5 class="activity-title" data-i18n="sleep">Sleep</h5><small>(Pidä 8 tuntia jos et vakituisesti nuku enemmän/vähemmän)</small>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                    <span class="input-group-text" data-i18n="hr">hr</span>
+                                    <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                    <span class="input-group-text" data-i18n="min">min</span>
+                                </div>
+                                <div class="value-display negative-value" id="sleep-value" style="display: none;"></div>
                             </div>
-                            <h5 class="activity-title" data-i18n="sleep">Sleep</h5><small>(Pidä 8 tuntia jos et vakituisesti nuku enemmän/vähemmän)</small>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="sleep-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
-                                <span class="input-group-text" data-i18n="hr">hr</span>
-                                <input type="number" class="form-control" id="sleep-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
-                                <span class="input-group-text" data-i18n="min">min</span>
+                        </div>
+                        
+                        <!-- Intense Exercise -->
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="activity-card">
+                                <div class="activity-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <h5 class="activity-title" data-i18n="intense_exercise">Intense Exercise</h5><small>(Urheilusuoritus mikä koettelee kuntoa)</small>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                    <span class="input-group-text" data-i18n="hr">hr</span>
+                                    <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                    <span class="input-group-text" data-i18n="min">min</span>
+                                </div>
+                                <div class="value-display positive-value" id="intense-value"></div>
                             </div>
-                            <div class="value-display negative-value" id="sleep-value" style="display: none;"></div>
+                        </div>
+                        
+                        <!-- Moderate Exercise -->
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="activity-card">
+                                <div class="activity-icon">
+                                    <i class="fas fa-biking"></i>
+                                </div>
+                                <h5 class="activity-title" data-i18n="moderate_exercise">Moderate Exercise</h5><small>(Kuntosali/kevyt cardio/reipas kävely)</small>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                    <span class="input-group-text" data-i18n="hr">hr</span>
+                                    <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                    <span class="input-group-text" data-i18n="min">min</span>
+                                </div>
+                                <div class="value-display positive-value" id="moderate-value"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Standing/Walking -->
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="activity-card">
+                                <div class="activity-icon">
+                                    <i class="fas fa-shoe-prints"></i>
+                                </div>
+                                <h5 class="activity-title" data-i18n="standing_walking">Standing/Walking</h5><small>(Aika jolloin perse ei ole penkissä)</small>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
+                                    <span class="input-group-text" data-i18n="hr">hr</span>
+                                    <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
+                                    <span class="input-group-text" data-i18n="min">min</span>
+                                </div>
+                                <div class="value-display positive-value" id="walking-value"></div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Intense Exercise -->
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fas fa-fire"></i>
-                            </div>
-                            <h5 class="activity-title" data-i18n="intense_exercise">Intense Exercise</h5><small>(Urheilusuoritus mikä koettelee kuntoa)</small>
+                </div>
+
+                <!-- Advanced Mode -->
+                <div id="advanced-mode" class="mode-content" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-shoe-prints me-2"></i><span data-i18n="step_count">Step Count</span></label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="intense-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
-                                <span class="input-group-text" data-i18n="hr">hr</span>
-                                <input type="number" class="form-control" id="intense-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
-                                <span class="input-group-text" data-i18n="min">min</span>
-                            </div>
-                            <div class="value-display positive-value" id="intense-value"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Moderate Exercise -->
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fas fa-biking"></i>
-                            </div>
-                            <h5 class="activity-title" data-i18n="moderate_exercise">Moderate Exercise</h5><small>(Kuntosali/kevyt cardio/reipas kävely)</small>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="moderate-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
-                                <span class="input-group-text" data-i18n="hr">hr</span>
-                                <input type="number" class="form-control" id="moderate-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
-                                <span class="input-group-text" data-i18n="min">min</span>
-                            </div>
-                            <div class="value-display positive-value" id="moderate-value"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Light Exercise -->
-                    <div class="col-md-6 col-lg-4 mb-4 d-none">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fas fa-walking"></i>
-                            </div>
-                            <h5 class="activity-title" data-i18n="light_exercise">Light Exercise</h5>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="light-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
-                                <span class="input-group-text" data-i18n="hr">hr</span>
-                                <input type="number" class="form-control" id="light-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
-                                <span class="input-group-text" data-i18n="min">min</span>
-                            </div>
-                            <div class="value-display positive-value" id="light-value"></div>
-                        </div>
-                    </div>  
-                    
-                    <!-- Standing/Walking -->
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fas fa-shoe-prints"></i>
-                            </div>
-                            <h5 class="activity-title" data-i18n="standing_walking">Standing/Walking</h5><small>(Aika jolloin perse ei ole penkissä)</small>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="walking-hours" min="0" max="24" value="" placeholder="Hours" data-i18n="hours">
-                                <span class="input-group-text" data-i18n="hr">hr</span>
-                                <input type="number" class="form-control" id="walking-minutes" min="0" max="59" value="" placeholder="Minutes" data-i18n="minutes">
-                                <span class="input-group-text" data-i18n="min">min</span>
-                            </div>
-                            <div class="value-display positive-value" id="walking-value"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Steps 
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="activity-card">
-                            <div class="activity-icon">
-                                <i class="fa-solid fa-face-grin-hearts"></i>
-                            </div>
-                            <h5 class="activity-title" data-i18n="steps_future">Steps (Future)</h5>
-                            <div class="input-group">
-                                <input type="number" class="form-control" disabled value="" placeholder="Steps" data-i18n="steps">
+                                <input type="number" class="form-control" id="step-count" min="0" max="100000" value="" placeholder="Enter steps" data-i18n="enter_steps">
                                 <span class="input-group-text" data-i18n="steps">steps</span>
                             </div>
-                            <div class="value-display" data-i18n="coming_soon">Coming soon</div>
+                            <small> Keskimääräinen askelmäärä on noin 5000-8000 askelta päivässä</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-fire me-2"></i><span data-i18n="activity_calories">Activity Calories</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="activity-calories" min="0" max="2000" value="" placeholder="Additional calories" data-i18n="additional_calories">
+                                <span class="input-group-text" data-i18n="kcal">kcal</span>
+                            </div>
+                            <small>Kulutetut kalorit harjoituksista</small>
                         </div>
                     </div>
-                </div> -->
+                    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Edistynyt:</strong> Kokonaiskulutus = BMR + Kalorit askeleista + harjoituksista
+                    </div>
+                </div>
+
+                <!-- Custom Mode -->
+                <div id="custom-mode" class="mode-content" style="display: none;">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-calculator me-2"></i><span data-i18n="custom_tdee">Input your own TDEE</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="custom-tdee" min="800" max="5000" value="" placeholder="Enter TDEE" data-i18n="enter_tdee">
+                                <span class="input-group-text" data-i18n="kcal">kcal</span>
+                            </div>
+                            <small>Päivittäinen kokonaiskulutuksesi</small>
+                        </div>
+                    </div>
+                    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tiedätkö paremmin?</strong> voit asettaa oman kokonaiskulutuksen itse
+                    </div>
+                </div>
                 
-                <div class="d-grid mt-2">
+                <div class="d-grid mt-4">
                     <button class="btn btn-primary btn-lg" id="calculate-btn">
-                        <i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Calculate TDEE</span>
+                        <i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske kulutus</span>
                     </button>
                 </div>
             </div>
         </div>
         
         <!-- Results Section -->
-<div class="glass-card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <i class="fas fa-chart-line me-2"></i><span data-i18n="energy_expenditure_results">Energy Expenditure Results</span>
-        </div>
-        <button class="btn btn-sm btn-primary" id="save-tdee-btn" style="display: none;">
-            <i class="fas fa-save me-1"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>
-        </button>
-    </div>
+        <div class="glass-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-chart-line me-2"></i><span data-i18n="energy_expenditure_results">Energy Expenditure Results</span>
+                </div>
+                <button class="btn btn-sm btn-primary" id="save-tdee-btn" style="display: none;">
+                    <i class="fas fa-save me-1"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>
+                </button>
+            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-4">
@@ -930,86 +1013,112 @@ body {
                 </div>
                 
                 <div class="tdee-explanation">
-    <h5><i class="fas fa-chart-pie me-2"></i><span data-i18n="energy_breakdown">Energy Breakdown</span></h5>
-    
-    <!-- BMR Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            <span><i class="fas fa-heartbeat me-2"></i data-i18n="bmr_short">BMR</span>
-            <span class="positive-value" id="bmr-breakdown-result"></span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progress-bmr" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
-    
-    <!-- Intense Exercise Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            <span><i class="fas fa-fire me-2"></i><span data-i18n="intense_exercise">Intense Exercise</span></span>
-            <span class="positive-value" id="intense-result"></span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progress-intense" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%)"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
-    
-    <!-- Moderate Exercise Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            <span><i class="fas fa-biking me-2"></i><span data-i18n="moderate_exercise">Moderate Exercise</span></span>
-            <span class="positive-value" id="moderate-result"></span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progress-moderate" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%)"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
-    
-    <!-- Light Exercise Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            <span><i class="fas fa-walking me-2"></i><span data-i18n="light_exercise">Light Exercise</span></span>
-            <span class="positive-value" id="light-result"></span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progress-light" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%)"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
-    
-    <!-- Standing/Walking Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            <span><i class="fas fa-shoe-prints me-2"></i><span data-i18n="standing_walking">Standing/Walking</span></span>
-            <span class="positive-value" id="walking-result"></span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progress-walking" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #AB47BC 0%, #BA68C8 100%)"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
+                    <h5><i class="fas fa-chart-pie me-2"></i><span data-i18n="energy_breakdown">Energy Breakdown</span></h5>
+                    
+                    <!-- BMR Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-heartbeat me-2"></i><span data-i18n="bmr_short">BMR</span></span>
+                            <span class="positive-value" id="bmr-breakdown-result"></span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" id="progress-bmr" role="progressbar"
+                                style="width: 0%; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)"
+                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dynamic content based on mode -->
+                    <div id="breakdown-easy" class="breakdown-section">
+                        <!-- Intense Exercise Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-fire me-2"></i><span data-i18n="intense_exercise">Intense Exercise</span></span>
+                                <span class="positive-value" id="intense-result"></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-intense" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%)"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Moderate Exercise Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-biking me-2"></i><span data-i18n="moderate_exercise">Moderate Exercise</span></span>
+                                <span class="positive-value" id="moderate-result"></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-moderate" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%)"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Standing/Walking Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-shoe-prints me-2"></i><span data-i18n="standing_walking">Standing/Walking</span></span>
+                                <span class="positive-value" id="walking-result"></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-walking" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #AB47BC 0%, #BA68C8 100%)"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
 
-    <!-- Other (Fidgeting, passive moving etc.) Progress Bar -->
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-           <span class="text-white"><i class="fas fa-random me-2"></i><span data-i18n="other_fidgeting">Other (Fidgeting, passive moving etc.)</span></span>
-            <span class="positive-value text-white" id="other-result"></span>
-        </div>
-        <div class="progress" style="height: 0.6rem;">
-            <div class="progress-bar" id="progress-other" role="progressbar"
-                style="width: 0%; background: linear-gradient(135deg, #bdbdbd 0%, #e0e0e0 100%); opacity: 0.7;"
-                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-    </div>
-</div>
+                        <!-- Other Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                               <span class="text-white"><i class="fas fa-random me-2"></i><span data-i18n="other_fidgeting">Other (Fidgeting, passive moving etc.)</span></span>
+                                <span class="positive-value text-white" id="other-result"></span>
+                            </div>
+                            <div class="progress" style="height: 0.6rem;">
+                                <div class="progress-bar" id="progress-other" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #bdbdbd 0%, #e0e0e0 100%); opacity: 0.7;"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="breakdown-advanced" class="breakdown-section" style="display: none;">
+                        <!-- Steps Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-shoe-prints me-2"></i><span data-i18n="steps_calories">Steps Calories</span></span>
+                                <span class="positive-value" id="steps-result"></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-steps" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%)"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Calories Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-fire me-2"></i><span data-i18n="activity_calories">Activity Calories</span></span>
+                                <span class="positive-value" id="activity-result"></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-activity" role="progressbar"
+                                    style="width: 0%; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%)"
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="breakdown-custom" class="breakdown-section" style="display: none;">
+                        <!-- Custom TDEE Info -->
+                        <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px;">
+                            <i class="fas fa-user-cog me-2"></i>
+                            Käytämme sinun mukautettua kokonaiskulutusarvoa. Perusaineenvaihdunta(BMR) muodostuu silti erikseen.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1025,7 +1134,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tdeeInput = document.getElementById('tdee-result');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const genderButtons = document.querySelectorAll('.gender-btn');
+    const modeButtons = document.querySelectorAll('.mode-btn');
     let currentGender = 'male';
+    let currentMode = 'easy';
 
     // Initialize all result fields to empty
     initializeResultFields();
@@ -1037,13 +1148,24 @@ document.addEventListener('DOMContentLoaded', function() {
         loadFormState();
     }
 
-    // Pre-select gender button if needed
+    // Mode selection
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            modeButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentMode = this.dataset.mode;
+            switchMode(currentMode);
+            saveFormState();
+        });
+    });
+
+    // Gender selection
     genderButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             genderButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentGender = this.dataset.gender;
-            saveFormState(); // Save when gender changes
+            saveFormState();
         });
     });
 
@@ -1062,13 +1184,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 group.style.borderColor = '#555';
                 group.style.backgroundColor = '#333';
             }
-            saveFormState(); // Save when input changes
+            saveFormState();
         });
     });
 
     // TDEE Calculation button
     if(calculateBtn) {
-        calculateBtn.addEventListener('click', function() {
+    calculateBtn.addEventListener('click', function() {
+        if (currentMode === 'custom') {
+            // For custom mode, skip calculation and go straight to saving
+            const customTdee = parseInt(document.getElementById('custom-tdee').value) || 0;
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const weight = parseFloat(weightInput.value) || 0;
+            const height = parseInt(document.getElementById('height').value) || 0;
+
+            if (!customTdee) {
+                alert('Please enter your custom TDEE value');
+                return;
+            }
+            
+            if(!age || !weight || !height) {
+                alert(t('fill_all_personal_info'));
+                return;
+            }
+
+            // Calculate BMR for reference and update display
+            const results = calculateEnergyExpenditureCustom(currentGender, age, weight, height, customTdee);
+            
+            // Update results display
+            document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
+            tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
+            document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
+            
+            updateProgressBars(results);
+            
+            // Show save button and save directly
+            saveTdeeBtn.style.display = 'block';
+            
+            // Trigger save immediately
+            saveTdeeBtn.click();
+            
+        } else {
+            // Normal calculation flow for easy and advanced modes
             const age = parseInt(document.getElementById('age').value) || 0;
             const weight = parseFloat(weightInput.value) || 0;
             const height = parseInt(document.getElementById('height').value) || 0;
@@ -1089,49 +1246,83 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadingOverlay.classList.remove('active');
                 }
             }, 1000);
+        }
+    });
+}
+
+    // Save TDEE & Weight button
+    if (saveTdeeBtn) {
+        saveTdeeBtn.addEventListener('click', function() {
+            const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
+            const weightValue = parseFloat(weightInput.value) || 0;
+
+            loadingOverlay.classList.add('active');
+
+            $.ajax({
+                type: 'POST',
+                url: '/save_metrics',
+                data: { tdee: tdeeValue, weight: weightValue },
+                headers: { "X-CSRFToken": csrfToken },
+                success: function(response) {
+                    if (response.success) {
+                        saveFormState();
+                        const btn = saveTdeeBtn;
+
+                        // Change to success style + text
+                        btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
+                        btn.classList.add('btn-flash-success');
+
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('save_metrics');
+                            btn.classList.remove('btn-flash-success');
+                        }, 2000);
+
+                    } else {
+                        alert(t('error_saving') + ' ' + (response.error || t('unknown_error')));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert(t('error_saving_console'));
+                },
+                complete: function() {
+                    loadingOverlay.classList.remove('active');
+                }
+            });
         });
     }
 
-   // Save TDEE & Weight button
-if (saveTdeeBtn) {
-    saveTdeeBtn.addEventListener('click', function() {
-        const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
-        const weightValue = parseFloat(weightInput.value) || 0;
-
-        loadingOverlay.classList.add('active');
-
-        $.ajax({
-            type: 'POST',
-            url: '/save_metrics',
-            data: { tdee: tdeeValue, weight: weightValue },
-            headers: { "X-CSRFToken": csrfToken },
-            success: function(response) {
-                if (response.success) {
-                    saveFormState();
-                    const btn = saveTdeeBtn;
-
-                    // Change to success style + text
-                    btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
-                    btn.classList.add('btn-flash-success');
-
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('save_metrics');
-                        btn.classList.remove('btn-flash-success');
-                    }, 2000);
-
-                } else {
-                    alert(t('error_saving') + ' ' + (response.error || t('unknown_error')));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
-                alert(t('error_saving_console'));
-            },
-            complete: function() {
-                loadingOverlay.classList.remove('active');
-            }
-        });
+    // Mode switching function
+function switchMode(mode) {
+    // Hide all mode content
+    document.querySelectorAll('.mode-content').forEach(content => {
+        content.style.display = 'none';
     });
+    
+    // Hide all breakdown sections
+    document.querySelectorAll('.breakdown-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show selected mode content
+    document.getElementById(mode + '-mode').style.display = 'block';
+    
+    // Show corresponding breakdown section
+    if (mode === 'easy') {
+        document.getElementById('breakdown-easy').style.display = 'block';
+    } else if (mode === 'advanced') {
+        document.getElementById('breakdown-advanced').style.display = 'block';
+    } else if (mode === 'custom') {
+        document.getElementById('breakdown-custom').style.display = 'block';
+    }
+    
+    // Update button text based on mode
+    const calculateBtn = document.getElementById('calculate-btn');
+    if (mode === 'custom') {
+        calculateBtn.innerHTML = '<i class="fas fa-save me-2"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>';
+    } else {
+        calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske Kulutus</span>';
+    }
 }
 
     // Calculate TDEE function
@@ -1140,178 +1331,257 @@ if (saveTdeeBtn) {
         const weight = parseFloat(weightInput.value) || 70;
         const height = parseInt(document.getElementById('height').value) || 175;
 
-        const sleepMin = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 +
-                         (parseInt(document.getElementById('sleep-minutes').value) || 0);
-        const intenseMin = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 +
-                           (parseInt(document.getElementById('intense-minutes').value) || 0);
-        const moderateMin = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 +
-                            (parseInt(document.getElementById('moderate-minutes').value) || 0);
-        const lightMin = (parseInt(document.getElementById('light-hours').value) || 0) * 60 +
-                         (parseInt(document.getElementById('light-minutes').value) || 0);
-        const walkingMin = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 +
-                           (parseInt(document.getElementById('walking-minutes').value) || 0);
+        let results;
 
-        const results = calculateEnergyExpenditure(currentGender, age, weight, height,
-            sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
+        if (currentMode === 'easy') {
+            // Original calculation logic
+            const sleepMin = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 +
+                             (parseInt(document.getElementById('sleep-minutes').value) || 0);
+            const intenseMin = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 +
+                               (parseInt(document.getElementById('intense-minutes').value) || 0);
+            const moderateMin = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 +
+                                (parseInt(document.getElementById('moderate-minutes').value) || 0);
+            const lightMin = 0; // Hidden in current layout
+            const walkingMin = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 +
+                               (parseInt(document.getElementById('walking-minutes').value) || 0);
 
+            results = calculateEnergyExpenditureEasy(currentGender, age, weight, height,
+                sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
+        } 
+        else if (currentMode === 'advanced') {
+            // Advanced calculation with steps
+            const steps = parseInt(document.getElementById('step-count').value) || 0;
+            const activityCals = parseInt(document.getElementById('activity-calories').value) || 0;
+            
+            results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, steps, activityCals);
+        }
+        else if (currentMode === 'custom') {
+            // Custom TDEE
+            const customTdee = parseInt(document.getElementById('custom-tdee').value) || 0;
+            if (!customTdee) {
+                alert('Please enter your custom TDEE value');
+                return;
+            }
+            
+            results = calculateEnergyExpenditureCustom(currentGender, age, weight, height, customTdee);
+        }
+
+        // Update results
         document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
         tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
+        document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
 
-        // Hide sleep value in input fields
+        // Update mode-specific breakdowns
+        if (currentMode === 'easy') {
+            updateEasyModeResults(results);
+        } else if (currentMode === 'advanced') {
+            updateAdvancedModeResults(results);
+        }
+
+        updateProgressBars(results);
+        
+        // Show save button
+        saveTdeeBtn.style.display = 'block';
+        saveTdeeBtn.classList.add('btn-flash-success');
+        setTimeout(() => {
+            saveTdeeBtn.classList.remove('btn-flash-success');
+        }, 1500);
+
+        saveFormState();
+    }
+
+    // Easy mode calculation (original)
+    function calculateEnergyExpenditureEasy(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
+        let baseBMR = (gender==='male') ? 1139 : 939;
+        let baseTDEE = (gender==='male') ? 1511 : 1311;
+
+        const weightDiff = weight - 30;
+        const weightUnits = weightDiff / 0.5;
+
+        const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
+        const weightTDEEAdj = (gender==='male') ? weightUnits*12 : weightUnits*11;
+
+        let ageAdj = 0;
+        if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
+        else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
+
+        const heightAdj = (height>170) ? (height-170)*2 : 0;
+
+        let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
+        let tdee = baseTDEE + weightTDEEAdj + ageAdj + heightAdj;
+
+        const activityBreakdown = {};
+        activityBreakdown.sleep = -Math.round((sleepMin/5)*2.8);
+        tdee += activityBreakdown.sleep;
+
+        activityBreakdown.intense = (gender==='male') ? Math.round((intenseMin/5)*60) : Math.round((intenseMin/5)*56);
+        tdee += activityBreakdown.intense;
+
+        activityBreakdown.moderate = (gender==='male') ? Math.round((moderateMin/5)*33) : Math.round((moderateMin/5)*31);
+        tdee += activityBreakdown.moderate;
+
+        activityBreakdown.light = (gender==='male') ? Math.round((lightMin/5)*17) : Math.round((lightMin/5)*15);
+        tdee += activityBreakdown.light;
+
+        activityBreakdown.walking = (gender==='male') ? Math.round((walkingMin/5)*5) : Math.round((walkingMin/5)*4);
+        tdee += activityBreakdown.walking;
+
+        const usedEnergy = bmr + activityBreakdown.intense + activityBreakdown.moderate + activityBreakdown.light + activityBreakdown.walking;
+        activityBreakdown.other = Math.max(tdee - usedEnergy, 0);
+
+        return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown, mode: 'easy' };
+    }
+
+    // Advanced mode calculation with steps
+    function calculateEnergyExpenditureAdvanced(gender, age, weight, height, steps, activityCals) {
+        // Calculate BMR using same formula as easy mode
+        let baseBMR = (gender==='male') ? 1139 : 939;
+        const weightDiff = weight - 30;
+        const weightUnits = weightDiff / 0.5;
+        const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
+        
+        let ageAdj = 0;
+        if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
+        else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
+        
+        const heightAdj = (height>170) ? (height-170)*2 : 0;
+        let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
+
+        // Calculate calories from steps (weight-adjusted)
+        const caloriesPerStep = 0.04 * (weight / 70); // Adjust base 0.04 cal/step by weight
+        const stepsCalories = Math.round(steps * caloriesPerStep);
+
+        // Calculate TDEE: BMR + Steps + Activity
+        const tdee = bmr + stepsCalories + activityCals;
+
+        const activityBreakdown = {
+            steps: stepsCalories,
+            activity: activityCals
+        };
+
+        return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown, mode: 'advanced' };
+    }
+
+    // Custom mode calculation
+    function calculateEnergyExpenditureCustom(gender, age, weight, height, customTdee) {
+        // Calculate BMR for reference
+        let baseBMR = (gender==='male') ? 1139 : 939;
+        const weightDiff = weight - 30;
+        const weightUnits = weightDiff / 0.5;
+        const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
+        
+        let ageAdj = 0;
+        if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
+        else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
+        
+        const heightAdj = (height>170) ? (height-170)*2 : 0;
+        let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
+
+        return { bmr: Math.round(bmr), tdee: customTdee, activityBreakdown: {}, mode: 'custom' };
+    }
+
+    // Update easy mode results
+    function updateEasyModeResults(results) {
         document.getElementById('sleep-value').style.display = 'none';      
         document.getElementById('intense-value').textContent = '+' + results.activityBreakdown.intense + ' kcal';
         document.getElementById('moderate-value').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
-        document.getElementById('light-value').textContent = '+' + results.activityBreakdown.light + ' kcal';
         document.getElementById('walking-value').textContent = '+' + results.activityBreakdown.walking + ' kcal';
 
-        // Update results section
-        document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
         document.getElementById('intense-result').textContent = '+' + results.activityBreakdown.intense + ' kcal';
         document.getElementById('moderate-result').textContent = '+' + results.activityBreakdown.moderate + ' kcal';
-        document.getElementById('light-result').textContent = '+' + results.activityBreakdown.light + ' kcal';
         document.getElementById('walking-result').textContent = '+' + results.activityBreakdown.walking + ' kcal';
         document.getElementById('other-result').textContent = '+' + results.activityBreakdown.other + ' kcal';
-        
-        updateActivityBreakdown(results.bmr, results.tdee, results.activityBreakdown);
-          // Show save button and flash green
-    saveTdeeBtn.style.display = 'block';
-    saveTdeeBtn.classList.add('btn-flash-success');
-    setTimeout(() => {
-        saveTdeeBtn.classList.remove('btn-flash-success');
-    }, 1500);
+    }
 
-    saveFormState(); // Save after calculation
-}
+    // Update advanced mode results
+    function updateAdvancedModeResults(results) {
+        document.getElementById('steps-result').textContent = '+' + results.activityBreakdown.steps + ' kcal';
+        document.getElementById('activity-result').textContent = '+' + results.activityBreakdown.activity + ' kcal';
+    }
 
-    // Energy expenditure formula
-    function calculateEnergyExpenditure(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
-    let baseBMR = (gender==='male') ? 1139 : 939;
-    let baseTDEE = (gender==='male') ? 1511 : 1311;
-
-    const weightDiff = weight - 30;
-    const weightUnits = weightDiff / 0.5;
-
-    const weightBMRAdj = (gender==='male') ? weightUnits*7 : weightUnits*6;
-    const weightTDEEAdj = (gender==='male') ? weightUnits*12 : weightUnits*11;
-
-    let ageAdj = 0;
-    if(age>=30 && age<60) { ageAdj = (gender==='male') ? 70 : 65; }
-    else if(age>=60) { ageAdj = (gender==='male') ? -150 : -140; }
-
-    const heightAdj = (height>170) ? (height-170)*2 : 0;
-
-    let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
-    let tdee = baseTDEE + weightTDEEAdj + ageAdj + heightAdj;
-
-    const activityBreakdown = {};
-    activityBreakdown.sleep = -Math.round((sleepMin/5)*2.8); // deducted silently
-    tdee += activityBreakdown.sleep;
-
-    activityBreakdown.intense = (gender==='male') ? Math.round((intenseMin/5)*60) : Math.round((intenseMin/5)*56);
-    tdee += activityBreakdown.intense;
-
-    activityBreakdown.moderate = (gender==='male') ? Math.round((moderateMin/5)*33) : Math.round((moderateMin/5)*31);
-    tdee += activityBreakdown.moderate;
-
-    activityBreakdown.light = (gender==='male') ? Math.round((lightMin/5)*17) : Math.round((lightMin/5)*15);
-    tdee += activityBreakdown.light;
-
-    activityBreakdown.walking = (gender==='male') ? Math.round((walkingMin/5)*5) : Math.round((walkingMin/5)*4);
-    tdee += activityBreakdown.walking;
-
-    // ✅ Calculate used energy BEFORE Other
-    const usedEnergy = bmr +
-        activityBreakdown.intense +
-        activityBreakdown.moderate +
-        activityBreakdown.light +
-        activityBreakdown.walking;
-
-    activityBreakdown.other = Math.max(tdee - usedEnergy, 0);
-
-    return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown };
-}
-
-    // Progress bar updates (showing BMR and activities as percentages of TDEE)
-    function updateActivityBreakdown(bmr, tdee, breakdown) {
-    // Calculate percentages for each component relative to TDEE
-    const bmrPct = Math.round((bmr / tdee) * 100);
-    const intensePct = Math.round((breakdown.intense / tdee) * 100);
-    const moderatePct = Math.round((breakdown.moderate / tdee) * 100);
-    const lightPct = Math.round((breakdown.light / tdee) * 100);
-    const walkingPct = Math.round((breakdown.walking / tdee) * 100);
-
-    // Update progress bars
+    // Update progress bars based on mode
+    function updateProgressBars(results) {
+    const bmrPct = Math.round((results.bmr / results.tdee) * 100);
     const bmrBar = document.getElementById('progress-bmr');
     if(bmrBar) { 
         bmrBar.style.width = bmrPct+'%'; 
         bmrBar.setAttribute('aria-valuenow', bmrPct); 
     }
 
-    const intenseBar = document.getElementById('progress-intense');
-    if(intenseBar) { 
-        intenseBar.style.width = intensePct+'%'; 
-        intenseBar.setAttribute('aria-valuenow', intensePct); 
-    }
+    if (results.mode === 'easy') {
+        const intensePct = Math.round((results.activityBreakdown.intense / results.tdee) * 100);
+        const moderatePct = Math.round((results.activityBreakdown.moderate / results.tdee) * 100);
+        const walkingPct = Math.round((results.activityBreakdown.walking / results.tdee) * 100);
+        const otherPct = Math.max(100 - (bmrPct + intensePct + moderatePct + walkingPct), 0);
 
-    const moderateBar = document.getElementById('progress-moderate');
-    if(moderateBar) { 
-        moderateBar.style.width = moderatePct+'%'; 
-        moderateBar.setAttribute('aria-valuenow', moderatePct); 
-    }
+        // Fix: Add setAttribute for aria-valuenow to all bars
+        const intenseBar = document.getElementById('progress-intense');
+        const moderateBar = document.getElementById('progress-moderate');
+        const walkingBar = document.getElementById('progress-walking');
+        const otherBar = document.getElementById('progress-other');
+        
+        if(intenseBar) {
+            intenseBar.style.width = intensePct+'%';
+            intenseBar.setAttribute('aria-valuenow', intensePct);
+        }
+        if(moderateBar) {
+            moderateBar.style.width = moderatePct+'%';
+            moderateBar.setAttribute('aria-valuenow', moderatePct);
+        }
+        if(walkingBar) {
+            walkingBar.style.width = walkingPct+'%';
+            walkingBar.setAttribute('aria-valuenow', walkingPct);
+        }
+        if(otherBar) {
+            otherBar.style.width = otherPct+'%';
+            otherBar.setAttribute('aria-valuenow', otherPct);
+        }
+    } 
+    else if (results.mode === 'advanced') {
+        const stepsPct = Math.round((results.activityBreakdown.steps / results.tdee) * 100);
+        const activityPct = Math.round((results.activityBreakdown.activity / results.tdee) * 100);
 
-    const lightBar = document.getElementById('progress-light');
-    if(lightBar) { 
-        lightBar.style.width = lightPct+'%'; 
-        lightBar.setAttribute('aria-valuenow', lightPct); 
-    }
-
-    const walkingBar = document.getElementById('progress-walking');
-    if(walkingBar) { 
-        walkingBar.style.width = walkingPct+'%'; 
-        walkingBar.setAttribute('aria-valuenow', walkingPct); 
-    }
-
-    // Calculate remaining % for Other
-    const otherPct = Math.max(100 - (bmrPct + intensePct + moderatePct + lightPct + walkingPct), 0);
-    const otherBar = document.getElementById('progress-other');
-    if(otherBar) {
-        otherBar.style.width = otherPct + '%';
-        otherBar.setAttribute('aria-valuenow', otherPct);
+        // Fix: Add setAttribute for aria-valuenow to advanced mode bars
+        const stepsBar = document.getElementById('progress-steps');
+        const activityBar = document.getElementById('progress-activity');
+        
+        if(stepsBar) {
+            stepsBar.style.width = stepsPct+'%';
+            stepsBar.setAttribute('aria-valuenow', stepsPct);
+        }
+        if(activityBar) {
+            activityBar.style.width = activityPct+'%';
+            activityBar.setAttribute('aria-valuenow', activityPct);
+        }
     }
 }
     
-    // Initialize all result fields to empty
-    function initializeResultFields() {
-        // Activity cards - hide sleep value display
+        // Initialize all result fields to empty
+        function initializeResultFields() {
         document.getElementById('sleep-value').style.display = 'none';
         document.getElementById('intense-value').textContent = '';
         document.getElementById('moderate-value').textContent = '';
-        document.getElementById('light-value').textContent = '';
         document.getElementById('walking-value').textContent = '';
         
-        // Results section
         document.getElementById('bmr-breakdown-result').textContent = '';
         document.getElementById('intense-result').textContent = '';
         document.getElementById('moderate-result').textContent = '';
-        document.getElementById('light-result').textContent = '';
         document.getElementById('walking-result').textContent = '';
         
-        // Progress bars
-        const progressBars = ['progress-bmr', 'progress-intense', 'progress-moderate', 'progress-light', 'progress-walking'];
+        const progressBars = ['progress-bmr', 'progress-intense', 'progress-moderate', 'progress-walking', 'progress-steps', 'progress-activity', 'progress-other'];
         progressBars.forEach(id => {
             const bar = document.getElementById(id);
-            bar.style.width = '0%';
-            bar.setAttribute('aria-valuenow', '0');
+            if(bar) {
+                bar.style.width = '0%';
+                bar.setAttribute('aria-valuenow', '0');  // This line was already correct
+            }
         });
         
-        // BMR and TDEE
         document.getElementById('bmr-result').textContent = '';
         document.getElementById('tdee-result').textContent = '';
-        
-        // Hide the save button
         document.getElementById('save-tdee-btn').style.display = 'none';
     }
-    
+        
     // Clear form fields on first visit
     function clearFormFields() {
         document.getElementById('age').value = '';
@@ -1322,15 +1592,17 @@ if (saveTdeeBtn) {
         document.getElementById('intense-minutes').value = '';
         document.getElementById('moderate-hours').value = '';
         document.getElementById('moderate-minutes').value = '';
-        document.getElementById('light-hours').value = '';
-        document.getElementById('light-minutes').value = '';
         document.getElementById('walking-hours').value = '';
         document.getElementById('walking-minutes').value = '';
+        document.getElementById('step-count').value = '';
+        document.getElementById('activity-calories').value = '';
+        document.getElementById('custom-tdee').value = '';
     }
 
     // Form state management
     function saveFormState() {
         const formState = {
+            mode: currentMode,
             gender: currentGender,
             age: document.getElementById('age').value,
             weight: document.getElementById('weight').value,
@@ -1341,10 +1613,11 @@ if (saveTdeeBtn) {
             intenseMinutes: document.getElementById('intense-minutes').value,
             moderateHours: document.getElementById('moderate-hours').value,
             moderateMinutes: document.getElementById('moderate-minutes').value,
-            lightHours: document.getElementById('light-hours').value,
-            lightMinutes: document.getElementById('light-minutes').value,
             walkingHours: document.getElementById('walking-hours').value,
-            walkingMinutes: document.getElementById('walking-minutes').value
+            walkingMinutes: document.getElementById('walking-minutes').value,
+            stepCount: document.getElementById('step-count').value,
+            activityCalories: document.getElementById('activity-calories').value,
+            customTdee: document.getElementById('custom-tdee').value
         };
         localStorage.setItem('activityFormState', JSON.stringify(formState));
     }
@@ -1354,11 +1627,21 @@ if (saveTdeeBtn) {
         if (savedState) {
             const state = JSON.parse(savedState);
             
+            // Set mode
+            currentMode = state.mode || 'easy';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === currentMode) {
+                    btn.classList.add('active');
+                }
+            });
+            switchMode(currentMode);
+            
             // Set gender
-            currentGender = state.gender;
+            currentGender = state.gender || 'male';
             document.querySelectorAll('.gender-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.dataset.gender === state.gender) {
+                if (btn.dataset.gender === currentGender) {
                     btn.classList.add('active');
                 }
             });
@@ -1372,12 +1655,28 @@ if (saveTdeeBtn) {
             document.getElementById('intense-minutes').value = state.intenseMinutes || '';
             document.getElementById('moderate-hours').value = state.moderateHours || '';
             document.getElementById('moderate-minutes').value = state.moderateMinutes || '';
-            document.getElementById('light-hours').value = state.lightHours || '';
-            document.getElementById('light-minutes').value = state.lightMinutes || '';
             document.getElementById('walking-hours').value = state.walkingHours || '';
             document.getElementById('walking-minutes').value = state.walkingMinutes || '';
+            document.getElementById('step-count').value = state.stepCount || '';
+            document.getElementById('activity-calories').value = state.activityCalories || '';
+            document.getElementById('custom-tdee').value = state.customTdee || '';
         }
     }
+
+    // Helper function for translations (if exists)
+    window.t = function(key) {
+        // Simple fallback if translation system isn't available
+        const translations = {
+            'fill_all_personal_info': 'Täydä vaadittavat kentät',
+            'error_in_calculation': 'Error in calculation:',
+            'saved': 'Tallennettu!',
+            'save_metrics': 'Tallenna mittaukset',
+            'error_saving': 'Error saving:',
+            'unknown_error': 'Unknown error',
+            'error_saving_console': 'Error saving metrics. Check console.'
+        };
+        return translations[key] || key;
+    };
 });
 </script>
 <script>
