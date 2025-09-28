@@ -806,12 +806,13 @@ def calculate_totals(eaten_items):
 def get_daily_totals(day_data):
     # Handle case where day_data might be None or empty
     if not day_data:
-        return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         
     total_calories = sum(item['calories'] for item in day_data)
     total_proteins = sum(item['proteins'] for item in day_data)
     total_fats = sum(item['fats'] for item in day_data)
     total_carbs = sum(item['carbs'] for item in day_data)
+    total_sugars = sum(item['sugars'] for item in day_data)
     total_salt = sum(item.get('salt', 0.0) for item in day_data)
     total_saturated = sum(item.get('saturated', 0.0) for item in day_data)
     total_fiber = sum(item.get('fiber', 0.0) for item in day_data)
@@ -821,6 +822,7 @@ def get_daily_totals(day_data):
         total_proteins,
         total_fats,
         total_carbs,
+        total_sugars,
         total_salt,
         total_saturated,
         total_fiber
@@ -2156,6 +2158,7 @@ def calculate_weekly_averages(session_history):
                     "proteins": 0,
                     "fats": 0,
                     "carbs": 0,
+                    "sugars": 0,
 
                     "salt": 0,
                     "saturated": 0,
@@ -2163,12 +2166,13 @@ def calculate_weekly_averages(session_history):
                     "count": 0
                 }
 
-            calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(items)
+            calories, proteins, fats, carbs, sugars, salt, saturated, fiber = get_daily_totals(items)
             weekly_data[week_key]["days"].append(date_str)
             weekly_data[week_key]["calories"] += calories
             weekly_data[week_key]["proteins"] += proteins
             weekly_data[week_key]["fats"] += fats
             weekly_data[week_key]["carbs"] += carbs
+            weekly_data[week_key]["sugars"] += sugars
             weekly_data[week_key]["salt"] += salt
             weekly_data[week_key]["saturated"] += saturated
             weekly_data[week_key]["fiber"] += fiber
@@ -2190,6 +2194,7 @@ def calculate_weekly_averages(session_history):
                 "avg_proteins": data["proteins"] / count,
                 "avg_fats": data["fats"] / count,
                 "avg_carbs": data["carbs"] / count,
+                "avg_sugars": data["sugars"] / count,
                 "avg_salt": data["salt"] / count,
                 "avg_saturated": data["saturated"] / count,
                 "avg_fiber": data["fiber"] / count
@@ -2239,13 +2244,14 @@ def history():
     # Fill history_data
     for date in daily_dates:
         day_data = session_history.get(date, [])
-        calories, proteins, fats, carbs, salt, saturated, fiber = get_daily_totals(day_data)
+        calories, proteins, fats, carbs, sugars, salt, saturated, fiber = get_daily_totals(day_data)
         history_data.append({
             'date': format_date(date),
             'date_raw': date,
             'calories': calories,
             'proteins': proteins,
             'fats': fats,
+            'sugars': sugars,
             'carbs': carbs,
             'salt': salt,
             'saturated': saturated,
@@ -2254,7 +2260,7 @@ def history():
 
     # Today's totals
     today_data = session_history.get(today_str, [])
-    today_calories, today_proteins, today_fats, today_carbs, today_salt, today_saturated, today_fiber = get_daily_totals(today_data)
+    today_calories, today_proteins, today_fats, today_carbs, today_salt, today_saturated, today_fiber, today_sugars = get_daily_totals(today_data)
 
     # Weekly averages
     weekly_data = calculate_weekly_averages(session_history)
