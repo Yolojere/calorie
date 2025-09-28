@@ -3551,10 +3551,33 @@ def get_exercise_history(exercise_id):
 @app.route('/save_metrics', methods=['POST'])
 @login_required
 def save_metrics():
+    """
+    Enhanced save_metrics route that handles TDEE calculations from different modes:
+    - Easy mode: Uses original activity-based calculation
+    - Advanced mode: Uses steps + activity calories (BMR + steps_calories + activity_calories)
+    - Custom mode: Uses user-provided TDEE directly
+    """
     try:
-        tdee = float(request.form.get('tdee', 0))
+        # Get basic metrics that are always required
         weight = float(request.form.get('weight', 0))
+        
+        # Get TDEE based on calculation mode
+        tdee = float(request.form.get('tdee', 0))
+        
+        # Optional: Get calculation mode for logging/analytics
+        calc_mode = request.form.get('mode', 'unknown')
+        
+        # Validate inputs
+        if not weight or weight <= 0:
+            return jsonify(success=False, error="Valid weight is required"), 400
+            
+        if not tdee or tdee <= 0:
+            return jsonify(success=False, error="Valid TDEE is required"), 400
+            
+        # Optional: Log the calculation mode for analytics
+        print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight}")
 
+        # Update database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -3562,13 +3585,66 @@ def save_metrics():
             (tdee, weight, current_user.id)
         )
         conn.commit()
-        return jsonify(success=True, message="Metrics saved successfully!")
+        
+        return jsonify(
+            success=True, 
+            message="Metrics saved successfully!",
+            data={
+                "tdee": tdee,
+                "weight": weight,
+                "mode": calc_mode
+            }
+        )
+        
+    except ValueError as e:
+        print(f"ValueError in save_metrics: {e}")
+        return jsonify(success=False, error="Invalid numeric values provided"), 400
+        
     except Exception as e:
         print(f"Error saving metrics: {e}")
         return jsonify(success=False, error=str(e)), 500
+        
     finally:
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
+
+
+# Optional: Add a separate endpoint for step-to-calorie calculations if needed elsewhere
+@app.route('/calculate_steps_calories', methods=['POST'])
+@login_required
+def calculate_steps_calories():
+    """
+    Utility endpoint to calculate calories from steps using the weight-adjusted formula
+    Formula: calories = steps × (0.04 × (weight_kg / 70))
+    """
+    try:
+        steps = int(request.form.get('steps', 0))
+        weight = float(request.form.get('weight', 70))
+        
+        if steps < 0 or weight <= 0:
+            return jsonify(success=False, error="Invalid input values"), 400
+            
+        # Weight-adjusted calories per step (base: 0.04 cal/step for 70kg person)
+        calories_per_step = 0.04 * (weight / 70)
+        total_calories = round(steps * calories_per_step)
+        
+        return jsonify(
+            success=True,
+            data={
+                "steps": steps,
+                "weight": weight,
+                "calories_per_step": round(calories_per_step, 4),
+                "total_calories": total_calories
+            }
+        )
+        
+    except (ValueError, TypeError) as e:
+        return jsonify(success=False, error="Invalid input format"), 400
+        
+    except Exception as e:
+        print(f"Error calculating step calories: {e}")
+        return jsonify(success=False, error=str(e)), 500
+
 @app.route('/workout/update_rir', methods=['POST'])
 def update_rir():
     data = request.json
@@ -3596,7 +3672,6 @@ def update_rir():
     conn.close()
 
     return jsonify({'success': True})
-
 
 @app.route('/workout/update_comment', methods=['POST'])
 def update_comment():
@@ -3647,6 +3722,7 @@ def get_nutrition_targets():
     return jsonify(targets)
 from datetime import datetime  # ensure this import
 
+
 @app.route("/workout/save", methods=["POST"])
 @login_required
 def save_workout():
@@ -3682,13 +3758,16 @@ def save_workout():
         set_comparisons = []
         personal_records = []
         improvements = []
+        new_exercises_count = 0
         total_sets = 0
         current_total_volume = 0
+        volume_improvements = 0
+        sets_improvements = 0
 
         for ex in exercises:
-            # Previous session for same focus_type
+            # Get most recent session for this exercise and focus type - FIXED QUERY
             cursor.execute("""
-                SELECT wset.reps, wset.weight, ws.date
+                SELECT ws.id, ws.date
                 FROM workout_sessions ws
                 JOIN workout_sets wset ON wset.session_id = ws.id
                 WHERE ws.user_id = %s
@@ -3698,63 +3777,124 @@ def save_workout():
                 ORDER BY ws.date DESC
                 LIMIT 1
             """, (current_user.id, focus_type, ex["id"], session_id))
-            last = cursor.fetchone()
+            
+            previous_session = cursor.fetchone()
 
             current_sets = ex["sets"]
             total_sets += len(current_sets)
 
             # Current session calculations
-            heaviest_set = max(current_sets, key=lambda s: s["weight"])
-            best_set = max(current_sets, key=lambda s: s["reps"] * s["weight"])
-            total_volume_ex = sum(s["reps"] * s["weight"] for s in current_sets)
-            current_total_volume += total_volume_ex
-
-            if last:
-                last_reps, last_weight, last_date = last
-                last_volume = last_reps * last_weight
-
-                # PR detection
-                if best_set["reps"] * best_set["weight"] > last_volume:
-                    personal_records.append({
-                        "exercise": ex["name"],
-                        "type": "bestSet",
-                        "weight": best_set["weight"],
-                        "reps": best_set["reps"],
-                        "previousBest": {"weight": last_weight, "reps": last_reps}
-                    })
-                if heaviest_set["weight"] > last_weight:
-                    personal_records.append({
-                        "exercise": ex["name"],
-                        "type": "heaviestWeight",
-                        "weight": heaviest_set["weight"],
-                        "reps": None,
-                        "previousBest": {"weight": last_weight, "reps": last_reps}
-                    })
-
-                # Per-set comparisons
-                for idx, s in enumerate(current_sets, start=1):
-                    current_volume = s["reps"] * s["weight"]
-                    volume_change = current_volume - last_volume
-                    set_comparisons.append({
-                        "setId": f"{ex['id']}-{idx}",
-                        "exerciseId": ex["id"],
-                        "currentReps": s["reps"],
-                        "currentWeight": s["weight"],
-                        "currentVolume": current_volume,
-                        "previousReps": last_reps,
-                        "previousWeight": last_weight,
-                        "previousVolume": last_volume,
-                        "volumeChange": volume_change,
-                        "noPrevious": False,
-                        "isNew": False
-                    })
-
-                # Track improvements per exercise
-                if total_volume_ex > last_volume:
-                    improvements.append({"exercise": ex["name"], "volumeChange": total_volume_ex - last_volume})
-
+            if current_sets:  # Safety check
+                heaviest_set = max(current_sets, key=lambda s: s["weight"])
+                best_set = max(current_sets, key=lambda s: s["reps"] * s["weight"])
+                total_volume_ex = sum(s["reps"] * s["weight"] for s in current_sets)
+                current_total_volume += total_volume_ex
             else:
-                # First session of this focus type
+                continue  # Skip if no sets
+
+            if previous_session:
+                previous_session_id, previous_date = previous_session
+                
+                # Get the last set data from previous session for this exercise
+                cursor.execute("""
+                    SELECT reps, weight
+                    FROM workout_sets
+                    WHERE session_id = %s AND exercise_id = %s
+                    ORDER BY id DESC
+                    LIMIT 1
+                """, (previous_session_id, ex["id"]))
+                
+                last_set = cursor.fetchone()
+                
+                # Get stats from previous session for this exercise
+                cursor.execute("""
+                    SELECT COUNT(*) as set_count, SUM(reps * weight) as total_volume
+                    FROM workout_sets
+                    WHERE session_id = %s AND exercise_id = %s
+                """, (previous_session_id, ex["id"]))
+                
+                previous_stats = cursor.fetchone()
+
+                if last_set and previous_stats:
+                    last_reps, last_weight = last_set
+                    last_volume = last_reps * last_weight
+                    last_set_count, last_total_volume_ex = previous_stats
+
+                    # Only add PRs if there's a meaningful previous best (not 0)
+                    if best_set["reps"] * best_set["weight"] > last_volume and last_volume > 0:
+                        personal_records.append({
+                            "exercise": ex["name"],
+                            "type": "bestSet",
+                            "weight": best_set["weight"],
+                            "reps": best_set["reps"],
+                            "previousBest": {"weight": last_weight, "reps": last_reps}
+                        })
+                    
+                    if heaviest_set["weight"] > last_weight and last_weight > 0:
+                        personal_records.append({
+                            "exercise": ex["name"],
+                            "type": "heaviestWeight",
+                            "weight": heaviest_set["weight"],
+                            "reps": None,
+                            "previousBest": {"weight": last_weight, "reps": last_reps}
+                        })
+
+                    # Per-set comparisons
+                    for idx, s in enumerate(current_sets, start=1):
+                        current_volume = s["reps"] * s["weight"]
+                        volume_change = current_volume - last_volume
+                        set_comparisons.append({
+                            "setId": f"{ex['id']}-{idx}",
+                            "exerciseId": ex["id"],
+                            "currentReps": s["reps"],
+                            "currentWeight": s["weight"],
+                            "currentVolume": current_volume,
+                            "previousReps": last_reps,
+                            "previousWeight": last_weight,
+                            "previousVolume": last_volume,
+                            "volumeChange": volume_change,
+                            "noPrevious": False,
+                            "isNew": False
+                        })
+
+                    # Track improvements per exercise
+                    if total_volume_ex > last_total_volume_ex:
+                        volume_improvements += 1
+                        improvements.append({
+                            "exercise": ex["name"], 
+                            "type": "volume",
+                            "volumeChange": total_volume_ex - last_total_volume_ex
+                        })
+                    
+                    if len(current_sets) > last_set_count:
+                        sets_improvements += 1
+                        improvements.append({
+                            "exercise": ex["name"],
+                            "type": "sets",
+                            "setsChange": len(current_sets) - last_set_count
+                        })
+                else:
+                    # Handle case where previous session exists but no data
+                    new_exercises_count += 1
+                    for idx, s in enumerate(current_sets, start=1):
+                        current_volume = s["reps"] * s["weight"]
+                        set_comparisons.append({
+                            "setId": f"{ex['id']}-{idx}",
+                            "exerciseId": ex["id"],
+                            "currentReps": s["reps"],
+                            "currentWeight": s["weight"],
+                            "currentVolume": current_volume,
+                            "previousReps": 0,
+                            "previousWeight": 0,
+                            "previousVolume": 0,
+                            "volumeChange": current_volume,
+                            "noPrevious": True,
+                            "isNew": True
+                        })
+            else:
+                # First time doing this exercise in this focus type
+                new_exercises_count += 1
+                
                 for idx, s in enumerate(current_sets, start=1):
                     current_volume = s["reps"] * s["weight"]
                     set_comparisons.append({
@@ -3771,42 +3911,42 @@ def save_workout():
                         "isNew": True
                     })
 
-                # First session PRs (best set & heaviest)
-                personal_records.append({
-                    "exercise": ex["name"],
-                    "type": "bestSet",
-                    "weight": best_set["weight"],
-                    "reps": best_set["reps"],
-                    "previousBest": {"weight": 0, "reps": 0}
-                })
-                personal_records.append({
-                    "exercise": ex["name"],
-                    "type": "heaviestWeight",
-                    "weight": heaviest_set["weight"],
-                    "reps": None,
-                    "previousBest": {"weight": 0, "reps": 0}
-                })
-
-        # Previous session totals for volume & sets
+        # Get previous session totals for same focus_type - FIXED QUERY
         cursor.execute("""
-            SELECT ws.id
-            FROM workout_sessions ws
-            WHERE ws.user_id = %s
-              AND ws.focus_type = %s
-              AND ws.id != %s
-            ORDER BY ws.date DESC
+            SELECT id
+            FROM workout_sessions
+            WHERE user_id = %s
+              AND focus_type = %s
+              AND id != %s
+            ORDER BY date DESC
             LIMIT 1
         """, (current_user.id, focus_type, session_id))
-        last_session = cursor.fetchone()
+        
+        last_session_result = cursor.fetchone()
 
         last_total_volume = 0
         last_total_sets = 0
-        if last_session:
-            last_session_id = last_session[0]
-            cursor.execute("SELECT SUM(reps * weight) FROM workout_sets WHERE session_id = %s", (last_session_id,))
-            last_total_volume = cursor.fetchone()[0] or 0
-            cursor.execute("SELECT COUNT(*) FROM workout_sets WHERE session_id = %s", (last_session_id,))
-            last_total_sets = cursor.fetchone()[0] or 0
+        
+        if last_session_result:
+            last_session_id = last_session_result[0]
+            
+            # Get total volume for previous session
+            cursor.execute("""
+                SELECT COALESCE(SUM(reps * weight), 0) as total_volume
+                FROM workout_sets 
+                WHERE session_id = %s
+            """, (last_session_id,))
+            volume_result = cursor.fetchone()
+            last_total_volume = volume_result[0] if volume_result else 0
+            
+            # Get total sets for previous session
+            cursor.execute("""
+                SELECT COUNT(*) as total_sets
+                FROM workout_sets 
+                WHERE session_id = %s
+            """, (last_session_id,))
+            sets_result = cursor.fetchone()
+            last_total_sets = sets_result[0] if sets_result else 0
 
         volume_change_percent = ((current_total_volume - last_total_volume) / last_total_volume * 100) if last_total_volume else 0
         sets_change = total_sets - last_total_sets
@@ -3824,13 +3964,19 @@ def save_workout():
             },
             "achievements": {
                 "personalRecords": personal_records,
-                "improvements": improvements
+                "improvements": improvements,
+                "newExercises": new_exercises_count,
+                "volumeImprovements": volume_improvements,
+                "setsImprovements": sets_improvements
             }
         })
 
     except Exception as e:
         conn.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        import traceback
+        print(f"Error in /workout/save: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
         conn.close()
