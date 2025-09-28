@@ -51,6 +51,10 @@ const translations = {
     grams: "g",
 
     // Workouts
+    greatJobTryingNew: "Good job trying new exercises!",
+    volumeImproved: "Volume improved",
+    newExercises: "New exercises",
+    comparedSameFocusType: "Compared to same focus type",
     strength: "Strength",
     hypertrophy: "Hypertrophy",
     focus_type_comp: "Focus (comparing vs last workout of that focus)",
@@ -150,6 +154,7 @@ const translations = {
     
     // Additional status messages
     action: "Action",
+    newExercisesDetected: "New exercises detected!",
         weekDisplay: "Week",
     selectExercise: "Select Exercise",
     noTemplatesFound: "No templates found",
@@ -232,6 +237,26 @@ const translations = {
     grams: "g",
 
     // Workouts
+    king: "Tästä lähtien sun toinen nimi on ennätys.",
+    winner: "Ding Ding!",
+    holdup: "No nyt lähti!",
+    woah: "WOW.",
+    majestic: "Majestista 👑👑",
+    onfire: "Liekeissä 🔥🔥",
+    incredible: "Uskomatonta! 💪",
+    takeit: "Tästä on hyvä jatkaa!",
+    notbad: "Ei huono!",
+    solid: "Kova! 💪",
+    whatinthe: "Uskomaton suoritus! 👌",
+    motivated: "Tällä linjalla jatketaan.🤛",
+    resultspeak: "Tulokset puhuvat puolestaan!",
+    thereitis: "NÄTTIÄ!",
+    pushing: "Hienoa ponnistelua!",
+    keepup: "Jatka samaan malliin!",
+    greatJobTryingNew: "Hyvää työtä, kokeilit uusia liikkeitä!",
+    volumeImproved: "Volyymi noussut!",
+    newExercises: "Uusia liikkeitä!",
+    comparedSameFocusType: "Verrattuna samaan focukseen",
     hypertrophy: "Hypertrofia",
     strength: "Voima",
     focus_type_comp: "Focus (Verrataan viimeiseen saman fokuksen treeniin)",
@@ -327,6 +352,7 @@ const translations = {
     no_data: "Ei tietoja saatavilla",
     
     // Additional status messages
+    newExercisesDetected: "Uutta liikettä havaittu!",
     action: "Toiminto",
     weekDisplay: "Viikko",
     selectExercise: "Valitse liike",
