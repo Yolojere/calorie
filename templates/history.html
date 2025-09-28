@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="nutrition_workout_history">TrackYou History</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -59,6 +63,35 @@
             transform: scale(1.01) !important ;
         }
         .btn-jere.focus {
+             background: #ffffff !important;
+            color: #000000 !important;
+            transform: scale(1.03);
+        }
+                .btn-jerew {
+            display: inline-block !important;
+            background-color: #1b1b1b !important;
+            color: #ffffff !important;
+            border: 1px solid #444 !important;
+            border-radius: 5px !important;
+            padding: 14px 16px !important;
+            font-size: 14px !important;
+            font-weight: 600;
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+
+        .btn-jerew:hover {
+            background-color: #ffffff !important;
+            color: black !important;
+            transform: scale(1.02);
+        }
+
+        .btn-jerew.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+            transform: scale(1.01) !important ;
+        }
+        .btn-jerew.focus {
              background: #ffffff !important;
             color: #000000 !important;
             transform: scale(1.03);
@@ -258,7 +291,26 @@
             border: 1px solid #444;
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
-
+        /* Weekly nutrition fonts */
+        #weekly-nutrition table thead th {
+    font-weight: bold;
+}
+#weekly-nutrition th[data-i18n="avg_calories_g"] {color: rgb(255, 255, 255); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(2) {color: rgb(255, 255, 255); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_protein_g"] {color: rgb(184, 118, 231); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(3) {color: rgb(184, 118, 231); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_carbs_g"] {color: rgb(0, 179, 255); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(4) {color: rgb(0, 179, 255); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_fats_g"] {color: rgb(255, 194, 13); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(5) {color: rgb(255, 194, 13); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_salt_g"] {color: rgb(0, 119, 255); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(6) {color: rgb(0, 119, 255); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_saturated_g"] {color: rgb(171, 138, 19); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(7) {color: rgb(171, 138, 19); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_sugars_g"] {color: rgb(20, 212, 230); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(8) {color: rgb(20, 212, 230); font-weight: bold;}
+#weekly-nutrition th[data-i18n="avg_fiber_g"] {color: rgb(255, 188, 17); font-weight: bold;}
+#weekly-nutrition tbody td:nth-child(9) {color: rgb(255, 188, 17); font-weight: bold;}
         /* NEW WORKOUT CARD STYLES */
         .workout-period-card {
             background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Match summary cards */
@@ -686,20 +738,14 @@
         }
 
         .progress-bar-protein {
-            background-color: #06d6a0;
-        }
-
-        .progress-bar-carbs {
-            background-color: #118ab2;
-        }
-
-        .progress-bar-fats {
-            background-color: #ef476f;
-        }
-
-        .progress-bar-salt {
-            background-color: #ffd166;
-        }
+            background: linear-gradient(to right, #b989f0, #835fac); }
+        .progress-bar-carbs 
+            { background: linear-gradient(to right, #6dc0d5, #929292); color:#000000; }
+        .progress-bar-fats { background: linear-gradient(to right, #ff9e6d, #8f5639); color:#000000; }
+        .progress-bar-salt { background: linear-gradient(to right, #6dc0d5, #3f7481); color:#000000; }
+        .progress-bar-saturated { background: linear-gradient(to right, #ffd166, #b39347); color:#000000; }
+        .progress-bar-fiber { background: linear-gradient(to right, #ffbe9e, #b3846e); color:#000000; }
+        .progress-bar-sugars { background: linear-gradient(to right, #7bc8a4, #4e8e71); color:#000000; }
 
         .exercise-search-container {
             position: relative;
@@ -1428,17 +1474,17 @@
                 <ul class="nav nav-tabs" id="historyTabs" role="tablist">
                     <!-- Updated tab names as requested -->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active btn-jere" id="nutrition-tab" data-bs-toggle="tab" data-bs-target="#nutrition" type="button" role="tab">
+                        <button class="nav-link active btn-jerew" id="nutrition-tab" data-bs-toggle="tab" data-bs-target="#nutrition" type="button" role="tab">
                              <i class="fas fa-utensils me-1"></i> <span data-i18n="nutrition">Nutrition</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link btn-jere" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">
+                        <button class="nav-link btn-jerew" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts" type="button" role="tab">
                             <i class="fas fa-dumbbell me-1"></i> <span data-i18n="workouts">Workouts</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link btn-jere" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab">
+                        <button class="nav-link btn-jerew" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab">
                             <i class="fas fa-running me-1"></i> <span data-i18n="exercises">Exercises</span>
                         </button>
                     </li>
@@ -1473,7 +1519,10 @@
                                                 <th data-i18n="protein_g">Protein (g)</th>
                                                 <th data-i18n="carbs_g">Carbs (g)</th>
                                                 <th data-i18n="fats_g">Fats (g)</th>
+                                                <th data-i18n="saturated_g">Fiber (g)</th>
+                                                <th data-i18n="sugars_g">Fiber (g)</th>
                                                 <th data-i18n="salt_g">Salt (g)</th>
+                                                <th data-i18n="fiber_g">Fiber (g)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1499,10 +1548,28 @@
                                                         <div class="progress-bar progress-bar-fats" data-value="{{ entry.fats }}"></div>
                                                     </div>
                                                 </td>
+                                                    <td>
+                                                    {{ entry.fats | round(1) }}
+                                                    <div class="progress">
+                                                        <div class="progress-bar progress-bar-saturated" data-value="{{ entry.saturated }}"></div>
+                                                    </div>
+                                                </td>
+                                                    <td>
+                                                    {{ entry.fats | round(1) }}
+                                                    <div class="progress">
+                                                        <div class="progress-bar progress-bar-sugars" data-value="{{ entry.sugars }}"></div>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     {{ entry.salt | round(1) }}
                                                     <div class="progress">
                                                         <div class="progress-bar progress-bar-salt" data-value="{{ entry.salt }}"></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {{ entry.fiber | round(1) }}
+                                                    <div class="progress">
+                                                        <div class="progress-bar progress-bar-fiber" data-value="{{ entry.fiber }}"></div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1527,12 +1594,15 @@
                                     <table class="table table-custom table-hover">
                                         <thead>
                                             <tr>
-                                                <th data-i18n="week">Week</th>
+                                                <th style data-i18n="week">Week</th>
                                                 <th data-i18n="avg_calories">Avg Calories</th>
                                                 <th data-i18n="avg_protein_g">Avg Protein (g)</th>
                                                 <th data-i18n="avg_carbs_g">Avg Carbs (g)</th>
                                                 <th data-i18n="avg_fats_g">Avg Fats (g)</th>
                                                 <th data-i18n="avg_salt_g">Avg Salt (g)</th>
+                                                <th data-i18n="avg_saturated_g">Avg Salt (g)</th>
+                                                <th data-i18n="avg_sugars_g">Avg Salt (g)</th>
+                                                <th data-i18n="avg_fiber_g">Avg Salt (g)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1546,7 +1616,10 @@
                                                 <td>{{ week.avg_proteins | round(1) }}</td>
                                                 <td>{{ week.avg_carbs | round(1) }}</td>
                                                 <td>{{ week.avg_fats | round(1) }}</td>
+                                                <td>{{ week.avg_saturated | round(1) }}</td>
+                                                <td>{{ week.avg_sugars | round(1) }}</td>
                                                 <td>{{ week.avg_salt | round(1) }}</td>
+                                                <td>{{ week.avg_fiber | round(1) }}</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
@@ -2651,6 +2724,24 @@ function renderExerciseChart(history) {
                     const percentage = Math.min(100, (value / targets.salt) * 100);
                     $(this).css('width', percentage + '%');
                 });
+                // Update saturated progress bars
+                $('.progress-bar-saturated').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / targets.saturated) * 100);
+                    $(this).css('width', percentage + '%');
+                });
+                 // Update fiber progress bars
+                $('.progress-bar-fiber').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / targets.fiber) * 100);
+                    $(this).css('width', percentage + '%');
+                });
+                 // Update sugars progress bars
+                $('.progress-bar-sugars').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / targets.sugars) * 100);
+                    $(this).css('width', percentage + '%');
+                });
                 
                 // Carbs target is not in the API response, keeping the original logic
                 $('.progress-bar-carbs').each(function() {
@@ -2679,6 +2770,21 @@ function renderExerciseChart(history) {
                 $('.progress-bar-carbs').each(function() {
                     const value = $(this).data('value');
                     const percentage = Math.min(100, (value / 250) * 100);
+                    $(this).css('width', percentage + '%');
+                });
+                 $('.progress-bar-fiber').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / 30) * 100);
+                    $(this).css('width', percentage + '%');
+                });
+                $('.progress-bar-sugars').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / 60) * 100);
+                    $(this).css('width', percentage + '%');
+                });
+                $('.progress-bar-saturated').each(function() {
+                    const value = $(this).data('value');
+                    const percentage = Math.min(100, (value / 20) * 100);
                     $(this).css('width', percentage + '%');
                 });
             });
