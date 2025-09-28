@@ -278,6 +278,12 @@ const translations = {
     enter_recipe_name: "Enter recipe name",
     optional_notes: "Optional notes about the set",
     enter_your: "Enter your username",
+    activity_calories: "Calories from workouts",
+    step_count: "Step count",
+    advanced: "Advanced",
+    easy: "Easy",
+    custom: "Custom",
+    custom_tdee: "Custom TDEE",
 
     // Food modal
     add_food_item: "Add Food Item",
@@ -401,6 +407,9 @@ const translations = {
     enter_height: "Syötä pituus",
     
     // Activity Tracking
+    steps_calories: "Kalorit askeleista",
+    enter_steps: "Syötä askelmäärä",
+    additional_calories: "Ylimääräiset kalorit",
     daily_activity_tracking: "Päivittäinen Aktiivisuusseuranta",
     sleep: "Uni",
     hours: "Tunnit",
@@ -418,8 +427,8 @@ const translations = {
     // Buttons
     terms: "Käyttöehdot",
     privacy: "Tietosuojakäytäntö",
-    calculate_tdee: "Laske TDEE",
-    save_tdee: "Tallenna TDEE",
+    calculate_tdee: "Laske Kulutus",
+    save_tdee: "Tallenna Kulutus",
     save_metrics: "Tallenna Mittaukset",
     saved: "Tallennettu!",
     remember_me: "Muista minut",
@@ -715,7 +724,13 @@ const translations = {
     remove_social: "Poista tämä sosiaalinen linkki",
     not_set: "Ei asetettu",
     not_calculated: "Ei laskettu",
-    enter_your: "Syötä"
+    enter_your: "Syötä",
+    activity_calories: "Kalorit harjoituksista",
+    step_count: "Askelmäärä",
+    advanced: "Edistynyt",
+    easy: "Helppo",
+    custom: "Mukautettu",
+    custom_tdee: "Kokonaiskulutus"
   }
 };
 
