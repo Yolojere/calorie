@@ -226,7 +226,7 @@ function renderCombinedWorkoutData(sessionData) {
     const hasCardioData = sessionData.cardio_sessions && sessionData.cardio_sessions.length > 0;
     
     if (!hasWorkoutData && !hasCardioData) {
-        container.insertAdjacentHTML('beforeend', `<div class='alert alert-info'><span data-i18n="noworkoutmessage">No workout session found for this date.</span></div>`);
+        container.insertAdjacentHTML('beforeend', `<div class='alert alert-info'><span data-i18n="no_workout_message">Tälle päivälle ei ole tallennettu harjoitusta. Lisää ensimmäinen sarja itse tai valitse valmis pohja alta!</span></div>`);
         return;
     }
     
