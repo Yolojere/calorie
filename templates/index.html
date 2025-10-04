@@ -481,7 +481,59 @@
                 line-height: 1.2;
                 margin-top: 1px;
             }
-            
+            /* TOAST STYLING */
+            .toast {
+            --toast-bg: #1f1f1f;
+            --toast-text: #f1f1f1;
+            --toast-success: #00c853;
+            --toast-error: #ff5252;
+            --toast-warning: #ffb300;
+            --toast-info: #29b6f6;
+
+            background-color: var(--toast-bg);
+            color: var(--toast-text);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.4s ease, transform 0.3s ease;
+            overflow: hidden;
+            border-left: 4px solid var(--toast-info);
+            backdrop-filter: blur(10px);
+            font-family: 'Inter', sans-serif;
+            }
+
+            .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            }
+
+            .toast .toast-body {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            }
+
+            .toast .toast-body i {
+            font-size: 1.25rem;
+            }
+
+            /* Type colors */
+            .toast-success { border-left-color: var(--toast-success); }
+            .toast-error { border-left-color: var(--toast-error); }
+            .toast-warning { border-left-color: var(--toast-warning); }
+            .toast-info { border-left-color: var(--toast-info); }
+            .toast-container .toast {
+            margin-top: 0.5rem;
+            }
+            .toast-container .toast.show {
+            animation: slideIn 0.35s ease;
+            }
+            @keyframes slideIn {
+            from { transform: translateY(-15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+            }
             /* ===== BUTTONS ===== */
             .highlight-temp {
             background-color: #666 !important; /* slightly lighter than your bg-secondary */
@@ -4360,7 +4412,7 @@ function clearSession() {
                     if (response.action === 'move') {
                         removeMovedItems(response, itemsToRemove);
                     }
-                    alert('Operaatio onnistui! tuotteet siirretty ' + targetDate);
+                    showToast('Operaatio onnistui! tuotteet siirretty ' + targetDate, 'success');
                 }
             }
 
@@ -4710,17 +4762,17 @@ function restoreCollapseStates(collapseStates) {
             success: function(response) {
                 saveBtn.html(originalText);
                 if (response.success) {
-                    alert('Template saved successfully!');
+                    showToast('Pohja tallennettu onnistuneesti!!', 'success');
                     $('#saveTemplateModal').modal('hide');
                     $('#template-name').val('');
                 } else {
-                    alert('Error: ' + (response.error || 'Failed to save template'));
+                    showToast('Virhe: ' + (response.error || 'Pohjan tallentaminen epäonnistui!'), 'error');
                 }
             },
             error: function(xhr, status, error) {
                 saveBtn.html(originalText);
                 console.error('Template error:', error, xhr.responseText);
-                alert('Failed to save template. Please check your connection and try again.');
+                showToast('Tallennus epäonnistui. Tarkista yhteys ja yritä uudelleen.', 'error');
             }
         });
     }
@@ -5803,7 +5855,35 @@ $(document).on('sessionUpdated', function() {
                         currentSearchRequest = null;
                     });
                 }
-                
+                // TOAST SYSTEM 
+            function showToast(message, type = 'success') {
+                const toastId = 'toast-' + Date.now();
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-times-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
+                        <div class="toast-body">
+                            <i class="fas ${icons[type] || icons.info}"></i>
+                            <span>${message}</span>
+                            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+
+                const container = document.querySelector('.toast-container');
+                container.insertAdjacentHTML('beforeend', toastHtml);
+
+                const toastEl = document.getElementById(toastId);
+                const bsToast = new bootstrap.Toast(toastEl);
+                bsToast.show();
+
+                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+            }
                 // ===== INITIALIZE THE APP =====
                 initializeApp();
             });
@@ -5817,5 +5897,7 @@ $(document).on('sessionUpdated', function() {
         tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
     })
     </script>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000">
+</div>
     </body>
     </html>
