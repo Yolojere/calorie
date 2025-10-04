@@ -77,6 +77,20 @@ function invalidateCache(key) {
     }
 }
 
+// Invalidate session cache for a specific date
+function invalidateDateCache(date) {
+    try {
+        const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+        if (cachedSessions[date]) {
+            delete cachedSessions[date];
+            setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
+        }
+        console.log('Cache invalidated for date:', date);
+    } catch (e) {
+        console.error('Error invalidating date cache:', e);
+    }
+}
+
 // Invalidate all cache
 function invalidateAllCache() {
     try {
@@ -91,41 +105,168 @@ function invalidateAllCache() {
     }
 }
 
-// Get session from cache or server
+// Get session from cache or server WITH CARDIO DATA (using single backend call)
 function getSessionWithCache(date, callback) {
+    console.log('🔄 Loading workout data for date:', date);
+    
     const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+    const hasSessionCache = cachedSessions[date] && cachedSessions[date].timestamp;
+    
+    // Check if session cache is fresh
+    const isSessionCacheFresh = hasSessionCache && 
+        (Date.now() - cachedSessions[date].timestamp) < CACHE_EXPIRATION.SESSIONS;
 
-    if (cachedSessions[date] && cachedSessions[date].timestamp) {
-        const isDataFresh = (Date.now() - cachedSessions[date].timestamp) < CACHE_EXPIRATION.SESSIONS;
-        if (isDataFresh) {
-            console.log('Using cached session data for', date);
-            callback(cachedSessions[date]);
-        }
-
-        // Still fetch from server in background
-        setTimeout(() => {
-            $.post("/workout/get_session", { date: date }, function (data) {
-                const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-                updatedSessions[date] = data;
-                setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
-
-                if (typeof currentSelectedDate !== "undefined" && date === currentSelectedDate) {
-                    renderWorkoutSession(data.session, data.exercises);
-                }
-            });
-        }, 1000);
-    } else {
-        // Not in cache, fetch from server
-        $.post("/workout/get_session", { date: date }, function (data) {
-            const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-            updatedSessions[date] = data;
-            setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
-
-            callback(data);
-        });
+    // If cache is fresh, use cached data
+    if (isSessionCacheFresh) {
+        console.log('✅ Using cached session + cardio data for', date);
+        
+        const sessionData = cachedSessions[date];
+        
+        // Render combined data (session + cardio)
+        renderCombinedWorkoutData(sessionData);
+        
+        if (callback) callback(sessionData);
+        
+        // Still fetch from server in background for freshness
+        fetchAndUpdateBackground(date);
+        return;
     }
+
+    // If no fresh cache available, fetch from server
+    console.log('⚡ No fresh cache, fetching session + cardio from server for', date);
+    
+    fetchCombinedSessionData(date).then(sessionData => {
+        // Update cache with combined data
+        const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+        updatedSessions[date] = { ...sessionData, timestamp: Date.now() };
+        setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
+        
+        // Render combined data
+        renderCombinedWorkoutData(sessionData);
+        
+        if (callback) callback(sessionData);
+        
+    }).catch(error => {
+        console.error('Error fetching workout data:', error);
+        
+        // Try to use any available cache as fallback
+        if (hasSessionCache) {
+            console.log('Using stale session cache as fallback');
+            const sessionData = cachedSessions[date];
+            renderCombinedWorkoutData(sessionData);
+            if (callback) callback(sessionData);
+        } else {
+            // Show error state
+            const container = document.getElementById('workout-session-container');
+            if (container) {
+                container.innerHTML = `<div class='alert alert-danger'>Error loading workout data. Please refresh the page.</div>`;
+            }
+            if (callback) callback({ success: false, error: 'Failed to load data' });
+        }
+    });
 }
 
+// Helper function to fetch combined session data (including cardio)
+function fetchCombinedSessionData(date) {
+    return new Promise((resolve, reject) => {
+        $.post("/workout/get_session", { 
+            date: date,
+            csrf_token: $('meta[name=csrf-token]').attr('content')
+        })
+        .done(data => resolve(data))
+        .fail((xhr, status, error) => reject(new Error(`Combined session fetch failed: ${error}`)));
+    });
+}
+
+// Background fetch for cache updates
+function fetchAndUpdateBackground(date) {
+    setTimeout(() => {
+        fetchCombinedSessionData(date).then(sessionData => {
+            // Update cache
+            const updatedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+            updatedSessions[date] = { ...sessionData, timestamp: Date.now() };
+            setCachedData(CACHE_KEYS.SESSIONS, updatedSessions);
+            
+            console.log('🔄 Background cache update completed for', date);
+        }).catch(error => {
+            console.error('Background update failed:', error);
+        });
+    }, 1000);
+}
+
+// Render combined workout data (session + cardio from single response)
+function renderCombinedWorkoutData(sessionData) {
+    const container = document.getElementById('workout-session-container');
+    if (!container) {
+        console.error('workout-session-container not found');
+        return;
+    }
+    
+    // ✅ CHECK FOR ACTIVE TIMER BEFORE CLEARING DOM
+    let timerWasRunning = false;
+    let timerDisplay = null;
+    
+    if (typeof workoutTimer !== 'undefined' && workoutTimer.isActive) {
+        timerWasRunning = true;
+        timerDisplay = container.querySelector('#workout-timer-container');
+        console.log('Timer is active, preserving display');
+    }
+    
+    // Clear container
+    container.innerHTML = '';
+    
+    // ✅ RESTORE TIMER DISPLAY IF IT WAS RUNNING
+    if (timerWasRunning && timerDisplay) {
+        container.appendChild(timerDisplay.cloneNode(true));
+        console.log('Timer display restored after DOM clear');
+    }
+    
+    // Check if we have any data to display
+    const hasWorkoutData = sessionData.success && sessionData.session;
+    const hasCardioData = sessionData.cardio_sessions && sessionData.cardio_sessions.length > 0;
+    
+    if (!hasWorkoutData && !hasCardioData) {
+        container.insertAdjacentHTML('beforeend', `<div class='alert alert-info'><span data-i18n="noworkoutmessage">No workout session found for this date.</span></div>`);
+        return;
+    }
+    
+    // Render strength training data first
+    if (hasWorkoutData) {
+        console.log('📋 Rendering strength training data');
+        if (typeof renderWorkoutSession === "function") {
+            renderWorkoutSession(sessionData.session, sessionData.exercises);
+        }
+    }
+    
+    // Render cardio data with delay to ensure DOM is ready
+    if (hasCardioData) {
+        console.log('❤️ Rendering cardio data for', sessionData.cardio_sessions.length, 'sessions');
+        
+        setTimeout(() => {
+            if (typeof displayCardioSessions === "function") {
+                displayCardioSessions(sessionData.cardio_sessions);
+            } else {
+                console.warn('displayCardioSessions function not available');
+            }
+        }, 50);
+    }
+    
+    // ✅ ENSURE TIMER KEEPS RUNNING AFTER DOM CHANGES
+    if (timerWasRunning && typeof workoutTimer !== 'undefined' && workoutTimer.isActive) {
+        // Make sure the timer interval is still running
+        if (!workoutTimer.intervalId && typeof updateTimerDisplay === 'function') {
+            workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+            console.log('Timer interval restarted after DOM update');
+        }
+        
+        // Update the display immediately
+        if (typeof updateTimerDisplay === 'function') {
+            updateTimerDisplay();
+        }
+    }
+    
+    console.log('✅ Combined workout data rendered successfully');
+}
 // Get exercises from cache or server
 function getExercisesWithCache(callback) {
     console.log("Fetching exercises...");
@@ -136,7 +277,7 @@ function getExercisesWithCache(callback) {
         console.log('Using cached exercises:', cachedExercises);
         window.exercises = cachedExercises;
 
-        // ✅ render after data is set
+        // render after data is set
         renderExerciseOptions();
 
         if (typeof callback === "function") callback();
@@ -151,7 +292,7 @@ function getExercisesWithCache(callback) {
                 window.exercises = data.exercises;
                 setCachedData(CACHE_KEYS.EXERCISES, window.exercises);
 
-                // ✅ render after fetching
+                // render after fetching
                 renderExerciseOptions();
 
                 if (typeof callback === "function") callback();
@@ -164,6 +305,7 @@ function getExercisesWithCache(callback) {
         });
     }
 }
+
 // Get templates from cache or server
 function getTemplatesWithCache() {
     const cachedTemplates = getCachedData(CACHE_KEYS.TEMPLATES, CACHE_EXPIRATION.TEMPLATES);
@@ -193,7 +335,7 @@ function getTemplatesWithCache() {
 // Update cache after modifying data
 function updateSessionCache(date, data) {
     const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-    cachedSessions[date] = data;
+    cachedSessions[date] = { ...data, timestamp: Date.now() };
     setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
 }
 
