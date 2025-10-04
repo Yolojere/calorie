@@ -2599,7 +2599,7 @@ def get_current_week():
     current_date = today.strftime("%Y-%m-%d")
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=DictCursor)
 
     week_data = {}
 
@@ -2617,7 +2617,7 @@ def get_current_week():
             for session_row in sessions:
                 session_id, focus_type, name = session_row
 
-                # Fetch sets for this session
+                # Fetch sets for this session (strength training)
                 cursor.execute("""
                     SELECT wset.id, wset.exercise_id, wset.reps, wset.weight, ex.name, ex.muscle_group
                     FROM workout_sets wset
@@ -2625,6 +2625,30 @@ def get_current_week():
                     WHERE wset.session_id = %s
                 """, (session_id,))
                 sets = cursor.fetchall()
+
+                # ✅ UPDATED: Use the same cardio query as get_workout_session for consistency
+                cursor.execute('''
+                    SELECT DISTINCT
+                        cs.id,
+                        cs.duration_minutes,
+                        cs.distance_km,
+                        cs.avg_pace_min_per_km,
+                        cs.avg_heart_rate,
+                        cs.watts,
+                        cs.calories_burned,
+                        cs.notes,
+                        ce.name as exercise_name,
+                        ce.type as exercise_type,
+                        ce.met_value,
+                        cs.created_at
+                    FROM cardio_sessions cs
+                    JOIN workout_sessions ws ON cs.session_id = ws.id
+                    JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+                    WHERE ws.user_id = %s AND ws.date = %s
+                    ORDER BY cs.created_at DESC, cs.id DESC
+                ''', (current_user.id, date_str))
+                
+                cardio_data = cursor.fetchall()
 
                 exercises_data = {}
                 for s in sets:
@@ -2637,6 +2661,27 @@ def get_current_week():
                             "sets": []
                         }
                     exercises_data[ex_id]["sets"].append({"reps": reps, "weight": weight})
+
+                # ✅ UPDATED: Process cardio data consistently
+                cardio_sessions = []
+                seen_cardio_ids = set()
+                
+                for row in cardio_data:
+                    if row['id'] not in seen_cardio_ids:
+                        seen_cardio_ids.add(row['id'])
+                        cardio_sessions.append({
+                            'id': row['id'],
+                            'exercise_name': row['exercise_name'],
+                            'exercise_type': row['exercise_type'],
+                            'met_value': float(row['met_value']),
+                            'duration_minutes': float(row['duration_minutes']),
+                            'distance_km': float(row['distance_km']) if row['distance_km'] else None,
+                            'avg_pace_min_per_km': float(row['avg_pace_min_per_km']) if row['avg_pace_min_per_km'] else None,
+                            'avg_heart_rate': row['avg_heart_rate'],
+                            'watts': row['watts'],
+                            'calories_burned': float(row['calories_burned']),
+                            'notes': row['notes']
+                        })
 
                 # Build comparison data per exercise (previous session with same focus_type + exercise)
                 comparison_data = []
@@ -2685,6 +2730,7 @@ def get_current_week():
                     "focus_type": focus_type,
                     "name": name,
                     "exercises": list(exercises_data.values()),
+                    "cardio_sessions": cardio_sessions,  # ✅ Already included
                     "comparisonData": comparison_data
                 })
 
@@ -2742,13 +2788,55 @@ def get_workout_session():
             (user_id, date)
         )
         session_data = cursor.fetchone()
-        
+        # Fetch cardio sessions for the same date
+        cursor.execute('''
+            SELECT DISTINCT
+                cs.id,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_pace_min_per_km,
+                cs.avg_heart_rate,
+                cs.watts,
+                cs.calories_burned,
+                cs.notes,
+                ce.name as exercise_name,
+                ce.type as exercise_type,
+                ce.met_value,
+                cs.created_at
+            FROM cardio_sessions cs
+            JOIN workout_sessions ws ON cs.session_id = ws.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE ws.user_id = %s AND ws.date = %s
+            ORDER BY cs.created_at DESC, cs.id DESC
+            ''', (user_id, date))  
+
+        cardio_sessions = []
+        seen_ids = set()                                          
+                                            
+        for row in cursor.fetchall():
+            if row['id'] not in seen_ids:
+                seen_ids.add(row['id'])
+                cardio_sessions.append({
+                    'id': row['id'],
+                    'exercise_name': row['exercise_name'],
+                    'exercise_type': row['exercise_type'],
+                    'met_value': float(row['met_value']),
+                    'duration_minutes': float(row['duration_minutes']),
+                    'distance_km': float(row['distance_km']) if row['distance_km'] else None,
+                    'avg_pace_min_per_km': float(row['avg_pace_min_per_km']) if row['avg_pace_min_per_km'] else None,
+                    'avg_heart_rate': row['avg_heart_rate'],
+                    'watts': row['watts'],
+                    'calories_burned': float(row['calories_burned']),
+                    'notes': row['notes']
+                })
+
         if not session_data:
             conn.close()
             return jsonify({
                 'success': True,
                 'session': None,
-                'exercises': []
+                'exercises': [],
+                'cardio_sessions': cardio_sessions
             })
         
         session = {
@@ -2799,7 +2887,8 @@ def get_workout_session():
         return jsonify({
             'success': True,
             'session': dict(session),
-            'exercises': list(exercises.values())
+            'exercises': list(exercises.values()),
+            'cardio_sessions': cardio_sessions
         })
     except Exception as e:
         traceback.print_exc()
@@ -2807,6 +2896,8 @@ def get_workout_session():
             'success': False,
             'error': str(e)
         }), 500
+    finally:
+        conn.close()
         
     
 @app.route('/workout/save_set', methods=['POST'])
@@ -3569,6 +3660,9 @@ def save_metrics():
         
         # Get TDEE based on calculation mode
         tdee = float(request.form.get('tdee', 0))
+
+        # Get gender (optional, defaults to None if not provided)
+        gender = request.form.get('gender', None)
         
         # Optional: Get calculation mode for logging/analytics
         calc_mode = request.form.get('mode', 'unknown')
@@ -3581,14 +3675,14 @@ def save_metrics():
             return jsonify(success=False, error="Valid TDEE is required"), 400
             
         # Optional: Log the calculation mode for analytics
-        print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight}")
+        print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight},Gender={gender}")
 
         # Update database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE users SET tdee = %s, weight = %s WHERE id = %s",
-            (tdee, weight, current_user.id)
+            "UPDATE users SET tdee = %s, weight = %s, gender = %s WHERE id = %s",
+            (tdee, weight, gender, current_user.id)
         )
         conn.commit()
         
@@ -3598,6 +3692,7 @@ def save_metrics():
             data={
                 "tdee": tdee,
                 "weight": weight,
+                "gender": gender,
                 "mode": calc_mode
             }
         )
@@ -3732,33 +3827,116 @@ from datetime import datetime  # ensure this import
 @app.route("/workout/save", methods=["POST"])
 @login_required
 def save_workout():
+    user_id = current_user.id
     data = request.get_json()
-    focus_type = data.get("focus_type")
-    date = data.get("date")
-    exercises = data.get("exercises", [])
-    name = data.get("name", "Unnamed Workout")
+    
+    name = data.get('name', 'Unnamed Workout')
+    focus_type = data.get('focus_type', 'general')
+    date_str = data.get('date')
+    exercises = data.get('exercises', [])
+    timer_data = data.get('timer_data', {})  # NEW: Timer data
+    cardio_sessions = data.get('cardio_sessions', [])  # NEW: Cardio data
 
-    if not focus_type or not date:
+    if not focus_type or not date_str:
         return jsonify({"success": False, "error": "Focus vaihtoehto on valittava"}), 400
+
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError) as e:
+        return jsonify(success=False, error=f"Invalid date: {str(e)}"), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Save the workout session
+        # Get or create workout session
         cursor.execute(
-            "INSERT INTO workout_sessions (user_id, date, name, focus_type) VALUES (%s, %s, %s, %s) RETURNING id",
-            (current_user.id, date, name, focus_type)
+            "SELECT id FROM workout_sessions WHERE user_id = %s AND date = %s",
+            (user_id, date)
         )
-        session_id = cursor.fetchone()[0]
+        session = cursor.fetchone()
+        
+        if not session:
+            cursor.execute(
+                "INSERT INTO workout_sessions (user_id, date, name, focus_type) "
+                "VALUES (%s, %s, %s, %s) RETURNING id",
+                (user_id, date, name, focus_type)
+            )
+            session_id = cursor.fetchone()[0]
+        else:
+            session_id = session[0]
+            # Update existing session
+            cursor.execute(
+                "UPDATE workout_sessions SET name = %s, focus_type = %s "
+                "WHERE id = %s",
+                (name, focus_type, session_id)
+            )
+
+        # 🟢 SAVE TIMER DATA
+        if timer_data.get('totalSeconds'):
+            cursor.execute(
+                "UPDATE workout_sessions SET "
+                "workout_duration_seconds = %s, "
+                "weight_calories_burned = %s "
+                "WHERE id = %s",
+                (timer_data['totalSeconds'], 
+                 timer_data.get('calories', 0), 
+                 session_id)
+            )
+            print(f"💾 Saved timer: {timer_data['totalSeconds']}s, {timer_data.get('calories', 0)} cal")
 
         # Save sets for each exercise
         for ex in exercises:
             for s in ex["sets"]:
+                # 🔍 DEBUG: Check what keys exist in ex
+                print(f"Exercise keys: {list(ex.keys())}")
+                
+                # Handle different possible ID field names
+                exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
+                
+                if not exercise_id:
+                    print(f"⚠️ WARNING: No exercise ID found in: {ex}")
+                    continue  # Skip this exercise if no ID
+                
                 cursor.execute(
                     "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) VALUES (%s, %s, %s, %s)",
-                    (session_id, ex["id"], s["reps"], s["weight"])
+                    (session_id, exercise_id, s["reps"], s["weight"])
                 )
+
+        # Calculate total calories (weights + cardio)
+        total_calories = float(timer_data.get('calories', 0))
+        total_duration_seconds = int(timer_data.get('totalSeconds', 0))
+        
+        try:
+            cursor.execute(
+                "SELECT SUM(calories_burned), SUM(duration_minutes * 60) "
+                "FROM cardio_sessions "
+                "WHERE date = %s",
+                (date,)
+            )
+            cardio_totals = cursor.fetchone()
+            
+            if cardio_totals and cardio_totals[0] is not None:
+                # Convert Decimal/database types to Python native types
+                cardio_calories = float(cardio_totals[0]) if cardio_totals[0] else 0
+                cardio_duration = int(cardio_totals[1]) if cardio_totals[1] else 0
+                
+                total_calories += cardio_calories
+                total_duration_seconds += cardio_duration
+                print(f"🏃 Added cardio: {cardio_calories} cal, {cardio_duration} sec")
+                
+        except Exception as cardio_error:
+            print(f"🔧 Cardio query failed: {str(cardio_error)}")
+            # Continue without cardio data
+
+        # Update session with combined totals (ensure proper types)
+        cursor.execute(
+            "UPDATE workout_sessions SET "
+            "total_calories_burned = %s, "
+            "total_duration_seconds = %s "
+            "WHERE id = %s",
+            (float(total_calories), int(total_duration_seconds), session_id)
+        )
 
         # Initialize tracking structures
         set_comparisons = []
@@ -3771,6 +3949,14 @@ def save_workout():
         sets_improvements = 0
 
         for ex in exercises:
+            # Handle different possible ID field names
+            exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
+            exercise_name = ex.get("name") or ex.get("exercise_name") or ex.get("exerciseName", "Unknown Exercise")
+            
+            if not exercise_id:
+                print(f"⚠️ Skipping exercise comparison - no ID: {ex}")
+                continue
+            
             # Get most recent session for this exercise and focus type - FIXED QUERY
             cursor.execute("""
                 SELECT ws.id, ws.date
@@ -3782,7 +3968,7 @@ def save_workout():
                   AND ws.id != %s
                 ORDER BY ws.date DESC
                 LIMIT 1
-            """, (current_user.id, focus_type, ex["id"], session_id))
+            """, (current_user.id, focus_type, exercise_id, session_id))
             
             previous_session = cursor.fetchone()
 
@@ -3808,7 +3994,7 @@ def save_workout():
                     WHERE session_id = %s AND exercise_id = %s
                     ORDER BY id DESC
                     LIMIT 1
-                """, (previous_session_id, ex["id"]))
+                """, (previous_session_id, exercise_id))
                 
                 last_set = cursor.fetchone()
                 
@@ -3817,7 +4003,7 @@ def save_workout():
                     SELECT COUNT(*) as set_count, SUM(reps * weight) as total_volume
                     FROM workout_sets
                     WHERE session_id = %s AND exercise_id = %s
-                """, (previous_session_id, ex["id"]))
+                """, (previous_session_id, exercise_id))
                 
                 previous_stats = cursor.fetchone()
 
@@ -3829,7 +4015,7 @@ def save_workout():
                     # Only add PRs if there's a meaningful previous best (not 0)
                     if best_set["reps"] * best_set["weight"] > last_volume and last_volume > 0:
                         personal_records.append({
-                            "exercise": ex["name"],
+                            "exercise": exercise_name,
                             "type": "bestSet",
                             "weight": best_set["weight"],
                             "reps": best_set["reps"],
@@ -3838,7 +4024,7 @@ def save_workout():
                     
                     if heaviest_set["weight"] > last_weight and last_weight > 0:
                         personal_records.append({
-                            "exercise": ex["name"],
+                            "exercise": exercise_name,
                             "type": "heaviestWeight",
                             "weight": heaviest_set["weight"],
                             "reps": None,
@@ -3850,8 +4036,8 @@ def save_workout():
                         current_volume = s["reps"] * s["weight"]
                         volume_change = current_volume - last_volume
                         set_comparisons.append({
-                            "setId": f"{ex['id']}-{idx}",
-                            "exerciseId": ex["id"],
+                            "setId": f"{exercise_id}-{idx}",
+                            "exerciseId": exercise_id,
                             "currentReps": s["reps"],
                             "currentWeight": s["weight"],
                             "currentVolume": current_volume,
@@ -3867,7 +4053,7 @@ def save_workout():
                     if total_volume_ex > last_total_volume_ex:
                         volume_improvements += 1
                         improvements.append({
-                            "exercise": ex["name"], 
+                            "exercise": exercise_name, 
                             "type": "volume",
                             "volumeChange": total_volume_ex - last_total_volume_ex
                         })
@@ -3875,7 +4061,7 @@ def save_workout():
                     if len(current_sets) > last_set_count:
                         sets_improvements += 1
                         improvements.append({
-                            "exercise": ex["name"],
+                            "exercise": exercise_name,
                             "type": "sets",
                             "setsChange": len(current_sets) - last_set_count
                         })
@@ -3885,8 +4071,8 @@ def save_workout():
                     for idx, s in enumerate(current_sets, start=1):
                         current_volume = s["reps"] * s["weight"]
                         set_comparisons.append({
-                            "setId": f"{ex['id']}-{idx}",
-                            "exerciseId": ex["id"],
+                            "setId": f"{exercise_id}-{idx}",
+                            "exerciseId": exercise_id,
                             "currentReps": s["reps"],
                             "currentWeight": s["weight"],
                             "currentVolume": current_volume,
@@ -3904,8 +4090,8 @@ def save_workout():
                 for idx, s in enumerate(current_sets, start=1):
                     current_volume = s["reps"] * s["weight"]
                     set_comparisons.append({
-                        "setId": f"{ex['id']}-{idx}",
-                        "exerciseId": ex["id"],
+                        "setId": f"{exercise_id}-{idx}",
+                        "exerciseId": exercise_id,
                         "currentReps": s["reps"],
                         "currentWeight": s["weight"],
                         "currentVolume": current_volume,
@@ -3922,13 +4108,27 @@ def save_workout():
             SELECT id
             FROM workout_sessions
             WHERE user_id = %s
-              AND focus_type = %s
-              AND id != %s
+            AND focus_type = %s
+            AND name = %s
+            AND id != %s
             ORDER BY date DESC
             LIMIT 1
-        """, (current_user.id, focus_type, session_id))
-        
+        """, (current_user.id, focus_type, name, session_id))
+
         last_session_result = cursor.fetchone()
+
+        # Fallback: just compare to last session with same focus_type
+        if not last_session_result:
+            cursor.execute("""
+                SELECT id
+                FROM workout_sessions
+                WHERE user_id = %s
+                AND focus_type = %s
+                AND id != %s
+                ORDER BY date DESC
+                LIMIT 1
+            """, (current_user.id, focus_type, session_id))
+            last_session_result = cursor.fetchone()
 
         last_total_volume = 0
         last_total_sets = 0
@@ -3959,8 +4159,13 @@ def save_workout():
 
         conn.commit()
 
+        # Return enhanced response
         return jsonify({
             "success": True,
+            "session_id": session_id,
+            "timer_data": timer_data,
+            "total_calories": total_calories,
+            "total_duration_seconds": total_duration_seconds,
             "comparisonData": {
                 "setComparisons": set_comparisons,
                 "totalSets": total_sets,
@@ -4311,6 +4516,307 @@ def copy_from_session():
     finally:
         cursor.close()
         conn.close()
+@app.route('/workout/cardio-exercises')
+@login_required
+def get_cardio_exercises():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        cursor.execute('''
+            SELECT id, name, type, met_value, description
+            FROM cardio_exercises
+            ORDER BY type, met_value
+        ''')
+        
+        exercises = []
+        for row in cursor.fetchall():
+            exercises.append({
+                'id': row['id'],
+                'name': row['name'],
+                'type': row['type'],
+                'met_value': float(row['met_value']),
+                'description': row['description']
+            })
+        
+        # Group by type for easier frontend handling
+        grouped_exercises = {}
+        for exercise in exercises:
+            exercise_type = exercise['type']
+            if exercise_type not in grouped_exercises:
+                grouped_exercises[exercise_type] = []
+            grouped_exercises[exercise_type].append(exercise)
+        
+        return jsonify(exercises=grouped_exercises)
+        
+    except Exception as e:
+        app.logger.error(f"Cardio Exercises Error: {str(e)}")
+        return jsonify(error="Could not load cardio exercises"), 500
+    finally:
+        conn.close()
+
+# Add cardio session endpoint
+@app.route('/workout/add-cardio', methods=['POST'])
+@login_required
+def add_cardio_session():
+    user_id = current_user.id
+    data = request.json
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
+    try:
+        # ✅ Validate and parse date
+        date_str = data.get('date', datetime.now().strftime("%Y-%m-%d"))
+        try:
+            session_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify(error="Invalid date format"), 400
+
+        # ✅ Validate required fields
+        if not data.get('cardio_exercise_id') or not data.get('duration_minutes'):
+            return jsonify(error="Missing required fields"), 400
+
+        # ✅ Check for duplicate cardio session
+        cursor.execute('''
+            SELECT cs.id FROM cardio_sessions cs
+            JOIN workout_sessions ws ON cs.session_id = ws.id
+            WHERE ws.user_id = %s AND ws.date = %s 
+            AND cs.cardio_exercise_id = %s AND cs.duration_minutes = %s
+            AND cs.created_at > NOW() - INTERVAL '5 seconds'
+        ''', (user_id, session_date, data['cardio_exercise_id'], data['duration_minutes']))
+        
+        existing = cursor.fetchone()
+        if existing:
+            return jsonify(error="Duplicate cardio session detected"), 409
+
+        # ✅ Get user weight & gender from database (with fallback)
+        cursor.execute('SELECT weight, gender FROM users WHERE id = %s', (user_id,))
+        user_record = cursor.fetchone()
+        
+        if user_record and user_record['weight']:
+            weight_kg = float(user_record['weight'])
+        else:
+            weight_kg = data.get('weight_kg', 70.0)  # fallback weight
+            
+        gender = (user_record['gender'].lower() if user_record and user_record['gender'] else "male")
+
+        app.logger.info(f"Using weight: {weight_kg}kg, gender: {gender} for user {user_id}")
+
+        # ✅ Get or create workout session
+        cursor.execute('''
+            SELECT id FROM workout_sessions 
+            WHERE user_id = %s AND date = %s
+        ''', (user_id, session_date))
+
+        session = cursor.fetchone()
+        if not session:
+            cursor.execute('''
+                INSERT INTO workout_sessions (user_id, date, name, focus_type, workout_type)
+                VALUES (%s, %s, %s, %s, %s) RETURNING id
+            ''', (user_id, session_date, 
+                  data.get('workout_name', 'Mixed Session'), 
+                  'mixed', 'mixed'))
+            session_id = cursor.fetchone()['id']
+        else:
+            session_id = session['id']
+
+        # ✅ Get cardio exercise details
+        cursor.execute('''
+            SELECT met_value, name FROM cardio_exercises WHERE id = %s
+        ''', (data['cardio_exercise_id'],))
+
+        exercise = cursor.fetchone()
+        if not exercise:
+            return jsonify(error="Cardio exercise not found"), 404
+
+        met_value = float(exercise['met_value'])
+        duration_minutes = float(data['duration_minutes'])
+        duration_hours = duration_minutes / 60.0
+
+        # ✅ Calories burned calculation
+        calories_burned = 0
+        calculation_method = "MET"
+
+        # Method 1: Watts-based
+        if data.get('watts') and float(data['watts']) > 0:
+            watts = float(data['watts'])
+            calories_burned = watts * duration_hours * 3.6
+            calculation_method = "Watts"
+
+        # Method 2: Distance-based (running/walking)
+        elif data.get('distance_km') and float(data['distance_km']) > 0:
+            distance_km = float(data['distance_km'])
+            speed_kmh = distance_km / duration_hours
+            
+            if speed_kmh > 6:  # Running
+                if speed_kmh >= 16:
+                    running_met = 15.0
+                elif speed_kmh >= 13:
+                    running_met = 12.0
+                elif speed_kmh >= 11:
+                    running_met = 11.0
+                elif speed_kmh >= 9:
+                    running_met = 9.0
+                elif speed_kmh >= 8:
+                    running_met = 8.0
+                else:
+                    running_met = 7.0
+                    
+                calories_burned = running_met * weight_kg * duration_hours
+                calculation_method = f"Distance-Running ({speed_kmh:.1f} km/h)"
+            else:  # Walking
+                if speed_kmh >= 5.5:
+                    walking_met = 4.3
+                elif speed_kmh >= 4.8:
+                    walking_met = 3.8
+                elif speed_kmh >= 4.0:
+                    walking_met = 3.5
+                elif speed_kmh >= 3.2:
+                    walking_met = 3.0
+                else:
+                    walking_met = 2.5
+                    
+                calories_burned = walking_met * weight_kg * duration_hours
+                calculation_method = f"Distance-Walking ({speed_kmh:.1f} km/h)"
+
+        # Method 3: Standard MET
+        else:
+            calories_burned = met_value * weight_kg * duration_hours
+            calculation_method = "MET"
+
+        # ✅ Heart rate adjustment (overrides other calculations)
+        if data.get('avg_heart_rate') and data.get('age'):
+            hr = float(data['avg_heart_rate'])
+            age = float(data['age'])
+            
+            if gender == 'male':
+                calories_burned = duration_minutes * (0.6309 * hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969) / 4.184
+            else:  # female or fallback
+                calories_burned = duration_minutes * (0.4472 * hr - 0.1263 * weight_kg + 0.074 * age - 20.4022) / 4.184
+            
+            calculation_method = f"Heart Rate ({hr} bpm)"
+
+        calories_burned = max(0, calories_burned)
+
+        # ✅ Insert cardio session
+        cursor.execute('''
+            INSERT INTO cardio_sessions 
+            (session_id, cardio_exercise_id, duration_minutes, distance_km, 
+             avg_pace_min_per_km, avg_heart_rate, watts, calories_burned, notes, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            RETURNING id
+        ''', (
+            session_id,
+            data['cardio_exercise_id'],
+            duration_minutes,
+            data.get('distance_km'),
+            data.get('avg_pace_min_per_km'),
+            data.get('avg_heart_rate'),
+            data.get('watts'),
+            calories_burned,
+            data.get('notes', '')
+        ))
+
+        cardio_session_id = cursor.fetchone()['id']
+        conn.commit()
+
+        return jsonify({
+            'success': True,
+            'cardio_session_id': cardio_session_id,
+            'calories_burned': round(calories_burned, 1),
+            'calculation_method': calculation_method,
+            'weight_used': weight_kg,
+            'gender_used': gender,
+            'session_id': session_id,
+            'exercise_name': exercise['name']
+        })
+
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"Add Cardio Error: {str(e)}")
+        return jsonify(error="Could not add cardio session"), 500
+    finally:
+        conn.close()
+
+
+
+# Delete cardio session
+@app.route('/workout/cardio-sessions/<int:session_id>', methods=['DELETE'])
+@login_required
+def delete_cardio_session(session_id):
+    user_id = current_user.id
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # ✅ Get session details before deletion for logging
+        cursor.execute('''
+            SELECT cs.id, ce.name as exercise_name, ws.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions ws ON cs.session_id = ws.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE cs.id = %s AND ws.user_id = %s
+        ''', (session_id, user_id))
+        
+        session_info = cursor.fetchone()
+        if not session_info:
+            return jsonify(error="Cardio session not found"), 404
+        
+        # ✅ Delete only the specific cardio session
+        cursor.execute('DELETE FROM cardio_sessions WHERE id = %s', (session_id,))
+        deleted_count = cursor.rowcount
+        
+        conn.commit()
+        
+        app.logger.info(f"Deleted cardio session {session_id} ({session_info['exercise_name']}) for user {user_id} on {session_info['date']}, rows affected: {deleted_count}")
+        
+        return jsonify({
+            'success': True, 
+            'deleted_id': session_id,
+            'deleted_count': deleted_count
+        })
+        
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"Delete Cardio Session Error: {str(e)}")
+        return jsonify(error="Could not delete cardio session"), 500
+    finally:
+        conn.close()
+@app.route('/user/profile-data', methods=['GET'])
+@login_required
+def get_user_profile_data():
+    """Get user profile data (weight, gender) for frontend calculations"""
+    user_id = current_user.id
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        cursor.execute('SELECT weight, gender FROM users WHERE id = %s', (user_id,))
+        user_record = cursor.fetchone()
+        
+        if user_record:
+            return jsonify({
+                'success': True,
+                'weight': user_record['weight'],
+                'gender': user_record['gender']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'User not found'
+            }), 404
+            
+    except Exception as e:
+        app.logger.error(f"Get User Profile Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Could not get user profile data'
+        }), 500
+    finally:
+        conn.close()                
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
