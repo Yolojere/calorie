@@ -2,6 +2,9 @@ console.log("data-operationworkout.js started");
 // File: data-operations.js
 // ===== DATA OPERATION FUNCTIONS =====
 function saveSet(isMobile = false) {
+    // 🟢 START TIMER ON FIRST SET
+    startWorkoutTimer();
+    
     const repsInput = isMobile ? $("#reps-input-mobile") : $("#reps-input");
     const weightInput = isMobile ? $("#weight-input-mobile") : $("#weight-input");
     
@@ -29,16 +32,10 @@ function saveSet(isMobile = false) {
         comments: comments
     }, function(response) {
         if (response.success) {
-            // Invalidate session cache for this date since we've modified it
-            const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-            if (cachedSessions[date]) {
-                delete cachedSessions[date];
-                setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-            }
-            
-            // Use cached version of session loading
+            // ✅ FIXED: Invalidate cache and use getSessionWithCache instead of loadWorkoutData
+            invalidateDateCache(date);
             getSessionWithCache(date, function(data) {
-                renderWorkoutSession(data.session, data.exercises);
+                console.log('✅ Workout refreshed after adding set');
             });
             resetSetForm(isMobile);
         } else {
@@ -48,40 +45,47 @@ function saveSet(isMobile = false) {
 }
     
 function deleteSet(setId, $button) {
-    saveScrollPosition(); // Save before making changes
-    
-    // Optimistic UI update - remove the set immediately
+    saveScrollPosition();
+
     const $row = $button.closest('tr');
-    $row.addClass('set-updated');
-    
-    setTimeout(() => {
-        $row.remove();
-        hideEmptyWorkoutGroups();
-    }, 1000);
-    
-    $.post("/workout/delete_set", { set_id: setId }, function(response) {
-        if (response.success) {
-            // Invalidate session cache for this date since we've modified it
-            const date = $(".workout-date.active").data("date");
-            const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-            if (cachedSessions[date]) {
-                delete cachedSessions[date];
-                setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-            }
+    const $exercise = $row.closest('.exercise-card'); // adjust selector to your container
+
+    // Animate row removal
+    $row.fadeOut(300, function() {
+        $(this).remove();
+
+        // Check if exercise group is now empty
+        const $tbody = $exercise.find("tbody");
+        if ($tbody.find("tr.set-row").length === 0) {
+            $exercise.fadeOut(300, function() {
+                $(this).remove();
+                hideEmptyWorkoutGroups();
+            });
         } else {
-            // If the server request failed, reload the session to restore the set
-            const date = $(".workout-date.active").data("date");
-            // Use cached version of session loading
+            hideEmptyWorkoutGroups();
+        }
+    });
+
+    // Call backend to delete set
+    $.post("/workout/delete_set", { set_id: setId }, function(response) {
+        const date = $(".workout-date.active").data("date");
+        if (response.success) {
+            // ✅ FIXED: Use invalidateDateCache and getSessionWithCache instead of loadWorkoutData
+            invalidateDateCache(date);
             getSessionWithCache(date, function(data) {
-                renderWorkoutSession(data.session, data.exercises);
+                console.log('✅ Workout refreshed after deleting set');
+            });
+        } else {
+            // ✅ FIXED: Use getSessionWithCache instead of loadWorkoutData  
+            getSessionWithCache(date, function(data) {
+                console.log('✅ Workout refreshed after delete error');
             });
         }
     }).fail(function() {
-        // If there was a network error, reload the session to restore the set
         const date = $(".workout-date.active").data("date");
-        // Use cached version of session loading
+        // ✅ FIXED: Use getSessionWithCache instead of loadWorkoutData
         getSessionWithCache(date, function(data) {
-            renderWorkoutSession(data.session, data.exercises);
+            console.log('✅ Workout refreshed after delete failure');
         });
     });
 }
@@ -517,6 +521,13 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
     const date = currentSelectedDate;
     const exercises = getExercisesFromUI();
     
+    // 🔴 STOP TIMER WHEN SAVING
+    stopWorkoutTimer();
+    
+    // Get timer and cardio data
+    const timerData = getWorkoutTimerData();
+    const cardioSessions = getCardioSessionsFromUI(); // New function needed
+    
     // Show analysis overlay
     showWorkoutAnalysis();
     
@@ -528,7 +539,9 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
             name,
             focus_type,
             date,
-            exercises
+            exercises,
+            timer_data: timerData, // Add timer data
+            cardio_sessions: cardioSessions // Add cardio data
         }),
         dataType: "json",
         success: function(response) {
@@ -541,8 +554,8 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
                     showWorkoutResults(response.comparisonData, response.achievements);
                     updateSetRowsWithProgress(response.comparisonData);
                 }, 4000);
-                    const date = currentSelectedDate;
-                    localStorage.removeItem(getWorkoutNameKey(date));
+                const date = currentSelectedDate;
+                localStorage.removeItem(getWorkoutNameKey(date));
             } else {
                 hideWorkoutAnalysis();
                 alert("Error saving workout: " + response.error);
@@ -562,3 +575,329 @@ function navigateWeek(direction) {
     const weekDates = getWeekDates(currentDate);
     renderWeekDates(weekDates);
 }
+// Load cardio exercises
+async function loadCardioExercises() {
+    try {
+        const response = await fetch('/workout/cardio-exercises');
+        const data = await response.json();
+        
+        if (data.exercises) {
+            cardioExercises = data.exercises;
+            populateCardioSelects();
+        }
+    } catch (error) {
+        console.error('Error loading cardio exercises:', error);
+    }
+}
+// ✅ NEW FUNCTION: Load user profile data from database
+async function loadUserProfileData() {
+    try {
+        const response = await fetch('/user/profile-data', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update global variables with database values
+            if (result.weight) {
+                userWeight = parseFloat(result.weight);
+                console.log('Loaded user weight from database:', userWeight);
+            }
+            
+            if (result.gender) {
+                userGender = result.gender;
+                console.log('Loaded user gender from database:', userGender);
+            }
+        } else {
+            console.warn('Could not load user profile data:', result.error);
+            // Keep defaults
+        }
+    } catch (error) {
+        console.error('Error loading user profile data:', error);
+        // Keep defaults
+    }
+}
+
+function populateCardioSelects() {
+    const selects = ['cardio-type-select', 'cardio-type-select-mobile'];
+    
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        // Clear existing options except first
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+        
+        // Add exercises grouped by type
+        Object.keys(cardioExercises).forEach(type => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+            
+            cardioExercises[type].forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise.id;
+                option.textContent = `${exercise.name} (${exercise.met_value} METs)`;
+                option.dataset.metValue = exercise.met_value;
+                optgroup.appendChild(option);
+            });
+            
+            select.appendChild(optgroup);
+        });
+    });
+}
+
+// ✅ ENHANCED: Calculate estimated calories with multiple methods
+function calculateCardioCalories(metValue, durationMinutes, heartRate = null, watts = null, distance = null) {
+    if (!metValue || !durationMinutes) return 0;
+    
+    let calories = 0;
+    let method = "MET";
+    const durationHours = durationMinutes / 60.0;
+    
+    // Method 1: Watts-based (most accurate for cycling)
+    if (watts && watts > 0) {
+        calories = watts * durationHours * 3.6;
+        method = "Watts";
+    }
+    // Method 2: Distance-based (good for running/walking)
+    else if (distance && distance > 0) {
+        const speedKmh = distance / durationHours;
+        
+        if (speedKmh > 6) {
+            // Running METs based on speed
+            let runningMet;
+            if (speedKmh >= 16) runningMet = 15.0;
+            else if (speedKmh >= 13) runningMet = 12.0;
+            else if (speedKmh >= 11) runningMet = 11.0;
+            else if (speedKmh >= 9) runningMet = 9.0;
+            else if (speedKmh >= 8) runningMet = 8.0;
+            else runningMet = 7.0;
+            
+            calories = runningMet * userWeight * durationHours;
+            method = `Running (${speedKmh.toFixed(1)} km/h)`;
+        } else {
+            // Walking METs based on speed
+            let walkingMet;
+            if (speedKmh >= 5.5) walkingMet = 4.3;
+            else if (speedKmh >= 4.8) walkingMet = 3.8;
+            else if (speedKmh >= 4.0) walkingMet = 3.5;
+            else if (speedKmh >= 3.2) walkingMet = 3.0;
+            else walkingMet = 2.5;
+            
+            calories = walkingMet * userWeight * durationHours;
+            method = `Walking (${speedKmh.toFixed(1)} km/h)`;
+        }
+    }
+    // Method 3: Heart rate (when available)
+    else if (heartRate && userAge && userGender) {
+        if (userGender.toLowerCase() === 'male') {
+            calories = durationMinutes * (0.6309 * heartRate + 0.1988 * userWeight + 0.2017 * userAge - 55.0969) / 4.184;
+        } else {
+            calories = durationMinutes * (0.4472 * heartRate - 0.1263 * userWeight + 0.074 * userAge - 20.4022) / 4.184;
+        }
+        method = `Heart Rate (${heartRate} bpm)`;
+    }
+    // Method 4: Standard MET calculation (fallback)
+    else {
+        calories = metValue * userWeight * durationHours;
+        method = "MET";
+    }
+    
+    console.log(`Calorie calculation - Method: ${method}, Calories: ${calories.toFixed(1)}`);
+    return Math.max(0, calories);
+}
+
+// ✅ ENHANCED: Update calorie preview with multiple input methods
+function updateCaloriePreview(isMobile = false) {
+    const suffix = isMobile ? '-mobile' : '';
+    
+    const typeSelect = document.getElementById(`cardio-type-select${suffix}`);
+    const durationInput = document.getElementById(`duration-input${suffix}`);
+    const heartRateInput = document.getElementById(`heart-rate-input${suffix}`);
+    const wattsInput = document.getElementById(`watts-input${suffix}`);
+    const distanceInput = document.getElementById(`distance-input${suffix}`);
+    const caloriesPreview = document.getElementById(`calories-preview${suffix}`);
+    
+    if (!typeSelect || !durationInput || !caloriesPreview) return;
+    
+    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+    const metValue = selectedOption ? parseFloat(selectedOption.dataset.metValue) : 0;
+    const duration = parseFloat(durationInput.value) || 0;
+    const heartRate = heartRateInput ? parseFloat(heartRateInput.value) : null;
+    const watts = wattsInput ? parseFloat(wattsInput.value) : null;
+    const distance = distanceInput ? parseFloat(distanceInput.value) : null;
+    
+    if (metValue && duration) {
+        const calories = calculateCardioCalories(metValue, duration, heartRate, watts, distance);
+        caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: ${Math.round(calories)}`;
+    } else {
+        caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: --`;
+    }
+}
+
+// ✅ UPDATED: Add cardio session without sending weight/gender (backend gets from DB)
+async function addCardioSession(isMobile = false) {
+    const suffix = isMobile ? '-mobile' : '';
+    
+    // Prevent double-clicking
+    const submitBtn = document.getElementById(`add-cardio-btn${suffix}`);
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+    
+    const typeSelect = document.getElementById(`cardio-type-select${suffix}`);
+    const durationInput = document.getElementById(`duration-input${suffix}`);
+    const distanceInput = document.getElementById(`distance-input${suffix}`);
+    const paceInput = document.getElementById(`pace-input${suffix}`);
+    const heartRateInput = document.getElementById(`heart-rate-input${suffix}`);
+    const wattsInput = document.getElementById(`watts-input${suffix}`);
+    const notesInput = document.getElementById(`cardio-notes-input${suffix}`);
+    const ageInput = document.getElementById(`age-input${suffix}`); // If you have age input
+    
+    try {
+        // Validate required fields
+        if (!typeSelect.value || !durationInput.value) {
+            alert('Please select a cardio exercise and enter duration');
+            return;
+        }
+        
+        const cardioData = {
+            cardio_exercise_id: parseInt(typeSelect.value),
+            duration_minutes: parseFloat(durationInput.value),
+            distance_km: distanceInput.value ? parseFloat(distanceInput.value) : null,
+            avg_pace_min_per_km: paceInput.value ? parseFloat(paceInput.value) : null,
+            avg_heart_rate: heartRateInput.value ? parseInt(heartRateInput.value) : null,
+            watts: wattsInput.value ? parseInt(wattsInput.value) : null,
+            notes: notesInput.value || '',
+            // ✅ REMOVED: weight_kg and gender (backend gets from database)
+            // ✅ KEEP: age (still from form input since not in database)
+            age: ageInput && ageInput.value ? parseInt(ageInput.value) : userAge,
+            date: currentSelectedDate,
+            workout_name: document.querySelector('.workout-name-display')?.textContent || 'Mixed Session'
+        };
+        
+        console.log('Adding cardio session:', cardioData);
+        
+        const response = await fetch('/workout/add-cardio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(cardioData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Cardio session added successfully:', result);
+            invalidateDateCache(currentSelectedDate);
+            
+            // ✅ INVALIDATE CACHE for current date
+            if (typeof invalidateCache === 'function' && typeof CACHE_KEYS !== 'undefined') {
+                const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+                if (cachedSessions[currentSelectedDate]) {
+                    delete cachedSessions[currentSelectedDate];
+                    setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
+                    console.log('Cache invalidated for date:', currentSelectedDate);
+                }
+            }
+            
+            // Clear form
+            typeSelect.value = '';
+            durationInput.value = '';
+            if (distanceInput) distanceInput.value = '';
+            if (paceInput) paceInput.value = '';
+            if (heartRateInput) heartRateInput.value = '';
+            if (wattsInput) wattsInput.value = '';
+            if (notesInput) notesInput.value = '';
+            if (ageInput) ageInput.value = '';
+            
+            // Update calorie preview
+            updateCaloriePreview(isMobile);
+            
+            getSessionWithCache(currentSelectedDate, function(data) {
+        console.log('Workout data refreshed after cardio addition');
+    });
+        } else {
+            console.error('Failed to add cardio session:', result);
+            if (result.error === 'Duplicate cardio session detected') {
+                alert('This cardio session was already added');
+            } else {
+                alert(result.error || 'Error adding cardio session');
+            }
+        }
+    } catch (error) {
+        console.error('Error adding cardio session:', error);
+        alert('Network error adding cardio session');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fas fa-heart me-1"></i><span data-i18n="add-cardio">Add Cardio</span>`;
+    }
+}
+
+// ✅ ENSURE MOBILE CARDIO FORM IS VISIBLE
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure mobile cardio section is visible
+    const mobileCardioSection = document.querySelector('.mobile-cardio-section');
+    if (mobileCardioSection) {
+        mobileCardioSection.style.display = 'block';
+    }
+    
+    // ✅ LOAD USER PROFILE DATA FIRST
+    loadUserProfileData().then(() => {
+        // Initialize cardio functionality after loading user data
+        loadCardioExercises();
+        setupCardioEventListeners();
+    });
+});
+
+// ✅ ENHANCED: Event listeners for cardio functionality (including new inputs)
+function setupCardioEventListeners() {
+    // Desktop events
+    const typeSelect = document.getElementById('cardio-type-select');
+    const durationInput = document.getElementById('duration-input');
+    const heartRateInput = document.getElementById('heart-rate-input');
+    const wattsInput = document.getElementById('watts-input');
+    const distanceInput = document.getElementById('distance-input');
+    const addCardioBtn = document.getElementById('add-cardio-btn');
+    
+    if (typeSelect) typeSelect.addEventListener('change', () => updateCaloriePreview(false));
+    if (durationInput) durationInput.addEventListener('input', () => updateCaloriePreview(false));
+    if (heartRateInput) heartRateInput.addEventListener('input', () => updateCaloriePreview(false));
+    if (wattsInput) wattsInput.addEventListener('input', () => updateCaloriePreview(false));
+    if (distanceInput) distanceInput.addEventListener('input', () => updateCaloriePreview(false));
+    if (addCardioBtn) addCardioBtn.addEventListener('click', () => addCardioSession(false));
+    
+    // Mobile events
+    const typeSelectMobile = document.getElementById('cardio-type-select-mobile');
+    const durationInputMobile = document.getElementById('duration-input-mobile');
+    const heartRateInputMobile = document.getElementById('heart-rate-input-mobile');
+    const wattsInputMobile = document.getElementById('watts-input-mobile');
+    const distanceInputMobile = document.getElementById('distance-input-mobile');
+    const addCardioBtnMobile = document.getElementById('add-cardio-btn-mobile');
+    
+    if (typeSelectMobile) typeSelectMobile.addEventListener('change', () => updateCaloriePreview(true));
+    if (durationInputMobile) durationInputMobile.addEventListener('input', () => updateCaloriePreview(true));
+    if (heartRateInputMobile) heartRateInputMobile.addEventListener('input', () => updateCaloriePreview(true));
+    if (wattsInputMobile) wattsInputMobile.addEventListener('input', () => updateCaloriePreview(true));
+    if (distanceInputMobile) distanceInputMobile.addEventListener('input', () => updateCaloriePreview(true));
+    if (addCardioBtnMobile) addCardioBtnMobile.addEventListener('click', () => addCardioSession(true));
+}
+
+// Initialize cardio functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // ✅ LOAD USER DATA FIRST, THEN INITIALIZE
+    loadUserProfileData().then(() => {
+        loadCardioExercises();
+        setupCardioEventListeners();
+    });
+});
