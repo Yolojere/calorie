@@ -442,32 +442,7 @@ input.form-control:-webkit-autofill {
     transform: scale(0.99);
     box-shadow: 0 0 0 2px rgba(63, 63, 63, 0.5);
 }
- /* Toast notification */
-    .toast-notification {
-        background-color: #ffffff !important;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: var(--success-color);
-        color: rgb(0, 0, 0) !important;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 1050;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.5s ease, transform 0.5s ease;
-        max-width: 300px;
-    }
-
-    .toast-notification.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .toast-notification.error {
-        background-color: var(--error-color);
-    }
+ 
     /* Icons */
     .fa-shield-alt, .fa-lock, .fa-user-shield {
         color:#fff !important;
@@ -1086,29 +1061,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial avatar state
     let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
     let uploadedAvatarFile = null;
-    // Helper to show toast safely
-    function showToast(message, isError = false) {
-    let toast = document.getElementById('toastNotification');
-
-    // Create toast if it doesn't exist
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toastNotification';
-        toast.className = 'toast-notification';
-        document.body.appendChild(toast);
-    }
-
-    toast.textContent = message;
-
-    if (isError) toast.classList.add('error');
-    else toast.classList.remove('error');
-
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
+    
 
     // Open modal when clicking avatar
     if (avatarContainer) {
@@ -1471,25 +1424,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Enhanced toast function
-    function showToast(message, isError = false) {
-        let toast = document.getElementById('toastNotification');
-
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'toastNotification';
-            toast.className = 'toast-notification';
-            document.body.appendChild(toast);
-        }
-
-        toast.textContent = message;
-        toast.className = 'toast-notification' + (isError ? ' error' : '');
-        toast.classList.add('show');
-
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
 
     // Event Listeners
     if (addSocialBtn) {
