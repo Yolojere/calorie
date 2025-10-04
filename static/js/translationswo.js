@@ -51,6 +51,16 @@ const translations = {
     grams: "g",
 
     // Workouts
+    selectCardio: "Select cardio exercise...",
+    distanceKm: "Distance (KM)",
+    avgPace: "Average Pace",
+    avgHeartRate: "Avgerage Heartrate",
+    watts: "Watts",
+    notes: "Comments",
+    addCardio: "Add Cardio",
+    cardio: "Cardio",
+    cardioType: "Cardio type",
+    durationMinutes: "Duration",
     greatJobTryingNew: "Good job trying new exercises!",
     volumeImproved: "Volume improved",
     newExercises: "New exercises",
@@ -136,6 +146,7 @@ const translations = {
     enter_template_name: "Enter template name",
     enter_recipe_name: "Enter recipe name",
     optional_notes: "Optional notes about the set",
+    optional: "Optional",
 
     amount: "Amount",
     search: "Search...",
@@ -237,6 +248,16 @@ const translations = {
     grams: "g",
 
     // Workouts
+    selectCardio: "Valitse harjoitus..",
+    distanceKm: "Pituus (KM)",
+    avgPace: "Keskim. Tahti",
+    avgHeartRate: "Keskisyke",
+    watts: "Watit",
+    notes: "Kommentit",
+    addCardio:"Lisää Suoritus",
+    cardio: "Cardio",
+    cardioType: "Cardio tyyppi",
+    durationMinutes: "Kesto",
     king: "Tästä lähtien sun toinen nimi on ennätys.",
     winner: "Ding Ding!",
     holdup: "No nyt lähti!",
@@ -259,7 +280,7 @@ const translations = {
     comparedSameFocusType: "Verrattuna samaan focukseen",
     hypertrophy: "Hypertrofia",
     strength: "Voima",
-    focus_type_comp: "Focus (Verrataan viimeiseen saman fokuksen treeniin)",
+    focus_type_comp: "Verrataan saman nimiseen treeniin ja/tai treenityyliä vastaan",
     workout_name_input: "esim. Jalat, Rintalihas Volyymi, jne.",
     workout_name: "Treenin Nimi",
     save_exercise: "Tallenna Liike",
@@ -329,6 +350,7 @@ const translations = {
     enter_template_name: "Syötä pohjan nimi",
     enter_recipe_name: "Syötä reseptin nimi",
     optional_notes: "Muistiinpanoja, kone säädöt yms.",
+    optional: "ei vaadita",
 
     // Food modal
     add_food_item: "Lisää Ruoka",
