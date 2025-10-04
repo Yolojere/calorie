@@ -439,7 +439,28 @@ object-fit: contain;
     border-radius: 50%;
     margin: 0 auto 15px;
 }
+.form-check-input {
+    background-color: #000000;
+    border-color: #a0a0a0;
 
+}
+.form-check-input:focus {
+    background-color: #010101;
+    border-color: #a0a0a0;
+    box-shadow: none !important;
+}
+.form-check-input:checked {
+    background-color: #4ca31a;
+    border-color: #ffffff !important;
+    border: 1px solid !important;
+    box-shadow: none !important;
+    animation: pop 0.25s ease forwards;
+}
+.form-check-input:not(:checked) {
+        background-color: #000000;
+    border-color: #a0a0a0;
+    font-size: 14px;
+}
 /* Gender selector */
 .gender-selector {
     display: flex;
@@ -950,6 +971,18 @@ object-fit: contain;
                             <small>Kulutetut kalorit harjoituksista</small>
                         </div>
                     </div>
+                    <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoWorkoutCalories" name="auto_add_workout_calories" value="true">
+                        <label class="form-check-label" for="autoWorkoutCalories">
+                            <strong>Tallenna kalorit harjoituksista</strong>
+                            <li>
+                            <small>Kun ruksattu, päivän kalorit muodostuvat askeleista ja tallennetuista harjoituksista.</small>
+                            </li>
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" name="auto_add_workout_calories" value="false">
                     <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Edistynyt:</strong> Kokonaiskulutus = BMR + Kalorit askeleista + harjoituksista
@@ -1147,7 +1180,35 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         loadFormState();
     }
+    // HEITÄ VITTUUN TÄÄ KU DONE
+document.getElementById('calculate-btn').addEventListener('click', function() {
+    // Debug: Check checkbox state before form submission
+    const checkbox = document.getElementById('autoWorkoutCalories');
+    if (checkbox) {
+        console.log('🔧 DEBUG: Checkbox checked state:', checkbox.checked);
+        console.log('🔧 DEBUG: Checkbox name:', checkbox.name);
+        console.log('🔧 DEBUG: Checkbox value:', checkbox.value);
+    }
+    
+    // Handle checkbox for form submission
+    ensureCheckboxValue();
+});
 
+// ✅ NEW: Function to ensure checkbox submits correct value
+function ensureCheckboxValue() {
+    const checkbox = document.getElementById('autoWorkoutCalories');
+    const hiddenInput = document.querySelector('input[name="auto_add_workout_calories"][type="hidden"]');
+    
+    if (checkbox && checkbox.checked) {
+        // Remove hidden input when checkbox is checked to avoid sending 'false'
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+        console.log('🔧 Checkbox is checked, will send value:', checkbox.value);
+    } else {
+        console.log('🔧 Checkbox is unchecked, hidden input will send: false');
+    }
+}
     // Mode selection
     modeButtons.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1249,49 +1310,70 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 }
-
     // Save TDEE & Weight button
-    if (saveTdeeBtn) {
-        saveTdeeBtn.addEventListener('click', function() {
-            const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.]/g, '')) || 0;
-            const weightValue = parseFloat(weightInput.value) || 0;
-
-            loadingOverlay.classList.add('active');
-
-            $.ajax({
-                type: 'POST',
-                url: '/save_metrics',
-                data: { tdee: tdeeValue, weight: weightValue },
-                headers: { "X-CSRFToken": csrfToken },
-                success: function(response) {
-                    if (response.success) {
-                        saveFormState();
-                        const btn = saveTdeeBtn;
-
-                        // Change to success style + text
-                        btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
-                        btn.classList.add('btn-flash-success');
-
-                        setTimeout(() => {
-                            btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('save_metrics');
-                            btn.classList.remove('btn-flash-success');
-                        }, 2000);
-
-                    } else {
-                        alert(t('error_saving') + ' ' + (response.error || t('unknown_error')));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX error:', error);
-                    alert(t('error_saving_console'));
-                },
-                complete: function() {
-                    loadingOverlay.classList.remove('active');
-                }
-            });
+ if (saveTdeeBtn) {
+    saveTdeeBtn.addEventListener('click', function() {
+        const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.-]/g, '')) || 0;
+        const weightValue = parseFloat(weightInput.value) || 0;
+        
+        // ✅ NEW: Get checkbox value
+        const checkbox = document.getElementById('autoWorkoutCalories');
+        const autoWorkoutCalories = checkbox ? checkbox.checked : false;
+        
+        console.log('🔧 Sending to save_metrics:', {
+            tdee: tdeeValue,
+            weight: weightValue,
+            auto_add_workout_calories: autoWorkoutCalories
         });
+        
+        loadingOverlay.classList.add('active');
+        
+        $.ajax({
+            type: 'POST',
+            url: '/save_metrics',
+            data: {
+                'tdee': tdeeValue,
+                'weight': weightValue,
+                'auto_add_workout_calories': autoWorkoutCalories ? 'true' : 'false',
+                'mode': currentMode  // Also send the mode
+            },
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    saveFormState();
+                    const btn = saveTdeeBtn;
+                    // Change to success style & text
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
+                    btn.classList.add('btn-flash-success');
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('savemetrics');
+                        btn.classList.remove('btn-flash-success');
+                    }, 2000);
+                } else {
+                    alert(t('errorsaving') + ': ' + (response.error || t('unknownerror')));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+                alert(t('errorsavingconsole'));
+            },
+            complete: function() {
+                loadingOverlay.classList.remove('active');
+            }
+        });
+    });
+}
+document.getElementById('calculate-btn').addEventListener('click', function() {
+    ensureCheckboxValue();
+    
+    // Debug: Check what will be sent
+    const checkbox = document.getElementById('autoWorkoutCalories');
+    if (checkbox) {
+        console.log('🔧 Final checkbox state - checked:', checkbox.checked, 'value:', checkbox.value);
     }
-
+});
     // Mode switching function
 function switchMode(mode) {
     // Hide all mode content
@@ -1324,6 +1406,54 @@ function switchMode(mode) {
         calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske Kulutus</span>';
     }
 }
+document.getElementById('autoWorkoutCalories').addEventListener('change', function() {
+    // Use the correct activity field ID from your HTML
+    const activityField = document.getElementById('activity-calories');
+    
+    if (!activityField) {
+        console.warn('Activity field not found - skipping hide/show functionality');
+        return;
+    }
+    
+    const activityGroup = activityField.closest('.col-md-6');
+    
+    if (this.checked) {
+        // Hide activity field when checkbox is checked
+        if (activityGroup) {
+            activityGroup.style.display = 'none';
+        }
+        // Clear activity value since we're not using it
+        activityField.value = '';
+        
+        console.log('Auto workout calories enabled - activity field hidden');
+    } else {
+        // Show activity field when checkbox is unchecked
+        if (activityGroup) {
+            activityGroup.style.display = 'block';
+        }
+        console.log('Auto workout calories disabled - activity field shown');
+    }
+});
+
+// ✅ NEW: Load saved preference on page load
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Use proper Jinja2 syntax and convert to JavaScript boolean
+        const savedPreference = {% if current_user.auto_add_workout_calories %}true{% else %}false{% endif %};
+        
+        const checkbox = document.getElementById('autoWorkoutCalories');
+        if (checkbox) {
+            checkbox.checked = savedPreference;
+            
+            // Trigger the change event to set initial visibility
+            checkbox.dispatchEvent(new Event('change'));
+        } else {
+            console.warn('autoWorkoutCalories checkbox not found');
+        }
+    } catch (error) {
+        console.error('Error loading workout calories preference:', error);
+    }
+});
 
     // Calculate TDEE function
     function calculateTDEE() {
