@@ -1208,7 +1208,140 @@
         font-size: 16px;
     }
 
+/* Cardio search container */
+.cardio-search-container {
+    position: relative;
+}
 
+/* Search dropdown */
+.cardio-search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    margin-top: 2px;
+}
+
+.cardio-search-dropdown.show {
+    display: block;
+}
+
+/* Search result items */
+.cardio-search-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s;
+    font-size: 12px;
+}
+
+.cardio-search-item:hover,
+.cardio-search-item.highlighted {
+    background-color: #333;
+}
+
+.cardio-search-item:last-child {
+    border-bottom: none;
+}
+
+/* Exercise type grouping */
+.cardio-group-header {
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    color: #6dc0d5;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #444;
+}
+
+/* Exercise details in search */
+.cardio-exercise-name {
+    font-weight: 600;
+    color: #fff;
+}
+
+.cardio-exercise-details {
+    font-size: 10px;
+    color: #aaa;
+    margin-top: 2px;
+}
+
+/* Clear button */
+.cardio-clear-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.cardio-clear-btn:hover {
+    color: #fff;
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* Selected state */
+.cardio-search-input.selected {
+    background-color: rgba(109, 192, 213, 0.1);
+    border-color: #6dc0d5;
+}
+
+/* Loading state */
+.cardio-search-loading {
+    padding: 12px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* No results state */
+.cardio-search-no-results {
+    padding: 12px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Scrollbar styling for search dropdown */
+.cardio-search-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cardio-search-dropdown::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.cardio-search-dropdown::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.cardio-search-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
 
     /* ===== DROPDOWNS ===== */
     .rir-dropdown {
@@ -1789,68 +1922,79 @@
         }
     }
 
-    /* WORKOUT TIMER */
-    .timer-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #1a1a1a, #535353);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 10px;
-    margin: 5px 0;
-    box-shadow: 0 4px 12px rgba(191, 191, 191, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+/* Timer Icon Container */
+.timer-icon-container {
+    position: relative; /* Keep as relative for reference */
+    z-index: 1000;
+    /* Ensure it doesn't extend beyond its natural bounds */
+    overflow: visible;
+    width: auto;
+    height: auto;
+}
+.timer-icon-clickable {
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    user-select: none;
+    animation: pulse 2s infinite;
 }
 
-.timer-icon {
-    font-size: 1.3em;
-    margin-right: 10px;
+.timer-icon-clickable:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
 }
 
-.timer-display {
-    font-size: 1.6em;
-    font-weight: bold;
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Timer Dropdown */
+.timer-dropdown {
+    position: absolute;
+    top: calc(100% + 5px); /* Position just below the icon */
+    right: 0;
+    background-color: #1e1e1e;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    border-color: #cfcfcf;
+    border-radius: 8px;
+    min-width: 160px;
+    z-index: 1001;
+    /* Key fix: ensure proper display behavior */
+    display: none !important; /* Force hidden when not active */
+    /* Remove from layout flow completely */
+    visibility: hidden;
+}
+.timer-dropdown:not(.d-none) {
+    display: block !important;
+    visibility: visible;
+}
+
+.timer-dropdown-content {
+    padding: 12px;
+    text-align: center;
+}
+
+.timer-display-text {
     font-family: 'Courier New', monospace;
-    margin-right: 10px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--accent-color, #fff);
+    margin-bottom: 4px;
 }
 
 .timer-label {
-    font-size: 0.95em;
-    opacity: 0.95;
-    font-weight: 500;
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 8px;
 }
 
-/* Achievement card enhancements for time/calories breakdown */
-.time-breakdown, .calories-breakdown {
-    font-size: 0.8em;
-    margin-top: 4px;
-}
-
-.time-item, .calories-item {
-    margin: 2px 0;
-    opacity: 0.8;
-}
-
-/* Enhanced achievement grid for 6 cards */
-.achievement-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-}
-
-@media (min-width: 768px) {
-    .achievement-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 1200px) {
-    .achievement-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+.stop-timer-btn {
+    font-size: 11px;
+    padding: 2px 8px;
 }
 
 /* Make achievement cards slightly smaller to fit 6 cards nicely */
@@ -2519,6 +2663,7 @@
     max-width: 100%;
     min-width: 0;
 }
+
 /* Mobile Responsive */
 
 @media (max-width: 768px) {
@@ -2937,14 +3082,31 @@
         <div class="mobile-toggle-content collapse hidden" id="cardio-body">
             <!-- Cardio form content -->
             <div class="row g-3">
-                <div class="col-12">
-                    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
-                    <select id="cardio-type-select-mobile" class="form-select">
-                        <option  data-i18n="selectCardio" value="">Select cardio exercise...</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
-            </div>
+<div class="col-12">
+    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
+    <div class="cardio-search-container position-relative">
+        <input type="text" 
+               id="cardio-search-input-mobile" 
+               class="form-control" 
+               placeholder="Search cardio exercises..."
+               data-i18n="searchCardio"
+               autocomplete="off">
+        <input type="hidden" id="cardio-exercise-id-mobile" value="">
+        
+        <!-- Search results dropdown -->
+        <div id="cardio-search-results-mobile" class="cardio-search-dropdown">
+            <!-- Results will be populated here -->
+        </div>
+        
+        <!-- Clear search button -->
+        <button type="button" 
+                class="cardio-clear-btn d-none" 
+                id="cardio-clear-mobile"
+                title="Clear selection">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
             
             <div class="row g-3 mt-2">
                 <div class="col-6">
@@ -3006,38 +3168,56 @@
             <!-- Desktop cardio form content -->
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
-                    <select id="cardio-type-select" class="form-select">
-                        <option  data-i18n="selectCardio" value="">Select cardio exercise...</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
+    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
+    <div class="cardio-search-container position-relative">
+        <input type="text" 
+               id="cardio-search-input" 
+               class="form-control" 
+               placeholder="Search cardio exercises..."
+               data-i18n="searchCardio"
+               autocomplete="off">
+        <input type="hidden" id="cardio-exercise-id" value="">
+        
+        <!-- Search results dropdown -->
+        <div id="cardio-search-results" class="cardio-search-dropdown">
+            <!-- Results will be populated here -->
+        </div>
+        
+        <!-- Clear search button -->
+        <button type="button" 
+                class="cardio-clear-btn d-none" 
+                id="cardio-clear"
+                title="Clear selection">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
                 <div class="col-md-2">
                     <label class="form-label" data-i18n="durationMinutes">Duration (min)</label>
                     <input type="number" id="duration-input" class="form-control" min="1" step="0.5" value="">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" data-i18n="distanceKm">Distance (km)</label>
-                    <input type="number" id="distance-input" class="form-control" min="0" step="0.1" value="" placeholder="Optional">
+                    <input type="number" id="distance-input" class="form-control" min="0" step="0.1" value="" data-i18n="optional" placeholder="Optional">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" data-i18n="avgPace">Pace (min/km)</label>
-                    <input type="number" id="pace-input" class="form-control" min="0" step="0.1" value="" placeholder="Optional">
+                    <input type="number" id="pace-input" class="form-control" min="0" step="0.1" value="" data-i18n="optional" placeholder="Optional">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" data-i18n="avgHeartRate">Heart Rate</label>
-                    <input type="number" id="heart-rate-input" class="form-control" min="50" max="220" value="" placeholder="Optional">
+                    <input type="number" id="heart-rate-input" class="form-control" min="50" max="220" value="" data-i18n="optional" placeholder="Optional">
                 </div>
             </div>
             
             <div class="row g-3 mt-2">
                 <div class="col-md-2">
                     <label class="form-label" data-i18n="watts">Watts</label>
-                    <input type="number" id="watts-input" class="form-control" min="0" value="" placeholder="Optional">
+                    <input type="number" id="watts-input" class="form-control" min="0" value="" data-i18n="optional" placeholder="Optional">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" data-i18n="notes">Notes</label>
-                    <input type="text" id="cardio-notes-input" class="form-control" placeholder="Optional notes">
+                    <input type="text" id="cardio-notes-input" class="form-control"  data-i18n="optional_notes" placeholder="Optional notes">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <div class="calories-preview" id="calories-preview" style="font-size: 14px; color: #6dc0d5; font-weight: bold; padding: 8px;">
@@ -3047,7 +3227,7 @@
                 <div class="col-md-3 d-flex align-items-end">
                     <button id="add-cardio-btn" class="btn btn-jerew w-100">
                         <i class="fas fa-heart me-1"></i>
-                        <span data-i18n="add-cardio">Add Cardio Session</span>
+                        <span data-i18n="addCardio">Add Cardio Session</span>
                     </button>
                 </div>
             </div>
@@ -3082,33 +3262,56 @@
                 
             </div>
             
-            <!-- Workout Session Container -->
-            <div class="grid-log">
-                <div class="card">
-                    <!-- Card Header -->
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0" data-i18n="workout_log">Workout Log</h5>
-
-                        <!-- Mobile-only date selector with spacing -->
-                        <div class="d-block d-lg-none ms-2">
-                            <select id="mobile-date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 14px; width: auto; min-width: 140px; max-width: 180px;">
-                                <!-- Dates will be populated here -->
-                            </select>
-                        </div>
+           <!-- Workout Session Container -->
+<class="grid-log">
+    <div class="card">
+        <!-- Card Header -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" data-i18n="workout_log">Workout Log</h5>
+            
+            <!-- Timer Icon (always visible when active) -->
+            <div id="workout-timer-icon" class="timer-icon-container d-none">
+                <div class="timer-icon-clickable" title="View Timer">
+                    ⏱️
                     </div>
- <div class="workout-name-container position-relative">
-    <span class="workout-name-display btn-jerez btn-outline-primary" 
-        style="font-size:12px; margin-left:2px; padding:2px 8px; border-radius:6px;">
-    </span>
-    
-    <input type="text" 
-        class="workout-name-input d-none" 
-        maxlength="60">
+                    
+                
+                <!-- Timer Dropdown -->
+                            <div id="timer-dropdown" class="timer-dropdown d-none">
+                    <div class="timer-dropdown-content">
+                        <div class="timer-display-text" style="color: #ffffff">00:00</div>
+                        <div class="timer-label">Kesto</div>
+                        <button class="btn btn-jere stop-timer-btn" onclick="toggleWorkoutTimer()">
+                            <i class="fas fa-pause"></i> Keskeytä
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile-only date selector with spacing -->
+            <div class="d-block d-lg-none ms-2">
+                <select id="mobile-date-selector" class="form-select bg-dark text-light border-secondary" style="font-size: 14px; width: auto; min-width: 140px; max-width: 180px;">
+                    <!-- Dates will be populated here -->
+                </select>
+            </div>
+        </div>
         
-    <div id="workout-name-suggestions-inline" class="suggestions-dropdown" style="display: none;">
-        <!-- Suggestions will be populated here -->
+        <div class="workout-name-container position-relative">
+            <span class="workout-name-display btn-jerez btn-outline-primary" 
+                style="font-size:12px; margin-left:2px; padding:2px 8px; border-radius:6px;">
+            </span>
+            
+            <input type="text" 
+                class="workout-name-input d-none" 
+                maxlength="60">
+                
+            <div id="workout-name-suggestions-inline" class="suggestions-dropdown" style="display: none;">
+                <!-- Suggestions will be populated here -->
+            </div>
+        </div>
     </div>
-</div>
+
+
 
 
                     <!-- Card Body -->
