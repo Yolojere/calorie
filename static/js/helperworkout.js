@@ -284,28 +284,50 @@ $('#saveWorkoutModal').on('show.bs.modal', function(){
     $("#workout-name-input").val(autosuggest);
 });
 function selectDate(dateString) {
-    // ✅ Only run timer logic if timer variables are defined
-    if (typeof TIMER_DATE_KEY !== 'undefined' && 
-        typeof workoutTimer !== 'undefined' && 
-        typeof stopWorkoutTimer === 'function') {
-        
-        const currentTimerDate = localStorage.getItem(TIMER_DATE_KEY);
-        
-        if (currentTimerDate && currentTimerDate !== dateString && workoutTimer.isActive) {
-            if (confirm('Ajastin päällä nykyisessä treenissä, keskeytetäänkö ajastin?')) {
-                stopWorkoutTimer();
-            }
+    // Check if timer is active
+    const currentTimerDate = localStorage.getItem(TIMER_DATE_KEY);
+    
+    if (currentTimerDate && currentTimerDate !== dateString && workoutTimer.isActive) {
+        if (confirm("Ajastin on päällä nykyisessä treenissä, keskeytetäänkö ajastin?")) {
+            // ✅ PROPERLY STOP AND CLEAR TIMER
+            stopWorkoutTimer();
+            clearTimerState(); // This was missing!
+            
+            console.log('🔴 Timer stopped and cleared when switching dates');
+        } else {
+            // User cancelled, don't switch dates
+            return;
         }
     }
     
-    currentSelectedDate = dateString; // ✅ Update global state
+    // Update global state
+    currentSelectedDate = dateString;
     
     // Update visual indicators
-    $(".workout-date").removeClass("active");
-    $(`.workout-date[data-date="${dateString}"]`).addClass("active");
+    $('.workout-date').removeClass('active');
+    $(`.workout-date[data-date="${dateString}"]`).addClass('active');
     
     // Load session for the selected date
     getSessionWithCache(dateString, function(data) {
         renderWorkoutSession(data.session, data.exercises);
     });
+}
+// Format time helper (if not already exists)
+function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Update restoration to use new UI
+function restoreTimerDisplay() {
+    if (workoutTimer.isActive) {
+        showTimerDisplay();
+        updateTimerDisplay();
+    }
 }
