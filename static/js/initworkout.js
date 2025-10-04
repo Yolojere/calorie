@@ -2,6 +2,8 @@ console.log("initworkout.js started");
 // File: init.js
 // Initialize workout page
 $(document).ready(function() {
+    initializeTimer();
+    
     // Initialize cache first
     initCache();
     
@@ -24,11 +26,9 @@ $(document).ready(function() {
     // Set initial date display
     const weekDates = getWeekDates(new Date());
     renderWeekDates(weekDates);
-    // Use cached version of session loading
     getSessionWithCache(currentSelectedDate, function(data) {
         renderWorkoutSession(data.session, data.exercises);
     });
-    
     // Setup RiR and comment functionality
     setupRirDropdowns();
     setupCommentTooltips();
@@ -43,7 +43,7 @@ $(document).ready(function() {
     
     // Set up calendar event handlers
     setupCalendarEvents();
-
+    refreshTimerAfterDOMChange();
 // ===== INITIALIZATION FUNCTIONS =====
 function loadCollapseState() {
     const savedState = localStorage.getItem('workoutCollapseState');
@@ -105,8 +105,9 @@ function initCalendar() {
     }
 }
 function setupMobileDateSelector() {
-    // Initialize with today
-    populateMobileDateSelector(currentSelectedDate);
+    // ✅ IMPROVED: Wait for currentSelectedDate to be set
+    const initDate = currentSelectedDate || new Date().toISOString().split('T')[0];
+    populateMobileDateSelector(initDate);
     
     $("#mobile-date-selector").change(function() {
         const selectedDate = $(this).val();
@@ -191,7 +192,7 @@ function getWorkoutNameKey(date) {
 
 // Render workout name in header
 function renderWorkoutName(date) {
-    const name = localStorage.getItem(getWorkoutNameKey(date)) || "Nimetön Treeni :(";
+    const name = localStorage.getItem(getWorkoutNameKey(date)) || "Nimetön Treeni";
     $(".workout-name-display").text(name).show();
     $(".workout-name-input").val(name).hide();
 }
@@ -208,7 +209,7 @@ $(document).on("keydown", ".workout-name-input", function(e){
 function saveEditWorkoutName() {
     const $input = $(".workout-name-input");
     const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
-    let val = $input.val().trim() || "Nimetön Treeni :(";
+    let val = $input.val().trim() || "Nimeä/Lataa Treeni";
     localStorage.setItem(getWorkoutNameKey(date), val);
     $(".workout-name-display").text(val).show();
     $input.hide();
@@ -220,6 +221,10 @@ $(document).on("workoutContentChanged", function() {
     renderWorkoutName(date);
 });
 $(document).ready(function(){
-    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    // ✅ IMPROVED: Use proper date fallback
+    const date = $(".workout-date.active").data("date") || currentSelectedDate || new Date().toISOString().split("T")[0];
     renderWorkoutName(date);
+});
+$(window).on('beforeunload', function() {
+    cleanupTimer();
 });
