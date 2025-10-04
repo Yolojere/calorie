@@ -1,5 +1,297 @@
 // File: render.js
 // ===== RENDERING FUNCTIONS =====
+
+// ===== WORKOUT TIMER FUNCTIONALITY =====
+let workoutTimer = {
+    startTime: null,
+    endTime: null,
+    isActive: false,
+    lastActivity: null,
+    totalSeconds: 0,
+    intervalId: null,
+    inactivityTimeout: null
+};
+const TIMER_STORAGE_KEY = 'workoutTimer';
+const TIMER_DATE_KEY = 'workoutTimerDate';
+function saveTimerState() {
+    if (!workoutTimer.startTime) return;
+    
+    const timerState = {
+        startTime: workoutTimer.startTime.toISOString(),
+        endTime: workoutTimer.endTime ? workoutTimer.endTime.toISOString() : null,
+        isActive: workoutTimer.isActive,
+        lastActivity: workoutTimer.lastActivity ? workoutTimer.lastActivity.toISOString() : null,
+        totalSeconds: workoutTimer.totalSeconds,
+        date: currentSelectedDate || new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerState));
+    localStorage.setItem(TIMER_DATE_KEY, timerState.date);
+    
+    console.log('💾 Timer state saved:', timerState);
+}
+function loadTimerState() {
+    try {
+        const storedState = localStorage.getItem(TIMER_STORAGE_KEY);
+        const storedDate = localStorage.getItem(TIMER_DATE_KEY);
+        
+        if (!storedState || !storedDate) return false;
+        
+        const timerState = JSON.parse(storedState);
+        const currentDate = currentSelectedDate || new Date().toISOString().split('T')[0];
+        
+        // Only restore timer if it's for the same date
+        if (storedDate !== currentDate) {
+            console.log('Timer from different date, not restoring');
+            clearTimerState();
+            return false;
+        }
+        
+        // Check if timer is too old (more than 24 hours)
+        const startTime = new Date(timerState.startTime);
+        const now = new Date();
+        const hoursDiff = (now - startTime) / (1000 * 60 * 60);
+        
+        if (hoursDiff > 24) {
+            console.log('Timer too old, clearing');
+            clearTimerState();
+            return false;
+        }
+        
+        // Restore timer state
+        workoutTimer.startTime = new Date(timerState.startTime);
+        workoutTimer.endTime = timerState.endTime ? new Date(timerState.endTime) : null;
+        workoutTimer.lastActivity = timerState.lastActivity ? new Date(timerState.lastActivity) : null;
+        workoutTimer.totalSeconds = timerState.totalSeconds || 0;
+        
+        // ✅ FIX: Check if timer should still be active more reliably
+        if (timerState.isActive && !workoutTimer.endTime) {
+            // Check for inactivity (20 minutes)
+            const lastActivity = workoutTimer.lastActivity || workoutTimer.startTime;
+            const inactiveTime = (now - lastActivity) / (1000 * 60); // minutes
+            
+            if (inactiveTime > 20) {
+                console.log('Timer expired due to inactivity, stopping');
+                workoutTimer.isActive = false;
+                workoutTimer.endTime = new Date(lastActivity.getTime() + (20 * 60 * 1000)); // 20 minutes after last activity
+                saveTimerState();
+                return false;
+            } else {
+                // ✅ Timer is still active
+                workoutTimer.isActive = true;
+                resumeTimer();
+                console.log('🟢 Timer restored and resumed');
+                return true;
+            }
+        }
+        
+        console.log('🔄 Timer state loaded but not active');
+        return false;
+    } catch (error) {
+        console.error('Error loading timer state:', error);
+        clearTimerState();
+        return false;
+    }
+}
+
+// Clear timer state from localStorage
+function clearTimerState() {
+    localStorage.removeItem(TIMER_STORAGE_KEY);
+    localStorage.removeItem(TIMER_DATE_KEY);
+    console.log('🗑️ Timer state cleared');
+}
+
+// Resume timer after page load
+function resumeTimer() {
+    if (!workoutTimer.isActive || !workoutTimer.startTime) return;
+    
+    // Start the display update interval
+    workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+    
+    // Reset inactivity timeout
+    resetInactivityTimeout();
+    
+    // Show timer display
+    showTimerDisplay();
+    
+    console.log('▶️ Timer resumed');
+}
+// Start workout timer when first activity occurs
+function startWorkoutTimer() {
+    if (workoutTimer.isActive) {
+        // Timer already running, just update last activity
+        updateLastActivity();
+        return;
+    }
+    
+    console.log('🟢 Starting workout timer');
+    workoutTimer.startTime = new Date();
+    workoutTimer.isActive = true;
+    workoutTimer.lastActivity = new Date();
+    workoutTimer.endTime = null; // Clear any previous end time
+    
+    // ✅ IMPORTANT: Save state immediately after starting
+    saveTimerState();
+    
+    // Start the timer interval (update every second)
+    workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+    
+    // Reset inactivity timeout
+    resetInactivityTimeout();
+    
+    // Show timer in UI
+    showTimerDisplay();
+}
+
+// Stop workout timer
+function stopWorkoutTimer() {
+    if (!workoutTimer.isActive) return;
+    
+    console.log('🔴 Stopping workout timer');
+    workoutTimer.endTime = new Date();
+    workoutTimer.isActive = false;
+    
+    // Clear intervals and timeouts
+    if (workoutTimer.intervalId) {
+        clearInterval(workoutTimer.intervalId);
+        workoutTimer.intervalId = null;
+    }
+    if (workoutTimer.inactivityTimeout) {
+        clearTimeout(workoutTimer.inactivityTimeout);
+        workoutTimer.inactivityTimeout = null;
+    }
+    
+    // Calculate total workout time
+    if (workoutTimer.startTime && workoutTimer.endTime) {
+        workoutTimer.totalSeconds = Math.floor((workoutTimer.endTime - workoutTimer.startTime) / 1000);
+    }
+    
+    hideTimerDisplay();
+}
+
+// Update last activity time and reset inactivity timeout
+function updateLastActivity() {
+    workoutTimer.lastActivity = new Date();
+    resetInactivityTimeout();
+}
+
+// Reset the 20-minute inactivity timeout
+function resetInactivityTimeout() {
+    if (workoutTimer.inactivityTimeout) {
+        clearTimeout(workoutTimer.inactivityTimeout);
+    }
+    
+    workoutTimer.inactivityTimeout = setTimeout(() => {
+        console.log('⏰ Ajastin pysäytetty 20 min inaktiivisuuden takia');
+        stopWorkoutTimer();
+    }, 20 * 60 * 1000); // 20 minutes in milliseconds
+}
+
+// Update timer display in UI
+function updateTimerDisplay() {
+    if (!workoutTimer.isActive || !workoutTimer.startTime) return;
+    
+    const now = new Date();
+    const elapsedSeconds = Math.floor((now - workoutTimer.startTime) / 1000);
+    const minutes = Math.floor(elapsedSeconds / 60);
+    const seconds = elapsedSeconds % 60;
+    
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    $('#workout-timer-display').text(timeString);
+}
+
+// Show timer display
+function showTimerDisplay() {
+    // Add timer display to UI if it doesn't exist
+    if (!$('#workout-timer-display').length) {
+        const timerHtml = `
+            <div id="workout-timer-container" class="timer-container mb-3">
+                <div class="timer-icon">⏱️</div>
+                <div id="workout-timer-display" class="timer-display">00:00</div>
+                <div class="timer-label">Kesto</div>
+            </div>
+        `;
+        // Insert timer at the top of the workout area
+        $('#workout-session-container').before(timerHtml);
+    }
+    $('#workout-timer-container').fadeIn();
+}
+
+// Hide timer display
+function hideTimerDisplay() {
+    $('#workout-timer-container').fadeOut();
+}
+
+// Calculate calories burned for weights (4 METs)
+function calculateWeightCalories() {
+    if (!workoutTimer.totalSeconds || workoutTimer.totalSeconds === 0) return 0;
+    
+    const durationHours = workoutTimer.totalSeconds / 3600; // Convert seconds to hours
+    const metValue = 4.0; // Weight training MET value
+    const calories = metValue * userWeight * durationHours;
+    
+    console.log(`Weight training calories: ${calories.toFixed(1)} (${durationHours.toFixed(2)}h × 4 METs × ${userWeight}kg)`);
+    return Math.max(0, calories);
+}
+
+// Get workout timer data for saving
+function getWorkoutTimerData() {
+    return {
+        startTime: workoutTimer.startTime,
+        endTime: workoutTimer.endTime || new Date(),
+        totalSeconds: workoutTimer.totalSeconds || (workoutTimer.isActive && workoutTimer.startTime ? 
+            Math.floor((new Date() - workoutTimer.startTime) / 1000) : 0),
+        calories: calculateWeightCalories()
+    };
+}
+// Initialize timer on page load
+function initializeTimer() {
+    console.log('🔧 Initializing timer system...');
+    
+    // Try to restore timer state
+    const restored = loadTimerState();
+    
+    if (restored) {
+        console.log('✅ Ajastin palautettu viime treeniltä');
+    } else {
+        console.log('ℹ️ Ei aktiivista ajastinta palautettavana');
+    }
+}
+
+// Clean up on page unload
+function cleanupTimer() {
+    if (workoutTimer.isActive) {
+        // Update last activity before leaving
+        workoutTimer.lastActivity = new Date();
+        saveTimerState();
+        console.log('💾 Timer state saved before page unload');
+    }
+}
+// Function to ensure timer persists after DOM changes
+function ensureTimerPersistence() {
+    if (typeof workoutTimer !== 'undefined' && workoutTimer.isActive) {
+        // Check if timer display exists
+        if (!document.getElementById('workout-timer-container')) {
+            console.log('Timer active but display missing, recreating...');
+            if (typeof showTimerDisplay === 'function') {
+                showTimerDisplay();
+            }
+        }
+        
+        // Ensure interval is running
+        if (!workoutTimer.intervalId && typeof updateTimerDisplay === 'function') {
+            workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+            console.log('Timer interval restarted');
+        }
+    }
+}
+
+// Call this after any DOM manipulation that might affect the timer
+function refreshTimerAfterDOMChange() {
+    if (workoutTimer.isActive) {
+        setTimeout(ensureTimerDisplay, 100);
+    }
+}
 function renderWeekDates(dates) {
     const container = $("#week-dates-container");
     container.empty();
@@ -51,7 +343,7 @@ function renderWeekDates(dates) {
 function _escapeHtml(s) {
   return String(s == null ? '' : s)
     .replace(/[&<>"'`=\/]/g, ch => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":"&#39;",'/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
     })[ch]);
 }
 
@@ -349,6 +641,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
     setupRirDropdowns();
     setupCommentTooltips();
     setupExerciseCompletion();
+    
 
     // Group toggle
     $(".toggle-group").off("click").on("click", function() {
@@ -384,6 +677,7 @@ function renderWorkoutSession(session, exercises, options = {}) {
     $(document).trigger('workoutContentChanged');
     $(document).trigger('workoutRendered');
 }
+
 function renderTemplatePreview(templateData) {
     const grouped = {};
 
@@ -417,6 +711,7 @@ function renderTemplatePreview(templateData) {
 
     $("#template-preview-content").html(html);
 }
+
 function renderTemplates(templates) {
     const $templateListDesktop = $("#template-list-desktop");
     const $templateListMobile = $("#template-list-mobile");
@@ -535,6 +830,22 @@ function hideWorkoutAnalysis() {
     });
 }
 
+// Format duration helper
+function formatDuration(seconds) {
+    if (!seconds) return '0m';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    let result = '';
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0) result += `${minutes}m`;
+    if (!hours && !minutes && secs > 0) result = `${secs}s`;
+    
+    return result.trim() || '0m';
+}
+
 // Show workout results with achievements and PRs
 function showWorkoutResults(comparisonData, achievements) {
     // Handle undefined data gracefully
@@ -552,6 +863,34 @@ function showWorkoutResults(comparisonData, achievements) {
     const meaningfulPRs = personalRecords.filter(pr => pr.previousBest && (pr.previousBest.weight > 0 || pr.previousBest.reps > 0));
     const prCount = meaningfulPRs.length;
     const improvementCount = improvements.length;
+    
+    // GET TIMER AND CARDIO DATA
+    const timerData = getWorkoutTimerData();
+    const weightDuration = timerData.totalSeconds || 0;
+    const weightCalories = timerData.calories || 0;
+    
+    // Get cardio data from DOM
+    let cardioDuration = 0;
+    let cardioCalories = 0;
+    $('.workout-group.cardio .exercise').each(function() {
+        const durationText = $(this).find('.set-details').text();
+        const caloriesText = $(this).find('.volume-display').text();
+        
+        // Extract duration in minutes
+        const durationMatch = durationText.match(/(\d+)\s*min/);
+        if (durationMatch) {
+            cardioDuration += parseInt(durationMatch[1]) * 60; // Convert to seconds
+        }
+        
+        // Extract calories
+        const caloriesMatch = caloriesText.match(/(\d+)\s*cal/);
+        if (caloriesMatch) {
+            cardioCalories += parseInt(caloriesMatch[1]);
+        }
+    });
+    
+    const totalDuration = weightDuration + cardioDuration;
+    const totalCalories = weightCalories + cardioCalories;
     
     // Dynamic PR messages based on count
     function getPRMessage(count) {
@@ -689,6 +1028,30 @@ function showWorkoutResults(comparisonData, achievements) {
                     </div>
                 </div>
             </div>
+            
+            <div class="achievement-card glass">
+                <div class="achievement-icon">⏱️</div>
+                <div class="achievement-title">Treenin Kesto</div>
+                <div class="achievement-value">${formatDuration(totalDuration)}</div>
+                <div class="achievement-change neutral">
+                    <div class="time-breakdown">
+                        ${weightDuration > 0 ? `<div class="time-item">💪 Puntti: ${formatDuration(weightDuration)}</div>` : ''}
+                        ${cardioDuration > 0 ? `<div class="time-item">❤️ Cardio: ${formatDuration(cardioDuration)}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="achievement-card glass">
+                <div class="achievement-icon">🔥</div>
+                <div class="achievement-title">Kaloreita Poltettu</div>
+                <div class="achievement-value">${Math.round(totalCalories)} cal</div>
+                <div class="achievement-change neutral">
+                    <div class="calories-breakdown">
+                        ${weightCalories > 0 ? `<div class="calories-item">💪 Puntti: ${Math.round(weightCalories)} cal</div>` : ''}
+                        ${cardioCalories > 0 ? `<div class="calories-item">❤️ Cardio: ${Math.round(cardioCalories)} cal</div>` : ''}
+                    </div>
+                </div>
+            </div>
         </div>
     `;
     
@@ -764,21 +1127,12 @@ function updateSetRowsWithProgress(comparisonData) {
     });
 }
 
-
-// Hide analysis overlay
-function hideWorkoutAnalysis() {
-    $('#workout-analysis').fadeOut(300, function() {
-        $(this).remove();
-    });
-}
-
 // Hide workout results
 function hideWorkoutResults() {
     $('#workout-results').fadeOut(300, function() {
         $(this).remove();
     });
 }
-
 
 // Share workout (optional feature)
 function shareWorkout() {
@@ -818,6 +1172,389 @@ $(document).on('keydown', function(e) {
     }
 });
 
+function displayCardioSessions(cardioSessions, containerOverride = null) {
+    if (!cardioSessions || cardioSessions.length === 0) {
+        return;
+    }
+
+    // Find the container - use override or default
+    const container = containerOverride || document.getElementById('workout-session-container');
+    if (!container) {
+        console.error('Could not find workout session container');
+        return;
+    }
+
+    // Remove existing cardio groups to prevent duplicates
+    const existingCardioGroup = container.querySelector('.workout-group.cardio');
+    if (existingCardioGroup) {
+        existingCardioGroup.remove();
+    }
+
+    // Deduplicate sessions by ID
+    const uniqueSessions = [];
+    const seenIds = new Set();
+    
+    cardioSessions.forEach(session => {
+        if (!seenIds.has(session.id)) {
+            seenIds.add(session.id);
+            uniqueSessions.push(session);
+        }
+    });
+
+    if (uniqueSessions.length === 0) {
+        console.warn('No unique cardio sessions to display');
+        return;
+    }
+
+    console.log('Displaying', uniqueSessions.length, 'unique cardio sessions');
+
+    // Create cardio group header
+    const cardioGroupDiv = document.createElement('div');
+    cardioGroupDiv.className = 'workout-group cardio';
+    
+    // Calculate total calories
+    const totalCalories = uniqueSessions.reduce((sum, session) => sum + session.calories_burned, 0);
+    
+    cardioGroupDiv.innerHTML = `
+        <div class="group-header" style="background: linear-gradient(135deg, #ff6b6b, rgba(0,0,0,0.8)) !important;">
+            <div class="group-header-content">
+                <div class="group-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="group-title">Cardio</div>
+            </div>
+            <div class="group-summary">
+                <span class="summary-item">${uniqueSessions.length} session${uniqueSessions.length !== 1 ? 's' : ''}</span>
+                <span class="summary-item">${Math.round(totalCalories)} cal</span>
+            </div>
+        </div>
+    `;
+
+    const groupItemsDiv = document.createElement('div');
+    groupItemsDiv.className = 'group-items';
+
+    // Display each unique cardio session
+    uniqueSessions.forEach(session => {
+        const exerciseDiv = document.createElement('div');
+        exerciseDiv.className = 'exercise';
+        exerciseDiv.setAttribute('data-cardio-id', session.id);
+
+        let sessionDetails = `${session.duration_minutes} min`;
+        if (session.distance_km) sessionDetails += `, ${session.distance_km} km`;
+        if (session.avg_pace_min_per_km) sessionDetails += `, ${session.avg_pace_min_per_km} min/km`;
+        if (session.avg_heart_rate) sessionDetails += `, ${session.avg_heart_rate} bpm`;
+        if (session.watts) sessionDetails += `, ${session.watts}W`;
+
+        exerciseDiv.innerHTML = `
+            <div class="exercise-header">
+                <div class="exercise-header-content">
+                    <div class="exercise-title">${session.exercise_name}</div>
+                </div>
+                <div class="exercise-info">
+                    <div class="set-details">${sessionDetails}</div>
+                    <div class="volume-display">${Math.round(session.calories_burned)} cal</div>
+                    <div class="actions-cell">
+                        <button class="delete-item cardio-delete-btn" data-session-id="${session.id}" title="Delete cardio session">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ${session.notes ? `<div class="exercise-notes" style="padding: 4px 8px; font-size: 11px; color: #aaa; font-style: italic;">${session.notes}</div>` : ''}
+        `;
+
+        groupItemsDiv.appendChild(exerciseDiv);
+    });
+
+    cardioGroupDiv.appendChild(groupItemsDiv);
+    
+    // ✅ ENSURE APPEND HAPPENS AFTER DOM IS READY
+    container.appendChild(cardioGroupDiv);
+    
+    console.log('Successfully displayed cardio sessions with data attributes');
+}
+
+// ✅ UTILITY: Show toast messages
+function showToast(message, type = 'info') {
+    // Create toast if it doesn't exist
+    let toast = document.getElementById('cardio-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cardio-toast';
+        toast.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            padding: 12px 20px; border-radius: 6px; color: white;
+            font-weight: bold; opacity: 0; transition: opacity 0.3s;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    // Set color based on type
+    const colors = {
+        success: '#4CAF50',
+        error: '#F44336', 
+        warning: '#FF9800',
+        info: '#2196F3'
+    };
+    
+    toast.style.backgroundColor = colors[type] || colors.info;
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 3000);
+}
+
+function displayWorkoutData(workoutData) {
+    const container = document.getElementById('workout-session-container');
+
+    if (!workoutData.success || !workoutData.session) {
+        container.innerHTML = "<p>No workout session found for this date.</p>";
+        return;
+    }
+
+    const session = workoutData.session;
+    const exercises = workoutData.exercises || [];
+
+    const sessionTitle = document.createElement("h3");
+    sessionTitle.textContent = session.name || "Workout Session";
+    container.appendChild(sessionTitle);
+
+    exercises.forEach(ex => {
+        const exDiv = document.createElement("div");
+        exDiv.classList.add("exercise");
+
+        const exName = document.createElement("h4");
+        exName.textContent = ex.name;
+        exDiv.appendChild(exName);
+
+        ex.sets.forEach(set => {
+            const setDiv = document.createElement("div");
+            setDiv.textContent = `Reps: ${set.reps}, Weight: ${set.weight || 0}kg`;
+            exDiv.appendChild(setDiv);
+        });
+
+        container.appendChild(exDiv);
+    });
+}
+
+function updateCardioGroupSummary(cardioGroup, remainingSessions) {
+    const summaryItems = cardioGroup.querySelectorAll('.summary-item');
+    const sessionCount = remainingSessions.length;
+    
+    // Calculate total calories from remaining sessions
+    let totalCalories = 0;
+    remainingSessions.forEach(session => {
+        const volumeDisplay = session.querySelector('.volume-display');
+        if (volumeDisplay) {
+            const calories = parseInt(volumeDisplay.textContent.replace(' cal', '')) || 0;
+            totalCalories += calories;
+        }
+    });
+    
+    // Update summary items
+    if (summaryItems[0]) {
+        summaryItems[0].textContent = `${sessionCount} session${sessionCount > 1 ? 's' : ''}`;
+    }
+    if (summaryItems[1]) {
+        summaryItems[1].textContent = `${totalCalories} cal`;
+    }
+    
+    console.log(`Updated cardio summary: ${sessionCount} sessions, ${totalCalories} calories`);
+}
+
+// Add function to delete cardio session
+async function deleteCardioSession(sessionId) {
+    if (!sessionId) {
+        console.error('No session ID provided for deletion');
+        return;
+    }
+    
+    if (!confirm) {
+        return;
+    }
+    
+    console.log('Deleting cardio session:', sessionId);
+    
+    try {
+        const response = await fetch(`/workout/cardio-sessions/${sessionId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Cardio session deleted successfully:', result);
+            
+            // ✅ INVALIDATE CACHE for current date
+            if (typeof invalidateCache === 'function' && typeof CACHE_KEYS !== 'undefined') {
+                const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
+                if (cachedSessions[currentSelectedDate]) {
+                    delete cachedSessions[currentSelectedDate];
+                    setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
+                }
+            }
+            
+            // ✅ Remove the specific session element from DOM
+            const sessionElement = document.querySelector(`[data-cardio-id="${sessionId}"]`) || 
+                                  document.querySelector(`button[onclick*="${sessionId}"]`)?.closest('.exercise');
+            
+            if (sessionElement) {
+                sessionElement.style.transition = 'all 0.3s ease';
+                sessionElement.style.transform = 'scale(0.95)';
+                sessionElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    sessionElement.remove();
+                    
+                    // Check if this was the last cardio session
+                    const cardioGroup = document.querySelector('.workout-group.cardio');
+                    if (cardioGroup) {
+                        const remainingSessions = cardioGroup.querySelectorAll('[data-cardio-id]') || 
+                                                cardioGroup.querySelectorAll('.exercise');
+                        
+                        if (remainingSessions.length === 0) {
+                            // Remove the entire cardio group if no sessions left
+                            cardioGroup.style.transition = 'all 0.3s ease';
+                            cardioGroup.style.opacity = '0';
+                            setTimeout(() => {
+                                cardioGroup.remove();
+                            }, 300);
+                        } else {
+                            // ✅ Update the summary with remaining count (using the fixed function)
+                            updateCardioGroupSummary(cardioGroup, remainingSessions);
+                        }
+                    }
+                }, 300);
+                
+            } else {
+                console.warn('Could not find cardio session element in DOM, refreshing data');
+                // Fallback: refresh the workout data
+                await loadWorkoutData(currentSelectedDate);
+            }
+            
+        } else {
+            console.error('Failed to delete cardio session:', result);
+            alert(result.error || 'Error deleting cardio session');
+        }
+    } catch (error) {
+        console.error('Error deleting cardio session:', error);
+        alert('Error deleting cardio session');
+    }
+}
+
+// ✅ Helper function to update cardio group summary
+function updateCardioSummary(cardioGroup, remainingSessions) {
+    const summaryItems = cardioGroup.querySelectorAll('.summary-item');
+    const sessionCount = remainingSessions.length;
+    
+    // Calculate total calories from remaining sessions
+    let totalCalories = 0;
+    remainingSessions.forEach(session => {
+        const volumeDisplay = session.querySelector('.volume-display');
+        if (volumeDisplay) {
+            const calories = parseInt(volumeDisplay.textContent.replace(' cal', '')) || 0;
+            totalCalories += calories;
+        }
+    });
+    
+    // Update summary items
+    if (summaryItems[0]) {
+        summaryItems[0].textContent = `${sessionCount} session${sessionCount > 1 ? 's' : ''}`;
+    }
+    if (summaryItems[1]) {
+        summaryItems[1].textContent = `${totalCalories} cal`;
+    }
+    
+    console.log(`Updated cardio summary: ${sessionCount} sessions, ${totalCalories} calories`);
+}
+
+// ✅ Fallback function to refresh only cardio data (not entire workout)
+async function refreshCardioDataOnly(date) {
+    try {
+        // Load only cardio sessions
+        const cardioResponse = await fetch(`/workout/cardio-sessions/${date}`);
+        const cardioData = await cardioResponse.json();
+        
+        // Remove existing cardio group
+        const existingCardioGroup = document.querySelector('.workout-group.cardio');
+        if (existingCardioGroup) {
+            existingCardioGroup.remove();
+        }
+        
+        // Add updated cardio data if any exists
+        if (cardioData.cardio_sessions && cardioData.cardio_sessions.length > 0) {
+            const container = document.getElementById('workout-session-container');
+            displayCardioSessions(cardioData.cardio_sessions, container);
+        }
+        
+        console.log('Refreshed cardio data only');
+    } catch (error) {
+        console.error('Error refreshing cardio data:', error);
+        // Last resort: full refresh
+        await loadWorkoutData(date);
+    }
+}
+
+async function loadWorkoutData(date, callback) {
+    // VALIDATE DATE PARAMETER
+    if (!date || date === 'undefined' || date === undefined) {
+        console.error('loadWorkoutData called with invalid date:', date);
+        
+        // Try to use currentSelectedDate as fallback
+        if (currentSelectedDate) {
+            console.log('Using currentSelectedDate as fallback:', currentSelectedDate);
+            date = currentSelectedDate;
+        } else {
+            console.error('No valid date available, cannot load workout data');
+            const container = document.getElementById('workout-session-container');
+            container.innerHTML = `<div class='alert alert-danger'>Error: No date specified for workout data</div>`;
+            return;
+        }
+    }
+    
+    try {
+        console.log('Loading workout data for date:', date);
+        
+        // ENSURE DATE IS IN CORRECT FORMAT (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+            throw new Error(`Invalid date format: ${date}. Expected YYYY-MM-DD format.`);
+        }
+        
+        // Use the caching system for combined data
+        getSessionWithCache(date, callback);
+        
+    } catch (error) {
+        console.error('Error loading workout data:', error);
+        const container = document.getElementById('workout-session-container');
+        container.innerHTML = `<div class='alert alert-danger'>Error loading workout data: ${error.message}</div>`;
+        if (callback) callback();
+    }
+}
+
+// Make sure displayCardioSessions is available when needed
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize cache
+    initCache();
+    
+    // Load cardio exercises data
+    if (typeof loadCardioExercises === 'function') {
+        loadCardioExercises();
+    }
+    
+    // Setup event handlers
+    if (typeof setupCardioEventListeners === 'function') {
+        setupCardioEventListeners();
+    }
+    
+    console.log('Cardio functionality initialized');
+});
 
 function populateMobileDateSelector(selectedDate) {
     const $selector = $("#mobile-date-selector");
@@ -829,6 +1566,7 @@ function populateMobileDateSelector(selectedDate) {
         $selector.append(`<option value="${d.date}" ${selected ? 'selected' : ''}>${d.formatted}</option>`);
     });
 }
+
 // Navigation
 let currentMonth = new Date();
 $(document).on("click", ".month-nav.prev", function() {
@@ -855,12 +1593,14 @@ $('#copyWorkoutModal').on('shown.bs.modal', function() {
         window.renderCalendar(window.calendarState.currentMonth);
     }, 100); // Small delay to ensure modal is fully rendered
 });
-    // glow up on date selector copy button
-    $(document).on("click", ".date-option", function() {
+
+// glow up on date selector copy button
+$(document).on("click", ".date-option", function() {
     $(".date-option").removeClass("active");
     $(this).addClass("active");
     copyWorkoutToDate($(this).data("date"));
 });
+
 function hideEmptyWorkoutGroups() {
     const currentDate = $(".workout-date.active").data("date");
     
