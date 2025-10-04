@@ -63,10 +63,33 @@ function restoreFocus() {
 }
         
 function resetExerciseForm() {
-    $("#new-exercise-name").val("");
+    $("#new-exercise-name").val("");https://www.perplexity.ai/discover
     $("#new-exercise-desc").val("");
 }
-
+function getCardioSessionsFromUI() {
+    const cardioSessions = [];
+    
+    // Find all cardio sessions in the current workout
+    $('.workout-group.cardio .exercise').each(function() {
+        const $cardioExercise = $(this);
+        const sessionId = $cardioExercise.data('cardio-id');
+        
+        if (sessionId) {
+            // Extract session data from DOM
+            const exerciseName = $cardioExercise.find('.exercise-title').text().trim();
+            const caloriesText = $cardioExercise.find('.volume-display').text();
+            const calories = parseInt(caloriesText.replace(' cal', '')) || 0;
+            
+            cardioSessions.push({
+                id: sessionId,
+                exercise_name: exerciseName,
+                calories: calories
+            });
+        }
+    });
+    
+    return cardioSessions;
+}
 function getMuscleIcon(muscleGroup) {
     const icons = {
         'Chest': 'heart',
@@ -261,6 +284,20 @@ $('#saveWorkoutModal').on('show.bs.modal', function(){
     $("#workout-name-input").val(autosuggest);
 });
 function selectDate(dateString) {
+    // ✅ Only run timer logic if timer variables are defined
+    if (typeof TIMER_DATE_KEY !== 'undefined' && 
+        typeof workoutTimer !== 'undefined' && 
+        typeof stopWorkoutTimer === 'function') {
+        
+        const currentTimerDate = localStorage.getItem(TIMER_DATE_KEY);
+        
+        if (currentTimerDate && currentTimerDate !== dateString && workoutTimer.isActive) {
+            if (confirm('Ajastin päällä nykyisessä treenissä, keskeytetäänkö ajastin?')) {
+                stopWorkoutTimer();
+            }
+        }
+    }
+    
     currentSelectedDate = dateString; // ✅ Update global state
     
     // Update visual indicators
