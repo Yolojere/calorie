@@ -1047,9 +1047,12 @@ def load_more_dates():
 @app.route('/')
 @login_required
 def index():
-    # Use current_user directly
+    # ✅ UPDATED: Use dynamic TDEE calculation instead of static current_user.tdee
     current_weight = current_user.weight or 0
-    current_tdee = current_user.tdee or 0
+    
+    # Get current TDEE including workout adjustments
+    tdee_data = get_user_current_tdee(current_user.id)
+    current_tdee = tdee_data["daily_tdee"]  # This includes workout calories if enabled
 
     # Get session data
     eaten_items, current_date = get_current_session(current_user.id)
@@ -1078,7 +1081,9 @@ def index():
         food_usage=food_usage,
         group_breakdown=group_breakdown,
         current_tdee=current_tdee,
-        current_weight=current_weight
+        current_weight=current_weight,
+        # ✅ NEW: Pass additional TDEE info for display
+        tdee_data=tdee_data  # Contains base_tdee, workout_calories, daily_tdee, auto_enabled
     )
 @app.route("/delete-data", methods=["GET", "POST"])
 def delete_data():
@@ -1202,6 +1207,7 @@ def profile():
     current_avatar = 'default.png'
     extra_columns_exist = False
     role = getattr(current_user, 'role', 'user')
+    tdee_data = get_user_current_tdee(current_user.id)
 
     predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 16)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
@@ -1274,8 +1280,10 @@ def profile():
 
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
-            flash('Your profile has been updated!', 'success')
-            return redirect(url_for('profile'))
+            
+            return redirect(
+                url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
+    )
 
         elif user_data:
             # Pre-fill form
@@ -1308,7 +1316,8 @@ def profile():
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
-        predefined_avatars=predefined_avatars
+        predefined_avatars=predefined_avatars,
+        tdee_data=tdee_data
     )
 
 
@@ -1381,8 +1390,7 @@ def reset_token(token):
         )
         conn.commit()
         conn.close()
-        flash('Salasana on päivitetty! voit kirjautua sisään uudella', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('login', toast_msg='Salasana on päivitetty! voit kirjautua sisään uudella', toast_cat='success'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
 @app.route('/get_favourite_grams', methods=['POST'])
@@ -1684,24 +1692,25 @@ def log_food():
 @login_required
 def update_session():
     user_id = current_user.id
-    date = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+    date_str = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    # Fetch current TDEE from user profile
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT tdee FROM users WHERE id = %s", (user_id,))
-    user_data = cursor.fetchone()
-    current_tdee = user_data[0] if user_data and user_data[0] else 0
-    cursor.close()
-    conn.close()
+    # ✅ UPDATED: Use dynamic TDEE calculation for specific date
+    try:
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        target_date = datetime.now().date()
     
-    eaten_items, current_date = get_current_session(user_id, date)
+    # Get TDEE for the specific date (includes workout adjustments if enabled)
+    tdee_data = get_user_current_tdee(user_id, target_date)
+    current_tdee = tdee_data["daily_tdee"]
+    
+    eaten_items, current_date = get_current_session(user_id, date_str)
     totals = calculate_totals(eaten_items)
     group_breakdown = calculate_group_breakdown(eaten_items)
     current_date_formatted = format_date(current_date)
     
     # Calculate calorie difference and status
-    calorie_difference = current_tdee - totals['calories']  # Fixed: TDEE - calories consumed
+    calorie_difference = current_tdee - totals['calories']  # TDEE - calories consumed
     status_dict = calculate_calorie_status(calorie_difference)
     calorie_status = status_dict['status']
     calorie_status_class = status_dict['class']
@@ -1714,7 +1723,14 @@ def update_session():
         'current_date_formatted': current_date_formatted,
         'calorie_difference': calorie_difference_str,
         'calorie_status': calorie_status,
-        'calorie_status_class': calorie_status_class
+        'calorie_status_class': calorie_status_class,
+        # ✅ NEW: Include TDEE breakdown in response
+        'tdee_data': {
+            'base_tdee': tdee_data["base_tdee"],
+            'workout_calories': tdee_data["workout_calories"],
+            'daily_tdee': tdee_data["daily_tdee"],
+            'auto_enabled': tdee_data["auto_enabled"]
+        }
     })
 
 @app.route('/delete_food', methods=['POST'])
@@ -3666,6 +3682,8 @@ def save_metrics():
         
         # Optional: Get calculation mode for logging/analytics
         calc_mode = request.form.get('mode', 'unknown')
+
+        auto_add_workout_calories = request.form.get('auto_add_workout_calories') == 'true'
         
         # Validate inputs
         if not weight or weight <= 0:
@@ -3681,8 +3699,8 @@ def save_metrics():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE users SET tdee = %s, weight = %s, gender = %s WHERE id = %s",
-            (tdee, weight, gender, current_user.id)
+            "UPDATE users SET tdee = %s, weight = %s, gender = %s, auto_add_workout_calories = %s WHERE id = %s",
+            (tdee, weight, gender, auto_add_workout_calories, current_user.id)
         )
         conn.commit()
         
@@ -3693,7 +3711,8 @@ def save_metrics():
                 "tdee": tdee,
                 "weight": weight,
                 "gender": gender,
-                "mode": calc_mode
+                "mode": calc_mode,
+                "auto_add_workout_calories": auto_add_workout_calories
             }
         )
         
@@ -3823,7 +3842,76 @@ def get_nutrition_targets():
     return jsonify(targets)
 from datetime import datetime  # ensure this import
 
-
+def get_user_current_tdee(user_id, target_date=None):
+    """
+    Get user's current TDEE, including workout adjustments if auto calories is enabled
+    
+    Args:
+        user_id: User ID
+        target_date: Date to get TDEE for (defaults to today)
+    
+    Returns:
+        dict: {
+            "base_tdee": float,
+            "workout_calories": float,
+            "daily_tdee": float,
+            "auto_enabled": bool
+        }
+    """
+    if target_date is None:
+        target_date = datetime.now().date()
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get user settings
+        cursor.execute(
+            "SELECT auto_add_workout_calories, tdee FROM users WHERE id = %s",
+            (user_id,)
+        )
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            return {"base_tdee": 0, "workout_calories": 0, "daily_tdee": 0, "auto_enabled": False}
+        
+        auto_enabled, base_tdee = user_data
+        base_tdee = float(base_tdee or 0)
+        
+        if not auto_enabled:
+            return {
+                "base_tdee": base_tdee,
+                "workout_calories": 0,
+                "daily_tdee": base_tdee,
+                "auto_enabled": False
+            }
+        
+        # Get daily adjustment if auto calories is enabled
+        cursor.execute(
+            "SELECT workout_calories, adjusted_tdee FROM daily_tdee_adjustments WHERE user_id = %s AND date = %s",
+            (user_id, target_date)
+        )
+        adjustment = cursor.fetchone()
+        
+        if adjustment:
+            workout_calories, adjusted_tdee = adjustment
+            return {
+                "base_tdee": base_tdee,
+                "workout_calories": float(workout_calories or 0),
+                "daily_tdee": float(adjusted_tdee or base_tdee),
+                "auto_enabled": True
+            }
+        else:
+            # No workout today, return base TDEE
+            return {
+                "base_tdee": base_tdee,
+                "workout_calories": 0,
+                "daily_tdee": base_tdee,
+                "auto_enabled": True
+            }
+    
+    finally:
+        conn.close()
 @app.route("/workout/save", methods=["POST"])
 @login_required
 def save_workout():
@@ -3909,22 +3997,27 @@ def save_workout():
         
         try:
             cursor.execute(
-                "SELECT SUM(calories_burned), SUM(duration_minutes * 60) "
-                "FROM cardio_sessions "
-                "WHERE date = %s",
-                (date,)
+                """
+                SELECT COALESCE(SUM(cs.calories_burned), 0) as total_cardio_calories,
+                     COALESCE(SUM(cs.duration_minutes * 60), 0) as total_cardio_seconds
+                FROM cardio_sessions cs
+                WHERE cs.session_id = %s
+                """,
+                (session_id,)
             )
             cardio_totals = cursor.fetchone()
             
-            if cardio_totals and cardio_totals[0] is not None:
-                # Convert Decimal/database types to Python native types
-                cardio_calories = float(cardio_totals[0]) if cardio_totals[0] else 0
-                cardio_duration = int(cardio_totals[1]) if cardio_totals[1] else 0
+            if cardio_totals:
+                # Convert to Python native types safely
+                cardio_calories = float(cardio_totals[0] or 0)
+                cardio_duration = int(cardio_totals[1] or 0)
                 
                 total_calories += cardio_calories
                 total_duration_seconds += cardio_duration
                 print(f"🏃 Added cardio: {cardio_calories} cal, {cardio_duration} sec")
-                
+            else:
+                print("🏃 No cardio sessions found for this session")
+
         except Exception as cardio_error:
             print(f"🔧 Cardio query failed: {str(cardio_error)}")
             # Continue without cardio data
@@ -4158,7 +4251,52 @@ def save_workout():
         sets_change = total_sets - last_total_sets
 
         conn.commit()
+        print(f"🔧 DEBUG: About to check auto workout calories for user {user_id}")
+        try:
+            # Check if user has auto workout calories enabled
+            cursor.execute(
+                "SELECT auto_add_workout_calories, tdee FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user_settings = cursor.fetchone()
 
+            print(f"🔧 DEBUG: User settings query result: {user_settings}")            
+            
+            auto_calories_enabled = False
+            daily_tdee = None
+            base_tdee = None
+            
+            if user_settings and user_settings[0]:  # auto_add_workout_calories is True
+                auto_calories_enabled = True
+                base_tdee = float(user_settings[1] or 0)
+                
+                # Calculate today's total TDEE including workout calories
+                daily_tdee = base_tdee + total_calories
+                
+                # Insert or update daily TDEE adjustment
+                cursor.execute("""
+                    INSERT INTO daily_tdee_adjustments (user_id, date, base_tdee, workout_calories, adjusted_tdee)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (user_id, date) 
+                    DO UPDATE SET 
+                        base_tdee = EXCLUDED.base_tdee,
+                        workout_calories = EXCLUDED.workout_calories,
+                        adjusted_tdee = EXCLUDED.adjusted_tdee,
+                        updated_at = NOW()
+                """, (user_id, date, base_tdee, total_calories, daily_tdee))
+                
+                print(f"🔥 Auto workout calories: Base {base_tdee} + Workout {total_calories} = Daily TDEE {daily_tdee}")
+            else:
+                print(f"🔧 DEBUG: Auto calories NOT enabled. User settings: {user_settings}")
+        except Exception as auto_cal_error:
+            print(f"🔧 Auto calories calculation failed: {str(auto_cal_error)}")
+            import traceback
+            print(f"🔧 Traceback: {traceback.format_exc()}")
+            # Continue without auto calories
+
+        # Commit the TDEE adjustment
+        conn.commit()
+        print(f"🔧 DEBUG: Committed TDEE adjustment")
         # Return enhanced response
         return jsonify({
             "success": True,
@@ -4166,6 +4304,9 @@ def save_workout():
             "timer_data": timer_data,
             "total_calories": total_calories,
             "total_duration_seconds": total_duration_seconds,
+            "auto_calories_enabled": auto_calories_enabled,
+            "base_tdee": base_tdee,
+            "daily_tdee": daily_tdee,
             "comparisonData": {
                 "setComparisons": set_comparisons,
                 "totalSets": total_sets,
@@ -4293,8 +4434,7 @@ def oauth_authorize(provider):
                 role=user['role']
             )
             login_user(user_obj)
-            flash(f'{provider.capitalize()} Kyttäjätili yhdisttety onnistuneesti!', 'success')
-            return redirect(url_for('index'))
+            return redirect(url_for('index', toast_msg='Käyttäjätili yhdisttety onnistuneesti!', toast_cat='success'))
         else:
             # Create new user
             username = email.split('@')[0]
