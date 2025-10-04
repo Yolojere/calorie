@@ -130,6 +130,7 @@ const translations = {
     workoutCopiedSuccess: "Workout copied succesfully!",
     applying: "Applying",
     adding: "Adding",
+    searchCardio: "Search Cardio",
 
     // Progress bars - NEW
     proteins_upper: "PROTEINS",
@@ -343,6 +344,7 @@ const translations = {
     error_loading_template: "Virhe ladattaessa pohjia",
     applying: "Sovelletaan",
     adding: "Lisätään",
+    searchCardio: "Etsi harjoitus",
 
     // Placeholders - NEW
     search_food_placeholder: "Hae ruokaa tai skannaa viivakoodi...",
