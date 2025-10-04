@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Nutrition Tracker{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"> 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -63,6 +67,58 @@
             height: 35px;
             
         }
+        .toast-container .toast {
+  margin-top: 0.5rem;
+}
+.toast-container .toast.show {
+  animation: slideIn 0.35s ease;
+}
+@keyframes slideIn {
+  from { transform: translateY(-15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+ .toast {
+  --toast-bg: #1f1f1f;
+  --toast-text: #f1f1f1;
+  --toast-success: #00c853;
+  --toast-error: #ff5252;
+  --toast-warning: #ffb300;
+  --toast-info: #29b6f6;
+
+  background-color: var(--toast-bg);
+  color: var(--toast-text);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.4s ease, transform 0.3s ease;
+  overflow: hidden;
+  border-left: 4px solid var(--toast-info);
+  backdrop-filter: blur(10px);
+  font-family: 'Inter', sans-serif;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast .toast-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+.toast .toast-body i {
+  font-size: 1.25rem;
+}
+
+/* Type colors */
+.toast-success { border-left-color: var(--toast-success); }
+.toast-error { border-left-color: var(--toast-error); }
+.toast-warning { border-left-color: var(--toast-warning); }
+.toast-info { border-left-color: var(--toast-info); }       
 /* Tooltip container */
 .tooltip {
   opacity: 1 !important; /* prevent Bootstrap fade weirdness */
@@ -315,7 +371,7 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div id="toastNotification" class="toast-notification"></div>
+    <div class="toast-container position-fixed top-3 end-3 p-3" style="z-index: 3000;"></div>
     {% if request.endpoint not in ['login', 'register', 'reset_request','terms','privacy'] %}
     <!-- Updated Navbar for layout -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-black">
@@ -522,8 +578,56 @@
         }
     }
 });
-    </script>
-    {% block scripts %}{% endblock %}
+function showToast(message, type = 'success') {
+    const toastId = 'toast-' + Date.now();
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-times-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+
+    const toastHtml = `
+        <div id="${toastId}" class="toast toast-${type} show align-items-center border-0 shadow mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
+            <div class="toast-body d-flex align-items-center text-white">
+                <i class="fas ${icons[type] || icons.info} me-2"></i>
+                <span>${message}</span>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    const container = document.querySelector('.toast-container');
+    container.insertAdjacentHTML('beforeend', toastHtml);
+
+    const toastEl = document.getElementById(toastId);
+    const bsToast = new bootstrap.Toast(toastEl);
+    bsToast.show();
+
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    let message, category;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('toast_msg')) {
+        message = params.get('toast_msg');
+        category = params.get('toast_cat') || 'info';
+        history.replaceState(null, null, window.location.pathname);
+    } else if (document.cookie.includes('toast_msg=')) {
+        const cookies = Object.fromEntries(
+            document.cookie.split('; ').map(c => c.split('=').map(decodeURIComponent))
+        );
+        message = cookies.toast_msg;
+        category = cookies.toast_cat || 'info';
+        document.cookie = 'toast_msg=; Max-Age=0; path=/';
+        document.cookie = 'toast_cat=; Max-Age=0; path=/';
+    }
+    if (message) {
+        showToast(message, category);
+    }
+});
+</script>
 <script>
   // Initialize tooltips globally
   document.addEventListener("DOMContentLoaded", function () {
