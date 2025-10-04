@@ -575,6 +575,313 @@ function navigateWeek(direction) {
     const weekDates = getWeekDates(currentDate);
     renderWeekDates(weekDates);
 }
+// ===== CARDIO SEARCH FUNCTIONALITY =====
+
+let cardioSearchTimeout = null;
+let selectedCardioExercises = {
+    desktop: null,
+    mobile: null
+};
+
+// Initialize cardio search functionality
+function initCardioSearch() {
+    console.log('Initializing cardio search functionality');
+    
+    // Setup search for both desktop and mobile
+    setupCardioSearch('', false); // Desktop
+    setupCardioSearch('-mobile', true); // Mobile
+}
+
+// Setup search functionality for a specific version (desktop/mobile)
+function setupCardioSearch(suffix, isMobile) {
+    const searchInput = document.getElementById(`cardio-search-input${suffix}`);
+    const hiddenInput = document.getElementById(`cardio-exercise-id${suffix}`);
+    const resultsContainer = document.getElementById(`cardio-search-results${suffix}`);
+    const clearBtn = document.getElementById(`cardio-clear${suffix}`);
+    
+    if (!searchInput || !resultsContainer) {
+        console.warn('Cardio search elements not found for suffix:', suffix);
+        return;
+    }
+    
+    // Search input handler
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (query.length === 0) {
+            hideCardioResults(suffix);
+            return;
+        }
+        
+        if (query.length < 2) {
+            return; // Wait for at least 2 characters
+        }
+        
+        // Debounce search
+        clearTimeout(cardioSearchTimeout);
+        cardioSearchTimeout = setTimeout(() => {
+            searchCardioExercises(query, suffix, isMobile);
+        }, 300);
+    });
+    
+    // Focus handler - show recent results if available
+    searchInput.addEventListener('focus', function() {
+        const query = this.value.trim();
+        if (query.length >= 2) {
+            searchCardioExercises(query, suffix, isMobile);
+        } else if (cardioExercises && Object.keys(cardioExercises).length > 0) {
+            // Show popular exercises when focusing empty field
+            showPopularCardioExercises(suffix);
+        }
+    });
+    
+    // Blur handler - hide results with delay to allow clicking
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => {
+            hideCardioResults(suffix);
+        }, 200);
+    });
+    
+    // Clear button handler
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            clearCardioSelection(suffix, isMobile);
+        });
+    }
+    
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', function(e) {
+        handleCardioKeyboardNavigation(e, suffix);
+    });
+    
+    // Click outside to close
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.cardio-search-container')) {
+            hideCardioResults('');
+            hideCardioResults('-mobile');
+        }
+    });
+}
+
+// Search through cardio exercises
+function searchCardioExercises(query, suffix, isMobile) {
+    const resultsContainer = document.getElementById(`cardio-search-results${suffix}`);
+    
+    if (!cardioExercises || Object.keys(cardioExercises).length === 0) {
+        console.warn('No cardio exercises loaded');
+        return;
+    }
+    
+    const searchQuery = query.toLowerCase();
+    const results = [];
+    
+    // Search through all exercise types
+    Object.keys(cardioExercises).forEach(type => {
+        cardioExercises[type].forEach(exercise => {
+            const nameMatch = exercise.name.toLowerCase().includes(searchQuery);
+            const typeMatch = type.toLowerCase().includes(searchQuery);
+            
+            if (nameMatch || typeMatch) {
+                results.push({
+                    ...exercise,
+                    type: type,
+                    relevance: nameMatch ? 2 : 1 // Higher relevance for name matches
+                });
+            }
+        });
+    });
+    
+    // Sort by relevance and name
+    results.sort((a, b) => {
+        if (a.relevance !== b.relevance) {
+            return b.relevance - a.relevance;
+        }
+        return a.name.localeCompare(b.name);
+    });
+    
+    displayCardioResults(results, suffix, isMobile);
+}
+
+// Display search results
+function displayCardioResults(results, suffix, isMobile) {
+    const resultsContainer = document.getElementById(`cardio-search-results${suffix}`);
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="cardio-search-no-results">
+                No exercises found. Try a different search term.
+            </div>
+        `;
+        resultsContainer.classList.add('show');
+        return;
+    }
+    
+    let html = '';
+    let currentType = '';
+    
+    results.forEach(exercise => {
+        // Add type header if it's a new type
+        if (exercise.type !== currentType) {
+            currentType = exercise.type;
+            const typeLabel = exercise.type.charAt(0).toUpperCase() + 
+                            exercise.type.slice(1).replace('_', ' ');
+            html += `<div class="cardio-group-header">${typeLabel}</div>`;
+        }
+        
+        html += `
+            <div class="cardio-search-item" 
+                 data-exercise-id="${exercise.id}"
+                 data-exercise-name="${exercise.name}"
+                 data-met-value="${exercise.met_value}"
+                 data-type="${exercise.type}">
+                <div class="cardio-exercise-name">${exercise.name}</div>
+                <div class="cardio-exercise-details">${exercise.met_value} METs • ${exercise.type.replace('_', ' ')}</div>
+            </div>
+        `;
+    });
+    
+    resultsContainer.innerHTML = html;
+    resultsContainer.classList.add('show');
+    
+    // Add click handlers
+    resultsContainer.querySelectorAll('.cardio-search-item').forEach(item => {
+        item.addEventListener('click', function() {
+            selectCardioExercise(this, suffix, isMobile);
+        });
+    });
+}
+
+// Show popular cardio exercises when focusing empty field
+function showPopularCardioExercises(suffix) {
+    if (!cardioExercises) return;
+    
+    const popular = [];
+    
+    // Get some popular exercises from each category
+    Object.keys(cardioExercises).forEach(type => {
+        const exercises = cardioExercises[type].slice(0, 2); // First 2 from each type
+        exercises.forEach(exercise => {
+            popular.push({
+                ...exercise,
+                type: type,
+                relevance: 1
+            });
+        });
+    });
+    
+    if (popular.length > 0) {
+        displayCardioResults(popular, suffix);
+    }
+}
+
+// Select a cardio exercise
+function selectCardioExercise(item, suffix, isMobile) {
+    const exerciseId = item.dataset.exerciseId;
+    const exerciseName = item.dataset.exerciseName;
+    const metValue = item.dataset.metValue;
+    
+    const searchInput = document.getElementById(`cardio-search-input${suffix}`);
+    const hiddenInput = document.getElementById(`cardio-exercise-id${suffix}`);
+    const clearBtn = document.getElementById(`cardio-clear${suffix}`);
+    
+    // Update inputs
+    searchInput.value = exerciseName;
+    searchInput.classList.add('selected');
+    hiddenInput.value = exerciseId;
+    
+    // Show clear button
+    if (clearBtn) {
+        clearBtn.classList.remove('d-none');
+    }
+    
+    // Store selection
+    selectedCardioExercises[isMobile ? 'mobile' : 'desktop'] = {
+        id: exerciseId,
+        name: exerciseName,
+        met_value: parseFloat(metValue)
+    };
+    
+    // Hide results
+    hideCardioResults(suffix);
+    
+    // Update calorie preview
+    updateCaloriePreview(isMobile);
+    
+    console.log('Selected cardio exercise:', exerciseName, 'ID:', exerciseId);
+}
+
+// Clear cardio selection
+function clearCardioSelection(suffix, isMobile) {
+    const searchInput = document.getElementById(`cardio-search-input${suffix}`);
+    const hiddenInput = document.getElementById(`cardio-exercise-id${suffix}`);
+    const clearBtn = document.getElementById(`cardio-clear${suffix}`);
+    
+    searchInput.value = '';
+    searchInput.classList.remove('selected');
+    hiddenInput.value = '';
+    
+    if (clearBtn) {
+        clearBtn.classList.add('d-none');
+    }
+    
+    selectedCardioExercises[isMobile ? 'mobile' : 'desktop'] = null;
+    
+    hideCardioResults(suffix);
+    updateCaloriePreview(isMobile);
+    
+    // Focus back to search input
+    searchInput.focus();
+}
+
+// Hide search results
+function hideCardioResults(suffix) {
+    const resultsContainer = document.getElementById(`cardio-search-results${suffix}`);
+    if (resultsContainer) {
+        resultsContainer.classList.remove('show');
+    }
+}
+
+// Keyboard navigation for search results
+function handleCardioKeyboardNavigation(e, suffix) {
+    const resultsContainer = document.getElementById(`cardio-search-results${suffix}`);
+    const items = resultsContainer.querySelectorAll('.cardio-search-item');
+    
+    if (items.length === 0) return;
+    
+    let highlighted = resultsContainer.querySelector('.cardio-search-item.highlighted');
+    let currentIndex = highlighted ? Array.from(items).indexOf(highlighted) : -1;
+    
+    switch (e.key) {
+        case 'ArrowDown':
+            e.preventDefault();
+            if (highlighted) highlighted.classList.remove('highlighted');
+            currentIndex = (currentIndex + 1) % items.length;
+            items[currentIndex].classList.add('highlighted');
+            items[currentIndex].scrollIntoView({ block: 'nearest' });
+            break;
+            
+        case 'ArrowUp':
+            e.preventDefault();
+            if (highlighted) highlighted.classList.remove('highlighted');
+            currentIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
+            items[currentIndex].classList.add('highlighted');
+            items[currentIndex].scrollIntoView({ block: 'nearest' });
+            break;
+            
+        case 'Enter':
+            e.preventDefault();
+            if (highlighted) {
+                const isMobile = suffix === '-mobile';
+                selectCardioExercise(highlighted, suffix, isMobile);
+            }
+            break;
+            
+        case 'Escape':
+            hideCardioResults(suffix);
+            break;
+    }
+}
+
 // Load cardio exercises
 async function loadCardioExercises() {
     try {
@@ -717,18 +1024,16 @@ function calculateCardioCalories(metValue, durationMinutes, heartRate = null, wa
 // ✅ ENHANCED: Update calorie preview with multiple input methods
 function updateCaloriePreview(isMobile = false) {
     const suffix = isMobile ? '-mobile' : '';
-    
-    const typeSelect = document.getElementById(`cardio-type-select${suffix}`);
+    const selectedExercise = selectedCardioExercises[isMobile ? 'mobile' : 'desktop'];
     const durationInput = document.getElementById(`duration-input${suffix}`);
     const heartRateInput = document.getElementById(`heart-rate-input${suffix}`);
     const wattsInput = document.getElementById(`watts-input${suffix}`);
     const distanceInput = document.getElementById(`distance-input${suffix}`);
     const caloriesPreview = document.getElementById(`calories-preview${suffix}`);
     
-    if (!typeSelect || !durationInput || !caloriesPreview) return;
+    if (!caloriesPreview || !selectedExercise || !durationInput) return;
     
-    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-    const metValue = selectedOption ? parseFloat(selectedOption.dataset.metValue) : 0;
+    const metValue = selectedExercise.met_value;
     const duration = parseFloat(durationInput.value) || 0;
     const heartRate = heartRateInput ? parseFloat(heartRateInput.value) : null;
     const watts = wattsInput ? parseFloat(wattsInput.value) : null;
@@ -742,48 +1047,78 @@ function updateCaloriePreview(isMobile = false) {
     }
 }
 
+// Initialize search when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for cardio exercises to load, then initialize search
+    if (typeof loadCardioExercises === 'function') {
+        loadCardioExercises().then(() => {
+            initCardioSearch();
+        });
+    } else {
+        // Fallback - try to initialize after a delay
+        setTimeout(initCardioSearch, 1000);
+    }
+});
+
+// Also initialize when cardio exercises are loaded
+const originalPopulateCardioSelects = populateCardioSelects;
+populateCardioSelects = function() {
+    // Call original function (if needed for backward compatibility)
+    if (typeof originalPopulateCardioSelects === 'function') {
+        originalPopulateCardioSelects();
+    }
+    
+    // Initialize search functionality
+    initCardioSearch();
+};
+
 // ✅ UPDATED: Add cardio session without sending weight/gender (backend gets from DB)
 async function addCardioSession(isMobile = false) {
     const suffix = isMobile ? '-mobile' : '';
     
-    // Prevent double-clicking
+    // Get the selected exercise ID from hidden input instead of select
+    const hiddenInput = document.getElementById(`cardio-exercise-id${suffix}`);
+    const selectedExercise = selectedCardioExercises[isMobile ? 'mobile' : 'desktop'];
+    
+    if (!selectedExercise || !hiddenInput.value) {
+        alert('Please select a cardio exercise first');
+        return;
+    }
+    
     const submitBtn = document.getElementById(`add-cardio-btn${suffix}`);
     if (submitBtn.disabled) return;
+    
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
     
-    const typeSelect = document.getElementById(`cardio-type-select${suffix}`);
+    // Get other form values...
     const durationInput = document.getElementById(`duration-input${suffix}`);
     const distanceInput = document.getElementById(`distance-input${suffix}`);
     const paceInput = document.getElementById(`pace-input${suffix}`);
     const heartRateInput = document.getElementById(`heart-rate-input${suffix}`);
     const wattsInput = document.getElementById(`watts-input${suffix}`);
     const notesInput = document.getElementById(`cardio-notes-input${suffix}`);
-    const ageInput = document.getElementById(`age-input${suffix}`); // If you have age input
     
     try {
         // Validate required fields
-        if (!typeSelect.value || !durationInput.value) {
-            alert('Please select a cardio exercise and enter duration');
+        if (!durationInput.value) {
+            alert('Please enter duration');
             return;
         }
         
         const cardioData = {
-            cardio_exercise_id: parseInt(typeSelect.value),
+            cardio_exercise_id: parseInt(hiddenInput.value),
             duration_minutes: parseFloat(durationInput.value),
-            distance_km: distanceInput.value ? parseFloat(distanceInput.value) : null,
-            avg_pace_min_per_km: paceInput.value ? parseFloat(paceInput.value) : null,
-            avg_heart_rate: heartRateInput.value ? parseInt(heartRateInput.value) : null,
-            watts: wattsInput.value ? parseInt(wattsInput.value) : null,
-            notes: notesInput.value || '',
-            // ✅ REMOVED: weight_kg and gender (backend gets from database)
-            // ✅ KEEP: age (still from form input since not in database)
-            age: ageInput && ageInput.value ? parseInt(ageInput.value) : userAge,
+            distance_km: distanceInput && distanceInput.value ? parseFloat(distanceInput.value) : null,
+            avg_pace_min_per_km: paceInput && paceInput.value ? parseFloat(paceInput.value) : null,
+            avg_heart_rate: heartRateInput && heartRateInput.value ? parseInt(heartRateInput.value) : null,
+            watts: wattsInput && wattsInput.value ? parseInt(wattsInput.value) : null,
+            notes: notesInput ? notesInput.value : '',
             date: currentSelectedDate,
             workout_name: document.querySelector('.workout-name-display')?.textContent || 'Mixed Session'
         };
         
-        console.log('Adding cardio session:', cardioData);
+        console.log('Adding cardio session with search data:', cardioData);
         
         const response = await fetch('/workout/add-cardio', {
             method: 'POST',
@@ -797,68 +1132,37 @@ async function addCardioSession(isMobile = false) {
         const result = await response.json();
         
         if (result.success) {
-            console.log('Cardio session added successfully:', result);
-            invalidateDateCache(currentSelectedDate);
-            
-            // ✅ INVALIDATE CACHE for current date
-            if (typeof invalidateCache === 'function' && typeof CACHE_KEYS !== 'undefined') {
-                const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-                if (cachedSessions[currentSelectedDate]) {
-                    delete cachedSessions[currentSelectedDate];
-                    setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-                    console.log('Cache invalidated for date:', currentSelectedDate);
-                }
-            }
+            console.log('Cardio session added successfully');
             
             // Clear form
-            typeSelect.value = '';
-            durationInput.value = '';
+            clearCardioSelection(suffix, isMobile);
+            if (durationInput) durationInput.value = '';
             if (distanceInput) distanceInput.value = '';
             if (paceInput) paceInput.value = '';
             if (heartRateInput) heartRateInput.value = '';
             if (wattsInput) wattsInput.value = '';
             if (notesInput) notesInput.value = '';
-            if (ageInput) ageInput.value = '';
             
             // Update calorie preview
             updateCaloriePreview(isMobile);
             
+            // Invalidate cache and refresh
+            invalidateDateCache(currentSelectedDate);
             getSessionWithCache(currentSelectedDate, function(data) {
-        console.log('Workout data refreshed after cardio addition');
-    });
+                console.log('Workout data refreshed after cardio addition');
+            });
         } else {
             console.error('Failed to add cardio session:', result);
-            if (result.error === 'Duplicate cardio session detected') {
-                alert('This cardio session was already added');
-            } else {
-                alert(result.error || 'Error adding cardio session');
-            }
+            alert(result.error || 'Error adding cardio session');
         }
     } catch (error) {
         console.error('Error adding cardio session:', error);
         alert('Network error adding cardio session');
     } finally {
-        // Re-enable button
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i class="fas fa-heart me-1"></i><span data-i18n="add-cardio">Add Cardio</span>`;
     }
 }
-
-// ✅ ENSURE MOBILE CARDIO FORM IS VISIBLE
-document.addEventListener('DOMContentLoaded', function() {
-    // Make sure mobile cardio section is visible
-    const mobileCardioSection = document.querySelector('.mobile-cardio-section');
-    if (mobileCardioSection) {
-        mobileCardioSection.style.display = 'block';
-    }
-    
-    // ✅ LOAD USER PROFILE DATA FIRST
-    loadUserProfileData().then(() => {
-        // Initialize cardio functionality after loading user data
-        loadCardioExercises();
-        setupCardioEventListeners();
-    });
-});
 
 // ✅ ENHANCED: Event listeners for cardio functionality (including new inputs)
 function setupCardioEventListeners() {
