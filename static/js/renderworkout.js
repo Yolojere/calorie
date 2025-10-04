@@ -9,26 +9,29 @@ let workoutTimer = {
     lastActivity: null,
     totalSeconds: 0,
     intervalId: null,
-    inactivityTimeout: null
+    inactivityTimeout: null,
+    pausedTime: 0,
+    pausedAt: null
 };
 const TIMER_STORAGE_KEY = 'workoutTimer';
 const TIMER_DATE_KEY = 'workoutTimerDate';
+
 function saveTimerState() {
     if (!workoutTimer.startTime) return;
     
-    const timerState = {
+    const state = {
         startTime: workoutTimer.startTime.toISOString(),
         endTime: workoutTimer.endTime ? workoutTimer.endTime.toISOString() : null,
         isActive: workoutTimer.isActive,
         lastActivity: workoutTimer.lastActivity ? workoutTimer.lastActivity.toISOString() : null,
-        totalSeconds: workoutTimer.totalSeconds,
-        date: currentSelectedDate || new Date().toISOString().split('T')[0]
+        totalSeconds: Math.floor(workoutTimer.totalSeconds || 0),        // ✅ Floor
+        pausedTime: Math.floor(workoutTimer.pausedTime || 0),           // ✅ Floor
+        pausedAt: workoutTimer.pausedAt ? workoutTimer.pausedAt.toISOString() : null
     };
     
-    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerState));
-    localStorage.setItem(TIMER_DATE_KEY, timerState.date);
-    
-    console.log('💾 Timer state saved:', timerState);
+    const currentDate = currentSelectedDate || new Date().toISOString().split('T')[0];
+    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(TIMER_DATE_KEY, currentDate);
 }
 function loadTimerState() {
     try {
@@ -40,20 +43,7 @@ function loadTimerState() {
         const timerState = JSON.parse(storedState);
         const currentDate = currentSelectedDate || new Date().toISOString().split('T')[0];
         
-        // Only restore timer if it's for the same date
         if (storedDate !== currentDate) {
-            console.log('Timer from different date, not restoring');
-            clearTimerState();
-            return false;
-        }
-        
-        // Check if timer is too old (more than 24 hours)
-        const startTime = new Date(timerState.startTime);
-        const now = new Date();
-        const hoursDiff = (now - startTime) / (1000 * 60 * 60);
-        
-        if (hoursDiff > 24) {
-            console.log('Timer too old, clearing');
             clearTimerState();
             return false;
         }
@@ -62,30 +52,33 @@ function loadTimerState() {
         workoutTimer.startTime = new Date(timerState.startTime);
         workoutTimer.endTime = timerState.endTime ? new Date(timerState.endTime) : null;
         workoutTimer.lastActivity = timerState.lastActivity ? new Date(timerState.lastActivity) : null;
-        workoutTimer.totalSeconds = timerState.totalSeconds || 0;
+        workoutTimer.totalSeconds = Math.floor(timerState.totalSeconds || 0);
+        workoutTimer.pausedTime = Math.floor(timerState.pausedTime || 0);
+        workoutTimer.pausedAt = timerState.pausedAt ? new Date(timerState.pausedAt) : null;
         
-        // ✅ FIX: Check if timer should still be active more reliably
         if (timerState.isActive && !workoutTimer.endTime) {
-            // Check for inactivity (20 minutes)
-            const lastActivity = workoutTimer.lastActivity || workoutTimer.startTime;
-            const inactiveTime = (now - lastActivity) / (1000 * 60); // minutes
+            // ✅ Timer was active - resume it WITHOUT adding refresh time as pause
+            workoutTimer.isActive = true;
+            workoutTimer.pausedAt = null; // ✅ CLEAR any pausedAt from refresh
             
-            if (inactiveTime > 20) {
-                console.log('Timer expired due to inactivity, stopping');
-                workoutTimer.isActive = false;
-                workoutTimer.endTime = new Date(lastActivity.getTime() + (20 * 60 * 1000)); // 20 minutes after last activity
-                saveTimerState();
-                return false;
-            } else {
-                // ✅ Timer is still active
-                workoutTimer.isActive = true;
-                resumeTimer();
-                console.log('🟢 Timer restored and resumed');
-                return true;
-            }
+            workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+            resetInactivityTimeout();
+            showTimerDisplay();
+            $('.timer-icon-clickable').addClass('active');
+            $('.stop-timer-btn').html('<i class="fas fa-pause"></i> Keskeytä');
+            console.log('🟢 Timer restored and resumed');
+            return true;
+        } else if (!timerState.isActive && !workoutTimer.endTime && workoutTimer.startTime) {
+            // Timer was paused - show as paused
+            workoutTimer.isActive = false;
+            showTimerDisplay();
+            updateTimerDisplay();
+            $('.timer-icon-clickable').removeClass('active');
+            $('.stop-timer-btn').html('<i class="fas fa-play"></i> Jatka');
+            console.log('⏸️ Timer restored in paused state');
+            return true;
         }
         
-        console.log('🔄 Timer state loaded but not active');
         return false;
     } catch (error) {
         console.error('Error loading timer state:', error);
@@ -119,7 +112,6 @@ function resumeTimer() {
 // Start workout timer when first activity occurs
 function startWorkoutTimer() {
     if (workoutTimer.isActive) {
-        // Timer already running, just update last activity
         updateLastActivity();
         return;
     }
@@ -128,24 +120,91 @@ function startWorkoutTimer() {
     workoutTimer.startTime = new Date();
     workoutTimer.isActive = true;
     workoutTimer.lastActivity = new Date();
-    workoutTimer.endTime = null; // Clear any previous end time
+    workoutTimer.endTime = null;
     
-    // ✅ IMPORTANT: Save state immediately after starting
     saveTimerState();
     
-    // Start the timer interval (update every second)
     workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
-    
-    // Reset inactivity timeout
     resetInactivityTimeout();
     
-    // Show timer in UI
+    // ✅ SIMPLIFIED: Just show timer display immediately
     showTimerDisplay();
 }
 
-// Stop workout timer
-function stopWorkoutTimer() {
-    if (!workoutTimer.isActive) return;
+// ✅ NEW: Separate resume function for when resuming from pause
+function resumeWorkoutTimer() {
+    console.log('▶️ Resuming workout timer');
+    
+    // ✅ Calculate and add paused duration
+    if (workoutTimer.pausedAt) {
+        const pauseDuration = Math.floor((new Date() - workoutTimer.pausedAt) / 1000); // Floor to whole seconds
+        workoutTimer.pausedTime = Math.floor(workoutTimer.pausedTime + pauseDuration); // Keep as integer
+        workoutTimer.pausedAt = null;
+        console.log(`Added ${pauseDuration}s to paused time. Total paused: ${workoutTimer.pausedTime}s`);
+    }
+    workoutTimer.isActive = true;
+    workoutTimer.lastActivity = new Date();
+    
+    // Restart interval
+    workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+    resetInactivityTimeout();
+    
+    // Save resumed state
+    saveTimerState();
+    
+    // Add active animation
+    $('.timer-icon-clickable').addClass('active');
+    
+    // Update button text
+    $('.stop-timer-btn').html('<i class="fas fa-pause"></i> Keskeytä');
+}
+
+// ✅ FIXED: Pause function (keep timer state)
+function pauseWorkoutTimer() {
+    console.log('⏸️ Pausing workout timer');
+    
+    workoutTimer.isActive = false;
+    workoutTimer.pausedAt = new Date(); // ✅ Record when paused
+    
+    // Clear intervals but keep the timer state
+    if (workoutTimer.intervalId) {
+        clearInterval(workoutTimer.intervalId);
+        workoutTimer.intervalId = null;
+    }
+    
+    if (workoutTimer.inactivityTimeout) {
+        clearTimeout(workoutTimer.inactivityTimeout);
+        workoutTimer.inactivityTimeout = null;
+    }
+    
+    // Save paused state to localStorage
+    saveTimerState();
+    
+    // Remove active animation
+    $('.timer-icon-clickable').removeClass('active');
+    
+    // Update button text
+    $('.stop-timer-btn').html('<i class="fas fa-play"></i> Jatka');
+}
+
+// ✅ UPDATED: Toggle function (this is what your button calls)
+function toggleWorkoutTimer() {
+    if (!workoutTimer.isActive && !workoutTimer.startTime) {
+        // First time starting - use startWorkoutTimer
+        startWorkoutTimer();
+        $('.stop-timer-btn').html('<i class="fas fa-pause"></i> Keskeytä');
+    } else if (!workoutTimer.isActive && workoutTimer.startTime) {
+        // Resume from pause
+        resumeWorkoutTimer();
+    } else {
+        // Pause active timer
+        pauseWorkoutTimer();
+    }
+}
+
+// ✅ KEEP: Stop function for complete termination (used when switching dates)
+function stopWorkoutTimer(saveToHistory = false) {
+    if (!workoutTimer.startTime) return;
     
     console.log('🔴 Stopping workout timer');
     workoutTimer.endTime = new Date();
@@ -166,6 +225,12 @@ function stopWorkoutTimer() {
         workoutTimer.totalSeconds = Math.floor((workoutTimer.endTime - workoutTimer.startTime) / 1000);
     }
     
+    if (saveToHistory) {
+        saveTimerState();
+    } else {
+        clearTimerState(); // Clear completely when switching dates
+    }
+    
     hideTimerDisplay();
 }
 
@@ -182,44 +247,105 @@ function resetInactivityTimeout() {
     }
     
     workoutTimer.inactivityTimeout = setTimeout(() => {
-        console.log('⏰ Ajastin pysäytetty 20 min inaktiivisuuden takia');
+        console.log('⏰ Ajastin pysäytetty 30 min inaktiivisuuden takia');
         stopWorkoutTimer();
-    }, 20 * 60 * 1000); // 20 minutes in milliseconds
+    }, 30 * 60 * 1000); // 30 minutes in milliseconds
 }
 
 // Update timer display in UI
 function updateTimerDisplay() {
-    if (!workoutTimer.isActive || !workoutTimer.startTime) return;
+    if (!workoutTimer.startTime) return;
     
     const now = new Date();
-    const elapsedSeconds = Math.floor((now - workoutTimer.startTime) / 1000);
-    const minutes = Math.floor(elapsedSeconds / 60);
-    const seconds = elapsedSeconds % 60;
+    let elapsed;
     
-    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    $('#workout-timer-display').text(timeString);
+    if (workoutTimer.isActive) {
+        // ✅ Floor both calculations to avoid decimals
+        elapsed = Math.floor((now - workoutTimer.startTime) / 1000) - Math.floor(workoutTimer.pausedTime);
+    } else {
+        // ✅ When paused, show time up to pause point
+        const pauseTime = workoutTimer.pausedAt || now;
+        elapsed = Math.floor((pauseTime - workoutTimer.startTime) / 1000) - Math.floor(workoutTimer.pausedTime);
+    }
+    
+    // ✅ Ensure elapsed is never negative and is a whole number
+    elapsed = Math.max(0, Math.floor(elapsed));
+    
+    const timeStr = formatTime(elapsed);
+    
+    // Update dropdown display
+    $('.timer-display-text').text(timeStr);
+    
+    workoutTimer.totalSeconds = elapsed;
+    if (workoutTimer.isActive) {
+        saveTimerState();
+    }
 }
+$(document).ready(function() {
+    // Toggle timer dropdown
+    $(document).on('click', '.timer-icon-clickable', function(e) {
+        e.stopPropagation();
+        $('#timer-dropdown').toggleClass('d-none');
+    });
+    
+    // Close dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#workout-timer-icon').length) {
+            $('#timer-dropdown').addClass('d-none');
+        }
+    });
+    
+    // Prevent dropdown from closing when clicking inside it
+    $(document).on('click', '#timer-dropdown', function(e) {
+        e.stopPropagation();
+    });
+});
 
 // Show timer display
 function showTimerDisplay() {
-    // Add timer display to UI if it doesn't exist
-    if (!$('#workout-timer-display').length) {
-        const timerHtml = `
-            <div id="workout-timer-container" class="timer-container mb-3">
-                <div class="timer-icon">⏱️</div>
-                <div id="workout-timer-display" class="timer-display">00:00</div>
-                <div class="timer-label">Kesto</div>
-            </div>
-        `;
-        // Insert timer at the top of the workout area
-        $('#workout-session-container').before(timerHtml);
+    const timerIcon = $('#workout-timer-icon');
+    
+    if (timerIcon.length) {
+        // ✅ Just remove d-none class - no fadeIn needed
+        timerIcon.removeClass('d-none');
+        
+        // Add active animation
+        $('.timer-icon-clickable').addClass('active');
+        
+        console.log('Timer icon displayed');
+    } else {
+        console.error('Timer icon container not found');
     }
-    $('#workout-timer-container').fadeIn();
 }
-
+function showTimerStartAnimation() {
+    console.log('🎬 Starting timer animation');
+    
+    const overlay = $('#timer-animation-overlay');
+    
+    // Force display and trigger reflow
+    overlay.removeClass('d-none');
+    overlay.css('display', 'flex');
+    
+    // Force a reflow to ensure the element is rendered
+    overlay[0].offsetHeight;
+    
+    // Hide overlay after animation completes
+    setTimeout(() => {
+        overlay.addClass('d-none');
+        overlay.css('display', 'none');
+        console.log('🎬 Timer animation completed');
+    }, 1500);
+}
 // Hide timer display
 function hideTimerDisplay() {
-    $('#workout-timer-container').fadeOut();
+    const timerIcon = $('#workout-timer-icon');
+    
+    // ✅ Simple class addition - no fadeOut needed
+    timerIcon.addClass('d-none');
+    $('.timer-icon-clickable').removeClass('active');
+    $('#timer-dropdown').addClass('d-none');
+    
+    console.log('Timer icon hidden');
 }
 
 // Calculate calories burned for weights (4 METs)
@@ -244,7 +370,6 @@ function getWorkoutTimerData() {
         calories: calculateWeightCalories()
     };
 }
-// Initialize timer on page load
 function initializeTimer() {
     console.log('🔧 Initializing timer system...');
     
@@ -252,9 +377,10 @@ function initializeTimer() {
     const restored = loadTimerState();
     
     if (restored) {
-        console.log('✅ Ajastin palautettu viime treeniltä');
+        console.log('🟢 Timer restored and active');
+        handleServerReconnection(); // Ensure display is working
     } else {
-        console.log('ℹ️ Ei aktiivista ajastinta palautettavana');
+        console.log('ℹ️ No active timer to restore');
     }
 }
 
@@ -292,6 +418,43 @@ function refreshTimerAfterDOMChange() {
         setTimeout(ensureTimerDisplay, 100);
     }
 }
+function handleServerReconnection() {
+    // Check if we have an active timer but server session expired
+    if (workoutTimer.isActive && workoutTimer.startTime) {
+        console.log('🔄 Server session expired, but timer is still active');
+        
+        // Try to restore timer display if missing
+        if (!document.getElementById('workout-timer-container')) {
+            showTimerDisplay();
+        }
+        
+        // Update the display immediately
+        updateTimerDisplay();
+        
+        // Restart the interval if it stopped
+        if (!workoutTimer.intervalId) {
+            workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+            console.log('Timer interval restarted after server reconnection');
+        }
+        
+        return true;
+    }
+    
+    return false;
+}
+// Detect when server session is restored
+function detectServerReconnection() {
+    // This runs on any successful AJAX call after a timeout
+    $(document).ajaxSuccess(function(event, xhr, settings) {
+        // If we have an active timer, ensure it's still displayed
+        if (workoutTimer.isActive) {
+            handleServerReconnection();
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', function() {
+    detectServerReconnection();
+});
 function renderWeekDates(dates) {
     const container = $("#week-dates-container");
     container.empty();
