@@ -12,12 +12,9 @@ function loadCurrentWeek() {
             console.warn("renderWeekDates function not loaded yet.");
         }
 
+        // ✅ FIXED: Only call getSessionWithCache - it now handles both strength + cardio
         getSessionWithCache(currentSelectedDate, function(sessionData) {
-            if (typeof renderWorkoutSession === "function") {
-                renderWorkoutSession(sessionData.session, sessionData.exercises, sessionData.comparisonData);
-            } else {
-                console.warn("renderWorkoutSession function not loaded yet.");
-            }
+            console.log('✅ Initial workout data loaded for', currentSelectedDate);
         });
     });
 }
@@ -29,9 +26,9 @@ function loadWorkoutSession(date) {
         '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
     );
     
-    // Use cached version of session loading
+    // ✅ FIXED: Use getSessionWithCache which now loads both strength + cardio
     getSessionWithCache(date, function(data) {
-        renderWorkoutSession(data.session, data.exercises);
+        console.log('✅ Complete workout session (strength + cardio) loaded for', date);
         initTooltips();
         
         // Restore scroll position after rendering
