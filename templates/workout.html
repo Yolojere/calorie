@@ -818,6 +818,58 @@
 
 }
 
+/* CARDIO STYLES */
+.workout-group.cardio .group-header {
+    background: linear-gradient(135deg, #ff6b6b, rgba(0,0,0,0.8)) !important;
+}
+
+.workout-group.cardio .group-items {
+    border-left: 3px solid #ff6b6b;
+    border-right: 3px solid #ff6b6b;
+    border-bottom: 3px solid #ff6b6b;
+}
+
+.calories-preview {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(109, 192, 213, 0.1);
+    border: 1px solid rgba(109, 192, 213, 0.3);
+}
+
+.exercise-notes {
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #aaa;
+    font-style: italic;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 4px;
+}
+
+/* Cardio form enhancements */
+#cardio-type-select,
+#cardio-type-select-mobile {
+    background-color: #121212 !important;
+    border: 1px solid #333 !important;
+    color: #eee !important;
+}
+
+#cardio-type-select option,
+#cardio-type-select-mobile option {
+    background-color: #1a1a1a;
+    color: #eee;
+}
+
+#cardio-type-select optgroup,
+#cardio-type-select-mobile optgroup {
+    background-color: #2a2a2a;
+    color: #6dc0d5;
+    font-weight: bold;
+}
+.mobile-cardio-section {
+    display: block !important;
+}
+
+
     /* exercise completed */
     .complete-exercise-options .fa-check {
     color: #4caf50;
@@ -1119,7 +1171,11 @@
         padding: 0 !important;
         background-color: var(--bg-tertiary) !important;
     }
-
+    /* toast */
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
     /* ===== BADGES & INDICATORS ===== */
     .rir-badge {
         display: inline-block;
@@ -1528,6 +1584,26 @@
     }
 
     @media (max-width: 768px) {
+            .mobile-cardio-section {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .mobile-cardio-section .collapse {
+        display: block !important;
+    }
+    
+    #cardio-type-select-mobile,
+    #duration-input-mobile,
+    #distance-input-mobile,
+    #pace-input-mobile,
+    #heart-rate-input-mobile,
+    #watts-input-mobile,
+    #cardio-notes-input-mobile {
+        display: block !important;
+        visibility: visible !important;
+    }
         .btn-jerey {
         display: inline-block;
         font-size: 10px !important;
@@ -1712,6 +1788,84 @@
             padding-left: 0px; 
         }
     }
+
+    /* WORKOUT TIMER */
+    .timer-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a1a, #535353);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    margin: 5px 0;
+    box-shadow: 0 4px 12px rgba(191, 191, 191, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timer-icon {
+    font-size: 1.3em;
+    margin-right: 10px;
+}
+
+.timer-display {
+    font-size: 1.6em;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    margin-right: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.timer-label {
+    font-size: 0.95em;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+/* Achievement card enhancements for time/calories breakdown */
+.time-breakdown, .calories-breakdown {
+    font-size: 0.8em;
+    margin-top: 4px;
+}
+
+.time-item, .calories-item {
+    margin: 2px 0;
+    opacity: 0.8;
+}
+
+/* Enhanced achievement grid for 6 cards */
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+@media (min-width: 768px) {
+    .achievement-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .achievement-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Make achievement cards slightly smaller to fit 6 cards nicely */
+.achievement-card {
+    min-height: 120px;
+    padding: 12px;
+}
+
+.achievement-value {
+    font-size: 1.3em;
+}
+
+.achievement-title {
+    font-size: 0.85em;
+}
     /* Analysis Overlay Styles */
 .workout-analysis-overlay {
     position: fixed;
@@ -2766,9 +2920,142 @@
                                 </button>
                             </div>
                         </div>
-                        
+                        </div>
                         
                 </div>
+<!-- Cardio Section -->
+<div class="grid-add-set">
+    <!-- Mobile cardio section (toggle + form) -->
+    <div class="mobile-toggle-section d-md-none">
+        <div class="mobile-toggle-header" data-bs-toggle="collapse" data-bs-target="#cardio-body" aria-expanded="false">
+            <h5 data-i18n="cardio">Cardio</h5>
+            <span class="toggle-arrow"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        </div>
+        
+        
+        <div class="mobile-toggle-content collapse hidden" id="cardio-body">
+            <!-- Cardio form content -->
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
+                    <select id="cardio-type-select-mobile" class="form-select">
+                        <option  data-i18n="selectCardio" value="">Select cardio exercise...</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <div class="col-6">
+                    <label class="form-label" data-i18n="durationMinutes">Duration (minutes)</label>
+                    <input type="number" id="duration-input-mobile" class="form-control" min="1" step="0.5" value="">
+                </div>
+                <div class="col-6">
+                    <label class="form-label" data-i18n="distanceKm">Distance (km)</label>
+                    <input type="number" id="distance-input-mobile" class="form-control" min="0" step="0.1" value="" data-i18n="optional" placeholder="optional">
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <div class="col-6">
+                    <label class="form-label" data-i18n="avgPace">Avg Pace (min/km)</label>
+                    <input type="number" id="pace-input-mobile" class="form-control" min="0" step="0.1" value="" data-i18n="optional" placeholder="optional">
+                </div>
+                <div class="col-6">
+                    <label class="form-label" data-i18n="avgHeartRate">Avg Heart Rate</label>
+                    <input type="number" id="heart-rate-input-mobile" class="form-control" min="50" max="220" value="" data-i18n="optional" placeholder="optional">
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <div class="col-6">
+                    <label class="form-label" data-i18n="watts">Watts</label>
+                    <input type="number" id="watts-input-mobile" class="form-control" min="0" value=""  data-i18n="optional" placeholder="Optional">
+                </div>
+                <div class="col-6 d-flex align-items-end">
+                    <div class="calories-preview" id="calories-preview-mobile" style="font-size: 12px; color: #6dc0d5; font-weight: bold;">
+                        Kalorit: --
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <label class="form-label" data-i18n="notes">Notes</label>
+                    <input type="text" id="cardio-notes-input-mobile" class="form-control"  data-i18n="optional_notes" placeholder="Optional notes about the cardio session">
+                </div>
+                <div class="col-12 d-flex align-items-end">
+                    <button id="add-cardio-btn-mobile" class="btn btn-jerew w-100">
+                        <i class="fas fa-heart me-1"></i>
+                        <span data-i18n="addCardio">Add Cardio</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- Desktop cardio form -->
+    <div class="card d-none d-md-block">
+        <div class="card-header">
+            <h5 data-i18n="cardio">Cardio</h5>
+        </div>
+        
+        <div class="card-body">
+            <!-- Desktop cardio form content -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" data-i18n="cardioType">Cardio Type</label>
+                    <select id="cardio-type-select" class="form-select">
+                        <option  data-i18n="selectCardio" value="">Select cardio exercise...</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" data-i18n="durationMinutes">Duration (min)</label>
+                    <input type="number" id="duration-input" class="form-control" min="1" step="0.5" value="">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" data-i18n="distanceKm">Distance (km)</label>
+                    <input type="number" id="distance-input" class="form-control" min="0" step="0.1" value="" placeholder="Optional">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" data-i18n="avgPace">Pace (min/km)</label>
+                    <input type="number" id="pace-input" class="form-control" min="0" step="0.1" value="" placeholder="Optional">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" data-i18n="avgHeartRate">Heart Rate</label>
+                    <input type="number" id="heart-rate-input" class="form-control" min="50" max="220" value="" placeholder="Optional">
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <div class="col-md-2">
+                    <label class="form-label" data-i18n="watts">Watts</label>
+                    <input type="number" id="watts-input" class="form-control" min="0" value="" placeholder="Optional">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-i18n="notes">Notes</label>
+                    <input type="text" id="cardio-notes-input" class="form-control" placeholder="Optional notes">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="calories-preview" id="calories-preview" style="font-size: 14px; color: #6dc0d5; font-weight: bold; padding: 8px;">
+                        Arvioitu Kulutus: --
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button id="add-cardio-btn" class="btn btn-jerew w-100">
+                        <i class="fas fa-heart me-1"></i>
+                        <span data-i18n="add-cardio">Add Cardio Session</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+        
+        
                 <div id="comparison-modal" class="modal fade" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
