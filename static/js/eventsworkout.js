@@ -289,21 +289,38 @@ $(document).on('keyup', '.set-input', function(e) {
     }
 });
 
-$(document).on("click", ".delete-item", function() {
+$(document).on("click", ".workout-table .delete-item", function() {
+    // Now only applies to delete buttons INSIDE workout tables
     const $button = $(this);
     const row = $button.closest("tr");
     const setId = row.data("set-id");
     
-
+    if (!setId) return; // Skip if no set ID
     
-    // Disable button & show spinner
     $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-    
-    // Call delete with button reference
     deleteSet(setId, $button);
 });
+// ✅ CARDIO-SPECIFIC delete handler
+$(document).on("click", ".cardio-delete-btn", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const sessionId = parseInt($(this).data('session-id'));
+    
+    if (!sessionId) {
+        console.error('No session ID found on cardio delete button');
+        return;
+    }
+    
+    console.log('Deleting cardio session:', sessionId);
+    deleteCardioSession(sessionId);
+});
+
 
 function handleSetUpdate() {
+    // 🟢 START TIMER ON SET EDIT
+    startWorkoutTimer();
+    
     const row = $(this).closest("tr");
     const repsInput = row.find(".set-reps");
     const weightInput = row.find(".set-weight");
@@ -316,11 +333,11 @@ function handleSetUpdate() {
     const repsVal = repsInput.val().trim();
     const weightVal = weightInput.val().trim();
 
-    if (repsVal === "" || weightVal === "" || isNaN(repsVal) || isNaN(weightVal)) {
+    if (!repsVal || !weightVal || isNaN(repsVal) || isNaN(weightVal)) {
         // Reset back to original values if invalid
         repsInput.val(repsInput.data("original"));
         weightInput.val(weightInput.data("original"));
-        return; 
+        return;
     }
 
     const setId = row.data("set-id");
@@ -336,7 +353,7 @@ function handleSetUpdate() {
         const newVolume = (reps * weight).toFixed(1);
         setTimeout(() => {
             volumeDisplay.text(newVolume);
-            row.addClass('set-updated');
+            row.addClass("set-updated");
         }, 300);
 
         $.post("/workout/update_set", {
@@ -347,28 +364,21 @@ function handleSetUpdate() {
             if (response.success) {
                 repsInput.data("original", reps);
                 weightInput.data("original", weight);
-                // Invalidate session cache for this date since we've modified it
-                const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
-                if (cachedSessions[date]) {
-                    delete cachedSessions[date];
-                    setCachedData(CACHE_KEYS.SESSIONS, cachedSessions);
-                }
+                
+                // ✅ FIXED: Use invalidateDateCache instead of direct cache manipulation
+                invalidateDateCache(date);
             } else {
                 alert("Error: " + response.error);
                 // Revert to original values on error
                 repsInput.val(repsInput.data("original"));
                 weightInput.val(weightInput.data("original"));
-                volumeDisplay.text(
-                    (repsInput.data("original") * weightInput.data("original")).toFixed(1)
-                );
+                volumeDisplay.text((repsInput.data("original") * weightInput.data("original")).toFixed(1));
             }
         }).fail(function() {
             // Revert to original values on network error
             repsInput.val(repsInput.data("original"));
             weightInput.val(weightInput.data("original"));
-            volumeDisplay.text(
-                (repsInput.data("original") * weightInput.data("original")).toFixed(1)
-            );
+            volumeDisplay.text((repsInput.data("original") * weightInput.data("original")).toFixed(1));
             alert("Network error. Please try again.");
         });
     }
@@ -376,6 +386,7 @@ function handleSetUpdate() {
 
 // Add this function to properly attach event handlers
 $(document).on('click', '.quick-add-set', function () {
+    startWorkoutTimer();
     const $exercise = $(this).closest('.exercise');
     const exerciseId = $exercise.data('exercise-id');
     const date = $(".workout-date.active").data("date");
@@ -467,7 +478,7 @@ $(document).on('click', '.quick-add-set', function () {
                 const weightVal = parseFloat($row.find(".set-weight").val() || 0);
                 $row.find(".volume-display").text((repsVal * weightVal).toFixed(1));
             });
-
+            invalidateDateCache(date);
         } else {
             alert("Error: " + response.error);
             console.error(response.error);
@@ -526,14 +537,14 @@ function loadWorkoutName() {
         workoutName.textContent = savedName;
         input.value = savedName;
     } else {
-        workoutName.textContent = "Nimetön Treeni :(";
-        input.value = "Nimetön Treeni :(";
+        workoutName.textContent = "Nimetön Treeni";
+        input.value = "Nimetön Treeni";
     }
 }
 
 // Save workout name for current date
 function saveEdit() {
-    const newName = input.value.trim() || "Nimetön Treeni :(";
+    const newName = input.value.trim() || "Nimetön Treeni";
     workoutName.textContent = newName;
 
     const key = "workoutName_" + getDateKey();
@@ -643,13 +654,18 @@ $(document).on('click', '#workout-name-suggestions-inline .suggestion-item', fun
     const workoutName = $(this).data('name');
     
     // Fill in the workout name
-    $('.workout-name-input:visible').val(workoutName);
-    
-    // Hide suggestions
+    $('.workout-name-input.visible').val(workoutName);
+    // ✅ UPDATE THE DISPLAY NAME IMMEDIATELY
+    $('.workout-name-display').text(workoutName);
+    // ✅ SAVE TO LOCALSTORAGE IMMEDIATELY
+    const currentDate = $('.workout-date.active').data('date') || currentSelectedDate || new Date().toISOString().split('T')[0];
+    const key = getWorkoutNameKey(currentDate);
+    localStorage.setItem(key, workoutName);
+
     $('#workout-name-suggestions-inline').hide().empty();
     
-    // Save the name immediately
-    saveEditWorkoutName();
+// ✅ TRIGGER BLUR TO EXIT EDIT MODE
+    $('.workout-name-input.visible').blur();
     
     // Show confirmation modal for copying the workout
     showCopyWorkoutConfirmationInline(sessionId, workoutName);
