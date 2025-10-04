@@ -26,7 +26,8 @@ function loadWorkoutSession(date) {
         '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>'
     );
     
-    // ✅ FIXED: Use getSessionWithCache which now loads both strength + cardio
+    // ✅ FIXED: Use getSessionWithCache which 
+    // now loads both strength + cardio
     getSessionWithCache(date, function(data) {
         console.log('✅ Complete workout session (strength + cardio) loaded for', date);
         initTooltips();
