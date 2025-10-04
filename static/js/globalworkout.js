@@ -16,6 +16,10 @@ let collapseState = {
     groups: {},
     exercises: {}
 };
+let cardioExercises = {};
+let userWeight = 70; // Default weight, should be loaded from user profile
+let userAge = 30; // Default age
+let userGender = 'male'; // Default gender
 let savedScrollPosition = { desktop: 0, mobile: 0 };
 let currentCommentSetId = null;
 // Store completed exercises state
