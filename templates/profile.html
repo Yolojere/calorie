@@ -98,7 +98,7 @@ input.form-control:-webkit-autofill {
         }
         .content-section .card-header {
     border-radius: 16px!important;
-    background: rgba(39, 39, 39, 0.6) !important;
+    background-color: #121212 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 .content-section .card-body {
@@ -320,24 +320,28 @@ input.form-control:-webkit-autofill {
         to { opacity: 1; transform: translateY(0); }
     }
 
-    .avatar-options {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        gap: 12px;
-        margin: 20px 0;
-        max-height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-    }
+.avatar-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+}
 
-    .avatar-option {
-        cursor: pointer;
-        border-radius: 50%;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        aspect-ratio: 1/1;
-        border: 2px solid transparent;
-    }
+
+.avatar-option {
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    aspect-ratio: 1/1;
+    border: 2px solid transparent;
+    /* Ensure minimum touch target */
+    min-width: 60px;
+    min-height: 60px;
+}
 
     .avatar-option img {
         width: 100%;
@@ -401,46 +405,52 @@ input.form-control:-webkit-autofill {
     }
     /* Icon side (left) */
 /* Base look for profile fields */
+.profile-field {
+    overflow: hidden;
+    display: flex;
+    border-radius: 25px;
+    border: 1px solid #444;
+    background-color: #121212;
+    transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
 .profile-field .input-group-text {
-    border-radius: 25px 0 0 25px !important; /* left pill */
-    background-color: #1b1b1b !important;
-    border: 1px solid #444 !important;
+    border: none !important;
+    background-color: transparent !important;
     color: #fff;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 25px 0 0 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0 12px;
 }
 .profile-field .input-group-text i {
-    font-size: 1.2rem;       /* adjust to match dumbbell/bullseye icons */
-    width: 1.5rem;           /* ensures square container if needed */
-    text-align: center;
-    display: inline-block;
+    font-size: 1.2rem;
 }
 .profile-field .form-control {
-    border-radius: 0 25px 25px 0 !important; /* square left, pill right */
-    background-color: #1b1b1b !important;
-    border: 1px solid #444 !important;
-    border-left: 0 !important; /* remove overlap border */
+    border: none !important;
+    border-radius: 0 25px 25px 0;
+    background-color: transparent;
     color: #fff;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: none;
+    transition: color 0.3s ease;
 }
 .profile-field .input-group-text {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-/* Hover effect on the entire group */
-.profile-field:hover .input-group-text,
-.profile-field:hover .form-control {
-    background-color: #3f3f3f !important;
-    transform: scale(1.02);
+    pointer-events: none;
 }
 
+
 /* Active (clicked/focused) effect */
-.profile-field:active .input-group-text,
-.profile-field:active .form-control,
-.profile-field .form-control:focus {
-    background-color: #1b1b1b !important;
-    transform: scale(0.99);
-    box-shadow: 0 0 0 2px rgba(63, 63, 63, 0.5);
+.profile-field:focus-within {
+    border-color: #777;
+    background-color: #181818;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+}
+.profile-field:focus-within .form-control {
+    color: #eee;
 }
  
     /* Icons */
@@ -686,6 +696,12 @@ input.form-control:-webkit-autofill {
     padding: 8px 0;
 }
 /* Responsive adjustments */
+@media (min-width: 768px) {
+  .avatar-modal {
+    align-items: flex-start;
+    padding-top: 30px;
+  }
+}
 @media (max-width: 576px) {
     .social-dropdown {
         right: 0;
@@ -759,6 +775,13 @@ input.form-control:-webkit-autofill {
 
     }
      @media (max-width: 576px) {
+        
+            .avatar-options {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 8px;
+        max-height: 250px;
+    }
             .avatar-modal {
         align-items: flex-start; /* align to top */
         padding-top: 40px;       /* optional spacing from top */
@@ -767,7 +790,10 @@ input.form-control:-webkit-autofill {
         .avatar-options {
             grid-template-columns: repeat(3, 1fr);
         }
-        
+            .avatar-option {
+        min-width: 50px;
+        min-height: 50px;
+    }
         .card-body.p-4 {
             padding: 1.5rem !important;
         }
@@ -779,7 +805,58 @@ input.form-control:-webkit-autofill {
         .metric-value {
             font-size: 1.5rem;
         }
+            .avatar-modal-content {
+        width: 95%;
+        max-width: none;
+        padding: 20px;
+        margin: 10px;
+        max-height: 90vh;
+        overflow-y: auto;
     }
+    
+    .avatar-modal {
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+    }
+    @media (max-width: 480px) {
+    .avatar-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        padding: 6px;
+    }
+    
+    .avatar-option {
+        min-width: 45px;
+        min-height: 45px;
+    }
+        .avatar-modal-content {
+        padding: 15px;
+        margin: 5px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+@media (max-width: 360px) {
+    .avatar-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 4px;
+        max-height: 200px;
+    }
+    
+    .avatar-option {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
 </style>
 {% endblock %}
 
@@ -927,7 +1004,9 @@ input.form-control:-webkit-autofill {
             </div>
             <div class="social-modal-body">
                 <input type="text" id="social-handle-input" data-i18n="enter_handle" placeholder="Enter your handle" autocomplete="off">
-                <small class="text-muted d-block mt-2" data-i18n="handle_instructions">Enter your username without @ symbol</small>
+              
+                <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
+   
             </div>
             <div class="social-modal-footer">
                 <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle" data-i18n="cancel">Cancel</button>
