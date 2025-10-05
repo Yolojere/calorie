@@ -367,6 +367,11 @@
             border: 1px solid #444;
             margin-top: 20px;
         }
+        @media (max-width: 360px) {
+    .navbar-brand.d-md-inline {
+        display: none !important; /* Hide brand text completely */
+    }
+}
     </style>
     {% block head %}{% endblock %}
 </head>
