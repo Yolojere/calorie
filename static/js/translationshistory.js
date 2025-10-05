@@ -55,7 +55,7 @@ const translations = {
     c: "C",
     f: "F",
     p: "P",
-
+    duration: "Duration",
 
     // Food log
     today: "Today",
@@ -239,7 +239,6 @@ const translations = {
     session: "Session",
     date: "Date",
     exercises: "Exercises",
-    duration: "Duration",
     exercise: "Exercise",
 
 
@@ -561,7 +560,7 @@ const translations = {
     session: "Harjoitus",
     date: "Päivämäärä",
     exercises: "Liikkeet",
-    duration: "Kesto",
+    duration: "Aika",
     exercise: "Liike",
 
 
@@ -609,7 +608,7 @@ const translations = {
     no_weekly_data: "Ei viikottaista dataa saatavilla",
     keep_tracking_weekly: "Jatka aterioidesi seuraamista nähdäksesi viikottaiset ravintotrendit",
     date_period: "Päivämäärä / Ajanjakso",
-    sessions: "Sessiot",
+    sessions: "Harjoitukset",
     muscle_group: "Lihasryhmä",
     muscle_groups: "Lihasryhmät",
     sets: "Sarjat",
