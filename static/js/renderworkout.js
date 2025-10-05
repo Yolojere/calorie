@@ -1194,7 +1194,7 @@ function showWorkoutResults(comparisonData, achievements) {
             
             <div class="achievement-card glass">
                 <div class="achievement-icon">⏱️</div>
-                <div class="achievement-title">Treenin Kesto</div>
+                <div class="achievement-title">Treenin Aika</div>
                 <div class="achievement-value">${formatDuration(totalDuration)}</div>
                 <div class="achievement-change neutral">
                     <div class="time-breakdown">
