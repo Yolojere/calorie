@@ -258,7 +258,7 @@ const translations = {
     addCardio:"Lisää Suoritus",
     cardio: "Cardio",
     cardioType: "Cardio tyyppi",
-    durationMinutes: "Kesto",
+    durationMinutes: "Aika (Minuuttia)",
     king: "Tästä lähtien sun toinen nimi on ennätys.",
     winner: "Ding Ding!",
     holdup: "No nyt lähti!",
@@ -368,7 +368,7 @@ const translations = {
     session: "Harjoitus",
     date: "Päivämäärä",
     exercises: "Liikkeet",
-    duration: "Kesto",
+    duration: "Aika",
     exercise: "Liike",
 
     // Empty states
