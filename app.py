@@ -1434,7 +1434,7 @@ def search_foods():
     # Visibility clause & parameters
     if is_admin:
         visibility_clause = "TRUE"
-        params = [user_id]  # only for usage join
+        params = [user_id]  # for usage join
     else:
         visibility_clause = "(f.owner_id IS NULL OR f.owner_id = %s)"
         params = [user_id, user_id]  # one for JOIN, one for visibility
@@ -1450,31 +1450,29 @@ def search_foods():
         """
         cursor.execute(sql, params + [limit, offset])
     else:
+        # Split query into separate keywords
+        words = query.split()
+
+        # Build AND conditions like:
+        # LOWER(f.name) LIKE %word1% AND LOWER(f.name) LIKE %word2% ...
+        word_conditions = " AND ".join([f"LOWER(f.name) LIKE %s" for _ in words])
+        word_params = [f"%{w}%" for w in words]
+
         sql = f"""
             SELECT f.*, COALESCE(u.count, 0) AS usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
             WHERE {visibility_clause}
-              AND (LOWER(f.name) LIKE %s OR LOWER(f.name) LIKE %s OR f.ean = %s)
+              AND (
+                    {word_conditions}
+                    OR f.ean = %s
+                  )
             ORDER BY 
-                CASE 
-                    WHEN LOWER(f.name) LIKE %s THEN 0
-                    WHEN LOWER(f.name) LIKE %s THEN 1
-                    ELSE 2
-                END,
                 usage DESC,
                 name ASC
             LIMIT %s OFFSET %s
         """
-        cursor.execute(sql, params + [
-            f"{query}%",   # starts with
-            f"%{query}%",  # contains
-            query,         # EAN exact
-            f"{query}%",   # order by startswith
-            f"%{query}%",  # order by contains
-            limit,
-            offset
-        ])
+        cursor.execute(sql, params + word_params + [query, limit, offset])
 
     foods = cursor.fetchall()
     conn.close()
@@ -1496,7 +1494,6 @@ def search_foods():
         result.append(d)
 
     return jsonify(result)
-
     
 
 @app.route('/get_food_details', methods=['POST'])
@@ -3068,6 +3065,23 @@ def delete_exercise():
     finally:
         conn.close()
 
+def format_duration(total_seconds):
+    """Convert seconds to human readable format like '1h 23m' or '45m' or '2h'"""
+    if not total_seconds or total_seconds <= 0:
+        return "0m"
+    
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    
+    if hours > 0 and minutes > 0:
+        return f"{hours}h {minutes}m"
+    elif hours > 0:
+        return f"{hours}h"
+    elif minutes > 0:
+        return f"{minutes}m"
+    else:
+        return "< 1m"
+        
 @app.route('/workout/history', methods=['GET'])
 @login_required
 def workout_history():
@@ -3079,10 +3093,13 @@ def workout_history():
 
     try:
         if period == 'daily':
-            # Get daily totals
+            # Get daily totals with NEW FIELDS: duration, calories, and workout names
             cursor.execute('''
                 SELECT 
                     s.date,
+                    s.name as workout_name,
+                    s.total_duration_seconds,
+                    s.total_calories_burned,
                     COUNT(ws.id) AS total_sets,
                     SUM(ws.reps) AS total_reps,
                     SUM(ws.volume) AS total_volume
@@ -3090,7 +3107,7 @@ def workout_history():
                 LEFT JOIN workout_sets ws ON s.id = ws.session_id
                 LEFT JOIN exercises e ON ws.exercise_id = e.id
                 WHERE s.user_id = %s
-                GROUP BY s.date
+                GROUP BY s.date, s.id, s.name, s.total_duration_seconds, s.total_calories_burned
                 ORDER BY s.date DESC
                 LIMIT 30;
             ''', (user_id,))
@@ -3122,9 +3139,17 @@ def workout_history():
                             'total_volume': float(m['volume'] or 0)
                         }
 
+                # Format duration from seconds to human-readable
+                duration_seconds = row['total_duration_seconds'] or 0
+                duration_formatted = format_duration(duration_seconds)
+                
                 history.append({
                     'date': date,
-                    'sessions_count': len(set([date])),  # adjust if multiple sessions per day
+                    'workout_name': row['workout_name'] or 'Unnamed Workout',  # ✅ NEW
+                    'duration_seconds': duration_seconds,                      # ✅ NEW  
+                    'duration_formatted': duration_formatted,                  # ✅ NEW
+                    'calories_burned': float(row['total_calories_burned'] or 0), # ✅ NEW
+                    'sessions_count': len(set([date])),
                     'total_sets': row['total_sets'] or 0,
                     'total_reps': row['total_reps'] or 0,
                     'total_volume': float(row['total_volume'] or 0),
@@ -3135,10 +3160,14 @@ def workout_history():
             date_trunc = 'week' if period == 'weekly' else 'month'
             period_limit = 12 if period == 'weekly' else 6
 
+            # Updated query to include duration and calories for weekly/monthly
             cursor.execute(f'''
                 SELECT 
                     DATE_TRUNC('{date_trunc}', s.date)::DATE AS period_start,
                     s.id AS session_id,
+                    s.name as workout_name,
+                    s.total_duration_seconds,
+                    s.total_calories_burned,
                     e.muscle_group,
                     ws.reps,
                     ws.volume
@@ -3156,15 +3185,22 @@ def workout_history():
                 if period_start not in period_map:
                     period_map[period_start] = {
                         'sessions': set(),
+                        'workout_names': set(),          # ✅ NEW: Track unique workout names
+                        'total_duration_seconds': 0,    # ✅ NEW
+                        'total_calories_burned': 0.0,   # ✅ NEW
                         'muscles': {},
                         'total_sets': 0,
                         'total_reps': 0,
                         'total_volume': 0.0
                     }
 
-                # Track sessions
+                # Track sessions and aggregate duration/calories
                 if row['session_id']:
                     period_map[period_start]['sessions'].add(row['session_id'])
+                    
+                    # Add workout name if available
+                    if row['workout_name']:
+                        period_map[period_start]['workout_names'].add(row['workout_name'])
 
                 # Track muscles
                 if row['muscle_group']:
@@ -3186,10 +3222,40 @@ def workout_history():
                         period_map[period_start]['total_reps'] += row['reps']
                         period_map[period_start]['total_volume'] += float(row['volume'] or 0)
 
-            # Convert to final history list
+            # Convert to final history list and fix double-counting
             history = []
             for period_start, data in sorted(period_map.items(), reverse=True):
+                
+                # Get actual session totals to avoid double counting
+                cursor.execute(f'''
+                    SELECT 
+                        SUM(DISTINCT s.total_duration_seconds) as actual_duration,
+                        SUM(DISTINCT s.total_calories_burned) as actual_calories
+                    FROM workout_sessions s
+                    WHERE s.user_id = %s 
+                    AND DATE_TRUNC('{date_trunc}', s.date)::DATE = %s
+                ''', (user_id, period_start))
+                
+                actual_totals = cursor.fetchone()
+                actual_duration = actual_totals['actual_duration'] if actual_totals else 0
+                actual_calories = actual_totals['actual_calories'] if actual_totals else 0
+                
+                # Format duration
+                duration_formatted = format_duration(actual_duration or 0)
+                
+                # Create workout names summary
+                workout_names_list = list(data['workout_names'])
+                if len(workout_names_list) > 2:
+                    workout_names_display = f"{', '.join(workout_names_list[:2])} +{len(workout_names_list)-2} more"
+                else:
+                    workout_names_display = ', '.join(workout_names_list) if workout_names_list else 'Various Workouts'
+
                 entry = {
+                    'workout_names': workout_names_list,                    # ✅ NEW: List of all workout names
+                    'workout_names_display': workout_names_display,        # ✅ NEW: Formatted display string
+                    'duration_seconds': actual_duration or 0,              # ✅ NEW
+                    'duration_formatted': duration_formatted,              # ✅ NEW
+                    'calories_burned': float(actual_calories or 0),        # ✅ NEW
                     'sessions_count': len(data['sessions']),
                     'total_sets': data['total_sets'],
                     'total_reps': data['total_reps'],
