@@ -2716,6 +2716,11 @@
         font-size: 1.2rem;
     }
     }
+    @media (max-width: 360px) {
+    .navbar-brand.d-md-inline {
+        display: none !important; /* Hide brand text completely */
+    }
+}
     </style>
 </head>
 <body>
@@ -3280,7 +3285,7 @@
                             <div id="timer-dropdown" class="timer-dropdown d-none">
                     <div class="timer-dropdown-content">
                         <div class="timer-display-text" style="color: #ffffff">00:00</div>
-                        <div class="timer-label">Kesto</div>
+                        <div class="timer-label">Aika</div>
                         <button class="btn btn-jere stop-timer-btn" onclick="toggleWorkoutTimer()">
                             <i class="fas fa-pause"></i> Keskeytä
                         </button>
