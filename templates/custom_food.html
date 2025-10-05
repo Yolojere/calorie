@@ -537,7 +537,12 @@
 
 #scanningOverlay {
     backdrop-filter: blur(2px);
-}               
+}  
+@media (max-width: 360px) {
+    .navbar-brand.d-md-inline {
+        display: none !important; /* Hide brand text completely */
+    }
+}             
     </style>
 </head>
 <body>
