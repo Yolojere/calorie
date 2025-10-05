@@ -33,6 +33,7 @@ const translations = {
     calculate_bmr_tdee_description: "Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE)",
     
     // Personal Information
+    handle_instructions: "Enter your username without @ symbol",
     personal_information: "Personal Information",
     male: "Male",
     female: "Female",
@@ -396,6 +397,7 @@ const translations = {
     calculate_bmr_tdee_description: "Laske perusaineenvaihdunta (BMR) ja kokonaisenergiankulutus (TDEE)",
     
     // Personal Information
+    handle_instruction: "Tunnus ilman @ merkkiä",
     personal_information: "Henkilötiedot",
     male: "Mies",
     female: "Nainen",
@@ -673,7 +675,7 @@ const translations = {
     // Additional status messages
     action: "Toiminto",
       account: "Tili",
-    account_profile: "Tilisi Profiili",
+    account_profile: "Profiili",
     account_type: "Tilin Tyyppi",
     general_info: "Yleiset Tiedot",
     full_name: "Koko Nimi",
