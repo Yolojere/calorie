@@ -10,7 +10,12 @@ function saveSet(isMobile = false) {
     
     saveScrollPosition();
     
-    const exerciseId = document.getElementById(`exercise-select-value${isMobile ? '-mobile' : ''}`).value;
+    const exerciseEl = document.getElementById(`exercise-select${isMobile ? '-mobile' : ''}`);
+    if (!exerciseEl) {
+        console.error("Exercise select element not found!");
+        return; // or handle it gracefully
+    }
+    const exerciseId = exerciseEl.value;
     const reps = isMobile ? $("#reps-input-mobile").val() : $("#reps-input").val();
     const weight = isMobile ? $("#weight-input-mobile").val() : $("#weight-input").val();
     const muscleGroup = isMobile ? $("#muscle-group-select-mobile").val() : $("#muscle-group-select").val();
