@@ -28,13 +28,67 @@ p {
     color: #ccc;
     line-height: 1.6;
 }
+.language-toggle {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+.language-toggle a {
+    color: #1e90ff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.language-toggle a:hover {
+    color: #63b3ed;
+}
+hr {
+    border-color: #555;
+    margin: 2rem 0;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-page">
     <div class="card">
-        <h3>Privacy Policy</h3>
+
+        <!-- Language toggle links -->
+        <div class="language-toggle">
+            <a href="#finnish">Suomeksi</a>
+            <a href="#english">In English</a>
+        </div>
+
+        <!-- Finnish Privacy Policy -->
+        <h3 id="finnish">Tietosuojakäytäntö</h3>
+        <p>Yksityisyytesi on meille tärkeä. Tämä käytäntö selittää, mitä tietoja keräämme ja miten käytämme niitä.</p>
+
+        <h4>Keräämämme tiedot</h4>
+        <p>- Tilitiedot, kuten käyttäjänimi, sähköposti ja valinnaiset profiilitiedot.<br>
+           - Sinun antamasi tiedot, kuten kirjattuja aterioita, ravintotietoja ja asetuksia.<br>
+           - OAuth-kirjautumistiedot palveluntarjoajilta, kuten Google, GitHub tai Facebook (vain sähköposti ja profiili-ID).</p>
+
+        <h4>Kuinka käytämme tietojasi</h4>
+        <p>- Tarjotaksemme ja parantaaksemme Nutrition Tracker -palvelua.<br>
+           - Mahdollistaaksemme turvallisen kirjautumisen ja tilisi käytön.<br>
+           - Kommunikoidaksemme tärkeitä päivityksiä (emme koskaan lähetä roskapostia).</p>
+
+        <h4>Tietojen jakaminen</h4>
+        <p>Emme myy henkilökohtaisia tietojasi. Jaamme tietoja vain luotettujen kolmansien osapuolien kanssa, kun se on tarpeen todennusta (OAuth-palveluntarjoajat) tai lain vuoksi.</p>
+
+        <h4>Tietoturva</h4>
+        <p>Käytämme salaus- ja turvallisuuskäytäntöjä suojataksemme tietojasi. Kukaan järjestelmä ei kuitenkaan ole 100 % turvallinen, joten käytä vahvaa salasanaa ja pidä se turvassa.</p>
+
+        <h4>Oikeutesi</h4>
+        <p>Voit pyytää tietojesi tarkastelua tai poistamista ottamalla meihin yhteyttä.</p>
+
+        <h4>Yhteystiedot</h4>
+        <p>Jos sinulla on kysyttävää, ota yhteyttä osoitteeseen <a href="mailto:admin@trackyou.fi" class="accent-color">admin@trackyou.fi</a>.</p>
+
+        <hr>
+
+        <!-- English Privacy Policy -->
+        <h3 id="english">Privacy Policy</h3>
         <p>Your privacy is important to us. This policy explains what information we collect and how we use it.</p>
 
         <h4>Information We Collect</h4>
@@ -57,7 +111,7 @@ p {
         <p>You may request to access or delete your data by contacting us.</p>
 
         <h4>Contact</h4>
-        <p>If you have questions, contact us at <a href="mailto:support@trackyou.onrender.com" class="accent-color">support@trackyou.onrender.com</a>.</p>
+        <p>If you have questions, contact us at <a href="mailto:admin@trackyou.fi" class="accent-color">admin@trackyou.fi</a>.</p>
     </div>
 </div>
 {% endblock %}
