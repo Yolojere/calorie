@@ -28,13 +28,62 @@ p {
     color: #ccc;
     line-height: 1.6;
 }
+.language-toggle {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+.language-toggle a {
+    color: #1e90ff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.language-toggle a:hover {
+    color: #63b3ed;
+}
+hr {
+    border-color: #555;
+    margin: 2rem 0;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-page">
     <div class="card">
-        <h3>Terms of Service</h3>
+
+        <!-- Language toggle links -->
+        <div class="language-toggle">
+            <a href="#finnish">Suomeksi</a>
+            <a href="#english">In English</a>
+        </div>
+
+        <!-- Finnish Terms of Service -->
+        <h3 id="finnish">Käyttöehdot</h3>
+        <p>Käyttämällä Track You -palvelua hyväksyt seuraavat ehdot:</p>
+
+        <h4>Palvelun käyttö</h4>
+        <p>- Tilin luomiseen on oltava vähintään 13-vuotias.<br>
+           - Olet vastuussa tilisi turvallisuuden ylläpitämisestä.<br>
+           - Sitoudut olemaan käyttämättä palvelua väärin (esim. hakkeroiminen, roskapostin lähettäminen tai palvelun häiritseminen).</p>
+
+        <h4>Terveysvastuu</h4>
+        <p>Track You -palvelu on tarkoitettu vain tiedonlähteeksi. Se ei korvaa ammatillista lääketieteellistä neuvontaa. Konsultoi aina terveydenhuollon ammattilaista ennen suuria muutoksia ruokavaliossa tai liikuntarutiineissa.</p>
+
+        <h4>Tilin lopettaminen</h4>
+        <p>Pidätämme oikeuden keskeyttää tai poistaa tilit, jotka rikkovat näitä ehtoja.</p>
+
+        <h4>Vastuun rajoitus</h4>
+        <p>Teemme parhaamme tarjotaksemme luotettavan palvelun, mutta emme voi taata keskeytyksetöntä käyttöä. Emme ole vastuussa palvelun käytöstä aiheutuvista menetyksistä tai vahingoista.</p>
+
+        <h4>Ehtojen muutokset</h4>
+        <p>Voi olla, että päivitämme näitä ehtoja aika ajoin. Palvelun jatkaminen tarkoittaa, että hyväksyt päivitetyt ehdot.</p>
+
+        <hr>
+
+        <!-- English Terms of Service -->
+        <h3 id="english">Terms of Service</h3>
         <p>By using Track You, you agree to the following terms:</p>
 
         <h4>Use of Service</h4>
