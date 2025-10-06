@@ -36,7 +36,6 @@ logging.basicConfig(level=logging.DEBUG)
 # Load environment variables
 load_dotenv()
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.zoho.eu')
@@ -46,6 +45,7 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('DEFAULT_MAIL_SENDER')
+mail = Mail(app)
 app.config['OAUTH_PROVIDERS'] = {
     'google': {
         'client_id': os.getenv('GOOGLE_CLIENT_ID'),
@@ -836,24 +836,56 @@ def format_date(date_str):
 
 # Email functions
 def send_reset_email(user):
+    """
+    Sends a password reset email using Zoho SMTP (SSL, port 465)
+    """
     token = user.get_reset_token()
-    msg = MIMEText(f'''Nollataksesi salasanasi, klikkaa alla olevaa linkkiä:
+
+    body = f"""Hei {user.username},
+
+Nollataksesi salasanasi, klikkaa alla olevaa linkkiä:
 {url_for('reset_token', token=token, _external=True)}
 
-jos et ole pyytänyt salasanan nollausta, voit jättää tämän viestin huomioimatta.
-''')
-    msg['Subject'] = 'Password Reset Request'
-    msg['From'] = app.config['MAIL_USERNAME']
+Jos et ole pyytänyt salasanan nollausta, voit jättää tämän viestin huomioimatta.
+"""
+    msg = MIMEText(body)
+    msg['Subject'] = 'Salasanan nollaus / Password Reset'
+    msg['From'] = current_app.config['MAIL_USERNAME']
     msg['To'] = user.email
-    
+
     try:
-        with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
-            server.starttls()
-            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        # Enable debug output
+        current_app.logger.info(f"Attempting to send email using server: {current_app.config['MAIL_SERVER']}:{current_app.config['MAIL_PORT']}")
+        current_app.logger.info(f"Username: {current_app.config['MAIL_USERNAME']}")
+        
+        with smtplib.SMTP_SSL(
+            current_app.config['MAIL_SERVER'],
+            current_app.config['MAIL_PORT']
+        ) as server:
+            # Enable SMTP debug output
+            server.set_debuglevel(1)  # Add this for detailed SMTP logs
+            
+            current_app.logger.info("SMTP connection established")
+            
+            server.login(
+                current_app.config['MAIL_USERNAME'],
+                current_app.config['MAIL_PASSWORD']
+            )
+            
+            current_app.logger.info("SMTP authentication successful")
+            
             server.send_message(msg)
+            current_app.logger.info(f"Email sent successfully to {user.email}")
+            
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        current_app.logger.error(f"SMTP Authentication error: {e}")
+        return False
+    except smtplib.SMTPException as e:
+        current_app.logger.error(f"SMTP error: {e}")
+        return False
     except Exception as e:
-        app.logger.error(f"Error sending email: {e}")
+        current_app.logger.error(f"General error sending email to {user.email}: {e}")
         return False
 
 # Admin decorator
