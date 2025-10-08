@@ -367,6 +367,8 @@ function handleSetUpdate() {
                 
                 // ✅ FIXED: Use invalidateDateCache instead of direct cache manipulation
                 invalidateDateCache(date);
+                getSessionWithCache(date, function(data) {
+                    });
             } else {
                 alert("Error: " + response.error);
                 // Revert to original values on error
