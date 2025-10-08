@@ -315,28 +315,72 @@ $(document).on("click", ".cardio-delete-btn", function(e) {
     console.log('Deleting cardio session:', sessionId);
     deleteCardioSession(sessionId);
 });
+function recalcSessionTotals() {
+    let totalSets = 0;
+    let totalVolume = 0;
 
+    $(".workout-group").each((_, groupEl) => {
+        const $group = $(groupEl);
+        $group.find(".exercise-sets tr.set-row").each((_, row) => {
+            const $row = $(row);
+            const reps = parseFloat($row.find(".set-reps").val()) || 0;
+            const weight = parseFloat($row.find(".set-weight").val()) || 0;
+            totalSets += 1;
+            totalVolume += reps * weight;
+        });
+    });
 
+    $("#session-total-sets").text(`${totalSets} sets`);
+    $("#session-total-volume").text(`${totalVolume.toFixed(1)} kg`);
+}
+function recalcGroupTotals($group) {
+    let totalSets = 0;
+    let totalVolume = 0;
+
+    $group.find(".exercise").each((_, exerciseEl) => {
+        const $exercise = $(exerciseEl);
+        $exercise.find(".exercise-sets tr.set-row").each((_, row) => {
+            const $row = $(row);
+            const reps = parseFloat($row.find(".set-reps").val()) || 0;
+            const weight = parseFloat($row.find(".set-weight").val()) || 0;
+            totalSets += 1;
+            totalVolume += reps * weight;
+        });
+    });
+
+    $group.find(".group-summary .summary-item").eq(0).text(`${totalSets} sets`);
+    $group.find(".group-summary .summary-item").eq(1).text(`${totalVolume.toFixed(1)} kg`);
+}
+function updateExerciseHeader($exercise) {
+    let exerciseSets = 0;
+    let exerciseVolume = 0;
+
+    $exercise.find(".exercise-sets tr.set-row").each((_, row) => {
+        const $row = $(row);
+        const reps = parseFloat($row.find(".set-reps").val()) || 0;
+        const weight = parseFloat($row.find(".set-weight").val()) || 0;
+        exerciseSets += 1;
+        exerciseVolume += reps * weight;
+    });
+
+    $exercise.find(".exercise-summary-text").text(`${exerciseSets} sets, ${exerciseVolume.toFixed(1)} kg`);
+}
 function handleSetUpdate() {
     // 🟢 START TIMER ON SET EDIT
     startWorkoutTimer();
-    
+
     const row = $(this).closest("tr");
     const repsInput = row.find(".set-reps");
     const weightInput = row.find(".set-weight");
 
-    // Store focus information before updating
     lastFocusedSetId = row.data("set-id");
     lastFocusedInputType = $(this).hasClass('set-reps') ? 'reps' : 'weight';
 
-    // Validate input
     const repsVal = repsInput.val().trim();
     const weightVal = weightInput.val().trim();
 
     if (!repsVal || !weightVal || isNaN(repsVal) || isNaN(weightVal)) {
-        // Reset back to original values if invalid
-        repsInput.val(repsInput.data("original"));
-        weightInput.val(weightInput.data("original"));
+        revertToOriginal();
         return;
     }
 
@@ -349,7 +393,7 @@ function handleSetUpdate() {
         const volumeDisplay = row.find(".volume-display");
         volumeDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
 
-        // Optimistic UI update - show the new volume immediately
+        // Optimistic UI update for volume
         const newVolume = (reps * weight).toFixed(1);
         setTimeout(() => {
             volumeDisplay.text(newVolume);
@@ -364,27 +408,33 @@ function handleSetUpdate() {
             if (response.success) {
                 repsInput.data("original", reps);
                 weightInput.data("original", weight);
-                
-                // ✅ FIXED: Use invalidateDateCache instead of direct cache manipulation
-                invalidateDateCache(date);
-                getSessionWithCache(date, function(data) {
-                    });
+
+                // ✅ Update exercise header totals dynamically
+                updateExerciseHeader(row.closest(".exercise"));
+
+                // ✅ Update group totals dynamically
+                const $group = row.closest(".workout-group");
+                recalcGroupTotals($group);
+
+                // ✅ Update overall session/workout totals
+                recalcSessionTotals();
             } else {
                 alert("Error: " + response.error);
-                // Revert to original values on error
-                repsInput.val(repsInput.data("original"));
-                weightInput.val(weightInput.data("original"));
-                volumeDisplay.text((repsInput.data("original") * weightInput.data("original")).toFixed(1));
+                revertToOriginal();
             }
         }).fail(function() {
-            // Revert to original values on network error
-            repsInput.val(repsInput.data("original"));
-            weightInput.val(weightInput.data("original"));
-            volumeDisplay.text((repsInput.data("original") * weightInput.data("original")).toFixed(1));
             alert("Network error. Please try again.");
+            revertToOriginal();
         });
     }
+
+    function revertToOriginal() {
+        repsInput.val(repsInput.data("original"));
+        weightInput.val(weightInput.data("original"));
+        volumeDisplay.text((repsInput.data("original") * weightInput.data("original")).toFixed(1));
+    }
 }
+
 
 // Add this function to properly attach event handlers
 $(document).on('click', '.quick-add-set', function () {
