@@ -35,7 +35,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
-
+print("=== Environment Variables Debug ===")
+print(f"MAIL_SERVER from env: '{os.getenv('MAIL_SERVER')}'")
+print(f"MAIL_PORT from env: '{os.getenv('MAIL_PORT')}'")  
+print(f"MAIL_USERNAME from env: '{os.getenv('MAIL_USERNAME')}'")
+print(f"MAIL_USE_SSL from env: '{os.getenv('MAIL_USE_SSL')}'")
+print("=====================================")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.zoho.eu')
@@ -4072,7 +4077,7 @@ def save_workout():
                  session_id)
             )
             print(f"💾 Saved timer: {timer_data['totalSeconds']}s, {timer_data.get('calories', 0)} cal")
-
+        cursor.execute("DELETE FROM workout_sets WHERE session_id = %s", (session_id,))
         # Save sets for each exercise
         for ex in exercises:
             for s in ex["sets"]:
@@ -4140,7 +4145,7 @@ def save_workout():
         current_total_volume = 0
         volume_improvements = 0
         sets_improvements = 0
-
+        
         for ex in exercises:
             # Handle different possible ID field names
             exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
