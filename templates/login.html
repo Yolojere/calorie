@@ -8,6 +8,7 @@
         background-color: #1b1b1b;
         padding: 2rem 1rem;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         color: white;
@@ -27,64 +28,64 @@
         margin: 0;
     }
 
-.form-control, .form-select {
-    background-color: #121212 !important;
-    border: 1px solid #333 !important;
-    color: #eee;
-    border-radius: 5px !important;
-    font-size: 14px !important;
-    padding: 6px 12px !important;
-    height: 36px !important;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
+    .form-control, .form-select {
+        background-color: #121212 !important;
+        border: 1px solid #333 !important;
+        color: #eee;
+        border-radius: 5px !important;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
 
-/* Focus state */
-.form-control:focus, .form-select:focus {
-    border-color: #555 !important;
-    box-shadow: none !important; /* remove Bootstrap blue glow */
-    background-color: #181818 !important;
-    color: #eee !important;
-    outline: none !important;
-    border: 1px solid #333 !important;
-}
+    /* Focus state */
+    .form-control:focus, .form-select:focus {
+        border-color: #555 !important;
+        box-shadow: none !important; /* remove Bootstrap blue glow */
+        background-color: #181818 !important;
+        color: #eee !important;
+        outline: none !important;
+        border: 1px solid #333 !important;
+    }
 
-/* Placeholder styling */
-.form-control::placeholder, .form-select::placeholder {
-    color: #ddd !important;
-    opacity: 0.6;
-}
+    /* Placeholder styling */
+    .form-control::placeholder, .form-select::placeholder {
+        color: #ddd !important;
+        opacity: 0.6;
+    }
 
-/* Autofill overrides (Chrome) */
-input.form-control:-webkit-autofill {
-    box-shadow: 0 0 0px 1000px #121212 inset !important;
-    -webkit-text-fill-color: #eee !important;
-    border-color: #333 !important;
-    color: white !important;
-}
+    /* Autofill overrides (Chrome) */
+    input.form-control:-webkit-autofill {
+        box-shadow: 0 0 0px 1000px #121212 inset !important;
+        -webkit-text-fill-color: #eee !important;
+        border-color: #333 !important;
+        color: white !important;
+    }
 
-/* Remove text-muted and make it white */
-.text-muted {
-    color: #eee !important;
-}
+    /* Remove text-muted and make it white */
+    .text-muted {
+        color: #eee !important;
+    }
 
-/* Optional: remove orange outline on images inside input groups */
-.input-group-text img {
-    outline: none !important;
-    border: none !important;
-}
+    /* Optional: remove orange outline on images inside input groups */
+    .input-group-text img {
+        outline: none !important;
+        border: none !important;
+    }
 
-/* Optional: chain input to image for smooth rounded edges */
-.input-group {
-    border-radius: 20px;
-    overflow: hidden;
-}
-.input-group .input-group-text:first-child {
-    border-radius: 20px 0 0 20px;
-}
-.input-group .form-control {
-    border-radius: 0 10px 10px 0;
-    margin: 0;
-}
+    /* Optional: chain input to image for smooth rounded edges */
+    .input-group {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .input-group .input-group-text:first-child {
+        border-radius: 20px 0 0 20px;
+    }
+    .input-group .form-control {
+        border-radius: 0 10px 10px 0;
+        margin: 0;
+    }
 
     .input-group-text {
         background-color: #0f0f0f;
@@ -109,9 +110,11 @@ input.form-control:-webkit-autofill {
         color: black !important;
         transform: scale(1.02);
     }
-.text-muted {
-    color: #eee !important;
-}
+
+    .text-muted {
+        color: #eee !important;
+    }
+
     .btn-jere.active {
         background: #858585 !important;
         color: #000000 !important;
@@ -132,79 +135,179 @@ input.form-control:-webkit-autofill {
     .fa-2x:hover {
         transform: scale(1.2);
     }
-.form-check-input {
-    background-color: #000000;
-    border-color: #a0a0a0;
 
-}
-.form-check-input:focus {
-    background-color: #010101;
-    border-color: #a0a0a0;
-    box-shadow: none !important;
-}
-.form-check-input:checked {
-    background-color: #4ca31a;
-    border-color: #ffffff !important;
-    border: 1px solid !important;
-    box-shadow: none !important;
-    animation: pop 0.25s ease forwards;
-}
-.form-check-input:not(:checked) {
+    .form-check-input {
         background-color: #000000;
-    border-color: #a0a0a0;
-    font-size: 14px;
-}
-.social-login {
-    font-weight: 600;
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    align-items: center !important;
-    justify-content: center !important;
-    position:relative;
-    display: row;
-}
+        border-color: #a0a0a0;
+    }
 
-.social-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    align-items: center;
-    justify-content: center;
-}
+    .form-check-input:focus {
+        background-color: #010101;
+        border-color: #a0a0a0;
+        box-shadow: none !important;
+    }
 
-.btn-google {
-    background-color: #DB4437;
-    color: white;
-}
+    .form-check-input:checked {
+        background-color: #4ca31a;
+        border-color: #ffffff !important;
+        border: 1px solid !important;
+        box-shadow: none !important;
+        animation: pop 0.25s ease forwards;
+    }
 
-.btn-github {
-    background-color: #333;
-    color: white;
-}
+    .form-check-input:not(:checked) {
+        background-color: #000000;
+        border-color: #a0a0a0;
+        font-size: 14px;
+    }
 
-.btn-facebook {
-    background-color: #5166c2cb;
-    color: white;
-}
-.btn-facebook:hover{
-    opacity: 0.9;
-    color: rgb(0, 0, 0);
-    background-color: #253dd3;
-}
+    .social-login {
+        font-weight: 600;
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative;
+        display: row;
+    }
 
-.btn-google:hover, .btn-github:hover {
-    opacity: 0.9;
-    color: rgb(0, 0, 0);
-    background-color: #ff0000;
-}
-/* Pop animation */
-@keyframes pop {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.5); }
-    100% { transform: scale(1.2); }
-}
-form-check-label
+    .social-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-google {
+        background-color: #DB4437;
+        color: white;
+    }
+
+    .btn-github {
+        background-color: #333;
+        color: white;
+    }
+
+    .btn-facebook {
+        background-color: #5166c2cb;
+        color: white;
+    }
+
+    .btn-facebook:hover{
+        opacity: 0.9;
+        color: rgb(0, 0, 0);
+        background-color: #253dd3;
+    }
+
+    .btn-google:hover, .btn-github:hover {
+        opacity: 0.9;
+        color: rgb(0, 0, 0);
+        background-color: #ff0000;
+    }
+
+    /* Pop animation */
+    @keyframes pop {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.5); }
+        100% { transform: scale(1.2); }
+    }
+
+    /* New styles for the teaser section */
+    .app-introduction {
+        margin-top: 3rem;
+        padding: 2rem 1rem;
+        max-width: 900px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .intro-header {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .features-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .feature-card {
+        background-color: #2b2b2b;
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+    }
+
+    .feature-title {
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: #ccc;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .feature-image {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid #555;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .feature-image:hover {
+        transform: scale(1.02);
+    }
+
+    .intro-footer {
+        color: #4ca31a;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 2rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .intro-header {
+            font-size: 1.5rem;
+        }
+        
+        .features-container {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            padding: 1rem;
+        }
+        
+        .app-introduction {
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+    }
 </style>
 
 <div class="container-page">
@@ -259,7 +362,6 @@ form-check-label
                     <button type="submit" class="btn-jere" data-i18n="login">Login</button>
                 </div>
 
-
                 <div class="text-center mb-2">
                     <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
                         <i class="fas fa-key me-1"></i> Unohtuiko Salasana?
@@ -274,18 +376,54 @@ form-check-label
                 </div>
             </form>
         </div>
+        
         <div class="social-login">
-    <h3>Tai kirjaudu suoraan</h3>
-    <div class="social-buttons">
-        <!-- Google -->
-        <a href="{{ url_for('oauth_login', provider='google') }}" class="btn btn-google">
-            <i class="fab fa-google"></i> Google
-        </a>
+            <h3>Tai kirjaudu suoraan</h3>
+            <div class="social-buttons">
+                <!-- Google -->
+                <a href="{{ url_for('oauth_login', provider='google') }}" class="btn btn-google">
+                    <i class="fab fa-google"></i> Google
+                </a>
 
-        <!-- comment out until working facebook auth --!>
-      <!--  <a href="{{ url_for('oauth_login', provider='facebook') }}" class="btn btn-facebook">
-            <i class="fab fa-facebook-f"></i> Facebook 
-        </a> --!> 
+                <!-- comment out until working facebook auth -->
+                <!--  <a href="{{ url_for('oauth_login', provider='facebook') }}" class="btn btn-facebook">
+                    <i class="fab fa-facebook-f"></i> Facebook 
+                </a> --> 
+            </div>
+        </div>
+    </div>
+
+    <!-- App Introduction/Teaser Section -->
+    <div class="app-introduction">
+        <h2 class="intro-header">Tuuhan kokeilee uutta fitness projektia!</h2>
+        
+        <div class="features-container">
+            <!-- Food Diary Feature -->
+            <div class="feature-card">
+                <h3 class="feature-title">
+                    <i class="fas fa-utensils me-2"></i>Helppoa kalorinlaskentaa
+                </h3>
+                <p class="feature-description">
+                    Pistä ruoat ylös ruokapäiväkirjaan, hae manuaalisesti tai skannaa enarit tuotteiden löytämiseksi. Reaaliaikainen seuranta painon pudotukselle/nousulle!
+                </p>
+                <img src="static/images/fooddiary.jpg" alt="Food Diary Screenshot" class="feature-image">
+            </div>
+
+            <!-- Workout Diary Feature -->
+            <div class="feature-card">
+                <h3 class="feature-title">
+                    <i class="fas fa-dumbbell me-2"></i>Kätevä treenipäiväkirja
+                </h3>
+                <p class="feature-description">
+                    Kirjoita treenit ylös päiväkirjaan, tallenna ja vertaa edellisiin suorituksiin.
+                </p>
+                <img src="static/images/workoutdiary.jpg" alt="Workout Diary Screenshot" class="feature-image">
+            </div>
+        </div>
+
+        <p class="intro-footer">
+            <i class="fas fa-star me-2"></i>Lisäksi sivulta löytyy paljon muuta, esim treeni ja ruokahistoria, aktiivisuuden ja kehityksen seuraaminen!
+        </p>
     </div>
 </div>
 
