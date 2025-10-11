@@ -462,39 +462,275 @@
 
         /* Modal styles for camera */
         #cameraModal .modal-content {
-            background-color: #333;
-            color: #e0e0e0;
-        }
+    background-color: #1d1d1d;
+    border: 1px solid #444;
+    border-radius: 12px;
+}
 
-        #cameraModal .modal-header, #cameraModal .modal-footer {
-            border-color: #555;
-        }
+#cameraModal .modal-header {
+    background-color: #0c0c0c;
+    border-bottom: 1px solid #444;
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+}
 
-        #cameraVideo {
-            width: 100%;
-            height: auto;
-            background-color: #000;
-            border-radius: 5px;
-        }
+#cameraModal .modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e0e0e0;
+}
 
-        #captureCanvas {
-            display: none;
-        }
+#cameraModal .modal-body {
+    padding: 30px;
+    background-color: #1d1d1d;
+}
 
-        .scanning-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            font-size: 24px;
-            z-index: 1000;
-        }
+/* Scan Container */
+.scan-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+}
+
+/* Instructions Section */
+.scan-instructions {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(40, 167, 69, 0.1));
+    border: 1px solid rgba(0, 123, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.instruction-icon {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.instruction-title {
+    color: #e0e0e0;
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.instruction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    display: inline-block;
+}
+
+.instruction-list li {
+    color: #e0e0e0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+/* Take Picture Button */
+.capture-section {
+    width: 100%;
+    text-align: center;
+}
+
+.capture-button-container {
+    margin-bottom: 15px;
+}
+
+.btn-take-picture {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    border-radius: 16px;
+    padding: 25px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-take-picture:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(40, 167, 69, 0.5);
+    background: linear-gradient(135deg, #218838, #1ea085);
+}
+
+.btn-take-picture:active {
+    transform: translateY(-1px);
+}
+
+.btn-take-picture i {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.btn-text {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.btn-subtitle {
+    font-size: 12px;
+    opacity: 0.9;
+    font-weight: normal;
+}
+
+.desktop-hint {
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+/* Photo Preview Section */
+.preview-section {
+    width: 100%;
+    text-align: center;
+}
+
+.preview-container {
+    position: relative;
+    display: inline-block;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+#photoPreview {
+    max-width: 100%;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+}
+
+.preview-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 20px;
+    border-radius: 0 0 12px 12px;
+}
+
+.preview-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn-preview-action {
+    border: none;
+    border-radius: 25px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.btn-retake {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-retake:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+.btn-process {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-process:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Processing Section */
+.processing-section {
+    width: 100%;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.processing-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.processing-spinner {
+    margin-bottom: 10px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 123, 255, 0.3);
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.processing-title {
+    color: #e0e0e0;
+    font-weight: 600;
+    margin: 0;
+}
+
+.processing-subtitle {
+    color: #aaa;
+    margin: 0;
+    font-size: 14px;
+}
+
+.processing-tips {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-top: 15px;
+    max-width: 400px;
+}
+
+/* Beta Warning */
+.beta-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+}
         
         /* Form specific adjustments */
 .field-populated {
@@ -542,7 +778,62 @@
     .navbar-brand.d-md-inline {
         display: none !important; /* Hide brand text completely */
     }
-}             
+}      '
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+    #cameraModal .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .scan-instructions {
+        padding: 15px;
+    }
+    
+    .instruction-title {
+        font-size: 1rem;
+    }
+    
+    .btn-take-picture {
+        padding: 20px 30px;
+        font-size: 16px;
+        min-width: 180px;
+    }
+    
+    .btn-text {
+        font-size: 16px;
+    }
+    
+    .instruction-list li {
+        font-size: 13px;
+    }
+    
+    .preview-actions {
+        gap: 10px;
+    }
+    
+    .btn-preview-action {
+        padding: 10px 16px;
+        font-size: 13px;
+        min-width: 85px;
+    }
+}
+
+@media (max-width: 400px) {
+    .btn-take-picture {
+        padding: 18px 25px;
+        min-width: 160px;
+    }
+    
+    .preview-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-preview-action {
+        width: 120px;
+        margin: 0 auto;
+    }
+}       
     </style>
 </head>
 <body>
@@ -860,75 +1151,116 @@
     </div>
 
     <!-- Photo Capture Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Ravintoarvojen Lukeminen</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="position-relative">
-                        <!-- Instructions -->
-                        <div class="capture-instructions">
-                            <i class="fas fa-camera mb-2" style="font-size: 24px;"></i>
-                            <div><strong>Ota selkeä kuva ravintoarvoista</strong></div>
-                            <div style="margin-top: 8px;">Suorista etiketti ja pidä huoli että valaistus on hyvä!<div>
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    <span data-i18n="scan_nutrition_label">Scan Nutrition Label</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="scan-container">
+                    
+                    <!-- Instructions Section -->
+                    <div class="scan-instructions">
+                        <div class="instruction-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h6 class="instruction-title">Hyvän kuvan saamiseksi:</h6>
+                        <ul class="instruction-list">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Yritä olla liikkumatta</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Pidä huoli hyvästä valaistuksesta</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Keskitä ravintotaulukon tiedot</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Vältä varjoja sekä valon heijastusta</li>
+                        </ul>
+                    </div>
+
+                    <!-- Take Picture Section -->
+                    <div id="captureSection" class="capture-section">
+                        <div class="capture-button-container">
+                            <!-- Hidden file input -->
+                            <input type="file" 
+                                   id="photoInput" 
+                                   accept="image/*" 
+                                   capture="environment" 
+                                   style="display: none;">
+                            
+                            <!-- Main capture button -->
+                            <button type="button" 
+                                    class="btn-take-picture" 
+                                    onclick="triggerPhotoCapture()">
+                                <i class="fas fa-camera"></i>
+                                <span class="btn-text">Ota Kuva</span>
+                                <div class="btn-subtitle">Avaa Kamera</div>
+                            </button>
                         </div>
                         
-                        <!-- Tips -->
-                        <div class="capture-tips">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            <strong>Huom!</strong> Ei toimi vielä kunnolla :D älä edes yritä lukea vaikeita etikettejä.
+                        <!-- Alternative text for desktop -->
+                        <div class="desktop-hint">
+                            <small>
+                                <i class="fas fa-desktop me-1"></i>
+                                Tietokoneella voit valita tiedoston, kuvan ottamisen sijasta
+                            </small>
                         </div>
+                    </div>
 
-                        <!-- Photo capture area -->
-                        <div id="captureArea" class="text-center">
-                            <!-- File input for photo capture -->
-                            <div id="photoInputSection">
-                                <input type="file" 
-                                       class="form-control mb-3" 
-                                       id="photoInput" 
-                                       accept="image/*" 
-                                       capture="environment">
-                                <div class="text-muted small">
-                                    <span id="pelle" style color="#white">Avaa kamera</span>
-                                    <p id="pelle">Tietokoneella: Avaa tiedosto</p>
-                                </div>
-                            </div>
-
-                            <!-- Photo preview area -->
-                            <div id="photoPreviewSection" class="d-none">
-                                <img id="photoPreview" alt="Captured photo">
-                                <div class="camera-controls">
-                                    <button type="button" class="retake-btn" onclick="retakePhoto()">
-                                        <i class="fas fa-redo me-1"></i> Uudestaan
+                    <!-- Photo Preview Section -->
+                    <div id="photoPreviewSection" class="preview-section d-none">
+                        <div class="preview-container">
+                            <img id="photoPreview" alt="Captured nutrition label">
+                            <div class="preview-overlay">
+                                <div class="preview-actions">
+                                    <button type="button" class="btn-preview-action btn-retake" onclick="retakePhoto()">
+                                        <i class="fas fa-redo"></i>
+                                        <span>Ota Uudelleen</span>
                                     </button>
-                                    <button type="button" class="process-btn" onclick="processPhoto()">
-                                        <i class="fas fa-magic me-1"></i> Prosessoi
+                                    <button type="button" class="btn-preview-action btn-process" onclick="processPhoto()">
+                                        <i class="fas fa-magic"></i>
+                                        <span>Skannaa</span>
                                     </button>
-                                </div>
-                            </div>
-
-                            <!-- Processing overlay -->
-                            <div id="processingOverlay" class="scanning-overlay d-none">
-                                <div class="text-center">
-                                    <div class="spinner-border text-light mb-3" role="status">
-                                        <span class="visually-hidden">Prosessoi...</span>
-                                    </div>
-                                    <div>Prosessoi ravintoarvoja...</div>
-                                    <div class="small mt-2">Hetki pieni</div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Processing Section -->
+                    <div id="processingSection" class="processing-section d-none">
+                        <div class="processing-content">
+                            <div class="processing-spinner">
+                                <div class="spinner"></div>
+                            </div>
+                            <h6 class="processing-title">Prosessoidaan</h6>
+                            <p class="processing-subtitle">Hetki pieni..</p>
+                            <div class="processing-tips">
+                                <small class="text-muted">
+                                    💡 Huolehdi hyväistä valaistuksesta ja yritä ottaa selvä kuva
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Beta Warning -->
+                    <div class="beta-warning">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <small>
+                            <strong>Beta Ominaisuus:</strong> Kokeilu versio, toimii vain todella selkeisiin ravintotaulukoihin :D
+                        </small>
+                    </div>
+                    
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    <span data-i18n="cancel">Cancel</span>
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -963,11 +1295,18 @@ $(document).ready(function() {
     });
     // Photo input change handler
     $('#photoInput').on('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    handlePhotoCapture(file);
-                }
-            });
+    const files = e.target.files;
+    
+    // Check if files exist and at least one file is selected
+    if (files && files.length > 0) {
+        const file = files[0];
+        handlePhotoCapture(file);
+    } else {
+        console.log('No file selected');
+        // Optionally show a message or just do nothing
+        // showMessage('No file selected.', 'info');
+    }
+});
 
 
     // Form submission
@@ -1069,55 +1408,80 @@ $(document).ready(function() {
     }
 });
 
-        function handlePhotoCapture(file) {
-            if (!file.type.startsWith('image/')) {
-                showMessage('Please select a valid image file.', 'error');
-                return;
-            }
+// Updated photo capture trigger
+function triggerPhotoCapture() {
+    document.getElementById('photoInput').click();
+}
 
-            if (file.size > 10 * 1024 * 1024) {
-                showMessage('Image file is too large. Please select a file smaller than 10MB.', 'error');
-                return;
-            }
+// Updated photo input change handler - replace the existing one
+$('#photoInput').on('change', function(e) {
+    const file = e.target.files;
+    if (file) {
+        handlePhotoCapture(file);
+    }
+});
 
-            // Store the captured photo
-            capturedPhoto = file;
+// Updated handlePhotoCapture function
+function handlePhotoCapture(file) {
+    // Check if file exists and has required properties
+    if (!file || !file.type) {
+        showMessage('Please select a valid image file.', 'error');
+        return;
+    }
 
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('photoPreview');
-                preview.src = e.target.result;
-                
-                // Show preview section, hide input section
-                document.getElementById('photoInputSection').classList.add('d-none');
-                document.getElementById('photoPreviewSection').classList.remove('d-none');
-            };
-            reader.readAsDataURL(file);
-        }
+    // Check if it's an image file
+    if (!file.type.startsWith('image/')) {
+        showMessage('Please select a valid image file.', 'error');
+        return;
+    }
 
-        function retakePhoto() {
-            // Reset to input section
-            document.getElementById('photoPreviewSection').classList.add('d-none');
-            document.getElementById('photoInputSection').classList.remove('d-none');
-            
-            // Clear the input
-            document.getElementById('photoInput').value = '';
-            capturedPhoto = null;
-        }
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+        showMessage('Image file is too large. Please select a file smaller than 10MB.', 'error');
+        return;
+    }
 
-        function processPhoto() {
-            if (!capturedPhoto) {
-                showMessage('No photo to process', 'error');
-                return;
-            }
+    // Store the captured photo
+    capturedPhoto = file;
 
-            // Show processing overlay
-            document.getElementById('processingOverlay').classList.remove('d-none');
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('photoPreview');
+        preview.src = e.target.result;
+        
+        // Show preview section, hide capture section
+        document.getElementById('captureSection').classList.add('d-none');
+        document.getElementById('photoPreviewSection').classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+}
 
-            // Optimize the image before sending
-            optimizeAndProcessImage(capturedPhoto);
-        }
+// Updated retakePhoto function
+function retakePhoto() {
+    // Show capture section, hide preview section
+    document.getElementById('photoPreviewSection').classList.add('d-none');
+    document.getElementById('captureSection').classList.remove('d-none');
+    
+    // Clear the input and reset
+    document.getElementById('photoInput').value = '';
+    capturedPhoto = null;
+}
+
+// Updated processPhoto function
+function processPhoto() {
+    if (!capturedPhoto) {
+        showMessage('No photo to process', 'error');
+        return;
+    }
+
+    // Hide preview, show processing
+    document.getElementById('photoPreviewSection').classList.add('d-none');
+    document.getElementById('processingSection').classList.remove('d-none');
+
+    // Optimize the image before sending
+    optimizeAndProcessImage(capturedPhoto);
+}
 
         function optimizeAndProcessImage(file) {
             const canvas = document.createElement('canvas');
@@ -1178,45 +1542,52 @@ $(document).ready(function() {
             ctx.putImageData(imageData, 0, 0);
         }
 
-        function sendImageForProcessing(imageBlob) {
-            const formData = new FormData();
-            formData.append('file', imageBlob, 'nutrition-label.png');
+       function sendImageForProcessing(imageBlob) {
+    const formData = new FormData();
+    formData.append('file', imageBlob, 'nutrition-label.png');
 
-            $.ajax({
-                url: '/scan_nutrition_label',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                timeout: 30000,
-                success: function(response) {
-                    handleScanResults(response);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Scan error:', error);
-                    let errorMessage = 'Error scanning nutrition label';
-                    
-                    try {
-                        const errorResponse = JSON.parse(xhr.responseText);
-                        errorMessage = errorResponse.error || errorMessage;
-                    } catch (e) {
-                        console.error('Could not parse error response:', e);
-                    }
-                    
-                    showMessage(errorMessage, 'error');
-                },
-                complete: function() {
-                    // Hide processing overlay
-                    document.getElementById('processingOverlay').classList.add('d-none');
-                    
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
+    $.ajax({
+        url: '/scan_nutrition_label',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        timeout: 30000,
+        success: function(response) {
+            handleScanResults(response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Scan error:', error);
+            let errorMessage = 'Error scanning nutrition label';
+            
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                errorMessage = errorResponse.error || errorMessage;
+            } catch (e) {
+                console.error('Could not parse error response:', e);
+            }
+            
+            showMessage(errorMessage, 'error');
+        },
+        complete: function() {
+            // Hide processing section and reset to initial state
+            document.getElementById('processingSection').classList.add('d-none');
+            document.getElementById('captureSection').classList.remove('d-none');
+            
+            // Reset photo input
+            document.getElementById('photoInput').value = '';
+            capturedPhoto = null;
+            
+            // Close modal after a short delay
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
+                if (modal) {
+                    modal.hide();
                 }
-            });
+            }, 1000);
         }
+    });
+}
 
         function handleScanResults(response) {
             if (response.success && response.form_data) {
