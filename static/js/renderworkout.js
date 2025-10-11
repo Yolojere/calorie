@@ -651,7 +651,13 @@ function renderWorkoutSession(session, exercises, options = {}) {
         if (!groups[group]) groups[group] = { exercises: [], totalSets: 0, totalVolume: 0 };
 
         const uniqueSets = Array.isArray(exercise.sets) ? [...exercise.sets] : [];
-        const exerciseVolume = uniqueSets.reduce((sum, set) => sum + set.volume, 0);
+        const exerciseVolume = uniqueSets.reduce((sum, set) => {
+        const reps = Number(set.reps) || 0;
+        const weight = Number(set.weight) || 0;
+        const volume = reps * weight;
+        set.volume = volume; // ✅ ensures .volume is always available for later rendering
+        return sum + volume;
+    }, 0);
         const exerciseSets = uniqueSets.length;
 
         groups[group].exercises.push({ ...exercise, sets: uniqueSets, exerciseSets, exerciseVolume });
@@ -942,7 +948,147 @@ function populateDateOptions() {
 
 // Helper
 function pad2(n){ return String(n).padStart(2,'0'); }
+// XP Display Functions
+function showXPSummary(xpData, workoutData) {
+    console.log('📊 Displaying XP summary:', xpData);
+    
+    const { gained, sources, levels_gained, level_before, level_after, current_xp, xp_to_next_level } = xpData;
+    
+    // Create XP overlay
+    const overlay = $(`
+        <div class="xp-overlay" id="xp-summary-overlay">
+            <div class="xp-card">
+                <div class="xp-particles" id="xp-particles"></div>
+                
+                ${levels_gained > 0 ? `
+                    <div class="level-up-banner">
+                        🎉 Level Up! 🎉
+                        <div style="font-size: 16px; margin-top: 5px;">
+                            Level ${level_before} → ${level_after}
+                        </div>
+                    </div>
+                    <div class="level-celebration">✨</div>
+                ` : `
+                    <h3 style="color: #6dc0d5; margin-bottom: 20px;">
+                        <i class="fas fa-star"></i> Suoritus Valmis!
+                    </h3>
+                `}
+                
+                <div class="xp-gained-display">
+                    +${gained} XP
+                </div>
+                
+                <div class="xp-sources">
+                    <h4 style="color: #fff; margin-bottom: 15px;">XP Jakauma</h4>
+                    ${Object.entries(sources).map(([source, value]) => {
+                        if (value <= 0) return '';
+                        const labels = {
+                            'cardio_duration': '🏃 Cardion Kesto',
+                            'cardio_calories': '🔥 Cardion Kalorit',
+                            'weights_volume': '💪 Treenin Volyymi',
+                            'new_exercises': '🆕 Uudet Liikkeet',
+                            'personal_bests': '🏆 Ennätykset'
+                        };
+                        return `
+                            <div class="xp-source-item">
+                                <span class="xp-source-label">${labels[source] || source}</span>
+                                <span class="xp-source-value">+${value}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                <div class="level-progress">
+                    <div class="level-info">
+                        <span>Level ${level_after}</span>
+                        <span>${current_xp}/${xp_to_next_level} XP</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="xp-progress-bar" 
+                             style="width: ${(current_xp / xp_to_next_level) * 100}%">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="continue-btn" onclick="hideXPSummary()">
+                    Jatka tilastoihin
+                </button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(overlay);
+    
+    // Show with animation
+    setTimeout(() => {
+        overlay.addClass('show');
+        animateXPElements(levels_gained > 0);
+    }, 100);
+    
+    // Store workout data for next step
+    window.pendingWorkoutResults = workoutData;
+}
 
+function animateXPElements(isLevelUp) {
+    // Animate progress bar
+    setTimeout(() => {
+        $('#xp-progress-bar').css('width', $('#xp-progress-bar').attr('style').match(/width: ([\d.]+)%/)[1] + '%');
+    }, 800);
+    
+    // Create floating particles if level up
+    if (isLevelUp) {
+        createXPParticles();
+    }
+    
+    // Animate XP sources with stagger
+    $('.xp-source-item').each((index, element) => {
+        setTimeout(() => {
+            $(element).css({
+                'opacity': '0',
+                'transform': 'translateX(-20px)'
+            }).animate({
+                'opacity': '1'
+            }, 300).css('transform', 'translateX(0)');
+        }, index * 100);
+    });
+}
+
+function createXPParticles() {
+    const container = $('#xp-particles');
+    const particleCount = 15;
+    
+    for (let i = 0; i < particleCount; i++) {
+        setTimeout(() => {
+            const particle = $('<div class="xp-particle"></div>');
+            particle.css({
+                'left': Math.random() * 100 + '%',
+                'animation-delay': Math.random() * 1 + 's'
+            });
+            container.append(particle);
+            
+            // Remove particle after animation
+            setTimeout(() => particle.remove(), 3000);
+        }, i * 100);
+    }
+}
+
+function hideXPSummary() {
+    const overlay = $('#xp-summary-overlay');
+    overlay.removeClass('show');
+    
+    setTimeout(() => {
+        overlay.remove();
+        
+        // Show achievements/results if available
+        if (window.pendingWorkoutResults) {
+            showWorkoutResults(
+                window.pendingWorkoutResults.comparisonData,
+                window.pendingWorkoutResults.achievements
+            );
+            delete window.pendingWorkoutResults;
+        }
+    }, 400);
+}
 // Show animated analysis overlay
 function showWorkoutAnalysis() {
     const overlay = $(`
@@ -1379,7 +1525,7 @@ function displayCardioSessions(cardioSessions, containerOverride = null) {
     const totalCalories = uniqueSessions.reduce((sum, session) => sum + session.calories_burned, 0);
     
     cardioGroupDiv.innerHTML = `
-        <div class="group-header" style="background: linear-gradient(135deg, #ff6b6b, rgba(0,0,0,0.8)) !important;">
+        <div class="group-header">
             <div class="group-header-content">
                 <div class="group-icon">
                     <i class="fas fa-heart"></i>
