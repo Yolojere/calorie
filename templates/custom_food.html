@@ -1425,13 +1425,11 @@ $('#photoInput').on('change', function(e) {
 function handlePhotoCapture(file) {
     // Check if file exists and has required properties
     if (!file || !file.type) {
-        showMessage('Please select a valid image file.', 'error');
         return;
     }
 
     // Check if it's an image file
     if (!file.type.startsWith('image/')) {
-        showMessage('Please select a valid image file.', 'error');
         return;
     }
 
