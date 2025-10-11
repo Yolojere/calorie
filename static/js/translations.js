@@ -287,6 +287,7 @@ const translations = {
     custom_tdee: "Custom TDEE",
 
     // Food modal
+    scan_nutrition_label: "Scan Nutrition Label",
     add_food_item: "Add Food Item",
     food_name: "Name",
     amount: "Amount",
@@ -652,6 +653,7 @@ const translations = {
     optional_notes: "Muistiinpanoja, kone säädöt yms.",
 
     // Food modal
+    scan_nutrition_label: "Skannaa Ravintoarvot",
     add_food_item: "Lisää Ruoka",
     food_name: "Nimi",
     amount: "Määrä",
