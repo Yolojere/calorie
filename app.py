@@ -31,6 +31,8 @@ import requests
 from flask_wtf.csrf import CSRFProtect
 from authlib.integrations.flask_client import OAuth
 from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
+from flask import send_from_directory
+from flask import Response
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
@@ -1234,6 +1236,16 @@ def allowed_file(filename):
 
 import json
 
+LEVEL_CAP = 999
+
+def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
+    """
+    XP required to advance from `level` to `level + 1`.
+    """
+    if level >= LEVEL_CAP:
+        return 10**12  # effectively unreachable
+    return max(50, int(round(base_xp * (level ** exp))))
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -1247,6 +1259,11 @@ def profile():
     extra_columns_exist = False
     role = getattr(current_user, 'role', 'user')
     tdee_data = get_user_current_tdee(current_user.id)
+    
+    # XP/Level defaults
+    user_level = 1
+    user_xp = 0
+    xp_to_next = 100
 
     predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 16)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
@@ -1262,7 +1279,23 @@ def profile():
         columns = [row['column_name'] for row in cursor.fetchall()]
         extra_columns_exist = bool(columns)
 
+        # Build select query with level/xp
         select_cols = ['username', 'email', 'weight', 'tdee', 'avatar'] + columns
+        
+        # Check if level and xp_points columns exist
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('level', 'xp_points')
+        """)
+        level_columns = [row['column_name'] for row in cursor.fetchall()]
+        
+        if 'level' in level_columns:
+            select_cols.append('level')
+        if 'xp_points' in level_columns:
+            select_cols.append('xp_points')
+        
         cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
         user_data = cursor.fetchone()
 
@@ -1270,6 +1303,13 @@ def profile():
             current_weight = user_data.get('weight')
             current_tdee = user_data.get('tdee')
             current_avatar = user_data.get('avatar') or 'default.png'
+            
+            # Extract level and XP
+            user_level = user_data.get('level', 1) or 1
+            user_xp = user_data.get('xp_points', 0) or 0
+            
+            # Calculate XP needed for next level
+            xp_to_next = xp_to_next_level(user_level)
 
         if form.validate_on_submit():
             # Handle email lowercase
@@ -1322,7 +1362,7 @@ def profile():
             
             return redirect(
                 url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
-    )
+            )
 
         elif user_data:
             # Pre-fill form
@@ -1356,12 +1396,11 @@ def profile():
         role=role,
         extra_columns_exist=extra_columns_exist,
         predefined_avatars=predefined_avatars,
-        tdee_data=tdee_data
+        tdee_data=tdee_data,
+        user_level=user_level,
+        user_xp=user_xp,
+        xp_to_next_level=xp_to_next
     )
-
-
-
-
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
@@ -4017,18 +4056,56 @@ def get_user_current_tdee(user_id, target_date=None):
     
     finally:
         conn.close()
+LEVEL_CAP = 999
+
+def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
+    """
+    XP required to advance from `level` to `level + 1`.
+    Tuned for:
+      - Early users: ~2-3 levels/week if very active
+      - After level 10: ~1 level/week if active
+      - Long-tail diminishing returns; practical long-term 50-60 range
+    """
+    if level >= LEVEL_CAP:
+        return 10**12  # effectively unreachable to prevent further leveling
+    # Minimum floor to avoid zero at very low levels
+    return max(50, int(round(base_xp * (level ** exp))))
+
+def clamp_level(level: int) -> int:
+    return min(max(level, 1), LEVEL_CAP)
+def safe_add_user_level_columns(cursor):
+    """
+    Defensive migration: add level and xp_points to users table if not present.
+    This allows drop-in replacement without requiring a separate migration step.
+    """
+    try:
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name='users'
+        """)
+        cols = {r[0] for r in cursor.fetchall()}
+        alter_needed = []
+        if 'level' not in cols:
+            alter_needed.append("ADD COLUMN level INTEGER DEFAULT 1")
+        if 'xp_points' not in cols:
+            alter_needed.append("ADD COLUMN xp_points INTEGER DEFAULT 0")
+        if alter_needed:
+            cursor.execute(f"ALTER TABLE users {', '.join(alter_needed)};")
+    except Exception as _migration_err:
+        # Non-fatal; if migration fails due to permissions, continue assuming columns exist.
+        pass
 @app.route("/workout/save", methods=["POST"])
 @login_required
 def save_workout():
     user_id = current_user.id
     data = request.get_json()
-    
+
     name = data.get('name', 'Unnamed Workout')
     focus_type = data.get('focus_type', 'general')
     date_str = data.get('date')
     exercises = data.get('exercises', [])
-    timer_data = data.get('timer_data', {})  # NEW: Timer data
-    cardio_sessions = data.get('cardio_sessions', [])  # NEW: Cardio data
+    timer_data = data.get('timer_data', {})  # Timer data
+    cardio_sessions = data.get('cardio_sessions', [])  # Cardio data (not directly used here; cardio_totals queried from DB)
 
     if not focus_type or not date_str:
         return jsonify({"success": False, "error": "Focus vaihtoehto on valittava"}), 400
@@ -4042,13 +4119,17 @@ def save_workout():
     cursor = conn.cursor()
 
     try:
+        # Defensive: ensure users table has level/xp columns
+        safe_add_user_level_columns(cursor)
+        conn.commit()
+
         # Get or create workout session
         cursor.execute(
             "SELECT id FROM workout_sessions WHERE user_id = %s AND date = %s",
             (user_id, date)
         )
         session = cursor.fetchone()
-        
+
         if not session:
             cursor.execute(
                 "INSERT INTO workout_sessions (user_id, date, name, focus_type) "
@@ -4065,69 +4146,65 @@ def save_workout():
                 (name, focus_type, session_id)
             )
 
-        # 🟢 SAVE TIMER DATA
-        if timer_data.get('totalSeconds'):
+        # SAVE TIMER DATA
+        if timer_data.get('totalSeconds') is not None:
             cursor.execute(
                 "UPDATE workout_sessions SET "
                 "workout_duration_seconds = %s, "
                 "weight_calories_burned = %s "
                 "WHERE id = %s",
-                (timer_data['totalSeconds'], 
-                 timer_data.get('calories', 0), 
-                 session_id)
+                (
+                    int(timer_data.get('totalSeconds') or 0),
+                    float(timer_data.get('calories', 0) or 0.0),
+                    session_id
+                )
             )
-            print(f"💾 Saved timer: {timer_data['totalSeconds']}s, {timer_data.get('calories', 0)} cal")
+
+        # Replace sets for this session
         cursor.execute("DELETE FROM workout_sets WHERE session_id = %s", (session_id,))
         # Save sets for each exercise
         for ex in exercises:
-            for s in ex["sets"]:
-                # 🔍 DEBUG: Check what keys exist in ex
-                print(f"Exercise keys: {list(ex.keys())}")
-                
+            sets = ex.get("sets", [])
+            for s in sets:
                 # Handle different possible ID field names
                 exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
-                
                 if not exercise_id:
-                    print(f"⚠️ WARNING: No exercise ID found in: {ex}")
-                    continue  # Skip this exercise if no ID
-                
+                    continue  # Skip if no exercise ID
+                reps = int(s.get("reps") or 0)
+                weight = float(s.get("weight") or 0.0)
                 cursor.execute(
                     "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) VALUES (%s, %s, %s, %s)",
-                    (session_id, exercise_id, s["reps"], s["weight"])
+                    (session_id, exercise_id, reps, weight)
                 )
 
         # Calculate total calories (weights + cardio)
-        total_calories = float(timer_data.get('calories', 0))
-        total_duration_seconds = int(timer_data.get('totalSeconds', 0))
-        
+        total_calories = float(timer_data.get('calories', 0) or 0.0)
+        total_duration_seconds = int(timer_data.get('totalSeconds', 0) or 0)
+
+        cardio_calories = 0.0
+        cardio_duration = 0
+
         try:
             cursor.execute(
                 """
                 SELECT COALESCE(SUM(cs.calories_burned), 0) as total_cardio_calories,
-                     COALESCE(SUM(cs.duration_minutes * 60), 0) as total_cardio_seconds
+                       COALESCE(SUM(cs.duration_minutes * 60), 0) as total_cardio_seconds
                 FROM cardio_sessions cs
                 WHERE cs.session_id = %s
                 """,
                 (session_id,)
             )
             cardio_totals = cursor.fetchone()
-            
             if cardio_totals:
-                # Convert to Python native types safely
-                cardio_calories = float(cardio_totals[0] or 0)
+                cardio_calories = float(cardio_totals[0] or 0.0)
                 cardio_duration = int(cardio_totals[1] or 0)
-                
                 total_calories += cardio_calories
                 total_duration_seconds += cardio_duration
-                print(f"🏃 Added cardio: {cardio_calories} cal, {cardio_duration} sec")
-            else:
-                print("🏃 No cardio sessions found for this session")
-
-        except Exception as cardio_error:
-            print(f"🔧 Cardio query failed: {str(cardio_error)}")
+        except Exception:
             # Continue without cardio data
+            pass
 
-        # Update session with combined totals (ensure proper types)
+        # Update session with combined totals
         cursor.execute(
             "UPDATE workout_sessions SET "
             "total_calories_burned = %s, "
@@ -4145,16 +4222,13 @@ def save_workout():
         current_total_volume = 0
         volume_improvements = 0
         sets_improvements = 0
-        
+
         for ex in exercises:
-            # Handle different possible ID field names
             exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
-            exercise_name = ex.get("name") or ex.get("exercise_name") or ex.get("exerciseName", "Unknown Exercise")
-            
+            exercise_name = ex.get("name") or ex.get("exercise_name") or ex.get("exerciseName") or "Unknown Exercise"
             if not exercise_id:
-                print(f"⚠️ Skipping exercise comparison - no ID: {ex}")
                 continue
-            
+
             # Get most recent session for this exercise and focus type - FIXED QUERY
             cursor.execute("""
                 SELECT ws.id, ws.date
@@ -4167,24 +4241,29 @@ def save_workout():
                 ORDER BY ws.date DESC
                 LIMIT 1
             """, (current_user.id, focus_type, exercise_id, session_id))
-            
             previous_session = cursor.fetchone()
 
-            current_sets = ex["sets"]
+            current_sets = ex.get("sets", [])
             total_sets += len(current_sets)
 
             # Current session calculations
-            if current_sets:  # Safety check
-                heaviest_set = max(current_sets, key=lambda s: s["weight"])
-                best_set = max(current_sets, key=lambda s: s["reps"] * s["weight"])
-                total_volume_ex = sum(s["reps"] * s["weight"] for s in current_sets)
+            if current_sets:
+                # sanitize sets
+                sanitized_sets = []
+                for s in current_sets:
+                    reps = int(s.get("reps") or 0)
+                    weight = float(s.get("weight") or 0.0)
+                    sanitized_sets.append({"reps": reps, "weight": weight})
+                heaviest_set = max(sanitized_sets, key=lambda s: s["weight"])
+                best_set = max(sanitized_sets, key=lambda s: s["reps"] * s["weight"])
+                total_volume_ex = sum(s["reps"] * s["weight"] for s in sanitized_sets)
                 current_total_volume += total_volume_ex
             else:
                 continue  # Skip if no sets
 
             if previous_session:
                 previous_session_id, previous_date = previous_session
-                
+
                 # Get the last set data from previous session for this exercise
                 cursor.execute("""
                     SELECT reps, weight
@@ -4193,25 +4272,23 @@ def save_workout():
                     ORDER BY id DESC
                     LIMIT 1
                 """, (previous_session_id, exercise_id))
-                
                 last_set = cursor.fetchone()
-                
+
                 # Get stats from previous session for this exercise
                 cursor.execute("""
-                    SELECT COUNT(*) as set_count, SUM(reps * weight) as total_volume
+                    SELECT COUNT(*) as set_count, COALESCE(SUM(reps * weight), 0) as total_volume
                     FROM workout_sets
                     WHERE session_id = %s AND exercise_id = %s
                 """, (previous_session_id, exercise_id))
-                
                 previous_stats = cursor.fetchone()
 
                 if last_set and previous_stats:
-                    last_reps, last_weight = last_set
+                    last_reps, last_weight = int(last_set[0] or 0), float(last_set[1] or 0.0)
+                    last_set_count, last_total_volume_ex = int(previous_stats[0] or 0), float(previous_stats[1] or 0.0)
                     last_volume = last_reps * last_weight
-                    last_set_count, last_total_volume_ex = previous_stats
 
-                    # Only add PRs if there's a meaningful previous best (not 0)
-                    if best_set["reps"] * best_set["weight"] > last_volume and last_volume > 0:
+                    # PRs
+                    if (best_set["reps"] * best_set["weight"]) > last_volume and last_volume > 0:
                         personal_records.append({
                             "exercise": exercise_name,
                             "type": "bestSet",
@@ -4219,7 +4296,6 @@ def save_workout():
                             "reps": best_set["reps"],
                             "previousBest": {"weight": last_weight, "reps": last_reps}
                         })
-                    
                     if heaviest_set["weight"] > last_weight and last_weight > 0:
                         personal_records.append({
                             "exercise": exercise_name,
@@ -4231,13 +4307,15 @@ def save_workout():
 
                     # Per-set comparisons
                     for idx, s in enumerate(current_sets, start=1):
-                        current_volume = s["reps"] * s["weight"]
+                        reps = int(s.get("reps") or 0)
+                        weight = float(s.get("weight") or 0.0)
+                        current_volume = reps * weight
                         volume_change = current_volume - last_volume
                         set_comparisons.append({
                             "setId": f"{exercise_id}-{idx}",
                             "exerciseId": exercise_id,
-                            "currentReps": s["reps"],
-                            "currentWeight": s["weight"],
+                            "currentReps": reps,
+                            "currentWeight": weight,
                             "currentVolume": current_volume,
                             "previousReps": last_reps,
                             "previousWeight": last_weight,
@@ -4247,15 +4325,15 @@ def save_workout():
                             "isNew": False
                         })
 
-                    # Track improvements per exercise
+                    # Improvements
                     if total_volume_ex > last_total_volume_ex:
                         volume_improvements += 1
                         improvements.append({
-                            "exercise": exercise_name, 
+                            "exercise": exercise_name,
                             "type": "volume",
                             "volumeChange": total_volume_ex - last_total_volume_ex
                         })
-                    
+
                     if len(current_sets) > last_set_count:
                         sets_improvements += 1
                         improvements.append({
@@ -4264,19 +4342,21 @@ def save_workout():
                             "setsChange": len(current_sets) - last_set_count
                         })
                 else:
-                    # Handle case where previous session exists but no data
+                    # Previous session exists but no data
                     new_exercises_count += 1
                     for idx, s in enumerate(current_sets, start=1):
-                        current_volume = s["reps"] * s["weight"]
+                        reps = int(s.get("reps") or 0)
+                        weight = float(s.get("weight") or 0.0)
+                        current_volume = reps * weight
                         set_comparisons.append({
                             "setId": f"{exercise_id}-{idx}",
                             "exerciseId": exercise_id,
-                            "currentReps": s["reps"],
-                            "currentWeight": s["weight"],
+                            "currentReps": reps,
+                            "currentWeight": weight,
                             "currentVolume": current_volume,
                             "previousReps": 0,
-                            "previousWeight": 0,
-                            "previousVolume": 0,
+                            "previousWeight": 0.0,
+                            "previousVolume": 0.0,
                             "volumeChange": current_volume,
                             "noPrevious": True,
                             "isNew": True
@@ -4284,18 +4364,19 @@ def save_workout():
             else:
                 # First time doing this exercise in this focus type
                 new_exercises_count += 1
-                
                 for idx, s in enumerate(current_sets, start=1):
-                    current_volume = s["reps"] * s["weight"]
+                    reps = int(s.get("reps") or 0)
+                    weight = float(s.get("weight") or 0.0)
+                    current_volume = reps * weight
                     set_comparisons.append({
                         "setId": f"{exercise_id}-{idx}",
                         "exerciseId": exercise_id,
-                        "currentReps": s["reps"],
-                        "currentWeight": s["weight"],
+                        "currentReps": reps,
+                        "currentWeight": weight,
                         "currentVolume": current_volume,
                         "previousReps": 0,
-                        "previousWeight": 0,
-                        "previousVolume": 0,
+                        "previousWeight": 0.0,
+                        "previousVolume": 0.0,
                         "volumeChange": current_volume,
                         "noPrevious": True,
                         "isNew": True
@@ -4312,7 +4393,6 @@ def save_workout():
             ORDER BY date DESC
             LIMIT 1
         """, (current_user.id, focus_type, name, session_id))
-
         last_session_result = cursor.fetchone()
 
         # Fallback: just compare to last session with same focus_type
@@ -4328,103 +4408,166 @@ def save_workout():
             """, (current_user.id, focus_type, session_id))
             last_session_result = cursor.fetchone()
 
-        last_total_volume = 0
+        last_total_volume = 0.0
         last_total_sets = 0
-        
+
         if last_session_result:
             last_session_id = last_session_result[0]
-            
-            # Get total volume for previous session
+
+            # Total volume for previous session
             cursor.execute("""
                 SELECT COALESCE(SUM(reps * weight), 0) as total_volume
-                FROM workout_sets 
+                FROM workout_sets
                 WHERE session_id = %s
             """, (last_session_id,))
             volume_result = cursor.fetchone()
-            last_total_volume = volume_result[0] if volume_result else 0
-            
-            # Get total sets for previous session
+            last_total_volume = float(volume_result[0] or 0.0)
+
+            # Total sets for previous session
             cursor.execute("""
                 SELECT COUNT(*) as total_sets
-                FROM workout_sets 
+                FROM workout_sets
                 WHERE session_id = %s
             """, (last_session_id,))
             sets_result = cursor.fetchone()
-            last_total_sets = sets_result[0] if sets_result else 0
+            last_total_sets = int(sets_result[0] or 0)
 
-        volume_change_percent = ((current_total_volume - last_total_volume) / last_total_volume * 100) if last_total_volume else 0
+        volume_change_percent = ((current_total_volume - last_total_volume) / last_total_volume * 100.0) if last_total_volume else 0.0
         sets_change = total_sets - last_total_sets
 
         conn.commit()
-        print(f"🔧 DEBUG: About to check auto workout calories for user {user_id}")
+
+        # Auto-add workout calories to TDEE if enabled
+        auto_calories_enabled = False
+        daily_tdee = None
+        base_tdee = None
         try:
-            # Check if user has auto workout calories enabled
             cursor.execute(
                 "SELECT auto_add_workout_calories, tdee FROM users WHERE id = %s",
                 (user_id,)
             )
             user_settings = cursor.fetchone()
 
-            print(f"🔧 DEBUG: User settings query result: {user_settings}")            
-            
-            auto_calories_enabled = False
-            daily_tdee = None
-            base_tdee = None
-            
-            if user_settings and user_settings[0]:  # auto_add_workout_calories is True
+            if user_settings and user_settings[0]:
                 auto_calories_enabled = True
-                base_tdee = float(user_settings[1] or 0)
-                
-                # Calculate today's total TDEE including workout calories
-                daily_tdee = base_tdee + total_calories
-                
-                # Insert or update daily TDEE adjustment
+                base_tdee = float(user_settings[1] or 0.0)
+                daily_tdee = base_tdee + float(total_calories)
+
                 cursor.execute("""
                     INSERT INTO daily_tdee_adjustments (user_id, date, base_tdee, workout_calories, adjusted_tdee)
                     VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (user_id, date) 
-                    DO UPDATE SET 
+                    ON CONFLICT (user_id, date)
+                    DO UPDATE SET
                         base_tdee = EXCLUDED.base_tdee,
                         workout_calories = EXCLUDED.workout_calories,
                         adjusted_tdee = EXCLUDED.adjusted_tdee,
                         updated_at = NOW()
-                """, (user_id, date, base_tdee, total_calories, daily_tdee))
-                
-                print(f"🔥 Auto workout calories: Base {base_tdee} + Workout {total_calories} = Daily TDEE {daily_tdee}")
-            else:
-                print(f"🔧 DEBUG: Auto calories NOT enabled. User settings: {user_settings}")
-        except Exception as auto_cal_error:
-            print(f"🔧 Auto calories calculation failed: {str(auto_cal_error)}")
-            import traceback
-            print(f"🔧 Traceback: {traceback.format_exc()}")
+                """, (user_id, date, base_tdee, float(total_calories), float(daily_tdee)))
+        except Exception:
             # Continue without auto calories
+            pass
 
-        # Commit the TDEE adjustment
+        # -------------------------
+        # XP REWARDS LOGIC
+        # -------------------------
+        # Compute XP contributions. Minimal vs medium weighting.
+        xp_sources = {}
+
+        # Cardio duration (minimal)
+        xp_cardio_duration = float(cardio_duration) * 0.01  # 1 XP per 100s
+        xp_sources['cardio_duration'] = xp_cardio_duration
+
+        # Cardio calories burned (minimal)
+        xp_cardio_calories = float(cardio_calories) * 0.2   # 1 XP per 5 cal
+        xp_sources['cardio_calories'] = xp_cardio_calories
+
+        # Weights total volume (medium)
+        # Volume is reps * weight summed across sets; reward moderately.
+        xp_weights_volume = float(current_total_volume) * 0.03  # 1 XP per ~33 volume
+        xp_sources['weights_volume'] = xp_weights_volume
+
+        # New exercises tried (minimal flat bonus)
+        xp_new_exercises = int(new_exercises_count) * 25.0
+        xp_sources['new_exercises'] = xp_new_exercises
+
+        # Personal bests (minimal flat bonus per PR)
+        xp_personal_bests = float(len(personal_records)) * 30.0
+        xp_sources['personal_bests'] = xp_personal_bests
+
+        xp_gain = int(round(sum(xp_sources.values())))
+
+        # Fetch user's current xp/level
+        cursor.execute("SELECT COALESCE(xp_points,0), COALESCE(level,1) FROM users WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+        current_xp = int(row[0] or 0)
+        current_level = clamp_level(int(row[1] or 1))
+
+        # Apply XP and handle potential multiple level-ups
+        new_levels = 0
+        pool = current_xp + xp_gain
+        level_cursor = current_level
+
+        # Diminishing returns naturally come from xp_to_next_level growth
+        while pool >= xp_to_next_level(level_cursor) and level_cursor < LEVEL_CAP:
+            need = xp_to_next_level(level_cursor)
+            pool -= need
+            level_cursor += 1
+            new_levels += 1
+            if level_cursor >= LEVEL_CAP:
+                level_cursor = LEVEL_CAP
+                pool = 0
+                break
+
+        # Persist XP and level
+        cursor.execute(
+            "UPDATE users SET xp_points = %s, level = %s WHERE id = %s",
+            (int(pool), int(level_cursor), user_id)
+        )
+
+        # Commit TDEE and XP updates
         conn.commit()
-        print(f"🔧 DEBUG: Committed TDEE adjustment")
-        # Return enhanced response
+
+        # Return enhanced response with XP breakdown and level-up info
         return jsonify({
             "success": True,
             "session_id": session_id,
-            "timer_data": timer_data,
-            "total_calories": total_calories,
-            "total_duration_seconds": total_duration_seconds,
-            "auto_calories_enabled": auto_calories_enabled,
-            "base_tdee": base_tdee,
-            "daily_tdee": daily_tdee,
+            "timer_data": {
+                "totalSeconds": int(timer_data.get('totalSeconds') or 0),
+                "calories": float(timer_data.get('calories', 0) or 0.0)
+            },
+            "total_calories": float(total_calories),
+            "total_duration_seconds": int(total_duration_seconds),
+            "auto_calories_enabled": bool(auto_calories_enabled),
+            "base_tdee": float(base_tdee) if base_tdee is not None else None,
+            "daily_tdee": float(daily_tdee) if daily_tdee is not None else None,
             "comparisonData": {
                 "setComparisons": set_comparisons,
-                "totalSets": total_sets,
-                "setsChange": sets_change,
-                "totalVolume": current_total_volume,
-                "volumeChange": volume_change_percent
+                "totalSets": int(total_sets),
+                "setsChange": int(sets_change),
+                "totalVolume": float(current_total_volume),
+                "volumeChange": float(round(volume_change_percent, 2))
             },
             "achievements": {
                 "personalRecords": personal_records,
                 "improvements": improvements,
-                "newExercises": new_exercises_count,
-                "volumeImprovements": volume_improvements,
-                "setsImprovements": sets_improvements
+                "newExercises": int(new_exercises_count),
+                "volumeImprovements": int(volume_improvements),
+                "setsImprovements": int(sets_improvements)
+            },
+            "xp": {
+                "gained": int(xp_gain),
+                "sources": {
+                    "cardio_duration": int(round(xp_cardio_duration)),
+                    "cardio_calories": int(round(xp_cardio_calories)),
+                    "weights_volume": int(round(xp_weights_volume)),
+                    "new_exercises": int(round(xp_new_exercises)),
+                    "personal_bests": int(round(xp_personal_bests))
+                },
+                "levels_gained": int(new_levels),
+                "level_before": int(current_level),
+                "level_after": int(level_cursor),
+                "current_xp": int(pool),
+                "xp_to_next_level": int(xp_to_next_level(level_cursor))
             }
         })
 
@@ -5061,7 +5204,39 @@ def get_user_profile_data():
             'error': 'Could not get user profile data'
         }), 500
     finally:
-        conn.close()                
+        conn.close()
+
+@app.route('/sitemap.xml', methods=['GET'])
+def sitemap():
+    pages = []
+    ten_days_ago = (datetime.now()).date().isoformat()
+
+    # Loop through all registered routes
+    for rule in app.url_map.iter_rules():
+        # Skip special routes
+        if "GET" in rule.methods and not any([
+            rule.rule.startswith("/static"),
+            rule.rule.startswith("/api"),
+            "<" in rule.rule  # exclude dynamic URLs like /user/<id>
+        ]):
+            url = url_for(rule.endpoint, _external=True)
+            pages.append(url)
+
+    # Build the XML sitemap
+    sitemap_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    )
+
+    for page in pages:
+        sitemap_xml += f"""
+        <url>
+            <loc>{page}</loc>
+            <lastmod>{ten_days_ago}</lastmod>
+        </url>"""
+    sitemap_xml += "</urlset>"
+
+    return Response(sitemap_xml, mimetype='application/xml')
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
