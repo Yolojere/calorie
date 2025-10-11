@@ -695,6 +695,125 @@ input.form-control:-webkit-autofill {
     font-size: 13px;
     padding: 8px 0;
 }
+.level-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    font-weight: bold;
+    font-size: 14px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5),
+                0 0 20px rgba(255, 215, 0, 0.3);
+    border: 2px solid #fff;
+    z-index: 10;
+    animation: levelBadgePulse 3s ease-in-out infinite;
+    transition: transform 0.3s ease;
+}
+
+.level-badge:hover {
+    transform: scale(1.1);
+    animation: none;
+}
+
+@keyframes levelBadgePulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.5); }
+}
+
+.level-badge-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.level-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.level-number {
+    font-size: 16px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Different badge styles based on level tier */
+.level-badge.tier-beginner {
+    background: linear-gradient(135deg, #C0C0C0, #808080);
+}
+
+.level-badge.tier-intermediate {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.level-badge.tier-advanced {
+    background: linear-gradient(135deg, #FF6B6B, #C92A2A);
+}
+
+.level-badge.tier-expert {
+    background: linear-gradient(135deg, #7B68EE, #4B0082);
+}
+
+.level-badge.tier-master {
+    background: linear-gradient(135deg, #00D9FF, #0080FF);
+    animation: masterBadgeGlow 2s ease-in-out infinite;
+}
+
+@keyframes masterBadgeGlow {
+    0%, 100% { 
+        box-shadow: 0 4px 12px rgba(0, 217, 255, 0.6), 
+                    0 0 25px rgba(0, 217, 255, 0.4);
+    }
+    50% { 
+        box-shadow: 0 4px 20px rgba(0, 217, 255, 0.9), 
+                    0 0 40px rgba(0, 217, 255, 0.6);
+    }
+}
+
+/* XP progress tooltip (optional enhancement) */
+.level-badge-tooltip {
+    position: absolute;
+    bottom: -45px;
+    right: -10px;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.level-badge:hover .level-badge-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.level-badge-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid rgba(0, 0, 0, 0.9);
+}
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .avatar-modal {
@@ -725,6 +844,21 @@ input.form-control:-webkit-autofill {
 }
     /* Responsive */
     @media (max-width: 768px) {
+            .level-badge {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+        top: -3px;
+        right: -3px;
+    }
+    
+    .level-number {
+        font-size: 14px;
+    }
+    
+    .level-label {
+        font-size: 7px;
+    }
         .social-dropdown {
     position:absolute;
     display:block;
@@ -820,6 +954,16 @@ input.form-control:-webkit-autofill {
     }
     }
     @media (max-width: 480px) {
+            .level-badge {
+        min-width: 28px;
+        height: 28px;
+        top: 0;
+        right: 0;
+    }
+    
+    .level-number {
+        font-size: 12px;
+    }
     .avatar-options {
         grid-template-columns: repeat(3, 1fr);
         gap: 5px;
@@ -878,18 +1022,34 @@ input.form-control:-webkit-autofill {
     {% set avatar_folder = 'uploads' %}
 {% endif %}
                     
-                    <!-- Main Avatar - Clickable -->
-                     <div class="avatar-container" id="avatar-container">
+                    <!-- Main Avatar - Clickable with Level Badge -->
+                    <div class="avatar-container" id="avatar-container">
                         <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ current_avatar) }}"
-                             class="avatar-img"
-                             id="main-avatar"
-                             alt="{{ current_user.username }}'s avatar"
-                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
-                        <div class="avatar-edit-indicator">
-                            <i class="fas fa-camera"></i>
+                            class="avatar-img"
+                            id="main-avatar"
+                            alt="{{ current_user.username }}'s avatar"
+                            onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                        
+                        <!-- Level Badge with Progress Bar -->
+                        <div class="level-badge {% if user_level < 5 %}tier-beginner{% elif user_level < 15 %}tier-intermediate{% elif user_level < 30 %}tier-advanced{% elif user_level < 50 %}tier-expert{% else %}tier-master{% endif %}">
+                            <div class="level-badge-text">
+                                <span class="level-number">{{ user_level }}</span>
+                            </div>
+                            
+                            <!-- Enhanced Tooltip with Progress -->
+                            <div class="level-badge-tooltip">
+                                <div style="margin-bottom: 5px;">
+                                    <strong>Level {{ user_level }}</strong>
+                                </div>
+                                <div style="font-size: 11px; color: #7bc8a4;">
+                                    {{ user_xp }} / {{ xp_to_next_level }} XP
+                                </div>
+                                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 5px; overflow: hidden;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) }}%;"></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
+                                            
                     <!-- User Info -->
                     <h2 class="account-heading">{{ current_user.username }}</h2>
                     <p class="text-secondary mb-1">{{ current_user.email }}</p>
