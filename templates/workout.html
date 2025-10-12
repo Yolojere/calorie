@@ -221,6 +221,7 @@
         color: white;
         text-align: center;
         margin: 0 auto;
+        
     }
 
     .set-input:focus {
@@ -287,7 +288,7 @@
         display: inline-block;
         background-color: #1b1b1b;
         color: #ffffff;
-        border: 1px solid #9359fe;
+        border: 1px solid #9359fe !important;
         border-radius: 20px;
         padding: 8px 12px;
         font-size: 12px;
@@ -297,8 +298,11 @@
 
     .btn-jerew:hover, .btn-jerew:focus {
         transform: scale(1.03);
-        border: 2px solid #9359fe;
+        border: 2px solid #9359fe !important;
 
+    }
+    .btn-jerew:active {
+        border: 2px solid #9359fe !important;
     }
 
     .btn-jerew.active {
@@ -332,7 +336,7 @@
         color: #00ffaa;
     }
 
-    .btn-jerey:hover, .btn-jerew:focus {
+    .btn-jerey:hover, .btn-jerey:focus {
         transform: scale(1.03);
         border: 2px solid #9359fe;
         background-color: #9359fe;
@@ -343,6 +347,7 @@
         background: #1b1b1b !important;
         color: #ffffff !important;
     }
+
     /* Footer buttons */
     .btn-custom {
         background-color: #1b1b1b;
@@ -820,7 +825,7 @@
 
 /* CARDIO STYLES */
 .workout-group.cardio .group-header {
-    background: linear-gradient(135deg, #9e0808, rgba(0,0,0,0.8)) !important;
+    background: linear-gradient(135deg, #be3131ba, rgba(0,0,0,0.8)) !important;
 }
 
 .workout-group.cardio .group-items {
@@ -2179,45 +2184,81 @@
     transition: all 0.3s ease;
     user-select: none;
     animation: pulse 2s infinite;
+    animation-play-state: running; /* Default state */
 }
-
+.timer-icon-clickable.paused {
+    animation-play-state: paused;
+    opacity: 0.7; /* Visual indication it's paused */
+}
+.timer-icon-clickable.active {
+    color: #4e4e4e;
+    background-color: rgba(78, 78, 78, 0.822);
+    box-shadow: 0 0 15px rgba(53, 53, 53, 0.901);
+    animation: activePulse 2s infinite;
+}
 .timer-icon-clickable:hover {
     background-color: rgba(255, 255, 255, 0.1);
     transform: scale(1.1);
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+@keyframes activePulse {
+    0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 15px rgba(50, 50, 50, 0.644);
+    }
+    50% { 
+        transform: scale(1.15); 
+        box-shadow: 0 0 25px rgba(63, 63, 63, 0.835);
+    }
+    100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 15px rgba(105, 105, 105, 0.534);
+    }
+}
+@keyframes pausedBlink {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.4; }
 }
 
+.timer-icon-clickable.paused {
+    animation: pausedBlink 3s infinite;
+    color: #ffa500;
+    background-color: rgba(255, 165, 0, 0.1);
+}
 /* Timer Dropdown */
 .timer-dropdown {
     position: absolute;
-    top: calc(100% + 5px); /* Position just below the icon */
+    top: calc(100% + 5px);
     right: 0;
-    background-color: #1e1e1e;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    border-color: #cfcfcf;
-    border-radius: 8px;
-    min-width: 160px;
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(20, 20, 40, 0.95));
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    min-width: 180px;
     z-index: 1001;
-    /* Key fix: ensure proper display behavior */
-    display: none !important; /* Force hidden when not active */
-    /* Remove from layout flow completely */
+    display: none !important;
     visibility: hidden;
 }
 .timer-dropdown:not(.d-none) {
     display: block !important;
     visibility: visible;
+    animation: dropdownFadeIn 0.3s ease;
 }
-
+@keyframes dropdownFadeIn {
+    0% { 
+        opacity: 0; 
+        transform: translateY(-10px) scale(0.95); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
 .timer-dropdown-content {
-    padding: 12px;
+    padding: 16px;
     text-align: center;
 }
-
 .timer-display-text {
     font-family: 'Courier New', monospace;
     font-size: 18px;
@@ -2226,16 +2267,46 @@
     margin-bottom: 4px;
 }
 
+.timer-display-text {
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    color: #00ffaa;
+    margin-bottom: 6px;
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+    letter-spacing: 1px;
+}
+
 .timer-label {
     font-size: 11px;
     color: #aaa;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stop-timer-btn {
+    background: linear-gradient(135deg, #6dc0d5, #7bc8a4);
+    border: none;
+    color: white;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    font-weight: 600;
 }
 
-.stop-timer-btn {
-    font-size: 11px;
-    padding: 2px 8px;
+.stop-timer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(109, 192, 213, 0.4);
 }
+.timer-icon-container {
+    position: relative;
+    z-index: 1000;
+    overflow: visible;
+    width: auto;
+    height: auto;
+}
+
 
 /* Make achievement cards slightly smaller to fit 6 cards nicely */
 .achievement-card {
@@ -3517,8 +3588,9 @@
             <!-- Timer Icon (always visible when active) -->
             <div id="workout-timer-icon" class="timer-icon-container d-none">
                 <div class="timer-icon-clickable" title="View Timer">
-                    ⏱️
+                    <img src="static/images/timer_icon.png" alt="Timer Icon" class="timer-icon" width="24" height="24">
                     </div>
+                    
                     
                 
                 <!-- Timer Dropdown -->
@@ -3541,6 +3613,7 @@
             </div>
         </div>
         
+        
         <div class="workout-name-container position-relative">
             <span class="workout-name-display btn-jerez btn-outline-primary" 
                 style="font-size:12px; margin-left:2px; padding:2px 8px; border-radius:6px;">
@@ -3555,15 +3628,16 @@
             </div>
         </div>
     </div>
+    
 
 
 
 
                     <!-- Card Body -->
                     <div class="card-body p-0">
-                        <div id="workout-session-container" class="p-2">
+                        <div id="workout-session-container" class="p-0">
                             <!-- Initial loading message -->
-                            <div class="text-center py-4 text-muted">
+                            <div class="text-center py-4">
                                 <i class="fas fa-spinner fa-spin me-2"></i><span data-i18n="loading_workout_data"> Ladataan treenitietoja... </span>
                             </div>
                         </div>
