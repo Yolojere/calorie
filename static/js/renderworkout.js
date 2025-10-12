@@ -1032,12 +1032,19 @@ function showXPSummary(xpData, workoutData) {
 function animateXPElements(isLevelUp) {
     // Animate progress bar
     setTimeout(() => {
-        $('#xp-progress-bar').css('width', $('#xp-progress-bar').attr('style').match(/width: ([\d.]+)%/)[1] + '%');
+        const progressBar = $('#xp-progress-bar');
+        const currentWidth = progressBar.css('width');
+        progressBar.css('width', '0%').animate({'width': currentWidth}, 1000);
     }, 800);
     
     // Create floating particles if level up
     if (isLevelUp) {
         createXPParticles();
+        
+        // CRITICAL: Remove level celebration star after animation
+        setTimeout(() => {
+            $('.level-celebration').remove();
+        }, 3000); // 3s animation duration
     }
     
     // Animate XP sources with stagger
@@ -1057,19 +1064,29 @@ function createXPParticles() {
     const container = $('#xp-particles');
     const particleCount = 15;
     
+    // Clear any existing particles first
+    container.empty();
+    
     for (let i = 0; i < particleCount; i++) {
         setTimeout(() => {
             const particle = $('<div class="xp-particle"></div>');
             particle.css({
                 'left': Math.random() * 100 + '%',
-                'animation-delay': Math.random() * 1 + 's'
+                'animation-delay': Math.random() * 0.5 + 's'
             });
             container.append(particle);
             
-            // Remove particle after animation
-            setTimeout(() => particle.remove(), 3000);
+            // CRITICAL: Remove particle after animation completes
+            setTimeout(() => {
+                particle.remove();
+            }, 5500); // 5s animation + 500ms buffer
         }, i * 100);
     }
+    
+    // Optional: Clear entire container after all animations
+    setTimeout(() => {
+        container.empty();
+    }, 6000);
 }
 
 function hideXPSummary() {
