@@ -49,49 +49,44 @@ function saveSet(isMobile = false) {
     });
 }
     
-function deleteSet(setId, $button) {
-    saveScrollPosition();
-
-    const $row = $button.closest('tr');
-    const $exercise = $row.closest('.exercise-card'); // adjust selector to your container
-
-    // Animate row removal
-    $row.fadeOut(300, function() {
-        $(this).remove();
-
-        // Check if exercise group is now empty
-        const $tbody = $exercise.find("tbody");
-        if ($tbody.find("tr.set-row").length === 0) {
-            $exercise.fadeOut(300, function() {
-                $(this).remove();
-                hideEmptyWorkoutGroups();
-            });
-        } else {
-            hideEmptyWorkoutGroups();
-        }
-    });
-
-    // Call backend to delete set
-    $.post("/workout/delete_set", { set_id: setId }, function(response) {
-        const date = $(".workout-date.active").data("date");
+function deleteSet(setId, button) {
+    console.log('CSRF token being sent:', csrfToken);
+    
+    // Capture date context BEFORE any DOM operations
+    const date = button.closest('.workout-session-container').data('date') ||
+                 $('.workout-date.active').data('date') ||
+                 currentSelectedDate ||
+                 new Date().toISOString().split('T')[0];
+    
+    if (!date) {
+        console.error('No valid date context for deleteSet');
+        alert('Error: Could not determine which day\'s workout to update.');
+        return;
+    }
+    
+    console.log('Delete set for date:', date);
+    
+    $.post('/workout/delete_set', {
+        set_id: setId
+    }, function(response) {
         if (response.success) {
-            // ✅ FIXED: Use invalidateDateCache and getSessionWithCache instead of loadWorkoutData
+            console.log('Set deleted successfully');
+            
+            // Invalidate cache for the specific date
             invalidateDateCache(date);
+            
+            // Refresh workout data for the same date
             getSessionWithCache(date, function(data) {
                 console.log('✅ Workout refreshed after deleting set');
             });
         } else {
-            // ✅ FIXED: Use getSessionWithCache instead of loadWorkoutData  
-            getSessionWithCache(date, function(data) {
-                console.log('✅ Workout refreshed after delete error');
-            });
+            console.error('Failed to delete set:', response.error);
+            alert('Error deleting set: ' + (response.error || 'Unknown error'));
         }
-    }).fail(function() {
-        const date = $(".workout-date.active").data("date");
-        // ✅ FIXED: Use getSessionWithCache instead of loadWorkoutData
-        getSessionWithCache(date, function(data) {
-            console.log('✅ Workout refreshed after delete failure');
-        });
+    })
+    .fail(function(xhr, status, error) {
+        console.error('Network error deleting set:', error);
+        alert('Network error deleting set. Please check your connection.');
     });
 }
 
@@ -174,7 +169,7 @@ function saveTemplate() {
 
     const $btn = $("#save-template-btn");
     const originalContent = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Tallentaa...');
     $btn.prop('disabled', true);
 
     const currentDate = $(".workout-date.active").data("date");
@@ -213,7 +208,7 @@ function saveTemplate() {
 function previewTemplate(templateId) {
     $("#template-preview-content").html(
         '<div class="text-center py-3">' +
-        '<i class="fas fa-spinner fa-spin me-2"></i>Loading template...' +
+        '<i class="fas fa-spinner fa-spin me-2"></i>Lataa pohjaa...' +
         '</div>'
     );
 
@@ -315,7 +310,7 @@ function applyTemplate(templateId) {
     // Show loading state
     const $btn = $("#apply-template-btn");
     const originalContent = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Applying...');
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Alustetaan...');
     $btn.prop('disabled', true);
     
     // Use jQuery AJAX instead of fetch to ensure CSRF token is included
@@ -373,7 +368,7 @@ function copyWorkoutToDate(targetDate) {
 
     const $btn = $("#copy-workout-btn, #copy-workout-mobile-btn");
     const originalContent = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Copying...');
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Kopioidaan...');
     $btn.prop('disabled', true);
 
     // Show loading overlay
@@ -521,7 +516,7 @@ function getExercisesFromUI() {
 }
 // Enhanced Save Workout with Analysis and PR Detection
 $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", function() {
-    const name = $("#workout-name-input").val().trim() || "Unnamed Workout";
+    const name = $("#workout-name-input").val().trim() || "Nimetön Treeni";
     const focus_type = $(".focus-btn.active").data("focus");
     const date = currentSelectedDate;
     const exercises = getExercisesFromUI();
@@ -1203,7 +1198,7 @@ async function addCardioSession(isMobile = false) {
     const hiddenInput = document.getElementById(`cardio-exercise-id${suffix}`);
     
     if (!selectedExercise || !hiddenInput || !hiddenInput.value) {
-        alert('Please select a cardio exercise first');
+        alert('Valitse ensin harjoitus');
         console.warn('No cardio exercise selected:', selectedExercise, hiddenInput?.value);
         return;
     }
@@ -1213,7 +1208,7 @@ async function addCardioSession(isMobile = false) {
     
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Lisätään...';
     }
     
     // Get other form values...
@@ -1240,7 +1235,7 @@ async function addCardioSession(isMobile = false) {
             watts: wattsInput && wattsInput.value ? parseInt(wattsInput.value) : null,
             notes: notesInput ? notesInput.value : '',
             date: currentSelectedDate,
-            workout_name: document.querySelector('.workout-name-display')?.textContent || 'Mixed Session'
+            workout_name: document.querySelector('.workout-name-display')?.textContent || 'Sekalainen Treeni'
         };
         
         console.log('Adding cardio session with search data:', cardioData);
@@ -1282,11 +1277,11 @@ async function addCardioSession(isMobile = false) {
             }
         } else {
             console.error('Failed to add cardio session:', result);
-            alert(result.error || 'Error adding cardio session');
+            alert(result.error || 'Error cardion lisäämisessä');
         }
     } catch (error) {
         console.error('Error adding cardio session:', error);
-        alert('Network error adding cardio session');
+        alert('Yhteysvirhe. cardion lisääminen epäonnistui.');
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
