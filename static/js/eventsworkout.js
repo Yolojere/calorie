@@ -804,14 +804,14 @@ function copyWorkoutFromSessionInline(sessionId, targetDate) {
                     location.reload();
                 }
                 
-                alert(`Workout copied successfully! ${response.debug ? response.debug.sets_copied : ''} sets copied.`);
+                alert(`Treeni kopioitu onnistuneesti! ${response.debug ? response.debug.sets_copied : ''} sarjaa kopioitu.`);
             } else {
-                alert('Error copying workout: ' + response.error);
+                alert('Ongelma kopioinissa: ' + response.error);
             }
         },
         error: function(xhr, status, error) {
             console.error('Copy error:', xhr.responseText);
-            alert('Network error occurred while copying workout');
+            alert('Yhteysvirhe kopioinissa');
         },
         complete: function() {
             $btn.text(originalText).prop('disabled', false);
