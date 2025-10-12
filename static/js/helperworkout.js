@@ -63,7 +63,7 @@ function restoreFocus() {
 }
         
 function resetExerciseForm() {
-    $("#new-exercise-name").val("");https://www.perplexity.ai/discover
+    $("#new-exercise-name").val("");
     $("#new-exercise-desc").val("");
 }
 function getCardioSessionsFromUI() {
@@ -210,7 +210,7 @@ function formatDateForSelector(date) {
 function collectWorkoutData() {
   let data = {
     date: currentSelectedDate,
-    name: $("#workout-name").val() || "Unnamed Workout",
+    name: $("#workout-name").val() || "Nimetön Treeni",
     exercises: []
   };
 
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
 $('#saveWorkoutModal').on('show.bs.modal', function(){
     const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
     const key = getWorkoutNameKey(date);
-    const autosuggest = localStorage.getItem(key) || "My Session";
+    const autosuggest = localStorage.getItem(key) || "Nimetön Treeni";
     $("#workout-name-input").val(autosuggest);
 });
 function selectDate(dateString) {
