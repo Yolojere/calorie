@@ -1878,13 +1878,30 @@
     transform: translateX(-50%);
     font-size: 60px;
     animation: levelCelebration 3s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
 }
 
 @keyframes levelCelebration {
-    0% { transform: translateX(-50%) translateY(0) scale(0); opacity: 0; }
-    20% { transform: translateX(-50%) translateY(-30px) scale(1.2); opacity: 1; }
-    80% { transform: translateX(-50%) translateY(-30px) scale(1); opacity: 1; }
-    100% { transform: translateX(-50%) translateY(-50px) scale(0.8); opacity: 0; }
+    0% { 
+        transform: translateX(-50%) translateY(0) scale(0); 
+        opacity: 0; 
+    }
+    20% { 
+        transform: translateX(-50%) translateY(-30px) scale(1.2); 
+        opacity: 1; 
+    }
+    80% { 
+        transform: translateX(-50%) translateY(-30px) scale(1); 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translateX(-50%) translateY(-50px) scale(0.8); 
+        opacity: 0;
+        /* Force complete invisibility */
+        visibility: hidden;
+    }
 }
 
 /* XP particles effect */
@@ -1903,17 +1920,26 @@
     height: 6px;
     background: #FFD700;
     border-radius: 50%;
-    animation: floatUp 3s ease-out forwards;
+    animation: floatUp 3s ease-out forwards;    
 }
-
 @keyframes floatUp {
     0% { 
-        transform: translateY(0) scale(0);
+        transform: translateY(0) scale(0) rotate(0deg);
         opacity: 1;
     }
+    15% {
+        transform: translateY(-20px) scale(1) rotate(45deg);
+        opacity: 1;
+    }
+    85% {
+        transform: translateY(-180px) scale(0.8) rotate(315deg);
+        opacity: 0.8;
+    }
     100% { 
-        transform: translateY(-200px) scale(1);
+        transform: translateY(-220px) scale(0) rotate(360deg);
         opacity: 0;
+        /* Ensure particle is completely invisible */
+        visibility: hidden !important;
     }
 }
 
@@ -3868,4 +3894,3 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
 </div>
 </body>
 </html>
-
