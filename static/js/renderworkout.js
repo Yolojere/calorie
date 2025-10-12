@@ -127,21 +127,23 @@ function startWorkoutTimer() {
     workoutTimer.intervalId = setInterval(updateTimerDisplay, 1000);
     resetInactivityTimeout();
     
-    // ✅ SIMPLIFIED: Just show timer display immediately
+    // Show timer with active animation
     showTimerDisplay();
+    $('.timer-icon-clickable').addClass('active');
 }
 
 // ✅ NEW: Separate resume function for when resuming from pause
 function resumeWorkoutTimer() {
     console.log('▶️ Resuming workout timer');
     
-    // ✅ Calculate and add paused duration
+    // Calculate and add paused duration
     if (workoutTimer.pausedAt) {
-        const pauseDuration = Math.floor((new Date() - workoutTimer.pausedAt) / 1000); // Floor to whole seconds
-        workoutTimer.pausedTime = Math.floor(workoutTimer.pausedTime + pauseDuration); // Keep as integer
+        const pauseDuration = Math.floor((new Date() - workoutTimer.pausedAt) / 1000);
+        workoutTimer.pausedTime = Math.floor(workoutTimer.pausedTime + pauseDuration);
         workoutTimer.pausedAt = null;
         console.log(`Added ${pauseDuration}s to paused time. Total paused: ${workoutTimer.pausedTime}s`);
     }
+    
     workoutTimer.isActive = true;
     workoutTimer.lastActivity = new Date();
     
@@ -152,8 +154,10 @@ function resumeWorkoutTimer() {
     // Save resumed state
     saveTimerState();
     
-    // Add active animation
-    $('.timer-icon-clickable').addClass('active');
+    // Update animation classes for active state
+    $('.timer-icon-clickable')
+        .removeClass('paused')
+        .addClass('active');
     
     // Update button text
     $('.stop-timer-btn').html('<i class="fas fa-pause"></i> Keskeytä');
@@ -164,7 +168,7 @@ function pauseWorkoutTimer() {
     console.log('⏸️ Pausing workout timer');
     
     workoutTimer.isActive = false;
-    workoutTimer.pausedAt = new Date(); // ✅ Record when paused
+    workoutTimer.pausedAt = new Date();
     
     // Clear intervals but keep the timer state
     if (workoutTimer.intervalId) {
@@ -180,8 +184,10 @@ function pauseWorkoutTimer() {
     // Save paused state to localStorage
     saveTimerState();
     
-    // Remove active animation
-    $('.timer-icon-clickable').removeClass('active');
+    // Update animation classes for paused state
+    $('.timer-icon-clickable')
+        .removeClass('active')
+        .addClass('paused');
     
     // Update button text
     $('.stop-timer-btn').html('<i class="fas fa-play"></i> Jatka');
@@ -340,9 +346,10 @@ function showTimerStartAnimation() {
 function hideTimerDisplay() {
     const timerIcon = $('#workout-timer-icon');
     
-    // ✅ Simple class addition - no fadeOut needed
     timerIcon.addClass('d-none');
-    $('.timer-icon-clickable').removeClass('active');
+    $('.timer-icon-clickable')
+        .removeClass('active')
+        .removeClass('paused');
     $('#timer-dropdown').addClass('d-none');
     
     console.log('Timer icon hidden');
@@ -1550,7 +1557,7 @@ function displayCardioSessions(cardioSessions, containerOverride = null) {
                 <div class="group-title">Cardio</div>
             </div>
             <div class="group-summary">
-                <span class="summary-item">${uniqueSessions.length} session${uniqueSessions.length !== 1 ? 's' : ''}</span>
+                <span class="summary-item">${uniqueSessions.length} Harjoitus${uniqueSessions.length !== 1 ? 'ta' : ''}</span>
                 <span class="summary-item">${Math.round(totalCalories)} cal</span>
             </div>
         </div>
@@ -1637,7 +1644,7 @@ function displayWorkoutData(workoutData) {
     const container = document.getElementById('workout-session-container');
 
     if (!workoutData.success || !workoutData.session) {
-        container.innerHTML = "<p>No workout session found for this date.</p>";
+        container.innerHTML = "<p>Tälle päivälle ei löytynyt harjoitus dataa</p>";
         return;
     }
 
@@ -1766,11 +1773,11 @@ async function deleteCardioSession(sessionId) {
             
         } else {
             console.error('Failed to delete cardio session:', result);
-            alert(result.error || 'Error deleting cardio session');
+            alert(result.error || 'Ongelma poistaa cardio harjoitus');
         }
     } catch (error) {
         console.error('Error deleting cardio session:', error);
-        alert('Error deleting cardio session');
+        alert('Ongelma poistaa cardio harjoitus');
     }
 }
 
@@ -1839,7 +1846,7 @@ async function loadWorkoutData(date, callback) {
         } else {
             console.error('No valid date available, cannot load workout data');
             const container = document.getElementById('workout-session-container');
-            container.innerHTML = `<div class='alert alert-danger'>Error: No date specified for workout data</div>`;
+            container.innerHTML = `<div class='alert alert-danger'>Error: Päivämäärää ei valittu</div>`;
             return;
         }
     }
