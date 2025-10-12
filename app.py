@@ -4104,8 +4104,8 @@ def save_workout():
     focus_type = data.get('focus_type', 'general')
     date_str = data.get('date')
     exercises = data.get('exercises', [])
-    timer_data = data.get('timer_data', {})  # Timer data
-    cardio_sessions = data.get('cardio_sessions', [])  # Cardio data (not directly used here; cardio_totals queried from DB)
+    timer_data = data.get('timer_data', {})
+    cardio_sessions = data.get('cardio_sessions', [])
 
     if not focus_type or not date_str:
         return jsonify({"success": False, "error": "Focus vaihtoehto on valittava"}), 400
@@ -4139,7 +4139,6 @@ def save_workout():
             session_id = cursor.fetchone()[0]
         else:
             session_id = session[0]
-            # Update existing session
             cursor.execute(
                 "UPDATE workout_sessions SET name = %s, focus_type = %s "
                 "WHERE id = %s",
@@ -4160,24 +4159,29 @@ def save_workout():
                 )
             )
 
-        # Replace sets for this session
-        cursor.execute("DELETE FROM workout_sets WHERE session_id = %s", (session_id,))
-        # Save sets for each exercise
-        for ex in exercises:
-            sets = ex.get("sets", [])
-            for s in sets:
-                # Handle different possible ID field names
-                exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
-                if not exercise_id:
-                    continue  # Skip if no exercise ID
-                reps = int(s.get("reps") or 0)
-                weight = float(s.get("weight") or 0.0)
-                cursor.execute(
-                    "INSERT INTO workout_sets (session_id, exercise_id, reps, weight) VALUES (%s, %s, %s, %s)",
-                    (session_id, exercise_id, reps, weight)
-                )
+        # CRITICAL FIX: Get IDs of sets that are currently UNSAVED before we mark them as saved
+        cursor.execute(
+            "SELECT id, exercise_id, reps, weight FROM workout_sets "
+            "WHERE session_id = %s AND is_saved = false",
+            (session_id,)
+        )
+        unsaved_sets = cursor.fetchall()
 
-        # Calculate total calories (weights + cardio)
+        # MARK ALL CURRENT UNSAVED SETS AS SAVED
+        cursor.execute(
+            "UPDATE workout_sets SET is_saved = true "
+            "WHERE session_id = %s AND is_saved = false",
+            (session_id,)
+        )
+
+        # MARK ALL CURRENT UNSAVED CARDIO AS SAVED  
+        cursor.execute(
+            "UPDATE cardio_sessions SET is_saved = true "
+            "WHERE session_id = %s AND is_saved = false",
+            (session_id,)
+        )
+
+        # Calculate total calories (weights + cardio) - ALL sessions
         total_calories = float(timer_data.get('calories', 0) or 0.0)
         total_duration_seconds = int(timer_data.get('totalSeconds', 0) or 0)
 
@@ -4201,7 +4205,6 @@ def save_workout():
                 total_calories += cardio_calories
                 total_duration_seconds += cardio_duration
         except Exception:
-            # Continue without cardio data
             pass
 
         # Update session with combined totals
@@ -4223,13 +4226,34 @@ def save_workout():
         volume_improvements = 0
         sets_improvements = 0
 
-        for ex in exercises:
-            exercise_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
-            exercise_name = ex.get("name") or ex.get("exercise_name") or ex.get("exerciseName") or "Unknown Exercise"
-            if not exercise_id:
-                continue
+        # Group unsaved sets by exercise_id for processing
+        unsaved_sets_by_exercise = {}
+        for set_id, exercise_id, reps, weight in unsaved_sets:
+            if exercise_id not in unsaved_sets_by_exercise:
+                unsaved_sets_by_exercise[exercise_id] = []
+            unsaved_sets_by_exercise[exercise_id].append({
+                "reps": int(reps),
+                "weight": float(weight)
+            })
 
-            # Get most recent session for this exercise and focus type - FIXED QUERY
+        # ONLY PROCESS EXERCISES THAT HAD UNSAVED SETS
+        for exercise_id, current_sets in unsaved_sets_by_exercise.items():
+            # Get exercise name from the exercises data or database
+            exercise_name = "Unknown Exercise"
+            for ex in exercises:
+                ex_id = ex.get("id") or ex.get("exercise_id") or ex.get("exerciseId")
+                if ex_id == exercise_id:
+                    exercise_name = ex.get("name") or ex.get("exercise_name") or ex.get("exerciseName") or "Unknown Exercise"
+                    break
+            
+            # If not found in exercises data, get from database
+            if exercise_name == "Unknown Exercise":
+                cursor.execute("SELECT name FROM exercises WHERE id = %s", (exercise_id,))
+                ex_result = cursor.fetchone()
+                if ex_result:
+                    exercise_name = ex_result[0]
+
+            # Get most recent session for this exercise and focus type (exclude current date)
             cursor.execute("""
                 SELECT ws.id, ws.date
                 FROM workout_sessions ws
@@ -4237,29 +4261,22 @@ def save_workout():
                 WHERE ws.user_id = %s
                   AND ws.focus_type = %s
                   AND wset.exercise_id = %s
-                  AND ws.id != %s
+                  AND ws.date != %s
                 ORDER BY ws.date DESC
                 LIMIT 1
-            """, (current_user.id, focus_type, exercise_id, session_id))
+            """, (current_user.id, focus_type, exercise_id, date))
             previous_session = cursor.fetchone()
 
-            current_sets = ex.get("sets", [])
             total_sets += len(current_sets)
 
             # Current session calculations
             if current_sets:
-                # sanitize sets
-                sanitized_sets = []
-                for s in current_sets:
-                    reps = int(s.get("reps") or 0)
-                    weight = float(s.get("weight") or 0.0)
-                    sanitized_sets.append({"reps": reps, "weight": weight})
-                heaviest_set = max(sanitized_sets, key=lambda s: s["weight"])
-                best_set = max(sanitized_sets, key=lambda s: s["reps"] * s["weight"])
-                total_volume_ex = sum(s["reps"] * s["weight"] for s in sanitized_sets)
+                heaviest_set = max(current_sets, key=lambda s: s["weight"])
+                best_set = max(current_sets, key=lambda s: s["reps"] * s["weight"])
+                total_volume_ex = sum(s["reps"] * s["weight"] for s in current_sets)
                 current_total_volume += total_volume_ex
             else:
-                continue  # Skip if no sets
+                continue
 
             if previous_session:
                 previous_session_id, previous_date = previous_session
@@ -4382,30 +4399,29 @@ def save_workout():
                         "isNew": True
                     })
 
-        # Get previous session totals for same focus_type - FIXED QUERY
+        # Get previous session totals for same focus_type (exclude current date)
         cursor.execute("""
             SELECT id
             FROM workout_sessions
             WHERE user_id = %s
             AND focus_type = %s
             AND name = %s
-            AND id != %s
+            AND date != %s
             ORDER BY date DESC
             LIMIT 1
-        """, (current_user.id, focus_type, name, session_id))
+        """, (current_user.id, focus_type, name, date))
         last_session_result = cursor.fetchone()
 
-        # Fallback: just compare to last session with same focus_type
         if not last_session_result:
             cursor.execute("""
                 SELECT id
                 FROM workout_sessions
                 WHERE user_id = %s
                 AND focus_type = %s
-                AND id != %s
+                AND date != %s
                 ORDER BY date DESC
                 LIMIT 1
-            """, (current_user.id, focus_type, session_id))
+            """, (current_user.id, focus_type, date))
             last_session_result = cursor.fetchone()
 
         last_total_volume = 0.0
@@ -4414,7 +4430,6 @@ def save_workout():
         if last_session_result:
             last_session_id = last_session_result[0]
 
-            # Total volume for previous session
             cursor.execute("""
                 SELECT COALESCE(SUM(reps * weight), 0) as total_volume
                 FROM workout_sets
@@ -4423,7 +4438,6 @@ def save_workout():
             volume_result = cursor.fetchone()
             last_total_volume = float(volume_result[0] or 0.0)
 
-            # Total sets for previous session
             cursor.execute("""
                 SELECT COUNT(*) as total_sets
                 FROM workout_sets
@@ -4464,50 +4478,31 @@ def save_workout():
                         updated_at = NOW()
                 """, (user_id, date, base_tdee, float(total_calories), float(daily_tdee)))
         except Exception:
-            # Continue without auto calories
             pass
 
-        # -------------------------
         # XP REWARDS LOGIC
-        # -------------------------
-        # Compute XP contributions. Minimal vs medium weighting.
         xp_sources = {}
-
-        # Cardio duration (minimal)
-        xp_cardio_duration = float(cardio_duration) * 0.01  # 1 XP per 100s
+        xp_cardio_duration = float(cardio_duration) * 0.01
         xp_sources['cardio_duration'] = xp_cardio_duration
-
-        # Cardio calories burned (minimal)
-        xp_cardio_calories = float(cardio_calories) * 0.2   # 1 XP per 5 cal
+        xp_cardio_calories = float(cardio_calories) * 0.2
         xp_sources['cardio_calories'] = xp_cardio_calories
-
-        # Weights total volume (medium)
-        # Volume is reps * weight summed across sets; reward moderately.
-        xp_weights_volume = float(current_total_volume) * 0.03  # 1 XP per ~33 volume
+        xp_weights_volume = float(current_total_volume) * 0.03
         xp_sources['weights_volume'] = xp_weights_volume
-
-        # New exercises tried (minimal flat bonus)
         xp_new_exercises = int(new_exercises_count) * 25.0
         xp_sources['new_exercises'] = xp_new_exercises
-
-        # Personal bests (minimal flat bonus per PR)
         xp_personal_bests = float(len(personal_records)) * 30.0
         xp_sources['personal_bests'] = xp_personal_bests
-
         xp_gain = int(round(sum(xp_sources.values())))
 
-        # Fetch user's current xp/level
         cursor.execute("SELECT COALESCE(xp_points,0), COALESCE(level,1) FROM users WHERE id = %s", (user_id,))
         row = cursor.fetchone()
         current_xp = int(row[0] or 0)
         current_level = clamp_level(int(row[1] or 1))
 
-        # Apply XP and handle potential multiple level-ups
         new_levels = 0
         pool = current_xp + xp_gain
         level_cursor = current_level
 
-        # Diminishing returns naturally come from xp_to_next_level growth
         while pool >= xp_to_next_level(level_cursor) and level_cursor < LEVEL_CAP:
             need = xp_to_next_level(level_cursor)
             pool -= need
@@ -4518,19 +4513,17 @@ def save_workout():
                 pool = 0
                 break
 
-        # Persist XP and level
         cursor.execute(
             "UPDATE users SET xp_points = %s, level = %s WHERE id = %s",
             (int(pool), int(level_cursor), user_id)
         )
 
-        # Commit TDEE and XP updates
         conn.commit()
 
-        # Return enhanced response with XP breakdown and level-up info
         return jsonify({
             "success": True,
             "session_id": session_id,
+            "exercises_saved": len(unsaved_sets_by_exercise),  # Number of exercises that were just saved
             "timer_data": {
                 "totalSeconds": int(timer_data.get('totalSeconds') or 0),
                 "calories": float(timer_data.get('calories', 0) or 0.0)
@@ -4580,6 +4573,8 @@ def save_workout():
     finally:
         cursor.close()
         conn.close()
+
+
 def get_oauth_connection(provider, provider_user_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
