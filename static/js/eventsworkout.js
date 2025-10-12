@@ -330,7 +330,7 @@ function recalcSessionTotals() {
         });
     });
 
-    $("#session-total-sets").text(`${totalSets} sets`);
+    $("#session-total-sets").text(`${totalSets} Sarjaa`);
     $("#session-total-volume").text(`${totalVolume.toFixed(1)} kg`);
 }
 function recalcGroupTotals($group) {
@@ -348,7 +348,7 @@ function recalcGroupTotals($group) {
         });
     });
 
-    $group.find(".group-summary .summary-item").eq(0).text(`${totalSets} sets`);
+    $group.find(".group-summary .summary-item").eq(0).text(`${totalSets} Sarjaa`);
     $group.find(".group-summary .summary-item").eq(1).text(`${totalVolume.toFixed(1)} kg`);
 }
 function updateExerciseHeader($exercise) {
@@ -363,7 +363,7 @@ function updateExerciseHeader($exercise) {
         exerciseVolume += reps * weight;
     });
 
-    $exercise.find(".exercise-summary-text").text(`${exerciseSets} sets, ${exerciseVolume.toFixed(1)} kg`);
+    $exercise.find(".exercise-summary-text").text(`${exerciseSets} Sarjaa, ${exerciseVolume.toFixed(1)} kg`);
 }
 function handleSetUpdate() {
     // 🟢 START TIMER ON SET EDIT
