@@ -526,6 +526,17 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
     const date = currentSelectedDate;
     const exercises = getExercisesFromUI();
     
+    // Validation
+    if (!focus_type) {
+        alert("Please select a focus type");
+        return;
+    }
+    
+    if (!exercises || exercises.length === 0) {
+        alert("Please add at least one exercise");
+        return;
+    }
+    
     // 🔴 STOP TIMER WHEN SAVING
     stopWorkoutTimer();
     
@@ -545,22 +556,37 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
             focus_type,
             date,
             exercises,
-            timer_data: timerData, // Add timer data
-            cardio_sessions: cardioSessions // Add cardio data
+            timer_data: timerData,
+            cardio_sessions: cardioSessions
         }),
         dataType: "json",
         success: function(response) {
             if (response.success) {
                 $("#saveWorkoutModal").modal("hide");
                 
-                // Continue analysis for 4 seconds, then show results
+                // Continue analysis for 4 seconds, then show XP or results
                 setTimeout(() => {
                     hideWorkoutAnalysis();
-                    showWorkoutResults(response.comparisonData, response.achievements);
-                    updateSetRowsWithProgress(response.comparisonData);
+                    
+                    // Check if XP data exists and user gained XP
+                    if (response.xp && response.xp.gained > 0) {
+                        // Show XP summary first
+                        showXPSummary(response.xp, response);
+                        
+                        // Store XP gain for potential display in results
+                        window.lastXPGain = response.xp.gained;
+                        window.lastLevelGain = response.xp.levels_gained;
+                    } else {
+                        // No XP gained, go directly to results
+                        showWorkoutResults(response.comparisonData, response.achievements);
+                        updateSetRowsWithProgress(response.comparisonData);
+                    }
                 }, 4000);
+                
+                // Clear local storage
                 const date = currentSelectedDate;
                 localStorage.removeItem(getWorkoutNameKey(date));
+                
             } else {
                 hideWorkoutAnalysis();
                 alert("Error saving workout: " + response.error);
