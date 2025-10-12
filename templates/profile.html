@@ -1303,7 +1303,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submit-button');
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
-
+    const levelBadge = document.querySelector('.level-badge');
+    
+    if (levelBadge) {
+        levelBadge.addEventListener('click', function(e) {
+            e.stopPropagation(); // This prevents the avatar container click event
+        });
+    }
     // Initial avatar state
     let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
     let uploadedAvatarFile = null;
