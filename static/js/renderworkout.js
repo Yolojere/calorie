@@ -1295,7 +1295,7 @@ function showWorkoutResults(comparisonData, achievements) {
                 if (pr.type === 'bestSet') {
                     resultsHTML += `
                         <div class="pr-celebration">
-                            <div class="pr-trophy">🏅</div>
+                            <div class="pr-trophy"><img src="static/images/gold-medal.png"></div>
                             <div class="pr-text">${t('newBestSet')}</div>
                             <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} toistoa</div>
                             <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} toistoa</div>
@@ -1303,7 +1303,7 @@ function showWorkoutResults(comparisonData, achievements) {
                 } else if (pr.type === 'heaviestWeight') {
                     resultsHTML += `
                         <div class="pr-celebration">
-                            <div class="pr-trophy">🏆</div>
+                            <div class="pr-trophy"><img src="static/images/trophy1.png"></div>
                             <div class="pr-text">${t('heaviestWeight')}</div>
                             <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
                             <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg</div>
@@ -1363,7 +1363,7 @@ function showWorkoutResults(comparisonData, achievements) {
             </div>
             
             <div class="achievement-card glass">
-                <div class="achievement-icon">⏱️</div>
+                <div class="achievement-icon"><img src="static/images/timer_icon.png" width=45></div>
                 <div class="achievement-title">Treenin Aika</div>
                 <div class="achievement-value">${formatDuration(totalDuration)}</div>
                 <div class="achievement-change neutral">
