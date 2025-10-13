@@ -52,6 +52,13 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('DEFAULT_MAIL_SENDER')
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,       # Prevents JavaScript access
+    SESSION_COOKIE_SECURE=True,         # HTTPS only
+    SESSION_COOKIE_SAMESITE='Lax',      # Helps prevent CSRF
+    REMEMBER_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SECURE=True,
+)
 mail = Mail(app)
 app.config['OAUTH_PROVIDERS'] = {
     'google': {
@@ -67,6 +74,14 @@ app.config['OAUTH_PROVIDERS'] = {
         'access_token_url': 'https://github.com/login/oauth/access_token',
         'userinfo_url': 'https://api.github.com/user',
         'client_kwargs': {'scope': 'user:email'}
+    },
+    'facebook': {
+        'client_id': os.getenv('FACEBOOK_CLIENT_ID'),
+        'client_secret': os.getenv('FACEBOOK_CLIENT_SECRET'),
+        'authorize_url': 'https://www.facebook.com/v18.0/dialog/oauth',
+        'access_token_url': 'https://graph.facebook.com/v18.0/oauth/access_token',
+        'userinfo_url': 'https://graph.facebook.com/me?fields=id,name,email',
+        'client_kwargs': {'scope': 'email public_profile'}
     }
 }
 
@@ -94,10 +109,10 @@ facebook = oauth.register(
     name='facebook',
     client_id=os.getenv('FACEBOOK_CLIENT_ID'),
     client_secret=os.getenv('FACEBOOK_CLIENT_SECRET'),
-    access_token_url='https://graph.facebook.com/v16.0/oauth/access_token',
-    authorize_url='https://www.facebook.com/v16.0/dialog/oauth',
-    api_base_url='https://graph.facebook.com/v16.0/',
-    client_kwargs={'scope': 'email'}  # add 'public_profile' if needed
+    access_token_url='https://graph.facebook.com/v18.0/oauth/access_token',
+    authorize_url='https://www.facebook.com/v18.0/dialog/oauth',
+    api_base_url='https://graph.facebook.com/v18.0/',
+    client_kwargs={'scope': 'email public_profile'}
 )
 
 github = oauth.register(
@@ -109,6 +124,7 @@ github = oauth.register(
     api_base_url='https://api.github.com/',
     client_kwargs={'scope': 'user:email'}
 )
+
 
 _nutrition_scanner = EnhancedSimpleScanner()
 def get_scanner():
@@ -1265,7 +1281,7 @@ def profile():
     user_xp = 0
     xp_to_next = 100
 
-    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 16)]
+    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
 
     try:
@@ -4617,6 +4633,9 @@ def oauth_login(provider):
     elif provider == 'github':
         redirect_uri = url_for('oauth_authorize', provider='github', _external=True)
         return github.authorize_redirect(redirect_uri)
+    elif provider == 'facebook':
+        redirect_uri = url_for('oauth_authorize', provider='facebook', _external=True)
+        return facebook.authorize_redirect(redirect_uri)
     else:
         flash('Unsupported OAuth provider', 'danger')
         return redirect(url_for('login'))
@@ -4639,9 +4658,8 @@ def oauth_authorize(provider):
             token = facebook.authorize_access_token()
             resp = facebook.get('me?fields=id,name,email')
             userinfo = resp.json()
-            
             email = userinfo.get('email')
-            provider_user_id = userinfo['id']
+            provider_user_id = str(userinfo['id'])
             # If email is not public, make another request to get emails
             if not email:
                 resp = github.get('user/emails')
@@ -5249,7 +5267,7 @@ if __name__ == '__main__':
 
 
         print("[START] Running Flask app...")
-        app.run(debug=True)
+        app.run(debug=False)
 
     except Exception as e:
         print(f"[ERROR] Initialization failed: {e}")
