@@ -1285,17 +1285,17 @@ def profile():
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
 
     try:
-        # Check for extra columns
+        # Check for extra columns including privacy controls
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name','main_sport','socials')
+            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials')
         """)
         columns = [row['column_name'] for row in cursor.fetchall()]
-        extra_columns_exist = bool(columns)
+        extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
 
-        # Build select query with level/xp
+        # Build select query with level/xp and privacy controls
         select_cols = ['username', 'email', 'weight', 'tdee', 'avatar'] + columns
         
         # Check if level and xp_points columns exist
@@ -1325,7 +1325,7 @@ def profile():
             user_xp = user_data.get('xp_points', 0) or 0
             
             # Calculate XP needed for next level
-            xp_to_next = xp_to_next_level(user_level)
+            xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
 
         if form.validate_on_submit():
             # Handle email lowercase
@@ -1356,8 +1356,19 @@ def profile():
             update_query = "UPDATE users SET username = %s, email = %s, avatar = %s"
             update_params = [form.username.data, email_lower, avatar_filename]
 
+            # Handle privacy controls
+            privacy_fields = ['show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials']
+            for privacy_field in privacy_fields:
+                if privacy_field in columns:
+                    # Get checkbox value (True if checked, False if not)
+                    privacy_value = request.form.get(privacy_field) == 'on'
+                    update_query += f", {privacy_field} = %s"
+                    update_params.append(privacy_value)
+
             for col in columns:
-                if col == "socials":
+                if col in privacy_fields:
+                    continue  # Already handled above
+                elif col == "socials":
                     # Parse socials JSON safely
                     socials_json = request.form.get("socials", "[]")
                     try:
@@ -1365,7 +1376,7 @@ def profile():
                     except json.JSONDecodeError:
                         socials_data = []
                     update_query += ", socials = %s"
-                    update_params.append(json.dumps(socials_data))  # always store as JSON string
+                    update_params.append(json.dumps(socials_data))
                 else:
                     update_query += f", {col} = %s"
                     update_params.append(getattr(form, col).data if hasattr(form, col) else '')
@@ -1415,9 +1426,121 @@ def profile():
         tdee_data=tdee_data,
         user_level=user_level,
         user_xp=user_xp,
-        xp_to_next_level=xp_to_next
+        xp_to_next_level=xp_to_next,
+        viewed_user=None,
+        is_owner=True
     )
 
+
+@app.route('/profile/<int:user_id>', methods=['GET'])
+@login_required
+def view_profile(user_id):
+    """Render a public profile (view-only) for any user"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    extra_columns_exist = False
+    role = 'user'
+    tdee_data = None
+    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
+    current_avatar = 'default.png'
+    user_level = 1
+    user_xp = 0
+    xp_to_next = 100
+    current_weight = None
+    current_tdee = None
+
+    try:
+        # Check for extra columns including privacy controls
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials')
+        """)
+        columns = [row['column_name'] for row in cursor.fetchall()]
+        extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
+
+        # Build select query with privacy controls
+        select_cols = ['id', 'username', 'email', 'weight', 'tdee', 'avatar', 'role'] + columns
+        
+        # Check if level and xp_points columns exist
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('level', 'xp_points')
+        """)
+        level_columns = [row['column_name'] for row in cursor.fetchall()]
+        
+        if 'level' in level_columns:
+            select_cols.append('level')
+        if 'xp_points' in level_columns:
+            select_cols.append('xp_points')
+
+        # Find requested user with all data
+        cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (user_id,))
+        user_data = cursor.fetchone()
+
+        if not user_data:
+            flash('User not found', 'danger')
+            return redirect(url_for('index'))
+
+        # Avatar
+        current_avatar = user_data.get('avatar') or 'default.png'
+        # Level/xp logic
+        user_level = user_data.get('level', 1) or 1
+        user_xp = user_data.get('xp_points', 0) or 0
+        xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
+        # Metrics (only if user allows it)
+        if user_data.get('show_health_metrics', False) or user_id == current_user.id:
+            current_weight = user_data.get('weight')
+            current_tdee = user_data.get('tdee')
+        role = user_data.get('role', 'user')
+        
+        # TDEE data only if health metrics are public or it's own profile
+        if user_data.get('show_health_metrics', False) or user_id == current_user.id:
+            tdee_data = get_user_current_tdee(user_data['id']) if callable(globals().get('get_user_current_tdee')) else None
+
+        # Create dummy form for template compatibility
+        form = UpdateProfileForm()
+        form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
+        
+        # Pre-fill form data
+        form.username.data = user_data.get('username', '')
+        form.email.data = user_data.get('email', '')
+        for col in columns:
+            if col.startswith('show_'):
+                continue  # Skip privacy controls
+            elif col == "socials":
+                form.socials.data = user_data.get(col) or "[]"
+            elif hasattr(form, col):
+                getattr(form, col).data = user_data.get(col, '')
+
+    except Exception as e:
+        print(f"Error loading profile: {e}")
+        flash('Error loading profile', 'danger')
+        return redirect(url_for('index'))
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'profile.html',
+        title='Profile',
+        form=form,
+        current_weight=current_weight,
+        current_tdee=current_tdee,
+        current_avatar=current_avatar,
+        role=role,
+        extra_columns_exist=extra_columns_exist,
+        predefined_avatars=predefined_avatars,
+        tdee_data=tdee_data,
+        user_level=user_level,
+        user_xp=user_xp,
+        xp_to_next_level=xp_to_next,
+        viewed_user=user_data,
+        is_owner=(user_id == current_user.id)
+    )
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     form = RequestResetForm()
@@ -5267,7 +5390,7 @@ if __name__ == '__main__':
 
 
         print("[START] Running Flask app...")
-        app.run(debug=False)
+        app.run(debug=True)
 
     except Exception as e:
         print(f"[ERROR] Initialization failed: {e}")
