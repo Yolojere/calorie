@@ -1,6 +1,12 @@
 {% extends "layout.html" %}
 
-{% block title %}Account - {{ current_user.username }}{% endblock %}
+{% block title %}
+    {% if viewed_user %}
+        Profile - {{ viewed_user.username }}
+    {% else %}
+        Account - {{ current_user.username }}
+    {% endif %}
+{% endblock %}
 
 {% block head %}
 <style>
@@ -441,8 +447,6 @@ input.form-control:-webkit-autofill {
     justify-content: center;
     pointer-events: none;
 }
-
-
 /* Active (clicked/focused) effect */
 .profile-field:focus-within {
     border-color: #777;
@@ -814,7 +818,107 @@ input.form-control:-webkit-autofill {
     border-right: 6px solid transparent;
     border-bottom: 6px solid rgba(0, 0, 0, 0.9);
 }
-/* Responsive adjustments */
+
+/* Read-only field styling */
+.readonly-field {
+    background-color: #1a1a1a !important;
+    border: 1px solid #555 !important;
+    color: #ccc !important;
+    cursor: not-allowed;
+}
+
+/* Privacy control styling */
+.privacy-controls {
+    background: #1b1b1b;
+    border: 1px solid #2a2a2a;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.privacy-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #333;
+}
+
+.privacy-control:last-child {
+    border-bottom: none;
+}
+
+.privacy-label {
+    font-weight: 500;
+    color: #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.privacy-label i {
+    margin-right: 8px;
+    color: #888;
+}
+
+.privacy-toggle {
+    position: relative;
+    width: 50px;
+    height: 26px;
+}
+
+.privacy-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.privacy-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.privacy-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.privacy-toggle input:checked + .privacy-slider {
+    background-color: #4CAF50;
+}
+
+.privacy-toggle input:checked + .privacy-slider:before {
+    transform: translateX(24px);
+}
+
+    /* Tab Navigation Styles */
+    .nav-tabs .nav-link:hover {
+        color: #fff !important;
+        border-bottom: 2px solid #555 !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: #fff !important;
+        border-bottom: 2px solid #7bc8a4 !important;
+        font-weight: 600;
+    }
+    .nav-tabs {
+        border-bottom: 1px solid #444 !important;
+    }
+
+    /* Responsive adjustments */
 @media (min-width: 768px) {
   .avatar-modal {
     align-items: flex-start;
@@ -1008,7 +1112,13 @@ input.form-control:-webkit-autofill {
 <div class="container py-4">
     <div class="card">
         <div class="card-header">
-            <h3 class="text-center" data-i18n="account_profile">Your Account Profile</h3>
+            <h3 class="text-center" data-i18n="account_profile">
+                {% if is_owner %}
+                    Your Account Profile
+                {% else %}
+                    {{ viewed_user.username }}'s Profile
+                {% endif %}
+            </h3>
         </div>
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row gap-4">
@@ -1016,18 +1126,19 @@ input.form-control:-webkit-autofill {
                 <!-- Left Section: Avatar + User Info -->
                 <div class="text-center flex-shrink-0">
                     <!-- Determine avatar folder based on whether it's a predefined avatar or uploaded -->
-                   {% if current_avatar in predefined_avatars %}
-    {% set avatar_folder = 'avatars' %}
-{% else %}
-    {% set avatar_folder = 'uploads' %}
-{% endif %}
+                   {% set show_avatar = viewed_user.avatar if viewed_user else current_avatar %}
+                   {% if show_avatar in predefined_avatars %}
+                       {% set avatar_folder = 'avatars' %}
+                   {% else %}
+                       {% set avatar_folder = 'uploads' %}
+                   {% endif %}
                     
-                    <!-- Main Avatar - Clickable with Level Badge -->
-                    <div class="avatar-container" id="avatar-container">
-                        <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ current_avatar) }}"
+                    <!-- Main Avatar - Clickable only if owner -->
+                    <div class="avatar-container" id="avatar-container" {% if is_owner %}style="cursor: pointer;"{% endif %}>
+                        <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ show_avatar) }}"
                             class="avatar-img"
                             id="main-avatar"
-                            alt="{{ current_user.username }}'s avatar"
+                            alt="{{ viewed_user.username if viewed_user else current_user.username }}'s avatar"
                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
                         
                         <!-- Level Badge with Progress Bar -->
@@ -1045,167 +1156,300 @@ input.form-control:-webkit-autofill {
                                     {{ user_xp }} / {{ xp_to_next_level }} XP
                                 </div>
                                 <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 5px; overflow: hidden;">
-                                    <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) }}%;"></div>
+                                    <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) if xp_to_next_level else 0 }}%;"></div>
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
                                             
                     <!-- User Info -->
-                    <h2 class="account-heading">{{ current_user.username }}</h2>
-                    <p class="text-secondary mb-1">{{ current_user.email }}</p>
+                    <h2 class="account-heading">{{ viewed_user.username if viewed_user else current_user.username }}</h2>
+                    <p class="text-secondary mb-1">{{ viewed_user.email if viewed_user else current_user.email }}</p>
                     <p class="text-info mb-0">
                         <i class="fas fa-user-shield me-1"></i> <span data-i18n="account_type">Account Type</span>: {{ role|capitalize }}
                     </p>
                 </div>
 
-                <!-- Right Section: Form -->
+                <!-- Right Section: Form or Read-only display -->
                 <div class="flex-grow-1">
-                    <form method="POST" enctype="multipart/form-data" id="profile-form">
-                        {{ form.hidden_tag() }}
+                    {% if is_owner %}
+                        <!-- EDITABLE FORM for owner -->
+                        <form method="POST" enctype="multipart/form-data" id="profile-form">
+                            {{ form.hidden_tag() }}
 
-                        <div class="mb-3">
-                            {{ form.username.label(class="form-label", data_i18n="username") }}
-                            {{ form.username(class="form-control bg-dark text-light") }}
-                        </div>
+                            <!-- Tab Navigation - Only for Personal Profile -->
+                            <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist" style="border-bottom: 1px solid #444;">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="main-tab" data-bs-toggle="tab" data-bs-target="#main-content" 
+                                            type="button" role="tab" aria-controls="main-content" aria-selected="true"
+                                            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                                        <i class="fas fa-user me-2"></i>Profiili
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" data-bs-target="#privacy-content" 
+                                            type="button" role="tab" aria-controls="privacy-content" aria-selected="false"
+                                            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                                        <i class="fas fa-eye-slash me-2"></i>Yksityisyys
+                                    </button>
+                                </li>
+                            </ul>
 
-                        <div class="mb-3">
-                            {{ form.email.label(class="form-label", **{"data-i18n": "email"}) }}
-                            {{ form.email(class="form-control bg-dark text-light") }}
-                        </div>
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="profileTabContent">
+                                <!-- Main Tab -->
+                                <div class="tab-pane fade show active" id="main-content" role="tabpanel" aria-labelledby="main-tab">
 
-                        {% if extra_columns_exist %}
-                            <legend class="border-bottom mb-4">
-                                <i class="fas fa-user me-2"></i><span data-i18n="general_info">General Information</span>
-                            </legend>
 
-                            <!-- Full Name Field -->
-                            <div class="form-group mb-4">
-                                <label for="full_name" class="form-label" data-i18n="full_name">Full Name</label>
-                                <div class="input-group profile-field">
-                                    <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
-                                    <input type="text" class="form-control" id="full_name" name="full_name" 
-                                           value="{{ form.full_name.data or '' }}" data-i18n="full_name_placeholder" placeholder="e.g. Arnold Schwarzenegger">
+                            {% if extra_columns_exist %}
+
+                                <!-- Full Name Field -->
+                                <div class="form-group mb-4">
+                                    <label for="full_name" class="form-label" data-i18n="full_name">Full Name</label>
+                                    <div class="input-group profile-field">
+                                        <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                                               value="{{ form.full_name.data or '' }}" data-i18n="full_name_placeholder" placeholder="e.g. Arnold Schwarzenegger">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Main Sport Field -->
-                            <div class="form-group mb-4">
-                                <label for="main_sport" class="form-label" data-i18n="main_sport">Main Sport / Activity</label>
-                                <div class="input-group profile-field">
-                                    <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
-                                    <input type="text" class="form-control" id="main_sport" name="main_sport" 
-                                           value="{{ form.main_sport.data or '' }}" data-i18n="main_sport_placeholder" placeholder="e.g. Weightlifting, Running, Cycling">
+                                <!-- Main Sport Field -->
+                                <div class="form-group mb-4">
+                                    <label for="main_sport" class="form-label" data-i18n="main_sport">Main Sport / Activity</label>
+                                    <div class="input-group profile-field">
+                                        <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
+                                        <input type="text" class="form-control" id="main_sport" name="main_sport" 
+                                               value="{{ form.main_sport.data or '' }}" data-i18n="main_sport_placeholder" placeholder="e.g. Weightlifting, Running, Cycling">
+                                    </div>
                                 </div>
-                            </div>
+                                
                                 <!-- Social Media Section -->
-                               <div class="form-group mb-4 socials-container">
-    <label class="form-label" data-i18n="social_media">Social Media</label>
-    
-    <!-- Container for social media pills - starts empty -->
-    <div class="social-pills-container" id="social-pills-container">
-        <!-- Pills will be dynamically inserted here by JavaScript -->
-    </div>
-    
-    <!-- Add social button and dropdown -->
-    <div class="position-relative">
-        <button type="button" class="add-social-btn" id="add-social-btn" data-i18n="add_social_media" title="Add social media">+</button>
-        <div class="social-dropdown" id="social-dropdown">
-            <div class="social-option" data-platform="instagram">
-                <i class="fa-brands fa-instagram"></i>
-                <span data-i18n="instagram">Instagram</span>
-            </div>
-            <div class="social-option" data-platform="tiktok">
-                <i class="fa-brands fa-tiktok"></i>
-                <span data-i18n="tiktok">TikTok</span>
-            </div>
-            <div class="social-option" data-platform="spotify">
-                <i class="fa-brands fa-spotify"></i>
-                <span data-i18n="spotify">Spotify</span>
-            </div>
-            <div class="social-option" data-platform="strava">
-                <i class="fa-solid fa-person-running"></i>
-                <span data-i18n="strava">Strava</span>
-            </div>
-            <div class="social-option" data-platform="facebook">
-                <i class="fa-brands fa-facebook"></i>
-                <span data-i18n="facebook">Facebook</span>
-            </div>
-            <div class="social-option" data-platform="twitter">
-                <i class="fa-brands fa-twitter"></i>
-                <span data-i18n="twitter">Twitter</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Hidden input to store socials data as JSON -->
-    <input type="hidden" id="socials-data" name="socials" value='{{ form.socials.data or "[]" }}'>
-</div>
-                        {% endif %}
+                                <div class="form-group mb-4 socials-container">
+                                    <label class="form-label" data-i18n="social_media">Social Media</label>
+                                    
+                                    <!-- Container for social media pills - starts empty -->
+                                    <div class="social-pills-container" id="social-pills-container">
+                                        <!-- Pills will be dynamically inserted here by JavaScript -->
+                                    </div>
+                                    
+                                    <!-- Add social button and dropdown -->
+                                    <div class="position-relative">
+                                        <button type="button" class="add-social-btn" id="add-social-btn" data-i18n="add_social_media" title="Add social media">+</button>
+                                        <div class="social-dropdown" id="social-dropdown">
+                                            <div class="social-option" data-platform="instagram">
+                                                <i class="fa-brands fa-instagram"></i>
+                                                <span data-i18n="instagram">Instagram</span>
+                                            </div>
+                                            <div class="social-option" data-platform="tiktok">
+                                                <i class="fa-brands fa-tiktok"></i>
+                                                <span data-i18n="tiktok">TikTok</span>
+                                            </div>
+                                            <div class="social-option" data-platform="spotify">
+                                                <i class="fa-brands fa-spotify"></i>
+                                                <span data-i18n="spotify">Spotify</span>
+                                            </div>
+                                            <div class="social-option" data-platform="strava">
+                                                <i class="fa-solid fa-person-running"></i>
+                                                <span data-i18n="strava">Strava</span>
+                                            </div>
+                                            <div class="social-option" data-platform="facebook">
+                                                <i class="fa-brands fa-facebook"></i>
+                                                <span data-i18n="facebook">Facebook</span>
+                                            </div>
+                                            <div class="social-option" data-platform="twitter">
+                                                <i class="fa-brands fa-twitter"></i>
+                                                <span data-i18n="twitter">Twitter</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hidden input to store socials data as JSON -->
+                                    <input type="hidden" id="socials-data" name="socials" value='{{ form.socials.data or "[]" }}'>
+                                </div>
 
-                        <!-- Hidden avatar selection fields -->
-                        <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
-                        <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
+                                
+                                </div>
 
-                        <button type="submit" class="btn btn-primary" id="submit-button">
-                            <span id="submit-text" data-i18n="update_profile">Update Profile</span>
-                            <span id="submit-spinner" class="d-none"><span class="spinner"></span><span data-i18n="updating">Updating...</span></span>
-                        </button>
-                    </form>
+                                <!-- Privacy Tab -->
+                                <div class="tab-pane fade" id="privacy-content" role="tabpanel" aria-labelledby="privacy-tab">
+<!-- Privacy Controls Section -->
+                                <div class="privacy-controls">
+                                    <legend class="border-bottom mb-4">
+                                        <i class="fas fa-eye-slash me-2"></i> Yksityisyysasetukset
+                                    </legend>
+                                    <p class="text-secondary mb-3">Hallitse mitä muut näkevät profiilissasi:</p>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-id-badge"></i>
+                                            <span>Näytä koko nimi</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_full_name" {% if viewed_user.get('show_full_name', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_full_name" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-dumbbell"></i>
+                                            <span>Pääurheilu/ Aktiviteetti</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_main_sport" {% if viewed_user.get('show_main_sport', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_main_sport" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-heartbeat"></i>
+                                            <span>Näytä terveysmittarit</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_health_metrics" {% if viewed_user.get('show_health_metrics', False) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_health_metrics">
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-share-alt"></i>
+                                            <span>Näytä Sosiaalinenmedia</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_socials" {% if viewed_user.get('show_socials', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_socials" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+                                </div>
+                            </div>
+
+
+                            <!-- Hidden avatar selection fields -->
+                            <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
+                            <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
+
+                            <button type="submit" class="btn btn-primary" id="submit-button">
+                                <span id="submit-text" data-i18n="update_profile">Update Profile</span>
+                                <span id="submit-spinner" class="d-none"><span class="spinner"></span><span data-i18n="updating">Updating...</span></span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- READ-ONLY DISPLAY for other users -->
+                        <div>
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <div class="form-control readonly-field">{{ viewed_user.username }}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="form-control readonly-field">{{ viewed_user.email }}</div>
+                            </div>
+
+                            {% if extra_columns_exist %}
+
+                                {% if viewed_user.get('full_name') and (viewed_user.get('show_full_name', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Full Name</label>
+                                    <div class="form-control readonly-field">{{ viewed_user.full_name }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if viewed_user.get('main_sport') and (viewed_user.get('show_main_sport', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Main Sport / Activity</label>
+                                    <div class="form-control readonly-field">{{ viewed_user.main_sport }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if viewed_user.get('socials') and viewed_user.socials != '[]' and (viewed_user.get('show_socials', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Social Media</label>
+                                    <div class="social-pills-container">
+                                        <!-- Parse JSON socials safely in Python, not Jinja2 -->
+                                        {% set socials_raw = viewed_user.socials %}
+                                        {% if socials_raw and socials_raw != '[]' %}
+                                            <!-- We'll handle JSON parsing in JavaScript instead -->
+                                            <div id="readonly-socials" data-socials="{{ socials_raw }}"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    <!-- Social Media Handle Input Modal -->
-    <div class="social-modal" id="social-modal">
-        <div class="social-modal-content">
-            <div class="social-modal-header">
-                <i id="modal-platform-icon" class="fa-brands fa-question"></i>
-                <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
-            </div>
-            <div class="social-modal-body">
-                <input type="text" id="social-handle-input" data-i18n="enter_handle" placeholder="Enter your handle" autocomplete="off">
-              
-                <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
-   
-            </div>
-            <div class="social-modal-footer">
-                <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-social-handle" data-i18n="save">Save</button>
-            </div>
-        </div>
-    </div>
-    <!-- Avatar Selection Modal -->
-    <div class="avatar-modal" id="avatarModal">
-        <div class="avatar-modal-content">
-            <h4 class="text-center mb-3" data-i18n="choose_avatar">Choose Your Avatar</h4>
-            <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Select from our options</p>
-            
-            <div class="avatar-options">
-                {% for value, label in form.avatar_choice.choices %}
-                    {% set thumb_path = url_for('static', filename='avatars/' ~ value) %}
-                    <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
-                         data-value="{{ value }}">
-                        <img src="{{ thumb_path }}" 
-                             alt="Avatar option {{ value }}"
-                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
-                    </div>
-                {% endfor %}
-            </div>
-            
-          <!-- <label for="avatar_upload_input" class="upload-btn">
-                <i class="fas fa-upload me-2"></i> <span data-i18n="upload_image">Upload Your Own Image</span>
-            </label>
-            <small class="d-block text-secondary mb-3" data-i18n="max_file_size">Max file size: 2MB (JPG, PNG)</small> -->
-            
-            <div class="modal-buttons">
-                <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Change Avatar</button>
+    
+    {% if is_owner %}
+        <!-- Social Media Handle Input Modal - only for owner -->
+        <div class="social-modal" id="social-modal">
+            <div class="social-modal-content">
+                <div class="social-modal-header">
+                    <i id="modal-platform-icon" class="fa-brands fa-question"></i>
+                    <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
+                </div>
+                <div class="social-modal-body">
+                    <input type="text" id="social-handle-input" data-i18n="enter_handle" placeholder="Enter your handle" autocomplete="off">
+                    <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
+                </div>
+                <div class="social-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-social-handle" data-i18n="save">Save</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Health Metrics Section -->
+        <!-- Avatar Selection Modal - only for owner -->
+        <div class="avatar-modal" id="avatarModal">
+            <div class="avatar-modal-content">
+                <h4 class="text-center mb-3" data-i18n="choose_avatar">Choose Your Avatar</h4>
+                <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Select from our options</p>
+                
+                <div class="avatar-options">
+                    {% for value, label in form.avatar_choice.choices %}
+                        {% set thumb_path = url_for('static', filename='avatars/' ~ value) %}
+                        <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
+                             data-value="{{ value }}">
+                            <img src="{{ thumb_path }}" 
+                                 alt="Avatar option {{ value }}"
+                                 onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Change Avatar</button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Health Metrics Section - Only show if allowed -->
+    {% if (viewed_user and (viewed_user.get('show_health_metrics', False) or is_owner)) or (not viewed_user and is_owner) %}
     <div class="health-metrics">
         <legend class="border-bottom mb-4">
             <i class="fas fa-heartbeat me-2" ></i><span data-i18n="health_metrics">Health Metrics</span>
@@ -1249,14 +1493,18 @@ input.form-control:-webkit-autofill {
             </div>
         </div>
         
+        {% if is_owner %}
         <div class="text-center mt-3">
             <a href="/activity" class="btn btn">
                 <i class="fas fa-calculator me-1"></i> <span data-i18n="update_metrics">Update Metrics</span>
             </a>
         </div>
+        {% endif %}
     </div>
+    {% endif %}
     
-    <!-- Password Reset Link -->
+    {% if is_owner %}
+    <!-- Password Reset Link - only for owner -->
     <div class="border-top pt-3 mt-4 text-center">
         <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
             <i class="fas fa-key me-1"></i> <span data-i18n="request_password_reset">Request Password Reset</span>
@@ -1267,8 +1515,8 @@ input.form-control:-webkit-autofill {
   💖 Sivu pyörii lahjoitusten voimalla 💖
 </a>
 </div>
+    {% endif %}
 
-    
     <!-- Security Features -->
     <div class="mt-5 pt-4 border-top">
         <div class="d-flex justify-content-center">
@@ -1288,8 +1536,59 @@ input.form-control:-webkit-autofill {
     </div>
 </div>
 
-   <script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Handle read-only social media display for other users' profiles
+    const readOnlySocials = document.getElementById('readonly-socials');
+    if (readOnlySocials) {
+        const socialsData = readOnlySocials.getAttribute('data-socials');
+        if (socialsData && socialsData !== '[]') {
+            try {
+                const socials = JSON.parse(socialsData);
+                const container = readOnlySocials.parentElement;
+                container.innerHTML = ''; // Clear the container
+                
+                const platformData = {
+                    instagram: { name: 'Instagram', baseUrl: 'https://instagram.com/', icon: 'fa-brands fa-instagram' },
+                    tiktok: { name: 'TikTok', baseUrl: 'https://tiktok.com/@', icon: 'fa-brands fa-tiktok' },
+                    spotify: { name: 'Spotify', baseUrl: 'https://open.spotify.com/user/', icon: 'fa-brands fa-spotify' },
+                    strava: { name: 'Strava', baseUrl: 'https://strava.com/athletes/', icon: 'fa-solid fa-person-running' },
+                    facebook: { name: 'Facebook', baseUrl: 'https://facebook.com/', icon: 'fa-brands fa-facebook' },
+                    twitter: { name: 'Twitter', baseUrl: 'https://twitter.com/', icon: 'fa-brands fa-twitter' }
+                };
+                
+                socials.forEach(social => {
+                    const platformInfo = platformData[social.platform];
+                    if (platformInfo) {
+                        const pill = document.createElement('div');
+                        pill.className = 'social-pill';
+                        pill.setAttribute('data-platform', social.platform);
+                        
+                        const link = document.createElement('a');
+                        link.href = platformInfo.baseUrl + social.handle;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        
+                        const icon = document.createElement('i');
+                        icon.className = platformInfo.icon;
+                        
+                        const handleSpan = document.createElement('span');
+                        handleSpan.textContent = '@' + social.handle;
+                        
+                        link.appendChild(icon);
+                        link.appendChild(handleSpan);
+                        pill.appendChild(link);
+                        container.appendChild(pill);
+                    }
+                });
+            } catch (e) {
+                console.error('Error parsing social media data:', e);
+            }
+        }
+    }
+
+    // Only run interactive JavaScript for profile owners
+    {% if is_owner %}
     // DOM elements
     const avatarModal = document.getElementById('avatarModal');
     const avatarContainer = document.getElementById('avatar-container');
@@ -1348,7 +1647,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (selectedAvatar) {
                 mainAvatar.src = '/static/avatars/' + selectedAvatar;
             }
-
             showToast(t('avatar_updated'));
             closeModal();
         });
@@ -1374,13 +1672,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const file = this.files[0];
 
                 if (!file.type.match('image.*')) {
-                    showToast(t('select_image'), true);
+                    alert('Please select an image file');
                     this.value = '';
                     return;
                 }
 
                 if (file.size > 2 * 1024 * 1024) {
-                    showToast(t('image_too_large'), true);
+                    alert('Image too large. Please select an image under 2MB');
                     this.value = '';
                     return;
                 }
@@ -1388,13 +1686,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadedAvatarFile = file;
                 avatarOptions.forEach(opt => opt.classList.remove('selected'));
                 selectedAvatar = '';
-
-                // Optional: preview uploaded file in modal
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Can preview inside modal if needed
-                };
-                reader.readAsDataURL(file);
             }
         });
     }
@@ -1439,7 +1730,7 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal();
         }
     });
-});
+
 // Social platform data with Font Awesome icons
     const platformData = {
         instagram: {
@@ -1537,11 +1828,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Set modal content
         modalPlatformIcon.className = platformInfo.icon;
-        modalPlatformName.textContent = `${t('add')} ${platformInfo.name}`;
+        modalPlatformName.textContent = `Add ${platformInfo.name}`;
         
         // Clear and focus input
         socialHandleInput.value = '';
-        socialHandleInput.placeholder = `${t('enter_your')} ${t(platformInfo.placeholder)}`;
+        socialHandleInput.placeholder = `Enter your ${platformInfo.placeholder}`;
         
         // Show modal
         socialModal.style.display = 'flex';
@@ -1552,7 +1843,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Close modal
-    function closeModal() {
+    function closeSocialModal() {
         socialModal.style.display = 'none';
         currentPlatform = null;
     }
@@ -1575,12 +1866,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const handle = socialHandleInput.value.trim();
         
         if (!handle || !currentPlatform) {
-            showToast(t('enter_valid_handle'), true);
+            alert('Please enter a valid handle');
             return;
         }
 
         if (!validateHandle(currentPlatform, handle)) {
-            showToast(t('invalid_handle'), true);
+            alert('Invalid handle or already exists');
             return;
         }
 
@@ -1597,10 +1888,10 @@ document.addEventListener('DOMContentLoaded', function() {
         renderSocialPills();
         
         // Close modal
-        closeModal();
+        closeSocialModal();
         
         // Show success message
-        showToast(`${platformData[currentPlatform].name} ${t('added_successfully')}`);
+        console.log(`${platformData[currentPlatform].name} added successfully`);
     }
 
     // Render social pills
@@ -1630,7 +1921,7 @@ document.addEventListener('DOMContentLoaded', function() {
             link.href = platformInfo.baseUrl + handle;
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.title = `${t('visit')} ${handle} ${t('on')} ${platformInfo.name}`;
+            link.title = `Visit ${handle} on ${platformInfo.name}`;
 
             // Create icon
             const icon = document.createElement('i');
@@ -1649,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteBtn.className = 'delete-btn';
             deleteBtn.innerHTML = '×';
             deleteBtn.type = 'button';
-            deleteBtn.title = t('remove_social');
+            deleteBtn.title = 'Remove social';
             deleteBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1672,10 +1963,9 @@ document.addEventListener('DOMContentLoaded', function() {
             socialsData.splice(index, 1);
             socialsDataInput.value = JSON.stringify(socialsData);
             renderSocialPills();
-            showToast(`${platformData[deletedSocial.platform].name} ${t('removed')}`);
+            console.log(`${platformData[deletedSocial.platform].name} removed`);
         }
     }
-
 
     // Event Listeners
     if (addSocialBtn) {
@@ -1699,7 +1989,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (cancelSocialHandle) {
-        cancelSocialHandle.addEventListener('click', closeModal);
+        cancelSocialHandle.addEventListener('click', closeSocialModal);
     }
 
     // Handle Enter key in input
@@ -1715,7 +2005,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modal on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && socialModal.style.display === 'flex') {
-            closeModal();
+            closeSocialModal();
         }
     });
 
@@ -1723,14 +2013,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (socialModal) {
         socialModal.addEventListener('click', function(e) {
             if (e.target === socialModal) {
-                closeModal();
+                closeSocialModal();
             }
         });
     }
 
     // Initialize on page load
     initializeSocials();
-
+    {% endif %}
+});
 </script>
 
 {% endblock %}
