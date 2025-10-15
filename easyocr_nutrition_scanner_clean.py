@@ -361,7 +361,7 @@ class EnhancedSimpleScanner:
         # PER PORTION DETECTION PATTERNS  
         self.per_portion_indicators = [
             'per portion', 'portion', 'per serving', 'serving', 'per pack', 'pack',
-            'per 40g', 'per 30g', 'per 50g', 'annos', 'portion'
+            'per 40g', 'per 30g', 'per 50g', 'annos', 'portion', 'per 35g', 'per 25g', 'per 20g'
         ]
 
     def filter_noise_enhanced(self, extracted_text):
