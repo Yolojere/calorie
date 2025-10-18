@@ -5342,6 +5342,325 @@ def get_user_profile_data():
     finally:
         conn.close()
 
+@app.route('/workout/history/muscle/<muscle_group>', methods=['GET'])
+@login_required
+def workout_history_muscle_detail(muscle_group):
+    """Get detailed exercise data for a specific muscle group WITH PR indicators"""
+    user_id = current_user.id
+    period = request.args.get('period', 'daily')
+    date_filter = request.args.get('date')
+    week_start = request.args.get('week_start')
+    month_start = request.args.get('month_start')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        if period == 'daily' and date_filter:
+            # Get exercise details for a specific day
+            cursor.execute('''
+                SELECT 
+                    e.id as exercise_id,
+                    e.name as exercise_name,
+                    ws.reps,
+                    ws.weight,
+                    ws.volume,
+                    ws.id,
+                    s.date
+                FROM workout_sessions s
+                JOIN workout_sets ws ON s.id = ws.session_id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE s.user_id = %s 
+                AND s.date = %s
+                AND LOWER(e.muscle_group) = LOWER(%s)
+                ORDER BY e.name, ws.id DESC
+            ''', (user_id, date_filter, muscle_group))
+            
+        elif period == 'weekly' and week_start:
+            # Parse the date string properly before using it
+            from datetime import datetime
+            try:
+                # Parse various date formats
+                if 'GMT' in week_start:
+                    week_start_date = datetime.strptime(week_start, '%a, %d %b %Y %H:%M:%S %Z')
+                else:
+                    week_start_date = datetime.strptime(week_start, '%Y-%m-%d')
+                
+                week_start_str = week_start_date.strftime('%Y-%m-%d')
+            except:
+                # Fallback: try to parse as ISO format
+                week_start_str = week_start.split('T') if 'T' in week_start else week_start.split(' ')
+            
+            # ✅ FIX: Changed ORDER BY to show newest first (DESC)
+            cursor.execute('''
+                SELECT 
+                    e.id as exercise_id,
+                    e.name as exercise_name,
+                    ws.reps,
+                    ws.weight,
+                    ws.volume,
+                    ws.id,
+                    s.date
+                FROM workout_sessions s
+                JOIN workout_sets ws ON s.id = ws.session_id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE s.user_id = %s 
+                AND s.date >= %s::date
+                AND s.date < %s::date + INTERVAL '7 days'
+                AND LOWER(e.muscle_group) = LOWER(%s)
+                ORDER BY e.name, s.date DESC, ws.id DESC
+            ''', (user_id, week_start_str, week_start_str, muscle_group))
+            
+        elif period == 'monthly' and month_start:
+            # Parse the date string properly
+            from datetime import datetime
+            try:
+                if 'GMT' in month_start:
+                    month_start_date = datetime.strptime(month_start, '%a, %d %b %Y %H:%M:%S %Z')
+                else:
+                    month_start_date = datetime.strptime(month_start, '%Y-%m-%d')
+                
+                month_start_str = month_start_date.strftime('%Y-%m-%d')
+            except:
+                month_start_str = month_start.split('T') if 'T' in month_start else month_start.split(' ')
+            
+            # ✅ FIX: Changed ORDER BY to show newest first (DESC)
+            cursor.execute('''
+                SELECT 
+                    e.id as exercise_id,
+                    e.name as exercise_name,
+                    ws.reps,
+                    ws.weight,
+                    ws.volume,
+                    ws.id,
+                    s.date
+                FROM workout_sessions s
+                JOIN workout_sets ws ON s.id = ws.session_id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE s.user_id = %s 
+                AND DATE_TRUNC('month', s.date) = %s::date
+                AND LOWER(e.muscle_group) = LOWER(%s)
+                ORDER BY e.name, s.date DESC, ws.id DESC
+            ''', (user_id, month_start_str, muscle_group))
+        else:
+            return jsonify(error="Invalid parameters"), 400
+            
+        rows = cursor.fetchall()
+        
+        # Group by exercise and check for PRs
+        exercises = {}
+        for row in rows:
+            ex_id = row['exercise_id']
+            ex_name = row['exercise_name']
+            
+            if ex_id not in exercises:
+                exercises[ex_id] = {
+                    'exercise_id': ex_id,
+                    'exercise_name': ex_name,
+                    'sets': []
+                }
+            
+            # Calculate set number
+            set_number = len(exercises[ex_id]['sets']) + 1
+            
+            # Use the date from the row
+            current_date = row.get('date', date_filter)
+            
+            # Check if this is a PR (heaviest weight for this exercise)
+            cursor.execute('''
+                SELECT MAX(weight) as max_weight
+                FROM workout_sets ws
+                JOIN workout_sessions s ON ws.session_id = s.id
+                WHERE s.user_id = %s 
+                AND ws.exercise_id = %s
+                AND s.date < %s
+            ''', (user_id, ex_id, current_date))
+            
+            prev_max = cursor.fetchone()
+            prev_max_weight = float(prev_max['max_weight'] or 0) if prev_max else 0
+            current_weight = float(row['weight'] or 0)
+            
+            # PR flags
+            is_heaviest_weight = current_weight > prev_max_weight and prev_max_weight > 0
+            
+            # Check for best set (weight * reps)
+            current_volume_per_set = current_weight * int(row['reps'] or 0)
+            cursor.execute('''
+                SELECT MAX(reps * weight) as max_volume
+                FROM workout_sets ws
+                JOIN workout_sessions s ON ws.session_id = s.id
+                WHERE s.user_id = %s 
+                AND ws.exercise_id = %s
+                AND s.date < %s
+            ''', (user_id, ex_id, current_date))
+            
+            prev_best = cursor.fetchone()
+            prev_best_volume = float(prev_best['max_volume'] or 0) if prev_best else 0
+            is_best_set = current_volume_per_set > prev_best_volume and prev_best_volume > 0
+            
+            exercises[ex_id]['sets'].append({
+                'set_number': set_number,
+                'reps': row['reps'],
+                'weight': current_weight,
+                'volume': float(row['volume'] or 0),
+                'date': str(current_date),
+                'is_heaviest_weight': is_heaviest_weight,
+                'is_best_set': is_best_set,
+                'has_pr': is_heaviest_weight or is_best_set
+            })
+        
+        return jsonify(exercises=list(exercises.values()))
+        
+    except Exception as e:
+        app.logger.error(f"Muscle detail error: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify(error="Could not load muscle group details"), 500
+    finally:
+        conn.close()
+
+
+
+# ✅ FIX: Update cardio route with same date parsing
+@app.route('/workout/history/cardio', methods=['GET'])
+@login_required
+def workout_history_cardio():
+    """Get cardio session history for a given period"""
+    user_id = current_user.id
+    period = request.args.get('period', 'daily')
+    date_filter = request.args.get('date')
+    week_start = request.args.get('week_start')
+    month_start = request.args.get('month_start')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        if period == 'daily' and date_filter:
+            cursor.execute('''
+                SELECT DISTINCT
+                    cs.id,
+                    cs.duration_minutes,
+                    cs.distance_km,
+                    cs.avg_pace_min_per_km,
+                    cs.avg_heart_rate,
+                    cs.watts,
+                    cs.calories_burned,
+                    cs.notes,
+                    ce.name as exercise_name,
+                    ce.type as exercise_type,
+                    ce.met_value,
+                    cs.created_at
+                FROM cardio_sessions cs
+                JOIN workout_sessions ws ON cs.session_id = ws.id
+                JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+                WHERE ws.user_id = %s 
+                AND ws.date = %s
+                ORDER BY cs.created_at DESC, cs.id DESC
+            ''', (user_id, date_filter))
+            
+        elif period == 'weekly' and week_start:
+            # ✅ FIX: Parse date properly
+            from datetime import datetime
+            try:
+                if 'GMT' in week_start:
+                    week_start_date = datetime.strptime(week_start, '%a, %d %b %Y %H:%M:%S %Z')
+                else:
+                    week_start_date = datetime.strptime(week_start, '%Y-%m-%d')
+                week_start_str = week_start_date.strftime('%Y-%m-%d')
+            except:
+                week_start_str = week_start.split('T') if 'T' in week_start else week_start.split(' ')
+            
+            cursor.execute('''
+                SELECT DISTINCT
+                    cs.id,
+                    cs.duration_minutes,
+                    cs.distance_km,
+                    cs.avg_pace_min_per_km,
+                    cs.avg_heart_rate,
+                    cs.watts,
+                    cs.calories_burned,
+                    cs.notes,
+                    ce.name as exercise_name,
+                    ce.type as exercise_type,
+                    ce.met_value,
+                    cs.created_at,
+                    ws.date
+                FROM cardio_sessions cs
+                JOIN workout_sessions ws ON cs.session_id = ws.id
+                JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+                WHERE ws.user_id = %s 
+                AND ws.date >= %s::date
+                AND ws.date < %s::date + INTERVAL '7 days'
+                ORDER BY ws.date DESC, cs.created_at DESC, cs.id DESC
+            ''', (user_id, week_start_str, week_start_str))
+            
+        elif period == 'monthly' and month_start:
+            # ✅ FIX: Parse date properly
+            from datetime import datetime
+            try:
+                if 'GMT' in month_start:
+                    month_start_date = datetime.strptime(month_start, '%a, %d %b %Y %H:%M:%S %Z')
+                else:
+                    month_start_date = datetime.strptime(month_start, '%Y-%m-%d')
+                month_start_str = month_start_date.strftime('%Y-%m-%d')
+            except:
+                month_start_str = month_start.split('T') if 'T' in month_start else month_start.split(' ')
+            
+            cursor.execute('''
+                SELECT DISTINCT
+                    cs.id,
+                    cs.duration_minutes,
+                    cs.distance_km,
+                    cs.avg_pace_min_per_km,
+                    cs.avg_heart_rate,
+                    cs.watts,
+                    cs.calories_burned,
+                    cs.notes,
+                    ce.name as exercise_name,
+                    ce.type as exercise_type,
+                    ce.met_value,
+                    cs.created_at,
+                    ws.date
+                FROM cardio_sessions cs
+                JOIN workout_sessions ws ON cs.session_id = ws.id
+                JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+                WHERE ws.user_id = %s 
+                AND DATE_TRUNC('month', ws.date) = %s::date
+                ORDER BY ws.date DESC, cs.created_at DESC, cs.id DESC
+            ''', (user_id, month_start_str))
+        else:
+            return jsonify(error="Invalid parameters"), 400
+            
+        rows = cursor.fetchall()
+        
+        cardio_sessions = []
+        for row in rows:
+            session = {
+                'cardio_type': row['exercise_name'],
+                'exercise_type': row['exercise_type'],
+                'duration_minutes': row['duration_minutes'],
+                'distance_km': float(row['distance_km'] or 0),
+                'avg_pace_min_per_km': row['avg_pace_min_per_km'],
+                'avg_heart_rate': row['avg_heart_rate'],
+                'watts': row['watts'],
+                'calories_burned': float(row['calories_burned'] or 0),
+                'notes': row['notes'],
+                'met_value': row['met_value'],
+                'date': str(row.get('date', ''))
+            }
+            cardio_sessions.append(session)
+        
+        return jsonify(cardio_sessions=cardio_sessions)
+        
+    except Exception as e:
+        app.logger.error(f"Cardio history error: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify(error="Could not load cardio sessions"), 500
+    finally:
+        conn.close()
+
 @app.route('/sitemap.xml', methods=['GET'])
 def sitemap():
     pages = []
