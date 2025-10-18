@@ -5357,7 +5357,6 @@ def workout_history_muscle_detail(muscle_group):
     
     try:
         if period == 'daily' and date_filter:
-            # Get exercise details for a specific day
             cursor.execute('''
                 SELECT 
                     e.id as exercise_id,
@@ -5365,33 +5364,17 @@ def workout_history_muscle_detail(muscle_group):
                     ws.reps,
                     ws.weight,
                     ws.volume,
-                    ws.id,
-                    s.date
+                    ws.id
                 FROM workout_sessions s
                 JOIN workout_sets ws ON s.id = ws.session_id
                 JOIN exercises e ON ws.exercise_id = e.id
                 WHERE s.user_id = %s 
                 AND s.date = %s
                 AND LOWER(e.muscle_group) = LOWER(%s)
-                ORDER BY e.name, ws.id DESC
+                ORDER BY e.name, ws.id
             ''', (user_id, date_filter, muscle_group))
             
         elif period == 'weekly' and week_start:
-            # Parse the date string properly before using it
-            from datetime import datetime
-            try:
-                # Parse various date formats
-                if 'GMT' in week_start:
-                    week_start_date = datetime.strptime(week_start, '%a, %d %b %Y %H:%M:%S %Z')
-                else:
-                    week_start_date = datetime.strptime(week_start, '%Y-%m-%d')
-                
-                week_start_str = week_start_date.strftime('%Y-%m-%d')
-            except:
-                # Fallback: try to parse as ISO format
-                week_start_str = week_start.split('T') if 'T' in week_start else week_start.split(' ')
-            
-            # ✅ FIX: Changed ORDER BY to show newest first (DESC)
             cursor.execute('''
                 SELECT 
                     e.id as exercise_id,
@@ -5408,23 +5391,10 @@ def workout_history_muscle_detail(muscle_group):
                 AND s.date >= %s::date
                 AND s.date < %s::date + INTERVAL '7 days'
                 AND LOWER(e.muscle_group) = LOWER(%s)
-                ORDER BY e.name, s.date DESC, ws.id DESC
-            ''', (user_id, week_start_str, week_start_str, muscle_group))
+                ORDER BY e.name, s.date DESC, ws.id
+            ''', (user_id, week_start, week_start, muscle_group))
             
         elif period == 'monthly' and month_start:
-            # Parse the date string properly
-            from datetime import datetime
-            try:
-                if 'GMT' in month_start:
-                    month_start_date = datetime.strptime(month_start, '%a, %d %b %Y %H:%M:%S %Z')
-                else:
-                    month_start_date = datetime.strptime(month_start, '%Y-%m-%d')
-                
-                month_start_str = month_start_date.strftime('%Y-%m-%d')
-            except:
-                month_start_str = month_start.split('T') if 'T' in month_start else month_start.split(' ')
-            
-            # ✅ FIX: Changed ORDER BY to show newest first (DESC)
             cursor.execute('''
                 SELECT 
                     e.id as exercise_id,
@@ -5440,8 +5410,8 @@ def workout_history_muscle_detail(muscle_group):
                 WHERE s.user_id = %s 
                 AND DATE_TRUNC('month', s.date) = %s::date
                 AND LOWER(e.muscle_group) = LOWER(%s)
-                ORDER BY e.name, s.date DESC, ws.id DESC
-            ''', (user_id, month_start_str, muscle_group))
+                ORDER BY e.name, s.date DESC, ws.id
+            ''', (user_id, month_start, muscle_group))
         else:
             return jsonify(error="Invalid parameters"), 400
             
@@ -5463,9 +5433,6 @@ def workout_history_muscle_detail(muscle_group):
             # Calculate set number
             set_number = len(exercises[ex_id]['sets']) + 1
             
-            # Use the date from the row
-            current_date = row.get('date', date_filter)
-            
             # Check if this is a PR (heaviest weight for this exercise)
             cursor.execute('''
                 SELECT MAX(weight) as max_weight
@@ -5474,7 +5441,7 @@ def workout_history_muscle_detail(muscle_group):
                 WHERE s.user_id = %s 
                 AND ws.exercise_id = %s
                 AND s.date < %s
-            ''', (user_id, ex_id, current_date))
+            ''', (user_id, ex_id, date_filter if date_filter else row.get('date')))
             
             prev_max = cursor.fetchone()
             prev_max_weight = float(prev_max['max_weight'] or 0) if prev_max else 0
@@ -5492,7 +5459,7 @@ def workout_history_muscle_detail(muscle_group):
                 WHERE s.user_id = %s 
                 AND ws.exercise_id = %s
                 AND s.date < %s
-            ''', (user_id, ex_id, current_date))
+            ''', (user_id, ex_id, date_filter if date_filter else row.get('date')))
             
             prev_best = cursor.fetchone()
             prev_best_volume = float(prev_best['max_volume'] or 0) if prev_best else 0
@@ -5503,7 +5470,7 @@ def workout_history_muscle_detail(muscle_group):
                 'reps': row['reps'],
                 'weight': current_weight,
                 'volume': float(row['volume'] or 0),
-                'date': str(current_date),
+                'date': row.get('date', date_filter),
                 'is_heaviest_weight': is_heaviest_weight,
                 'is_best_set': is_best_set,
                 'has_pr': is_heaviest_weight or is_best_set
@@ -5519,9 +5486,7 @@ def workout_history_muscle_detail(muscle_group):
     finally:
         conn.close()
 
-
-
-# ✅ FIX: Update cardio route with same date parsing
+# Keep your existing cardio route unchanged
 @app.route('/workout/history/cardio', methods=['GET'])
 @login_required
 def workout_history_cardio():
@@ -5560,17 +5525,6 @@ def workout_history_cardio():
             ''', (user_id, date_filter))
             
         elif period == 'weekly' and week_start:
-            # ✅ FIX: Parse date properly
-            from datetime import datetime
-            try:
-                if 'GMT' in week_start:
-                    week_start_date = datetime.strptime(week_start, '%a, %d %b %Y %H:%M:%S %Z')
-                else:
-                    week_start_date = datetime.strptime(week_start, '%Y-%m-%d')
-                week_start_str = week_start_date.strftime('%Y-%m-%d')
-            except:
-                week_start_str = week_start.split('T') if 'T' in week_start else week_start.split(' ')
-            
             cursor.execute('''
                 SELECT DISTINCT
                     cs.id,
@@ -5593,20 +5547,9 @@ def workout_history_cardio():
                 AND ws.date >= %s::date
                 AND ws.date < %s::date + INTERVAL '7 days'
                 ORDER BY ws.date DESC, cs.created_at DESC, cs.id DESC
-            ''', (user_id, week_start_str, week_start_str))
+            ''', (user_id, week_start, week_start))
             
         elif period == 'monthly' and month_start:
-            # ✅ FIX: Parse date properly
-            from datetime import datetime
-            try:
-                if 'GMT' in month_start:
-                    month_start_date = datetime.strptime(month_start, '%a, %d %b %Y %H:%M:%S %Z')
-                else:
-                    month_start_date = datetime.strptime(month_start, '%Y-%m-%d')
-                month_start_str = month_start_date.strftime('%Y-%m-%d')
-            except:
-                month_start_str = month_start.split('T') if 'T' in month_start else month_start.split(' ')
-            
             cursor.execute('''
                 SELECT DISTINCT
                     cs.id,
@@ -5628,9 +5571,10 @@ def workout_history_cardio():
                 WHERE ws.user_id = %s 
                 AND DATE_TRUNC('month', ws.date) = %s::date
                 ORDER BY ws.date DESC, cs.created_at DESC, cs.id DESC
-            ''', (user_id, month_start_str))
+            ''', (user_id, month_start))
         else:
-            return jsonify(error="Invalid parameters"), 400
+            # Remove the strict validation - allow empty results
+            return jsonify(cardio_sessions=[])
             
         rows = cursor.fetchall()
         
@@ -5647,7 +5591,7 @@ def workout_history_cardio():
                 'calories_burned': float(row['calories_burned'] or 0),
                 'notes': row['notes'],
                 'met_value': row['met_value'],
-                'date': str(row.get('date', ''))
+                'date': row.get('date')
             }
             cardio_sessions.append(session)
         
