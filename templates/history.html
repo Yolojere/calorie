@@ -452,15 +452,30 @@
             margin-bottom: 15px;
             font-weight: 600;
         }
+        .muscle-detail-card:first-child {
+        border-top: 1px solid #444;
+        border-radius: 12px 12px 0 0; /* Round top corners of first card */
+    }
+    .muscle-detail-card:last-child {
+        border-radius: 0 0 12px 12px;
+    }
+    .exercise-detail-section {
+    margin: 0 -15px; /* Negative margin to counteract parent padding */
+    padding: 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    border-radius: 0;
+    overflow: visible;
+}
 
             .muscle-detail-card {
             background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%); /* Match summary cards instead of solid #0c0c0c */
             border: 1px solid #444; /* Consistent with summary cards */
-            border-radius: 8px;
-            padding: 12px; /* Reduced from 15px */
-            margin-bottom: 8px; /* Reduced from 10px */
+            border-radius: 0px;
+            padding: 12px 15px; /* Reduced from 15px */
+            margin-bottom: 0px; /* Reduced from 10px */
             border-left: 4px solid #ffd166;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Add subtle shadow */
+            box-shadow: none;
+            border-top: none;
         }
 
         .muscle-detail-card .muscle-name {
@@ -1270,15 +1285,15 @@
                 box-shadow: var(--shadow-md);
 }
 /* Exercise detail containers - DARK THEME */
-.exercise-detail-container {
-    margin-bottom: 10px;
-    border: 1px solid #444;
-    border-radius: 8px;
-    overflow: visible; /* ✅ CHANGED from 'hidden' to 'visible' */
-    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    position: relative; /* ✅ ADDED for z-index stacking context */
-}
+    .exercise-detail-container {
+        margin-bottom: 0;
+        border: none;
+        border-top: 1px solid #333; /* Just a separator line */
+        border-radius: 0;
+        overflow: visible;
+        background: transparent;
+        box-shadow: none;
+    }
 
 
 /* Clickable exercise header - DARK THEME */
@@ -1291,7 +1306,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 8px 8px 0 0; /* ✅ ADDED to maintain rounded corners */
+    border-radius: 0; /* ✅ ADDED to maintain rounded corners */
 }
 
 .clickable-exercise-header:hover {
@@ -1362,14 +1377,15 @@
 .exercise-sets-container {
     padding: 0;
     background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
-    border-radius: 0 0 8px 8px; /* ✅ ADDED to maintain rounded corners */
-    overflow: visible; /* ✅ ADDED to allow tooltips to overflow */
+    border-radius: 0;
+    overflow: visible;
 }
 
 /* Exercise sets table - DARK THEME */
 .exercise-sets-table {
     width: 100%;
     margin: 0;
+    text-align: center !important;
     border-collapse: collapse;
     background: transparent;
     position: relative; /* ✅ ADDED for z-index stacking */
@@ -1382,7 +1398,7 @@
 
 .exercise-sets-table th {
     padding: 10px 12px;
-    text-align: left;
+    text-align: center;
     font-size: 11px;
     font-weight: 600;
     color: #ffd166;
@@ -2998,35 +3014,39 @@ if (item.muscles && Object.keys(item.muscles).length > 0) {
     
     // ✅ CRITICAL FIX: Add click handlers AFTER cards are appended to DOM
     muscleBreakdownContainer.find('.muscle-detail-card').each(function() {
-        $(this).off('click').on('click', function(e) {
-            // Prevent event bubbling
-            e.stopPropagation();
-            
-            const card = $(this);
-            const muscle = card.data('muscle');
-            const period = card.data('period');
-            const date = card.data('date');
-            const weekStart = card.data('week-start');
-            const monthStart = card.data('month-start');
-            
-            const muscleId = `muscle-${muscle.replace(/\s+/g, '-')}-${period}`;
-            const detailSection = $(`#${muscleId}-details`);
-            
-            if (card.hasClass('expanded')) {
-                // Collapse
-                card.removeClass('expanded');
-                detailSection.slideUp(300);
-            } else {
-                // Expand and load details
-                card.addClass('expanded');
-                detailSection.slideDown(300);
-                loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, muscleId);
-            }
-        });
+    const card = $(this);
+    
+    // Remove click handler from entire card
+    card.off('click');
+    
+    // Add click handler ONLY to the muscle name header
+    card.find('.muscle-name').off('click').on('click', function(e) {
+        // Prevent event bubbling
+        e.stopPropagation();
+        
+        const muscle = card.data('muscle');
+        const period = card.data('period');
+        const date = card.data('date');
+        const weekStart = card.data('week-start');
+        const monthStart = card.data('month-start');
+        const muscleId = `muscle-${muscle.replace(/\s+/g, '-')}-${period}`;
+        const detailSection = $(`#${muscleId}-details`);
+        
+        if (card.hasClass('expanded')) {
+            // Collapse
+            card.removeClass('expanded');
+            detailSection.slideUp(300);
+        } else {
+            // Expand and load details
+            card.addClass('expanded');
+            detailSection.slideDown(300);
+            loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, muscleId);
+        }
     });
+});
 } else {
     muscleBreakdownContainer.html(`
-        <div class="text-center text-muted py-3">
+        <div class="text-center text-muted">
             <i class="fas fa-info-circle me-2"></i>
             <span data-i18n="nomuscledata">No muscle group data available</span>
         </div>
@@ -3063,7 +3083,7 @@ function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, 
     
     $.get(url, function(data) {
         if (!data.exercises || data.exercises.length === 0) {
-            detailSection.html('<div class="text-center text-muted py-3">No exercise data found</div>');
+            detailSection.html('<div class="text-center text-muted">No exercise data found</div>');
             return;
         }
         
@@ -3105,8 +3125,8 @@ function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, 
                                 <tr>
                                     <th>Sarjat</th>
                                     <th>Toistot</th>
-                                    <th>Paino (kg)</th>
-                                    <th>Volyymi (kg)</th>
+                                    <th>Paino</th>
+                                    <th>Volyymi</th>
                                     ${period !== 'daily' ? '<th>Päivä</th>' : ''}
                                     <th>PR</th>
                                 </tr>
