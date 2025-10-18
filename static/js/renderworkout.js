@@ -960,6 +960,11 @@ function showXPSummary(xpData, workoutData) {
     console.log('📊 Displaying XP summary:', xpData);
     
     const { gained, sources, levels_gained, level_before, level_after, current_xp, xp_to_next_level } = xpData;
+        if (levels_gained > 0) {
+        if (window.SoundManager) {
+            window.SoundManager.playLevelup();
+        }
+    }
     
     // Create XP overlay
     const overlay = $(`
