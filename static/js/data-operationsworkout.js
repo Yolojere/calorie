@@ -164,7 +164,7 @@ function updateComment(setId, comment) {
 }
 
 function saveTemplate() {
-    const templateName = prompt("Enter a name for this template:");
+    const templateName = prompt("Nimeä pohja:");
     if (!templateName) return;
 
     const $btn = $("#save-template-btn");
@@ -190,7 +190,7 @@ function saveTemplate() {
             $btn.prop('disabled', false);
 
             if (data.success) {
-                alert("Template saved successfully!");
+                alert("Pohja tallennettu onnistuneesti!");
                 invalidateCache(CACHE_KEYS.TEMPLATES);
                 getTemplatesWithCache();
             } else {
@@ -284,7 +284,7 @@ function previewTemplate(templateId) {
             }
         },
         error: function(xhr, status, error) {
-            alert("Error loading template: " + error);
+            alert("Ongelma pohjan lataamisessa: " + error);
             $("#templatePreviewModal").modal('hide');
         }
     });
@@ -326,7 +326,7 @@ function applyTemplate(templateId) {
             $btn.prop('disabled', false);
             
             if (data.success) {
-                alert("Template applied successfully!");
+                alert("Treenipohja ladattu onnistuneesti!");
                 // Invalidate session cache for this date since we've modified it
                 const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
                 if (cachedSessions[currentDate]) {
