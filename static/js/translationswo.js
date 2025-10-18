@@ -430,6 +430,7 @@ const translations = {
     "Bench press (Barbell)": "Penkkipunnerrus (Levytanko)",
     "Bench press (Dumbell)": "Penkkipunnerrus (Käsipainot)",
     "Bench press (Incline)": "Vinopenkkipunnerrus",
+    "Bench press (Incline dumbell)": "Vinopenkkipunnerrus (Käsipainot)",
     "Bench press (Machine)": "Penkkipunnerrus (Laite)",
     "Bench press (Smith)": "Penkkipunnerrus (Smith)",
     "Cable cross over": "Ristikkäistalja",
@@ -449,8 +450,8 @@ const translations = {
     "Pull up": "Leuanveto",
     "Pulldown (Machine)": "Ylätalja (Laite)",
     "Row (Machine)": "Soutu (Laite)",
-    "Row (T-bar)": "Tankosoutu",
-    "Seated cable row": "Soutu taljassa",
+    "Row (T-bar)": "Tankosoutu (T-bar)",
+    "Seated cable row": "Alasoutu taljassa",
     // LEEEEGS
     "Calf (Seated)": "Pohkeet (Istuen)",
     "Calf (Standing)": "Pohkeet (Seisten)",
@@ -500,7 +501,7 @@ const translations = {
     "Tricep extension (Cable)": "Ojentajapunnerrus (Talja)",
     "Tricep pushdown": "Ojentajapunnerrus taljassa",
     "Tricep pushdown (Rope)": "Ojentajapunnerrus taljassa (Köysi)",
-    "Push down (Machine)": "Punnerrus taljassa (Laite)",
+    "Push down (Machine)": "Ojentaja (Laite)",
     // CORE
     "Bicycle crunch": "Polkupyörä vatsalihas",
     "Crunch (Machine)": "Vatsarutistus (Laite)",
