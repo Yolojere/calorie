@@ -1007,9 +1007,444 @@
 .workout-summary-card.calories .card-icon { 
     color: #fd7e14; /* Orange color for fire/calories */
 }
+
+        /* Cardio breakdown section */
+        .cardio-breakdown-section {
+            margin-top: 20px;
+        }
+
+        .cardio-session-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #06d6a0;
+            transition: transform 0.2s ease;
+        }
+
+        .cardio-session-card:hover {
+            transform: translateX(5px);
+        }
+
+        .cardio-session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .cardio-type {
+            font-weight: 600;
+            color: #06d6a0;
+            font-size: 14px;
+        }
+
+        .cardio-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .cardio-stat-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 60px;
+        }
+
+        .cardio-stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .cardio-stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Collapsible muscle group */
+        .muscle-detail-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .muscle-detail-card.expanded {
+            border-left: 4px solid #06d6a0;
+        }
+
+        .muscle-collapse-icon {
+            transition: transform 0.3s ease;
+            float: right;
+            color: #888;
+        }
+
+        .muscle-detail-card.expanded .muscle-collapse-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Loading spinner for muscle details */
+        .muscle-loading {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        /* Custom PR tooltips */
+    .pr-tooltip {
+        position: relative;
+        display: inline-block;
+        z-index: 1; /* Base z-index */
+    }
+
+    .pr-tooltip .tooltip-text {
+        visibility: hidden;
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        white-space: nowrap;
+        
+        /* Position the tooltip */
+        position: absolute;
+        z-index: 9999;
+        bottom: 150%;
+        left: 50%;
+        transform: translateX(-50%);
+        
+        /* Fade in */
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+
+    .pr-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+    }
+
+    /* Show tooltip on hover (desktop) */
+    .pr-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        z-index: 10000;
+    }
+
+    /* Mobile: Show on touch/click */
+    .pr-tooltip.active .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .pr-tooltip.tooltip-below .tooltip-text {
+    bottom: auto;
+    top: 150%;
+}
+.pr-tooltip.tooltip-below .tooltip-text::after {
+    top: auto;
+    bottom: 100%;
+    border-color: transparent transparent #ffd166 transparent;
+}
+        /* PR Badge Styling */
+            .pr-badge {
+                display: inline-block;
+                font-size: var(--font-size-lg);
+                animation: prPulse var(--duration-normal) infinite;
+                margin: 0 var(--space-2);
+            }
+
+            .pr-badge.pr-double {
+                animation: prGlow calc(var(--duration-normal) * 0.6) infinite;
+            }
+
+            /* PR Row Highlighting */
+            .pr-row {
+                background: linear-gradient(90deg, var(--color-bg-2) 0%, rgba(var(--color-warning-rgb), 0.05) 100%) !important;
+                border-left: var(--space-4) solid var(--color-warning) !important;
+            }
+
+            .pr-row td {
+                font-weight: var(--font-weight-bold) !important;
+                background-color: transparent !important;
+            }
+
+            .pr-row:hover td {
+                background: linear-gradient(90deg, rgba(var(--color-warning-rgb), 0.2) 0%, rgba(var(--color-warning-rgb), 0.1) 100%) !important;
+            }
+
+            /* PR Badge Animations */
+            @keyframes prPulse {
+                0%, 100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+                50% {
+                    transform: scale(1.15);
+                    opacity: 0.85;
+                }
+            }
+
+            @keyframes prGlow {
+                0%, 100% {
+                    transform: scale(1);
+                    filter: drop-shadow(0 0 var(--space-2) var(--color-warning));
+                }
+                50% {
+                    transform: scale(1.2);
+                    filter: drop-shadow(0 0 var(--space-8) var(--color-warning)) drop-shadow(0 0 var(--space-12) var(--color-warning));
+                }
+            }
+
+            /* Clickable Exercise Names */
+            .clickable-exercise {
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                transition: all var(--duration-fast) var(--ease-standard);
+                padding: var(--space-4) var(--space-8);
+                border-radius: var(--radius-base);
+                width: fit-content;
+            }
+
+            .clickable-exercise:hover {
+                color: var(--color-warning) !important;
+                transform: translateX(var(--space-4));
+                background-color: rgba(var(--color-warning-rgb), 0.1);
+            }
+
+            .clickable-exercise:hover .fa-external-link-alt {
+                color: var(--color-warning) !important;
+                animation: linkBounce 0.6s var(--ease-standard) infinite;
+            }
+
+            .clickable-exercise .fa-external-link-alt {
+                font-size: var(--font-size-base);
+                color: var(--color-text-secondary);
+                transition: all var(--duration-fast) var(--ease-standard);
+            }
+
+            @keyframes linkBounce {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(calc(var(--space-4) * -0.75));
+                }
+            }
+
+            /* Exercise Detail Table PR Column */
+            .exercise-sets-table th:last-child,
+            .exercise-sets-table td:last-child {
+                text-align: center;
+                width: 60px;
+            }
+
+            /* Add glow effect to table when PRs are present */
+            .exercise-sets-table:has(.pr-row) {
+                border: var(--space-1) solid rgba(var(--color-warning-rgb), 0.3);
+                box-shadow: 0 0 var(--space-16) rgba(var(--color-warning-rgb), 0.1);
+            }
+
+            /* Tooltip for PR badges */
+            .pr-badge[title]:hover::after {
+                content: attr(title);
+                position: absolute;
+                background: var(--color-surface);
+                color: var(--color-warning);
+                padding: var(--space-4) var(--space-8);
+                border-radius: var(--radius-sm);
+                font-size: var(--font-size-xs);
+                white-space: nowrap;
+                z-index: 1000;
+                margin-left: var(--space-10);
+                border: var(--space-1) solid var(--color-warning);
+                box-shadow: var(--shadow-md);
+}
+/* Exercise detail containers - DARK THEME */
+.exercise-detail-container {
+    margin-bottom: 10px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    overflow: visible; /* ✅ CHANGED from 'hidden' to 'visible' */
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    position: relative; /* ✅ ADDED for z-index stacking context */
+}
+
+
+/* Clickable exercise header - DARK THEME */
+.clickable-exercise-header {
+    padding: 12px 15px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-bottom: 1px solid #444;
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0; /* ✅ ADDED to maintain rounded corners */
+}
+
+.clickable-exercise-header:hover {
+    background: linear-gradient(135deg, #333 0%, #222 100%);
+}
+
+/* Exercise title row - TOGGLE ON RIGHT SIDE */
+.exercise-detail-title-row {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.exercise-detail-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #ffd166;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Chevron icon animation - MOVED TO RIGHT */
+.exercise-chevron {
+    font-size: 14px;
+    transition: transform 0.2s;
+    color: #888;
+    order: 10 !important; /* Push to end of flex container */
+    margin-left: auto;
+}
+
+.exercise-chevron.fa-chevron-down {
+    transform: rotate(90deg);
+}
+
+/* Go to exercise icon */
+.go-to-exercise {
+    transition: color 0.2s, transform 0.2s;
+    font-size: 14px;
+    color: #888;
+    margin-left: 8px;
+}
+
+.go-to-exercise:hover {
+    color: #ffd166 !important;
+    transform: scale(1.1);
+}
+
+/* Exercise summary stats */
+.exercise-summary-stats {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    color: #888;
+    margin-left: 15px;
+}
+
+.exercise-summary-stat {
+    padding: 3px 8px;
+    background: #1b1b1b;
+    border-radius: 4px;
+    border: 1px solid #444;
+    color: #e0e0e0;
+}
+
+/* Exercise sets container */
+.exercise-sets-container {
+    padding: 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0c0c0c 100%);
+    border-radius: 0 0 8px 8px; /* ✅ ADDED to maintain rounded corners */
+    overflow: visible; /* ✅ ADDED to allow tooltips to overflow */
+}
+
+/* Exercise sets table - DARK THEME */
+.exercise-sets-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    background: transparent;
+    position: relative; /* ✅ ADDED for z-index stacking */
+}
+
+
+.exercise-sets-table thead {
+    background: linear-gradient(135deg, #333 0%, #1b1b1b 50%, #333 100%);
+}
+
+.exercise-sets-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffd166;
+    border-bottom: 1px solid #444;
+}
+
+.exercise-sets-table td {
+    padding: 10px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #333;
+    background: transparent;
+    color: #e0e0e0;
+    position: relative; /* ✅ ADDED for tooltip positioning */
+}
+
+.exercise-sets-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.exercise-sets-table tbody tr:hover {
+    background: #1a1a1a;
+}
+
+.exercise-sets-table tbody tr:hover td {
+    background: #1a1a1a;
+}
+
+/* PR row highlighting - DARK THEME */
+.pr-row {
+    background: rgba(255, 209, 102, 0.1) !important;
+}
+
+.pr-row td {
+    background: rgba(255, 209, 102, 0.1) !important;
+}
+
+.pr-row:hover {
+    background: rgba(255, 209, 102, 0.2) !important;
+}
+
+.pr-row:hover td {
+    background: rgba(255, 209, 102, 0.2) !important;
+}
+
+.pr-badge {
+    font-size: 14px;
+    margin-right: 4px;
+}
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
+                .clickable-exercise {
+          font-size: var(--font-size-base);
+            }
             
+            .pr-badge {
+                font-size: var(--font-size-base);
+            }
+            
+            .clickable-exercise:hover {
+                transform: translateX(var(--space-2));
+            }
+                    
             .history-container {
                 overflow-x: hidden; /* Prevent horizontal scroll on container */
                 margin-left: -10px;
@@ -1162,7 +1597,37 @@
         gap: 6px;
     }
         }
-
+    @media (max-width: 480px) {
+        .clickable-exercise {
+            font-size: var(--font-size-base);
+            gap: var(--space-6);
+            padding: var(--space-2) var(--space-6);
+        }
+        
+        .pr-badge {
+            font-size: var(--font-size-base);
+            margin: 0 var(--space-1);
+        }
+        
+        .clickable-exercise:hover {
+            transform: translateX(var(--space-2));
+        }
+        
+        .clickable-exercise .fa-external-link-alt {
+            font-size: var(--font-size-sm);
+        }
+        
+        .pr-badge[title]:hover::after {
+            font-size: var(--font-size-xs);
+            padding: var(--space-2) var(--space-6);
+            margin-left: var(--space-8);
+        }
+        
+        .exercise-sets-table th:last-child,
+        .exercise-sets-table td:last-child {
+            width: 50px;
+        }
+    }
         /* Animation for tab content */
         .tab-pane {
             animation: fadeIn 0.5s ease;
@@ -1900,7 +2365,7 @@
                             Personal Best <i class="fas fa-sort sort-icon"></i>
                         </th>
                         <th class="sortable-header text-end" data-sort="volume">
-                            Total Volume <i class="fas fa-sort sort-icon"></i>
+                            Kokonais Volyymi <i class="fas fa-sort sort-icon"></i>
                         </th>
                         <th class="sortable-header text-end" data-sort="trend">
                             Trendi <i class="fas fa-sort sort-icon"></i>
@@ -2063,6 +2528,30 @@ $('#daily-nutrition-tab, #weekly-nutrition-tab').on('shown.bs.tab', function() {
 });
         
         // Helper function to translate exercise names
+        function formatDateForAPI(dateInput) {
+    if (!dateInput) return null;
+    
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+        return dateInput;
+    }
+    
+    try {
+        const date = new Date(dateInput);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return null;
+        }
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    } catch (e) {
+        console.error('Date formatting error:', e, dateInput);
+        return null;
+    }
+}
         function translateExerciseName(exerciseName) {
             return t(exerciseName) !== exerciseName ? t(exerciseName) : exerciseName;
         }
@@ -2416,7 +2905,601 @@ if (data.best_set.weight > 0 && data.best_set.reps > 0) {
     $('#exercises-list').closest('.table-responsive').hide();
     $('#exercise-detail').show();
 }
+        // Updated showWorkoutDetail function to make muscle groups clickable
+ function showWorkoutDetail(period, item) {
+    const detailContainer = `#${period}-workout-detail`;
+    const listContainer = `#${period}-workout-list`;
+    
+    // Hide list and show detail
+    $(listContainer).hide();
+    $(detailContainer).show();
 
+    // Update detail header
+    let periodLabel = '';
+    let dateFilter = '';
+    let weekStart = '';
+    let monthStart = '';
+
+    if (period === 'daily') {
+        const date = new Date(item.date);
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const translatedWeekday = translateWeekday(weekday);
+        const monthName = translateMonth(date.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+        periodLabel = `${translatedWeekday}, ${date.getDate()} ${monthName}`;
+        dateFilter = item.date;
+    } else if (period === 'weekly') {
+        const startDate = new Date(item.week_start);
+        const weekEnd = new Date(startDate); 
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+        const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+        periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
+        weekStart = item.week_start;
+    } else {
+        const startDate = new Date(item.month_start);
+        const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+        periodLabel = `${monthName} ${startDate.getFullYear()}`;
+        monthStart = item.month_start;
+    }
+
+    $(`#${period}-detail-title`).text(periodLabel);
+
+    // Update summary cards
+    const muscleGroupCount = Object.keys(item.muscles || {}).length;
+    $(`#${period}-detail-sessions`).text(item.sessions_count || 0);
+    $(`#${period}-detail-muscle-groups`).text(muscleGroupCount);
+    $(`#${period}-detail-sets`).text(item.total_sets || 0);
+    $(`#${period}-detail-reps`).text(item.total_reps || 0);
+    $(`#${period}-detail-volume`).text(parseFloat(item.total_volume || 0).toLocaleString() + ' kg');
+    $(`#${period}-detail-duration`).text(item.duration_formatted || '0m');
+    $(`#${period}-detail-calories`).text(Math.round(item.calories_burned || 0));
+
+    // Updated muscle breakdown with clickable cards
+const muscleBreakdownContainer = $(`#${period}-detail-muscle-breakdown`);
+muscleBreakdownContainer.empty();
+
+if (item.muscles && Object.keys(item.muscles).length > 0) {
+    Object.entries(item.muscles).forEach(([muscle, stats]) => {
+        const muscleId = `muscle-${muscle.replace(/\s+/g, '-')}-${period}`;
+        
+        const muscleCardHtml = `
+            <div class="muscle-detail-card" 
+                 data-muscle="${muscle}" 
+                 data-period="${period}" 
+                 data-date="${dateFilter || ''}" 
+                 data-week-start="${weekStart || ''}" 
+                 data-month-start="${monthStart || ''}">
+                <div class="muscle-name">
+                    ${translateMuscleGroup(muscle)}
+                    <i class="fas fa-chevron-down muscle-collapse-icon"></i>
+                </div>
+                <div class="muscle-stats">
+                    <div class="muscle-stat">
+                        <div class="muscle-stat-value">${stats.total_sets || 0}</div>
+                        <div class="muscle-stat-label">${t('sets')}</div>
+                    </div>
+                    <div class="muscle-stat">
+                        <div class="muscle-stat-value">${stats.total_reps || 0}</div>
+                        <div class="muscle-stat-label">${t('reps')}</div>
+                    </div>
+                    <div class="muscle-stat">
+                        <div class="muscle-stat-value">${parseFloat(stats.total_volume || 0).toFixed(0)}</div>
+                        <div class="muscle-stat-label">kg</div>
+                    </div>
+                </div>
+                <div id="${muscleId}-details" class="exercise-detail-section" style="display: none;">
+                    <!-- Exercise details will be loaded here -->
+                </div>
+            </div>
+        `;
+        
+        muscleBreakdownContainer.append(muscleCardHtml);
+    });
+    
+    // ✅ CRITICAL FIX: Add click handlers AFTER cards are appended to DOM
+    muscleBreakdownContainer.find('.muscle-detail-card').each(function() {
+        $(this).off('click').on('click', function(e) {
+            // Prevent event bubbling
+            e.stopPropagation();
+            
+            const card = $(this);
+            const muscle = card.data('muscle');
+            const period = card.data('period');
+            const date = card.data('date');
+            const weekStart = card.data('week-start');
+            const monthStart = card.data('month-start');
+            
+            const muscleId = `muscle-${muscle.replace(/\s+/g, '-')}-${period}`;
+            const detailSection = $(`#${muscleId}-details`);
+            
+            if (card.hasClass('expanded')) {
+                // Collapse
+                card.removeClass('expanded');
+                detailSection.slideUp(300);
+            } else {
+                // Expand and load details
+                card.addClass('expanded');
+                detailSection.slideDown(300);
+                loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, muscleId);
+            }
+        });
+    });
+} else {
+    muscleBreakdownContainer.html(`
+        <div class="text-center text-muted py-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <span data-i18n="nomuscledata">No muscle group data available</span>
+        </div>
+    `);
+}
+
+    // Load cardio breakdown
+    loadCardioBreakdown(period, dateFilter, weekStart, monthStart);
+}
+
+        // New function to load exercise details for a muscle group
+function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, muscleId) {
+    const detailSection = $(`#${muscleId}-details`);
+    
+    // Show loading
+    detailSection.html('<div class="muscle-loading"><i class="fas fa-spinner fa-spin"></i> Loading exercises...</div>');
+    
+    // Format dates properly before sending to API
+    const formattedDate = date ? formatDateForAPI(date) : null;
+    const formattedWeekStart = weekStart ? formatDateForAPI(weekStart) : null;
+    const formattedMonthStart = monthStart ? formatDateForAPI(monthStart) : null;
+    
+    // Build query parameters
+    let url = `/workout/history/muscle/${encodeURIComponent(muscle)}?period=${period}`;
+    if (formattedDate) {
+        url += `&date=${formattedDate}`;
+    }
+    if (formattedWeekStart) {
+        url += `&week_start=${formattedWeekStart}`;
+    }
+    if (formattedMonthStart) {
+        url += `&month_start=${formattedMonthStart}`;
+    }
+    
+    $.get(url, function(data) {
+        if (!data.exercises || data.exercises.length === 0) {
+            detailSection.html('<div class="text-center text-muted py-3">No exercise data found</div>');
+            return;
+        }
+        
+        let html = '';
+        data.exercises.forEach((exercise, index) => {
+            const exerciseDetailId = `exercise-detail-${muscleId}-${index}`;
+            
+            // Calculate totals for the exercise
+            const totalSets = exercise.sets.length;
+            const totalReps = exercise.sets.reduce((sum, set) => sum + (set.reps || 0), 0);
+            const totalVolume = exercise.sets.reduce((sum, set) => sum + (set.volume || 0), 0);
+            const hasPR = exercise.sets.some(set => set.has_pr);
+            
+            // ✅ FIXED: Collapsible exercise header with toggle on RIGHT side
+            html += `
+                <div class="exercise-detail-container">
+                    <div class="exercise-detail-header clickable-exercise-header" data-target="${exerciseDetailId}">
+                        <div class="exercise-detail-title-row">
+                            <div class="exercise-detail-title">
+                                <span>${translateExerciseName(exercise.exercise_name)}</span>
+                                ${hasPR ? '<i class="fas fa-trophy text-warning" style="font-size: 12px;" title="Sisältää PR"></i>' : ''}
+                                <i class="fas fa-external-link-alt go-to-exercise" 
+                                   data-exercise-id="${exercise.exercise_id}" 
+                                   data-exercise-name="${exercise.exercise_name}"
+                                   title="Go to exercise details"></i>
+                            </div>
+                            <div class="exercise-summary-stats">
+                                <span class="exercise-summary-stat">${totalSets} sarjaa</span>
+                                <span class="exercise-summary-stat">${totalReps} toistoa</span>
+                                <span class="exercise-summary-stat">${totalVolume.toFixed(0)} kg</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right exercise-chevron"></i>
+                    </div>
+                    
+                    <div id="${exerciseDetailId}" class="exercise-sets-container" style="display: none;">
+                        <table class="exercise-sets-table">
+                            <thead>
+                                <tr>
+                                    <th>Sarjat</th>
+                                    <th>Toistot</th>
+                                    <th>Paino (kg)</th>
+                                    <th>Volyymi (kg)</th>
+                                    ${period !== 'daily' ? '<th>Päivä</th>' : ''}
+                                    <th>PR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+exercise.sets.forEach(set => {
+    const prBadges = [];
+    
+    // ✅ FIX: Use custom tooltip structure instead of title attribute
+    if (set.is_heaviest_weight) {
+        prBadges.push(`
+            <span class="pr-tooltip">
+                <i class="fa-solid fa-trophy text-warning pr-badge pr-heaviest"></i>
+                <span class="tooltip-text">Raskain Paino PR</span>
+            </span>
+        `);
+    }
+    if (set.is_best_set) {
+        prBadges.push(`
+            <span class="pr-tooltip">
+                <i class="fa-solid fa-fire text-danger pr-badge pr-best-set"></i>
+                <span class="tooltip-text">Paras Sarja PR</span>
+            </span>
+        `);
+    }
+    
+    const rowClass = set.has_pr ? 'pr-row' : '';
+    
+    html += `
+        <tr class="${rowClass}">
+            <td>${set.set_number}</td>
+            <td>${set.reps}</td>
+            <td>${set.weight}</td>
+            <td>${set.volume.toFixed(1)}</td>
+            ${period !== 'daily' ? `<td>${formatDate(set.date)}</td>` : ''}
+            <td>${prBadges.join(' ') || '-'}</td>
+        </tr>
+    `;
+});
+
+// After rendering all HTML, add mobile touch handlers
+detailSection.html(html);
+
+// ✅ NEW: Add mobile touch handlers for tooltips
+detailSection.find('.pr-tooltip').on('touchstart click', function(e) {
+    e.stopPropagation();
+    
+    // Close other tooltips
+    $('.pr-tooltip.active').not(this).removeClass('active');
+    
+    // Toggle this tooltip
+    $(this).toggleClass('active');
+});
+
+// Close tooltips when clicking outside
+$(document).on('touchstart click', function(e) {
+    if (!$(e.target).closest('.pr-tooltip').length) {
+        $('.pr-tooltip.active').removeClass('active');
+    }
+});
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        });
+        
+        detailSection.html(html);
+        
+        // ✅ FIXED: Add click handlers for collapsible exercise headers
+        detailSection.find('.clickable-exercise-header').off('click').on('click', function(e) {
+            // Don't trigger if clicking the "go to exercise" icon
+            if ($(e.target).hasClass('go-to-exercise')) {
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = $(this).data('target');
+            const setsContainer = $(`#${targetId}`);
+            const chevron = $(this).find('.exercise-chevron');
+            
+            if (setsContainer.is(':visible')) {
+                // Collapse
+                setsContainer.slideUp(200);
+                chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+            } else {
+                // Expand
+                setsContainer.slideDown(200);
+                chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+            }
+        });
+        
+        // ✅ FIXED: Add click handlers for "go to exercise" icon with proper DOM element access
+        detailSection.find('.go-to-exercise').off('click').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const exerciseId = $(this).data('exercise-id');
+    const exerciseName = $(this).data('exercise-name');
+    
+    console.log('Navigating to exercise:', exerciseId, exerciseName);
+    
+    // ✅ NEW: Store the exercise ID in session storage for persistence
+    sessionStorage.setItem('selectedExerciseId', exerciseId);
+    
+    // Switch to exercises tab
+    $('#exercises-tab').tab('show');
+    
+    // Wait for tab to be fully shown
+    $('#exercises-tab').one('shown.bs.tab', function() {
+        console.log('Exercises tab shown');
+        
+        // ✅ NEW: Check if exercises are already loaded
+        const exercisesLoaded = $('#exercises-list tr.exercise-row').length > 0;
+        
+        if (!exercisesLoaded) {
+            console.log('Loading exercises...');
+            
+            // ✅ NEW: Load exercises and then select the target exercise
+            if (typeof loadExercises === 'function') {
+                loadExercises(function() {
+                    // Callback after exercises load
+                    setTimeout(function() {
+                        scrollToAndHighlightExercise(exerciseId);
+                    }, 300);
+                });
+            } else {
+                // Fallback if loadExercises doesn't support callback
+                setTimeout(function() {
+                    scrollToAndHighlightExercise(exerciseId);
+                }, 500);
+            }
+        } else {
+            // Exercises already loaded, just scroll and select
+            console.log('Exercises already loaded, selecting...');
+            scrollToAndHighlightExercise(exerciseId);
+        }
+    });
+});
+        
+    }).fail(function(xhr) {
+        console.error('Failed to load muscle details:', xhr);
+        detailSection.html('<div class="text-center text-danger py-3">Failed to load exercise details</div>');
+    });
+}
+function navigateToExerciseDetail(exerciseId, exerciseName) {
+    // Switch to exercises tab
+    $('#exercises-tab').tab('show');
+    
+    // Wait for tab to be fully shown
+    $('#exercises-tab').one('shown.bs.tab', function() {
+        // Load exercises if not already loaded
+        if ($('#exercises-list tr').length === 0) {
+            loadExercises();
+        }
+        
+        // Wait a moment for exercises to load, then trigger the click
+        setTimeout(function() {
+            // Find and trigger click on the exercise row
+            const $exerciseRow = $(`.exercise-row[data-id="${exerciseId}"]`);
+            
+            if ($exerciseRow.length > 0) {
+                // Scroll to the exercise
+                $exerciseRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight the exercise briefly
+                $exerciseRow.css('background-color', 'rgba(255, 209, 102, 0.3)');
+                setTimeout(function() {
+                    $exerciseRow.css('background-color', '');
+                }, 1000);
+                
+                // Click the exercise to show details
+                setTimeout(function() {
+                    $exerciseRow.trigger('click');
+                }, 500);
+            } else {
+                console.log('Exercise not found in list:', exerciseId, exerciseName);
+            }
+        }, 300);
+    });
+}
+// New function to load cardio breakdown
+function loadCardioBreakdown(period, date, weekStart, monthStart) {
+    // Check if cardio breakdown container exists, if not create it
+    let cardioSection = $(`#${period}-detail-cardio-breakdown`);
+    if (cardioSection.length === 0) {
+        $(`#${period}-detail-muscle-breakdown`).parent().after(`
+            <div class="cardio-breakdown-section">
+                <h5><i class="fas fa-running me-2"></i>Cardio Breakdown</h5>
+                <div id="${period}-detail-cardio-breakdown">
+                    <!-- Cardio sessions will be loaded here -->
+                </div>
+            </div>
+        `);
+        cardioSection = $(`#${period}-detail-cardio-breakdown`);
+    }
+    
+    cardioSection.html('<div class="muscle-loading"><i class="fas fa-spinner fa-spin"></i> Loading cardio sessions...</div>');
+    
+    // ✅ FIX: Format dates properly before sending to API
+    const formattedDate = date ? formatDateForAPI(date) : null;
+    const formattedWeekStart = weekStart ? formatDateForAPI(weekStart) : null;
+    const formattedMonthStart = monthStart ? formatDateForAPI(monthStart) : null;
+    
+    // Build query parameters
+    let url = `/workout/history/cardio?period=${period}`;
+    if (formattedDate) {
+        url += `&date=${formattedDate}`;
+    }
+    if (formattedWeekStart) {
+        url += `&week_start=${formattedWeekStart}`;
+    }
+    if (formattedMonthStart) {
+        url += `&month_start=${formattedMonthStart}`;
+    }
+    
+    $.get(url, function(data) {
+        if (!data.cardio_sessions || data.cardio_sessions.length === 0) {
+            cardioSection.html(`
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>No cardio sessions recorded</span>
+                </div>
+            `);
+            return;
+        }
+        
+        let html = '';
+        data.cardio_sessions.forEach(session => {
+            html += `
+                <div class="cardio-session-card">
+                    <div class="cardio-session-header">
+                        <div class="cardio-type">
+                            ${getCardioIcon(session.exercise_type)} ${session.cardio_type} - Cardio
+                        </div>
+                        ${period !== 'daily' && session.date ? `<div class="text-muted" style="font-size: 11px;">${formatDate(session.date)}</div>` : ''}
+                    </div>
+                    <div class="cardio-stats">
+                        <div class="cardio-stat-item">
+                            <div class="cardio-stat-label">Duration</div>
+                            <div class="cardio-stat-value">${session.duration_minutes} min</div>
+                        </div>
+                        ${session.distance_km > 0 ? `
+                        <div class="cardio-stat-item">
+                            <div class="cardio-stat-label">Distance</div>
+                            <div class="cardio-stat-value">${session.distance_km.toFixed(2)} km</div>
+                        </div>
+                        ` : ''}
+                        ${session.avg_pace_min_per_km ? `
+                        <div class="cardio-stat-item">
+                            <div class="cardio-stat-label">Avg Pace</div>
+                            <div class="cardio-stat-value">${formatPace(session.avg_pace_min_per_km)}/km</div>
+                        </div>
+                        ` : ''}
+                        ${session.avg_heart_rate ? `
+                        <div class="cardio-stat-item">
+                            <div class="cardio-stat-label">Avg HR</div>
+                            <div class="cardio-stat-value">${session.avg_heart_rate} bpm</div>
+                        </div>
+                        ` : ''}
+                        ${session.calories_burned > 0 ? `
+                        <div class="cardio-stat-item">
+                            <div class="cardio-stat-label">Calories</div>
+                            <div class="cardio-stat-value">${Math.round(session.calories_burned)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ${session.notes ? `<div class="text-muted" style="font-size: 11px; margin-top: 8px;">${session.notes}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        cardioSection.html(html);
+    }).fail(function(xhr) {
+        console.error('Failed to load cardio sessions:', xhr);
+        cardioSection.html('<div class="text-center text-danger py-3">Failed to load cardio data</div>');
+    });
+}
+
+
+function getCardioIcon(exerciseType) {
+    const icons = {
+        'running': '<i class="fas fa-running"></i>',
+        'cycling': '<i class="fas fa-biking"></i>',
+        'swimming': '<i class="fas fa-person-swimming"></i>',
+        'walking': '<i class="fas fa-walking"></i>',
+        'rowing': '<i class="fas fa-water"></i>',
+        'elliptical': '<i class="fas fa-dumbbell"></i>',
+        'stairmaster': '<i class="fas fa-stairs"></i>',
+        'hiking': '<i class="fas fa-mountain"></i>',
+        'other': '<i class="fas fa-heart-pulse"></i>'
+    };
+    
+    return icons[exerciseType] || icons['other'];
+}
+
+// Format pace from decimal minutes to min:sec format
+function formatPace(paceMinutes) {
+    if (!paceMinutes || paceMinutes <= 0) return '--:--';
+    
+    const minutes = Math.floor(paceMinutes);
+    const seconds = Math.round((paceMinutes - minutes) * 60);
+    
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+function loadExercises(callback) {
+    $.get('/workout/exercises', function(data) {
+        renderExercisesList(data.exercises);
+        
+        // ✅ NEW: Call callback if provided
+        if (typeof callback === 'function') {
+            callback();
+        }
+        
+        // ✅ NEW: Check if there's a stored exercise ID to select
+        const selectedExerciseId = sessionStorage.getItem('selectedExerciseId');
+        if (selectedExerciseId) {
+            sessionStorage.removeItem('selectedExerciseId');
+            setTimeout(function() {
+                scrollToAndHighlightExercise(parseInt(selectedExerciseId));
+            }, 300);
+        }
+    }).fail(function() {
+        alert('Failed to load exercises');
+        if (typeof callback === 'function') {
+            callback();
+        }
+    });
+}
+// Helper function to format date (keep this one too)
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return `${date.getDate()}/${date.getMonth() + 1}`;
+}
+
+function scrollToAndHighlightExercise(exerciseId) {
+    console.log('Looking for exercise:', exerciseId);
+    
+    // Find the exercise row
+    const exerciseRow = $(`.exercise-row[data-id="${exerciseId}"]`);
+    
+    if (exerciseRow.length > 0) {
+        console.log('Found exercise row:', exerciseId);
+        
+        // ✅ FIX: Get DOM element from jQuery object properly
+        const domElement = exerciseRow.get(0);
+        
+        if (domElement && typeof domElement.scrollIntoView === 'function') {
+            domElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            // Fallback: use jQuery scrollTop
+            const container = exerciseRow.closest('.table-responsive');
+            if (container.length > 0) {
+                container.animate({
+                    scrollTop: exerciseRow.position().top + container.scrollTop() - container.height() / 2
+                }, 500);
+            }
+        }
+        
+        // Highlight the exercise briefly
+        exerciseRow.css('background-color', 'rgba(255, 209, 102, 0.3)');
+        setTimeout(function() {
+            exerciseRow.css('background-color', '');
+        }, 1500);
+        
+        // ✅ NEW: Actually trigger the click to load exercise details
+        setTimeout(function() {
+            console.log('Clicking exercise row to load details');
+            exerciseRow.trigger('click');
+            
+            // ✅ NEW: After clicking, also call loadExerciseDetail directly if it exists
+            const exerciseName = exerciseRow.data('name');
+            if (typeof loadExerciseDetail === 'function') {
+                loadExerciseDetail(exerciseId);
+            }
+        }, 800);
+    } else {
+        console.log('Exercise not found in list:', exerciseId);
+        
+        // ✅ NEW: If exercise not found, try to load it directly
+        if (typeof loadExerciseDetail === 'function') {
+            console.log('Attempting to load exercise details directly');
+            loadExerciseDetail(exerciseId);
+        }
+    }
+}
 // ---------- Render exercise chart ----------
 function renderExerciseChart(history) {
     const ctx = document.getElementById('exercise-chart').getContext('2d');
@@ -2547,7 +3630,7 @@ function renderExerciseChart(history) {
             sortedHistory.forEach(session => {
                 let prIndicator = '';
                 if (session.is_pr) {
-                    prIndicator = ` <i class="fa-solid fa-trophy text-warning" title="Personal Record: ${session.best_weight} kg"></i>`;
+                    prIndicator = ` <i class="fa-solid fa-trophy text-warning" title="Oma Ennätys: ${session.best_weight} kg"></i>`;
                 }
 
                 const row = `
@@ -2559,8 +3642,17 @@ function renderExerciseChart(history) {
                     </tr>`;
                 container.append(row);
             });
-        }
-
+        
+container.find('.pr-tooltip').on('touchstart click', function(e) {
+    e.stopPropagation();
+    
+    // Close other tooltips
+    $('.pr-tooltip.active').not(this).removeClass('active');
+    
+    // Toggle this tooltip
+    $(this).toggleClass('active');
+});
+}
         // Workout history tab functionality
         $('#workoutHistoryTabs button').click(function() {
             const period = $(this).attr('id').split('-')[0];
@@ -2674,83 +3766,7 @@ function renderExerciseChart(history) {
             }
 
         // Show workout detail view
- function showWorkoutDetail(period, item) {
-    const detailContainer = `#${period}-workout-detail`;
-    const listContainer = `#${period}-workout-list`;
-    
-    // Hide list and show detail
-    $(listContainer).hide();
-    $(detailContainer).show();
 
-    // Update detail header
-    let periodLabel = '';
-    if (period === 'daily') {
-        const date = new Date(item.date);
-        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-        const translatedWeekday = translateWeekday(weekday);
-        const monthName = translateMonth(date.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-        periodLabel = `${translatedWeekday}, ${date.getDate()} ${monthName}`;
-    } else if (period === 'weekly') {
-        const startDate = new Date(item.week_start);
-        const weekEnd = new Date(startDate); 
-        weekEnd.setDate(weekEnd.getDate() + 6);
-        const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-        const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-        periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
-    } else {
-        const startDate = new Date(item.month_start);
-        const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-        periodLabel = `${monthName} ${startDate.getFullYear()}`;
-    }
-
-    $(`#${period}-detail-title`).text(periodLabel);
-
-    // Update summary cards - NOW INCLUDING DURATION AND CALORIES
-    const muscleGroupCount = Object.keys(item.muscles || {}).length;
-    $(`#${period}-detail-sessions`).text(item.sessions_count || 0);
-    $(`#${period}-detail-muscle-groups`).text(muscleGroupCount);
-    $(`#${period}-detail-sets`).text(item.total_sets || 0);
-    $(`#${period}-detail-reps`).text(item.total_reps || 0);
-    $(`#${period}-detail-volume`).text(parseFloat(item.total_volume || 0).toLocaleString() + ' kg');
-    
-    // ✅ NEW: Add duration and calories to summary cards (you'll need to add these to your HTML template)
-    $(`#${period}-detail-duration`).text(item.duration_formatted || '0m');
-    $(`#${period}-detail-calories`).text(Math.round(item.calories_burned || 0));
-
-    // Update muscle breakdown
-    const muscleBreakdownContainer = $(`#${period}-detail-muscle-breakdown`);
-    muscleBreakdownContainer.empty();
-
-    if (item.muscles && Object.keys(item.muscles).length > 0) {
-        Object.entries(item.muscles).forEach(([muscle, stats]) => {
-            const muscleCardHtml = `
-                <div class="muscle-detail-card">
-                    <div class="muscle-name">${translateMuscleGroup(muscle)}</div>
-                    <div class="muscle-stats">
-                        <div class="muscle-stat">
-                            <div class="muscle-stat-value">${stats.total_sets || 0}</div>
-                            <div class="muscle-stat-label" data-i18n="sets">Sets</div>
-                        </div>
-                        <div class="muscle-stat">
-                            <div class="muscle-stat-value">${stats.total_reps || 0}</div>
-                            <div class="muscle-stat-label" data-i18n="reps">Reps</div>
-                        </div>
-                        <div class="muscle-stat">
-                            <div class="muscle-stat-value">${parseFloat(stats.total_volume || 0).toFixed(0)}</div>
-                            <div class="muscle-stat-label">kg</div>
-                        </div>
-                    </div>
-                </div>`;
-            muscleBreakdownContainer.append(muscleCardHtml);
-        });
-    } else {
-        muscleBreakdownContainer.html(`
-            <div class="text-center text-muted py-3">
-                <i class="fas fa-info-circle me-2"></i>
-                <span data-i18n="no_muscle_data">No muscle group data available</span>
-            </div>`);
-    }
-}
         
         // Function to update progress bars with targets from server
         function updateProgressBarsWithTargets() {
