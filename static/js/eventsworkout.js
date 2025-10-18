@@ -93,9 +93,6 @@ function setupRirDropdowns() {
     // RiR option selection
     $(document).on('click', '.rir-option', function(e) {
         e.stopPropagation();
-                if (window.SoundManager) {
-            window.SoundManager.playSuccess();
-        }
         const value = $(this).data('value');
         const badge = $(this).closest('.rir-dropdown').find('.rir-badge');
         const setId = $(this).closest('.set-row').data('set-id');
@@ -112,6 +109,7 @@ function setupRirDropdowns() {
         
         // Update the RiR value in the database
         updateRir(setId, value);
+       
     });
 }
 
