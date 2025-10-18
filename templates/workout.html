@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>TrackYou treenit</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
@@ -3106,7 +3106,16 @@
                                 <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
                             </a>
                         </li>
-                        
+                        <li>
+    <div class="dropdown-item" style="color: #e0e0e0; padding: 8px 15px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="soundToggle" checked>
+            <label class="form-check-label" for="soundToggle">
+                <i class="fas fa-volume-up me-2"></i>Äänet
+            </label>
+        </div>
+    </div>
+</li>
                     </ul>
                 </div>
                 
@@ -3907,6 +3916,7 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
 
 
 </script>
+    <script src="{{ url_for('static', filename='js/soundutils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cacheworkout.js') }}"></script>    
     <script src="{{ url_for('static', filename='js/helperworkout.js') }}"></script>
 <script>
@@ -3949,6 +3959,22 @@ window.renderCalendar = function(date = window.calendarState.currentMonth) {
     // Get CSRF token for use in fetch requests
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
     </script>
+<script>
+// Handle sound toggle
+$(document).ready(function() {
+    // Initialize toggle state
+    if (window.SoundManager) {
+        $('#soundToggle').prop('checked', window.SoundManager.enabled);
+    }
+    
+    // Handle toggle changes
+    $('#soundToggle').on('change', function() {
+        if (window.SoundManager) {
+            window.SoundManager.setEnabled(this.checked);
+        }
+    });
+});
+</script>    
 <script src="{{ url_for('static', filename='js/globalworkout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/data-loadingworkout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/data-operationsworkout.js') }}"></script>
