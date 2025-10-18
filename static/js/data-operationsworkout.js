@@ -37,6 +37,9 @@ function saveSet(isMobile = false) {
         comments: comments
     }, function(response) {
         if (response.success) {
+              if (window.SoundManager) {
+                window.SoundManager.playSuccess();
+            }
             // ✅ FIXED: Invalidate cache and use getSessionWithCache instead of loadWorkoutData
             invalidateDateCache(date);
             getSessionWithCache(date, function(data) {
@@ -107,6 +110,9 @@ function addExercise() {
         description: description
     }, function(response) {
         if (response.success) {
+                        if (window.SoundManager) {
+                window.SoundManager.playSuccess();
+            }
             // Invalidate exercises cache since we've added a new exercise
             invalidateCache(CACHE_KEYS.EXERCISES);
             
@@ -326,6 +332,9 @@ function applyTemplate(templateId) {
             $btn.prop('disabled', false);
             
             if (data.success) {
+                                if (window.SoundManager) {
+                    window.SoundManager.playSuccesstwo();
+                }
                 alert("Treenipohja ladattu onnistuneesti!");
                 // Invalidate session cache for this date since we've modified it
                 const cachedSessions = getCachedData(CACHE_KEYS.SESSIONS, CACHE_EXPIRATION.SESSIONS) || {};
@@ -420,6 +429,9 @@ function copyWorkoutToDate(targetDate) {
                 });
                 
                 $("#copyWorkoutModal").modal("hide");
+                     if (window.SoundManager) {
+                window.SoundManager.playSuccesstwo();
+            }
                 
                 // Show success toast
                 const toastEl = document.getElementById('copySuccessToast');
@@ -1252,6 +1264,9 @@ async function addCardioSession(isMobile = false) {
         const result = await response.json();
         
         if (result.success) {
+                        if (window.SoundManager) {
+                window.SoundManager.playSuccess();
+            }
             console.log('Cardio session added successfully');
             
             // Clear form
