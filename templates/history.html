@@ -3116,7 +3116,7 @@ function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, 
                                 <span class="exercise-summary-stat">${totalVolume.toFixed(0)} kg</span>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-right exercise-chevron"></i>
+                        
                     </div>
                     
                     <div id="${exerciseDetailId}" class="exercise-sets-container" style="display: none;">
@@ -3372,30 +3372,30 @@ function loadCardioBreakdown(period, date, weekStart, monthStart) {
                     </div>
                     <div class="cardio-stats">
                         <div class="cardio-stat-item">
-                            <div class="cardio-stat-label">Duration</div>
+                            <div class="cardio-stat-label">Aika</div>
                             <div class="cardio-stat-value">${session.duration_minutes} min</div>
                         </div>
                         ${session.distance_km > 0 ? `
                         <div class="cardio-stat-item">
-                            <div class="cardio-stat-label">Distance</div>
+                            <div class="cardio-stat-label">Pituus (KM)</div>
                             <div class="cardio-stat-value">${session.distance_km.toFixed(2)} km</div>
                         </div>
                         ` : ''}
                         ${session.avg_pace_min_per_km ? `
                         <div class="cardio-stat-item">
-                            <div class="cardio-stat-label">Avg Pace</div>
+                            <div class="cardio-stat-label">Keskim. Tahti </div>
                             <div class="cardio-stat-value">${formatPace(session.avg_pace_min_per_km)}/km</div>
                         </div>
                         ` : ''}
                         ${session.avg_heart_rate ? `
                         <div class="cardio-stat-item">
-                            <div class="cardio-stat-label">Avg HR</div>
+                            <div class="cardio-stat-label">Keskisyke</div>
                             <div class="cardio-stat-value">${session.avg_heart_rate} bpm</div>
                         </div>
                         ` : ''}
                         ${session.calories_burned > 0 ? `
                         <div class="cardio-stat-item">
-                            <div class="cardio-stat-label">Calories</div>
+                            <div class="cardio-stat-label">Kalorit</div>
                             <div class="cardio-stat-value">${Math.round(session.calories_burned)}</div>
                         </div>
                         ` : ''}
