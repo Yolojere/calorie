@@ -7,9 +7,9 @@ function setupEventListeners() {
     $("#save-set-btn").click(() => saveSet(false));
     $("#save-set-btn-mobile").click(() => saveSet(true));
     
-    // Add exercise
-    $(document).on("click", "#save-exercise-btn", addExercise);
     
+    // Add exercise
+    $(document).on("click", "#save-exercise-btn", addExercise);  
     // Week navigation
     $("#prev-week-btn").click(() => navigateWeek('prev'));
     $("#next-week-btn").click(() => navigateWeek('next'));
@@ -93,6 +93,9 @@ function setupRirDropdowns() {
     // RiR option selection
     $(document).on('click', '.rir-option', function(e) {
         e.stopPropagation();
+                if (window.SoundManager) {
+            window.SoundManager.playSuccess();
+        }
         const value = $(this).data('value');
         const badge = $(this).closest('.rir-dropdown').find('.rir-badge');
         const setId = $(this).closest('.set-row').data('set-id');
@@ -119,7 +122,7 @@ function setupExerciseCompletion() {
 
     // Dropdown toggle
     $(document).on('click.complete', '.complete-exercise-icon', function(e) {
-        e.stopPropagation(); // only stop bubbling, don't preventDefault
+        e.stopPropagation();
 
         const $dropdown = $(this).siblings('.complete-exercise-options');
 
@@ -131,7 +134,7 @@ function setupExerciseCompletion() {
 
         if (!$dropdown.is(':visible')) return;
 
-        // Position dropdown (your existing logic)
+        // Position dropdown
         const $container = $(this).closest('.card, .grid-panel');
         const containerTop = $container.offset().top;
         const containerBottom = containerTop + $container.outerHeight();
@@ -154,13 +157,21 @@ function setupExerciseCompletion() {
     // Option selection
     $(document).on('click.complete', '.complete-option', function(e) {
         e.stopPropagation();
+
         const value = $(this).data('value');
         const exerciseId = $(this).closest('.exercise').data('exercise-id');
         const groupName = $(this).closest('.workout-group').data('group');
         const date = $(".workout-date.active").data("date");
+        
 
-        if (value === 'yes') markExerciseCompleted(exerciseId, groupName, date);
-        else markExerciseNotCompleted(exerciseId, groupName, date);
+        if (value === 'yes') {
+        if (window.SoundManager) {
+            window.SoundManager.playSuccesstwo(); // ✅ only plays when "yes"
+        }
+        markExerciseCompleted(exerciseId, groupName, date);
+    } else {
+        markExerciseNotCompleted(exerciseId, groupName, date);
+    }
 
         $(this).closest('.complete-exercise-options').hide();
     });
@@ -174,8 +185,8 @@ function setupExerciseCompletion() {
 // Handle resume from background / tab focus
 document.addEventListener("visibilitychange", function() {
     if (!document.hidden) {
-        $('.complete-exercise-options').hide(); // reset dropdowns
-        setupExerciseCompletion();              // rebind handlers
+        $('.complete-exercise-options').hide();
+        setupExerciseCompletion();
     }
 });
 
@@ -202,7 +213,6 @@ function markExerciseCompleted(exerciseId, groupName, date) {
     if (!exerciseCollapsed) {
         $exercise.find('.toggle-exercise').click();
     }
-
 }
 
 
@@ -251,7 +261,9 @@ function setupCommentTooltips() {
 // Save comment
 $('#save-comment-btn').click(function() {
     if (!activeCommentIcon) return;
-
+            if (window.SoundManager) {
+            window.SoundManager.playSuccess();
+        }
     const tooltip = $('#comment-tooltip');
     const textarea = tooltip.find('textarea');
     const comment = textarea.val();
@@ -290,6 +302,9 @@ $(document).on('keyup', '.set-input', function(e) {
 });
 
 $(document).on("click", ".workout-table .delete-item", function() {
+            if (window.SoundManager) {
+            window.SoundManager.playDelete();
+        }
     // Now only applies to delete buttons INSIDE workout tables
     const $button = $(this);
     const row = $button.closest("tr");
@@ -302,6 +317,9 @@ $(document).on("click", ".workout-table .delete-item", function() {
 });
 // ✅ CARDIO-SPECIFIC delete handler
 $(document).on("click", ".cardio-delete-btn", function(e) {
+            if (window.SoundManager) {
+            window.SoundManager.playDelete();
+        }
     e.preventDefault();
     e.stopPropagation();
     
@@ -406,6 +424,11 @@ function handleSetUpdate() {
             weight: weight
         }, function(response) {
             if (response.success) {
+                // 🔊 PLAY SUCCESS SOUND
+                if (window.SoundManager) {
+                    window.SoundManager.playSuccess();
+                }
+                
                 repsInput.data("original", reps);
                 weightInput.data("original", weight);
 
@@ -428,6 +451,7 @@ function handleSetUpdate() {
         });
     }
 
+
     function revertToOriginal() {
         repsInput.val(repsInput.data("original"));
         weightInput.val(weightInput.data("original"));
@@ -438,6 +462,9 @@ function handleSetUpdate() {
 
 // Add this function to properly attach event handlers
 $(document).on('click', '.quick-add-set', function () {
+    if (window.SoundManager) {
+            window.SoundManager.playSuccess();
+        }
     startWorkoutTimer();
     const $exercise = $(this).closest('.exercise');
     const exerciseId = $exercise.data('exercise-id');
@@ -780,6 +807,9 @@ function copyWorkoutFromSessionInline(sessionId, targetDate) {
             target_date: targetDate
         },
         success: function(response) {
+                 if (window.SoundManager) {
+                window.SoundManager.playSuccesstwo();
+            }
             console.log('Copy response:', response); // Debug log
             
             if (response.success) {
