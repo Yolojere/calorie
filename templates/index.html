@@ -3,7 +3,7 @@
     <head>
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         <title>TrackYou Kalorilaskuri</title>
         <meta name="description" content="TrackYou Kalorilaskuri — moderni, ilmainen ravinnon ja kaloreiden seurantasovellus verkossa.">
         <meta property="og:title" content="TrackYou Kalorilaskuri">
@@ -13,6 +13,7 @@
         <meta property="og:image" content="https://trackyou.fi/static/images/favicon-48x48.png">
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="TrackYou Kalorilaskuri">
+        <meta name="theme-color" content="#8b34f6">
         <meta name="twitter:description" content="Moderni kalorilaskuri ja ravintopäiväkirja verkossa.">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
@@ -27,6 +28,7 @@
         <link rel="preconnect" href="https://cdn.jsdelivr.net">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+        <link rel="manifest" href="/manifest.json">
         <script src="https://unpkg.com/@zxing/library@latest"></script>
         <script src="/static/js/translations.js"></script>
         <style>
@@ -1793,16 +1795,10 @@
             .activity-grid-container {
                 display: none;
             }
-                .nutrition-grid-container {
-                    display: none;
-                    left: calc(20% + 360px - 10vw);
-                    transform: scale(0.95);
-                }
+            .nutrition-grid-container {
+                display: none;
+            }
                 
-                .activity-grid-container {
-                    left: calc(50% - 390px - 10vw);
-                    transform: scale(0.85);
-                }
             }
             
             @media (max-height: 800px) {
@@ -5915,5 +5911,18 @@ $(document).on('sessionUpdated', function() {
     </script>
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000">
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('ServiceWorker registered:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('ServiceWorker registration failed:', error);
+      });
+  });
+}
+</script>
     </body>
     </html>
