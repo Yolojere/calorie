@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - TrackYou</title>
+    <style>
+        body {
+            background-color: #161616;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .offline-container {
+            max-width: 400px;
+            padding: 20px;
+        }
+        h1 { color: #8b34f6; }
+        .icon { font-size: 64px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="icon">📡</div>
+        <h1>Ei yhteyttä</h1>
+        <p>Olet offline-tilassa. Tarkista internet-yhteytesi ja yritä uudelleen.</p>
+        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #8b34f6; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            Yritä uudelleen
+        </button>
+    </div>
+</body>
+</html>
