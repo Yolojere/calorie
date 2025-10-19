@@ -141,6 +141,7 @@ function updateRir(setId, rirValue) {
             if (!response.success) {
                 alert('Error updating RiR');
                 const date = $(".workout-date.active").data("date");
+                
                 // Use cached version of session loading
                 getSessionWithCache(date, function(data) {
                     renderWorkoutSession(data.session, data.exercises);
@@ -569,6 +570,9 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
         dataType: "json",
         success: function(response) {
             if (response.success) {
+                 if (window.SoundManager) {
+            window.SoundManager.playLoading();
+        }
                 $("#saveWorkoutModal").modal("hide");
                 
                 // Continue analysis for 4 seconds, then show XP or results
