@@ -20,11 +20,10 @@ const pageSpecificResources = [
   '/activity',
   '/custom_food',
   '/profile',
-  '/login',
   '/register'
 ];
 
-// Install event
+// =============== INSTALL ===============
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -39,7 +38,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate event
+// =============== ACTIVATE ===============
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -56,30 +55,35 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event with 206 response handling
+// =============== FETCH ===============
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   // Skip cross-origin requests
-  if (url.origin !== location.origin && !isCDNResource(url)) {
-    return;
-  }
+  if (url.origin !== location.origin && !isCDNResource(url)) return;
 
   // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
+  if (request.method !== 'GET') return;
+
+  // Skip API calls
+  if (
+    url.pathname.includes('/api/') || 
+    url.pathname.includes('/save_') || 
+    url.pathname.includes('/delete_') ||
+    url.pathname.includes('/search_')
+  ) return;
+
+  // ✅ Skip favicon and app icon requests completely
+  if (
+    url.pathname.includes('favicon') ||
+    url.pathname.includes('icon-') ||
+    url.pathname.includes('apple-touch-icon')
+  ) {
+    return; // Let browser handle them natively
   }
 
-  // Skip API endpoints
-  if (url.pathname.includes('/api/') || 
-      url.pathname.includes('/save_') || 
-      url.pathname.includes('/delete_') ||
-      url.pathname.includes('/search_')) {
-    return;
-  }
-
-  // Handle Range requests (video/audio/large files) differently
+  // Handle Range requests (for media)
   if (request.headers.has('range')) {
     event.respondWith(handleRangeRequest(request));
     return;
@@ -90,25 +94,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Only cache successful responses (200-299)
           if (response && response.ok && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
         })
-        .catch(() => {
-          return caches.match(request).then((response) => {
-            return response || caches.match('/offline.html');
-          });
-        })
+        .catch(() => caches.match(request).then((res) => res || caches.match('/offline.html')))
     );
     return;
   }
 
-  // Cache First for JavaScript files
+  // Cache First for JavaScript
   if (url.pathname.endsWith('.js') && url.origin === location.origin) {
     event.respondWith(
       caches.match(request)
@@ -117,23 +114,15 @@ self.addEventListener('fetch', (event) => {
             // Update cache in background
             fetch(request).then((response) => {
               if (response && response.ok && response.status === 200) {
-                caches.open(CACHE_NAME).then((cache) => {
-                  cache.put(request, response);
-                });
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, response));
               }
             }).catch(() => {});
-            
             return cachedResponse;
           }
-
-          // Not in cache, fetch from network
           return fetch(request).then((response) => {
-            // Only cache 200 responses, not 206
             if (response && response.ok && response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, responseClone);
-              });
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
             }
             return response;
           });
@@ -143,50 +132,39 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Cache First for CSS and images
-  if (url.pathname.endsWith('.css') || 
-      request.destination === 'image' ||
-      url.pathname.includes('/static/images/')) {
+  if (
+    url.pathname.endsWith('.css') ||
+    request.destination === 'image' ||
+    url.pathname.includes('/static/images/')
+  ) {
     event.respondWith(
-      caches.match(request)
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((response) => {
+          if (response && response.ok && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
-
-          return fetch(request).then((response) => {
-            // Only cache complete responses
-            if (response && response.ok && response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          });
-        })
+          return response;
+        });
+      })
     );
     return;
   }
 
-  // CDN resources
+  // CDN resources (cache first)
   if (isCDNResource(url)) {
     event.respondWith(
-      caches.match(request)
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((response) => {
+          if (response && response.ok && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
-
-          return fetch(request).then((response) => {
-            if (response && response.ok && response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          });
-        })
+          return response;
+        });
+      })
     );
     return;
   }
@@ -196,34 +174,25 @@ self.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         if (response && response.ok && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
       })
-      .catch(() => {
-        return caches.match(request);
-      })
+      .catch(() => caches.match(request))
   );
 });
 
-// Handle Range requests (for video/audio files)
+// =============== RANGE HANDLER ===============
 function handleRangeRequest(request) {
   return caches.match(request.url)
     .then((cachedResponse) => {
-      // If we have a full cached response, serve it
       if (cachedResponse) {
         return cachedResponse.arrayBuffer().then((arrayBuffer) => {
-          const bytes = /^bytes\=(\d+)\-(\d+)?$/g.exec(
-            request.headers.get('range')
-          );
-          
+          const bytes = /^bytes\=(\d+)\-(\d+)?$/g.exec(request.headers.get('range'));
           if (bytes) {
             const start = Number(bytes[1]);
             const end = Number(bytes[2]) || arrayBuffer.byteLength - 1;
-            
             return new Response(arrayBuffer.slice(start, end + 1), {
               status: 206,
               statusText: 'Partial Content',
@@ -233,37 +202,25 @@ function handleRangeRequest(request) {
               ]
             });
           }
-          
           return new Response(arrayBuffer);
         });
       }
 
-      // No cached version, fetch from network
-      // Create new request WITHOUT range header to get full response
-      const newRequest = new Request(request.url, {
-        headers: new Headers(request.headers)
-      });
-      
-      // Remove range header to get complete response
-      return fetch(newRequest, { cache: "no-store" })
+      // No cached version → fetch full file
+      const newRequest = new Request(request.url, { headers: new Headers(request.headers) });
+      return fetch(newRequest, { cache: 'no-store' })
         .then((response) => {
-          // Cache the full response for future use
           if (response && response.ok && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request.url, responseClone);
-            });
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request.url, clone));
           }
           return response;
         });
     })
-    .catch(() => {
-      // If all fails, let browser handle it normally
-      return fetch(request);
-    });
+    .catch(() => fetch(request));
 }
 
-// Helper function
+// =============== HELPER ===============
 function isCDNResource(url) {
   const cdnDomains = [
     'cdn.jsdelivr.net',
