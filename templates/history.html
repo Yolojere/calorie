@@ -3108,11 +3108,10 @@ function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, 
                                 <i class="fas fa-external-link-alt go-to-exercise" 
                                    data-exercise-id="${exercise.exercise_id}" 
                                    data-exercise-name="${exercise.exercise_name}"
-                                   title="Go to exercise details"></i>
+                                   title="Siirry liikkeet sivulle"></i>
                             </div>
                             <div class="exercise-summary-stats">
                                 <span class="exercise-summary-stat">${totalSets} sarjaa</span>
-                                <span class="exercise-summary-stat">${totalReps} toistoa</span>
                                 <span class="exercise-summary-stat">${totalVolume.toFixed(0)} kg</span>
                             </div>
                         </div>
@@ -3321,7 +3320,7 @@ function loadCardioBreakdown(period, date, weekStart, monthStart) {
     if (cardioSection.length === 0) {
         $(`#${period}-detail-muscle-breakdown`).parent().after(`
             <div class="cardio-breakdown-section">
-                <h5><i class="fas fa-running me-2"></i>Cardio Breakdown</h5>
+                <h5><i class="fas fa-running me-2"></i>Kestävyys harjoitukset</h5>
                 <div id="${period}-detail-cardio-breakdown">
                     <!-- Cardio sessions will be loaded here -->
                 </div>
