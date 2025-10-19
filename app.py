@@ -5604,7 +5604,17 @@ def workout_history_cardio():
         return jsonify(error="Could not load cardio sessions"), 500
     finally:
         conn.close()
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
 
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
+@app.route('/offline.html')
+def offline():
+    return render_template('offline.html')
 @app.route('/sitemap.xml', methods=['GET'])
 def sitemap():
     pages = []
