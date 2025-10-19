@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="/static/js/translations.js"></script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#8b34f6">
     <style>
         /* === MAIN STYLES === */
             body {
@@ -642,5 +644,18 @@ document.addEventListener('DOMContentLoaded', () => {
     tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
   })
 </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('ServiceWorker registered with scope:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('ServiceWorker registration failed:', error);
+                });
+        });
+    }
+    </script>
 </body>
 </html>
