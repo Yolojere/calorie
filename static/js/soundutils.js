@@ -47,41 +47,42 @@ const SoundManager = {
      * @param {number} volume - Optional volume override (0.0 to 1.0)
      */
     play: function(name, volume = null) {
-        if (!this.enabled) return;
+    if (!this.enabled) return;
+    
+    let sound = this.sounds[name];
+    
+    // If sound doesn't exist, create it on-demand
+    if (!sound) {
+        // Try to construct path (you can customize this logic)
+        const path = `/static/sounds/${name}.mp3`;
+        sound = new Audio(path);
+        sound.volume = this.defaultVolume;
+        sound.preload = 'none'; // Don't preload
+        this.sounds[name] = sound;
+    }
+    
+    try {
+        const soundClone = sound.cloneNode();
+        soundClone.volume = volume !== null ? volume : this.defaultVolume;
         
-        const sound = this.sounds[name];
-        if (!sound) {
-            console.warn(`Sound "${name}" not found. Please preload it first.`);
-            return;
+        const playPromise = soundClone.play();
+        
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {})
+                .catch(error => {
+                    console.warn('Sound playback failed:', error);
+                });
         }
         
-        try {
-            // Clone the audio to allow overlapping sounds
-            const soundClone = sound.cloneNode();
-            soundClone.volume = volume !== null ? volume : this.defaultVolume;
-            
-            // Play and clean up
-            const playPromise = soundClone.play();
-            
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        // Playback started successfully
-                    })
-                    .catch(error => {
-                        console.warn('Sound playback failed:', error);
-                    });
-            }
-            
-            // Clean up after playing
-            soundClone.addEventListener('ended', function() {
-                this.remove();
-            });
-            
-        } catch (error) {
-            console.error('Error playing sound:', error);
-        }
-    },
+        soundClone.addEventListener('ended', function() {
+            this.remove();
+        });
+        
+    } catch (error) {
+        console.error('Error playing sound:', error);
+    }
+},
     
     /**
      * Play the success sound
@@ -97,6 +98,9 @@ const SoundManager = {
     },
     playLevelup: function() {
         this.play('levelup');
+    },
+     playLoading: function() {
+        this.play('loading');
     },
 
     
