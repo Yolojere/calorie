@@ -2604,11 +2604,11 @@
                                 <i class="fas fa-fire me-2"></i><span data-i18n="activity">Aktiivisuus</span>
                             </a>
                         </li>
-                        <li>
+                                                <li>
                             <a class="dropdown-item" 
-                            href="/custom_food"
+                            href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Lisää Ruoka</span>
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                             </a>
                         </li>
                         <li>
@@ -4828,7 +4828,30 @@ function applyTemplate() {
     const originalText = applyBtn.html();
     applyBtn.html(`<span class="spinner-border spinner-border-sm" role="status"></span> ${t('applying')}`);
 
-    
+    // find target group and collapse element BEFORE AJAX
+    const targetGroup = $(`.food-group[data-group="${mealGroup}"]`);
+    // common cases:
+    // - Bootstrap: a .collapse element inside the group
+    // - Toggle button: button or a that has aria-expanded
+    // - fallback: check visibility of .group-items
+    const collapseEl = targetGroup.find('.collapse').first();
+    let isExpanded = false;
+    if (collapseEl.length) {
+        isExpanded = collapseEl.hasClass('show') || collapseEl.is(':visible');
+    } else {
+        // try to find a toggle with aria-expanded
+        const toggle = targetGroup.find('[data-toggle="collapse"], [data-bs-toggle="collapse"]').first();
+        if (toggle.length) {
+            // aria-expanded is string "true"/"false" or absent
+            const aria = toggle.attr('aria-expanded');
+            isExpanded = aria === 'true' || aria === true;
+        } else {
+            // fallback: check if .group-items are visible
+            const items = targetGroup.find('.group-items').first();
+            isExpanded = items.length ? items.is(':visible') : false;
+        }
+    }
+
     $.post(APPLY_TEMPLATE_URL, {
         template_id: templateId,
         meal_group: mealGroup,
@@ -4841,25 +4864,52 @@ function applyTemplate() {
             if (response.totals) {
                 updateNutritionTotalsOnly(response.totals);
                 applyTranslations();
-                 updateNutritionAbbreviations();
+                updateNutritionAbbreviations();
             }
-            
-            // Force the target group to be collapsed when applying template
+
+            // Load previous states
             const collapseStates = loadCollapseStates();
-            collapseStates[mealGroup] = true;
+
+            // If currently expanded, keep it expanded (false = not collapsed)
+            // Otherwise, default to collapsed (true)
+            collapseStates[mealGroup] = !isExpanded;
             localStorage.setItem('mealGroupCollapseStates', JSON.stringify(collapseStates));
-            
-            // Add new items to specific group instead of full refresh
+
+            // Clear existing items before adding new ones
+            if (targetGroup.length) {
+                targetGroup.find('.group-items').empty();
+            }
+
+            // Add items to the correct group
             if (response.breakdown && response.breakdown[mealGroup]) {
                 const groupData = response.breakdown[mealGroup];
                 addItemsToGroup(mealGroup, groupData.items, groupData);
             }
-            
-            // ✅ Remove the empty state if items were added
+
+            // Force UI to match the desired state (this prevents auto-collapse)
+            // Use Bootstrap collapse API if available
+            try {
+                if (collapseEl.length && typeof collapseEl.collapse === 'function') {
+                    collapseEl.collapse(isExpanded ? 'show' : 'hide');
+                } else {
+                    // fallback: toggle visibility of .group-items
+                    const items = targetGroup.find('.group-items').first();
+                    if (items.length) {
+                        if (isExpanded) items.show();
+                        else items.hide();
+                    }
+                    // also fix toggle aria-expanded if present
+                    const toggle = targetGroup.find('[data-toggle="collapse"], [data-bs-toggle="collapse"]').first();
+                    if (toggle.length) toggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
+                }
+            } catch (e) {
+                // if anything goes wrong, log but continue
+                console.warn('Could not force-collapse state:', e);
+            }
+
             hideEmptyGroups();
-            
             $('#applyTemplateModal').modal('hide');
-            
+        
         } else {
             alert(t('error_apply_template' + (response.error || 'failed_to_apply_template')));
         }
@@ -4869,6 +4919,8 @@ function applyTemplate() {
         alert(t('failed_to_apply_template_retry'));
     });
 }
+
+
  function addItemsToGroup(groupName, newItems, groupData) {
     let groupElement = $(`.food-group[data-group="${groupName}"]`);
     
