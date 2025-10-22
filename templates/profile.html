@@ -917,9 +917,221 @@ input.form-control:-webkit-autofill {
     .nav-tabs {
         border-bottom: 1px solid #444 !important;
     }
+/* Connected Devices Styles */
+.devices-container {
+    background: #1b1b1b;
+    border: 1px solid #2a2a2a;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
 
+.device-card {
+    background: #121212;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.device-card:hover {
+    border-color: #555;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.device-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.device-icon {
+    font-size: 2rem;
+    color: #7bc8a4;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(123, 200, 164, 0.1);
+    border-radius: 12px;
+}
+
+.device-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.device-description {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.device-status-btn {
+    margin-left:40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 25px;
+    border: 1px solid #444;
+    background: #1e1e1e;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.device-status-btn:hover {
+    background: #2a2a2a;
+    border-color: #555;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #666;
+    transition: background 0.3s ease;
+}
+
+.device-status-btn[data-status="active"] .status-indicator {
+    background: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+}
+
+.device-status-btn[data-status="inactive"] .status-indicator {
+    background: #666;
+}
+
+.device-details {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #aaa;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Garmin Modal Styles */
+.garmin-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.garmin-modal-content {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+.garmin-modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+}
+
+.garmin-modal-header i {
+    font-size: 24px;
+    margin-right: 12px;
+    color: #7bc8a4;
+}
+
+.garmin-modal-header h5 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+}
+
+.garmin-modal-body .form-label {
+    color: #ddd;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.garmin-modal-body .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    background: #121212;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.garmin-modal-body .form-control:focus {
+    outline: none;
+    border-color: #7bc8a4;
+    box-shadow: 0 0 0 2px rgba(123, 200, 164, 0.2);
+}
+
+.garmin-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
     /* Responsive adjustments */
 @media (min-width: 768px) {
+        .device-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .device-status-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
   .avatar-modal {
     align-items: flex-start;
     padding-top: 30px;
@@ -1164,7 +1376,7 @@ input.form-control:-webkit-autofill {
                                             
                     <!-- User Info -->
                     <h2 class="account-heading">{{ viewed_user.username if viewed_user else current_user.username }}</h2>
-                    <p class="text-secondary mb-1">{{ viewed_user.email if viewed_user else current_user.email }}</p>
+                    <p class="text-secondary mb-1">{% if not viewed_user or viewed_user.id == current_user.id %}{{ current_user.email }}{% else %}<!-- Hidden -->{% endif %}</p>
                     <p class="text-info mb-0">
                         <i class="fas fa-user-shield me-1"></i> <span data-i18n="account_type">Account Type</span>: {{ role|capitalize }}
                     </p>
@@ -1193,8 +1405,15 @@ input.form-control:-webkit-autofill {
                                         <i class="fas fa-eye-slash me-2"></i>Yksityisyys
                                     </button>
                                 </li>
+                                <li class="nav-item" role="presentation">
+    <button class="nav-link" id="devices-tab" data-bs-toggle="tab" data-bs-target="#devices-content" 
+            type="button" role="tab" aria-controls="devices-content" aria-selected="false" 
+            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+        <i class="fas fa-link me-2"></i>Yhdistetyt Laitteet
+    </button>
+</li>
                             </ul>
-
+                            
                             <!-- Tab Content -->
                             <div class="tab-content" id="profileTabContent">
                                 <!-- Main Tab -->
@@ -1341,8 +1560,71 @@ input.form-control:-webkit-autofill {
                                 </div>
                             {% endif %}
                                 </div>
-                            </div>
-
+                                                        <!-- Devices Tab -->
+<div class="tab-pane fade" id="devices-content" role="tabpanel" aria-labelledby="devices-tab">
+    <!-- Connected Devices Section -->
+    <div class="devices-container">
+        <legend class="border-bottom mb-4">
+            <i class="fas fa-link me-2"></i> Yhdistetyt Laitteet
+        </legend>
+        <p class="text-secondary mb-4">Yhdistä treenisovelluksesi synkronoidaksesi treenit automaattisesti.</p>
+        
+        <!-- Garmin Connection Card -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-info">
+                    <i class="fas fa-running device-icon"></i>
+                    <div>
+                        <h5 class="device-name">Garmin Connect</h5>
+                        <p class="device-description">Synkronoi treenit ja aktiviteetit Garmin Connectista</p>
+                    </div>
+                </div>
+            </div>
+                            <button type="button" class="device-status-btn" id="garmin-status-btn" data-status="inactive">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Inactive</span>
+                </button>
+            <!-- Connection Details (shown when active) -->
+            <div class="device-details" id="garmin-details" style="display: none;">
+                <div class="detail-row">
+                    <i class="fas fa-envelope me-2"></i>
+                    <class="detail-value" id="garmin-email">
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-sync me-2"></i>Viimeisin synkronointi:</span>
+                    <span class="detail-value" id="garmin-last-sync">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Garmin Connection Modal -->
+<div class="garmin-modal" id="garmin-modal">
+    <div class="garmin-modal-content">
+        <div class="garmin-modal-header">
+            <i class="fas fa-running"></i>
+            <h5>Yhdistä Garmin Tiliin</h5>
+        </div>
+        <div class="garmin-modal-body">
+            <div class="mb-3">
+                <label for="garmin-email-input" class="form-label">Garmin Sähköposti</label>
+                <input type="email" class="form-control" id="garmin-email-input" placeholder="teidän@email.com">
+            </div>
+            <div class="mb-3">
+                <label for="garmin-password-input" class="form-label">Garmin Salasana</label>
+                <input type="password" class="form-control" id="garmin-password-input" placeholder="Kirjoita salansana">
+            </div>
+            <div class="alert alert-danger" id="garmin-error" style="display: none;"></div>
+        </div>
+        <div class="garmin-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" id="cancel-garmin">Peruuta</button>
+            <button type="button" class="btn btn-primary" id="connect-garmin">
+                <span id="connect-text">Yhdistä</span>
+                <span id="connect-spinner" class="d-none"><span class="spinner"></span> Yhdistetään...</span>
+            </button>
+        </div>
+    </div>
+</div>
 
                             <!-- Hidden avatar selection fields -->
                             <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
@@ -1356,15 +1638,23 @@ input.form-control:-webkit-autofill {
                     {% else %}
                         <!-- READ-ONLY DISPLAY for other users -->
                         <div>
+                            {% if not viewed_user or viewed_user.id == current_user.id %}
                             <div class="mb-3">
                                 <label class="form-label">Username</label>
-                                <div class="form-control readonly-field">{{ viewed_user.username }}</div>
+                                <div class="form-control readonly-field">
+                                    {{ viewed_user.username if viewed_user else current_user.username }}
+                                </div>
                             </div>
-                            
+                             {% endif %}
+                            {% if not viewed_user or viewed_user.id == current_user.id %}
                             <div class="mb-3">
                                 <label class="form-label">Email</label>
-                                <div class="form-control readonly-field">{{ viewed_user.email }}</div>
+                                <div class="form-control readonly-field">
+                                    {{ current_user.email }}
+                                </div>
                             </div>
+                            {% endif %}
+                        </div>
 
                             {% if extra_columns_exist %}
 
@@ -1402,6 +1692,7 @@ input.form-control:-webkit-autofill {
             </div>
         </div>
     </div>
+
     
     {% if is_owner %}
         <!-- Social Media Handle Input Modal - only for owner -->
@@ -1603,6 +1894,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
     const levelBadge = document.querySelector('.level-badge');
+    const garminStatusBtn = document.getElementById('garmin-status-btn');
+    const garminModal = document.getElementById('garmin-modal');
+    const garminEmailInput = document.getElementById('garmin-email-input');
+    const garminPasswordInput = document.getElementById('garmin-password-input');
+    const connectGarminBtn = document.getElementById('connect-garmin');
+    const cancelGarminBtn = document.getElementById('cancel-garmin');
+    const garminDetails = document.getElementById('garmin-details');
+    const garminError = document.getElementById('garmin-error');
+    const connectText = document.getElementById('connect-text');
+    const connectSpinner = document.getElementById('connect-spinner');
     
     if (levelBadge) {
         levelBadge.addEventListener('click', function(e) {
@@ -2017,7 +2318,198 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+// Check Garmin connection status on page load
+async function checkGarminStatus() {
+    try {
+        const response = await fetch('/garmin/status', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.connected) {
+            updateGarminUI(true, data.email, data.last_sync);
+        } else {
+            updateGarminUI(false);
+        }
+    } catch (error) {
+        console.error('Error checking Garmin status:', error);
+    }
+}
 
+// Update UI based on connection status
+function updateGarminUI(isConnected, email = null, lastSync = null) {
+    if (isConnected) {
+        garminStatusBtn.setAttribute('data-status', 'active');
+        garminStatusBtn.querySelector('.status-text').textContent = 'Päällä';
+        garminDetails.style.display = 'block';
+        
+        if (email) {
+            document.getElementById('garmin-email').textContent = email;
+        }
+        
+        if (lastSync) {
+            const syncDate = new Date(lastSync);
+            document.getElementById('garmin-last-sync').textContent = syncDate.toLocaleString('fi-FI');
+        }
+    } else {
+        garminStatusBtn.setAttribute('data-status', 'inactive');
+        garminStatusBtn.querySelector('.status-text').textContent = 'Pois päältä';
+        garminDetails.style.display = 'none';
+    }
+}
+
+// Open Garmin modal
+function openGarminModal() {
+    const currentStatus = garminStatusBtn.getAttribute('data-status');
+    
+    if (currentStatus === 'active') {
+        // If already connected, offer to disconnect
+        if (confirm('Haluatko katkaista yhteyden Garmin Connectiin?')) {
+            disconnectGarmin();
+        }
+    } else {
+        // Show login modal
+        garminModal.style.display = 'flex';
+        garminEmailInput.focus();
+        garminError.style.display = 'none';
+    }
+}
+
+// Close Garmin modal
+function closeGarminModal() {
+    garminModal.style.display = 'none';
+    garminEmailInput.value = '';
+    garminPasswordInput.value = '';
+    garminError.style.display = 'none';
+}
+
+// Connect to Garmin
+async function connectGarmin() {
+    const email = garminEmailInput.value.trim();
+    const password = garminPasswordInput.value;
+    
+    if (!email || !password) {
+        showGarminError('Syötä sähköposti ja salasana.');
+        return;
+    }
+    
+    // Show loading state
+    connectText.classList.add('d-none');
+    connectSpinner.classList.remove('d-none');
+    connectGarminBtn.disabled = true;
+    garminError.style.display = 'none';
+    
+    try {
+        const response = await fetch('/garmin/connect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Success!
+            updateGarminUI(true, email, new Date().toISOString());
+            closeGarminModal();
+            showToast('Garmin Connect yhdistetty onnistuneesti!', 'success');
+        } else {
+            showGarminError(data.error || 'Yhdistäminen epäonnistui. Tarkista kirjautumistietosi.');
+        }
+    } catch (error) {
+        console.error('Error connecting to Garmin:', error);
+        showGarminError('Verkkovirhe. Yritä uudelleen.');
+    } finally {
+        // Reset button state
+        connectText.classList.remove('d-none');
+        connectSpinner.classList.add('d-none');
+        connectGarminBtn.disabled = false;
+    }
+}
+
+// Disconnect from Garmin
+async function disconnectGarmin() {
+    try {
+        const response = await fetch('/garmin/disconnect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateGarminUI(false);
+            showToast('Garmin Connect yhteys katkaistu', 'info');
+        }
+    } catch (error) {
+        console.error('Error disconnecting Garmin:', error);
+        showToast('Virhe yhteyden katkaisussa', 'error');
+    }
+}
+
+// Show error in modal
+function showGarminError(message) {
+    garminError.textContent = message;
+    garminError.style.display = 'block';
+}
+
+// Get CSRF token
+function getCsrfToken() {
+    const tokenInput = document.querySelector('input[name="csrf_token"]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+// Event Listeners
+if (garminStatusBtn) {
+    garminStatusBtn.addEventListener('click', openGarminModal);
+}
+
+if (connectGarminBtn) {
+    connectGarminBtn.addEventListener('click', connectGarmin);
+}
+
+if (cancelGarminBtn) {
+    cancelGarminBtn.addEventListener('click', closeGarminModal);
+}
+
+// Enter key to submit in modal
+if (garminPasswordInput) {
+    garminPasswordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            connectGarmin();
+        }
+    });
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && garminModal && garminModal.style.display === 'flex') {
+        closeGarminModal();
+    }
+});
+
+// Close modal when clicking outside
+if (garminModal) {
+    garminModal.addEventListener('click', function(e) {
+        if (e.target === garminModal) {
+            closeGarminModal();
+        }
+    });
+}
+
+// Check status on page load
+checkGarminStatus();
     // Initialize on page load
     initializeSocials();
     {% endif %}
