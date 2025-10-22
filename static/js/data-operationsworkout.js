@@ -1375,3 +1375,139 @@ document.addEventListener('DOMContentLoaded', function() {
         setupCardioEventListeners();
     });
 });
+async function syncGarminActivities() {
+    const garminSyncBtn = document.getElementById('garmin-sync-btn');
+    const garminSyncBtnMobile = document.getElementById('garmin-sync-btn-mobile');
+    
+    // Disable buttons during sync
+    [garminSyncBtn, garminSyncBtnMobile].forEach(btn => {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Synkronoi...';
+        }
+    });
+    
+    try {
+        // Step 1: Sync activities from Garmin
+        console.log('Starting Garmin sync...');
+        const syncResponse = await fetch('/garmin/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const syncResult = await syncResponse.json();
+        
+        if (!syncResult.success) {
+            throw new Error(syncResult.error || 'Failed to sync with Garmin');
+        }
+        
+        console.log('Garmin sync successful:', syncResult);
+        
+        // Step 2: Get importable activities
+        const importableResponse = await fetch('/garmin/importable-activities', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const importableResult = await importableResponse.json();
+        
+        if (!importableResult.success || !importableResult.activities || importableResult.activities.length === 0) {
+            alert('No new activities to import from Garmin');
+            return;
+        }
+        
+        console.log(`Found ${importableResult.activities.length} activities to import`);
+        
+        // Step 3: Import all activities
+        const importResponse = await fetch('/garmin/import-activities-bulk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                activity_ids: importableResult.activities.map(a => a.activity_id)
+            })
+        });
+        
+        const importResult = await importResponse.json();
+        
+        if (!importResult.success) {
+            throw new Error(importResult.error || 'Failed to import activities');
+        }
+        
+        // Success!
+        console.log('Import successful:', importResult);
+        
+        // Play success sound
+        if (window.SoundManager) {
+            window.SoundManager.playSuccess();
+        }
+        
+        // Show success message
+        const importedCount = importResult.imported_count || importableResult.activities.length;
+        alert(`Successfully imported ${importedCount} cardio activities from Garmin!`);
+        
+        // Invalidate cache for affected dates and refresh current view
+        if (typeof invalidateDateCache === 'function') {
+            // Invalidate cache for all imported activity dates
+            importableResult.activities.forEach(activity => {
+                if (activity.start_time) {
+                    const activityDate = activity.start_time.split('T');
+                    invalidateDateCache(activityDate);
+                }
+            });
+            
+            // Also invalidate current date
+            invalidateDateCache(currentSelectedDate);
+        }
+        
+        // Refresh current workout view
+        if (typeof getSessionWithCache === 'function') {
+            getSessionWithCache(currentSelectedDate, function(data) {
+                console.log('Workout data refreshed after Garmin import');
+            });
+        }
+        
+        // Refresh achievement cards if available
+        if (typeof refreshAchievementCards === 'function') {
+            refreshAchievementCards();
+        }
+        
+    } catch (error) {
+        console.error('Error during Garmin sync:', error);
+        alert(`Garmin sync failed: ${error.message}`);
+    } finally {
+        // Re-enable buttons
+        [garminSyncBtn, garminSyncBtnMobile].forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt me-1"></i><span>Tuo Garminista</span>';
+            }
+        });
+    }
+}
+
+// Setup Garmin sync event listeners
+function setupGarminSyncListeners() {
+    const garminSyncBtn = document.getElementById('garmin-sync-btn');
+    const garminSyncBtnMobile = document.getElementById('garmin-sync-btn-mobile');
+    
+    if (garminSyncBtn) {
+        garminSyncBtn.addEventListener('click', syncGarminActivities);
+    }
+    
+    if (garminSyncBtnMobile) {
+        garminSyncBtnMobile.addEventListener('click', syncGarminActivities);
+    }
+}
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    setupGarminSyncListeners();
+});
