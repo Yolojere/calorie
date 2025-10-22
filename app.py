@@ -4,7 +4,7 @@ import json
 import os
 import psycopg2
 from psycopg2.extras import DictCursor, RealDictCursor
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import re
 import uuid
 import time
@@ -33,6 +33,8 @@ from authlib.integrations.flask_client import OAuth
 from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
 from flask import send_from_directory
 from flask import Response
+from garminconnect import Garmin
+from flask_apscheduler import APScheduler
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
@@ -58,7 +60,10 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',      # Helps prevent CSRF
     REMEMBER_COOKIE_HTTPONLY=True,
     REMEMBER_COOKIE_SECURE=True,
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+    SESSION_COOKIE_NAME='your_app_session'
 )
+
 mail = Mail(app)
 app.config['OAUTH_PROVIDERS'] = {
     'google': {
@@ -92,6 +97,8 @@ login_manager.login_view = 'login'
 login_manager.login_message = "Sisäänkirjautuminen vaadittu!"
 login_manager.login_message_category = 'info'
 csrf = CSRFProtect(app)
+login_manager.remember_cookie_duration = timedelta(days=30)
+login_manager.session_protection = "strong"
 
 # Initialize OAuth
 oauth = OAuth(app)
@@ -124,7 +131,8 @@ github = oauth.register(
     api_base_url='https://api.github.com/',
     client_kwargs={'scope': 'user:email'}
 )
-
+scheduler = APScheduler()
+garmin_clients = {}
 
 _nutrition_scanner = EnhancedSimpleScanner()
 def get_scanner():
@@ -178,7 +186,45 @@ def get_db_connection():
     except Exception as e:
         print(f"Database connection failed: {e}")
         raise
-
+    
+def add_garmin_sync_preferences():
+    """Add user preferences for Garmin sync intervals"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            DO $$
+            BEGIN
+                -- Add sync interval column (in minutes)
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name='users' AND column_name='garmin_sync_interval'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN garmin_sync_interval INTEGER DEFAULT 60;
+                END IF;
+                
+                -- Add auto-sync enabled flag
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name='users' AND column_name='garmin_auto_sync_enabled'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN garmin_auto_sync_enabled BOOLEAN DEFAULT TRUE;
+                END IF;
+            END
+            $$;
+        """)
+        
+        conn.commit()
+        print("✅ Garmin sync preference columns added")
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Error adding columns: {e}")
+        
+    finally:
+        cursor.close()
+        conn.close()        
 # Initialize database
 def init_db():
     conn = get_db_connection()
@@ -325,6 +371,51 @@ def init_db():
             comments TEXT
         )
     ''')
+    # 9. Garmin Credentials (encrypted storage)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS garmin_connections (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            garmin_email TEXT NOT NULL,
+            garmin_session_data TEXT,  -- Stores encrypted session tokens
+            last_sync TIMESTAMP,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 11. Garmin Activities Cache
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS garmin_activities (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            activity_id BIGINT NOT NULL,  -- Garmin's activity ID
+            activity_name TEXT,
+            activity_type TEXT,
+            start_time TIMESTAMP,
+            duration_seconds INTEGER,
+            distance_meters REAL,
+            calories INTEGER,
+            avg_hr INTEGER,
+            max_hr INTEGER,
+            avg_speed REAL,
+            elevation_gain REAL,
+            date DATE,  -- For easy querying
+            synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, activity_id)
+        )
+    ''')
+
+    # Create indexes for performance
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_garmin_daily_user_date 
+        ON garmin_daily_data(user_id, date DESC)
+    ''')
+    
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_garmin_activities_user_date 
+        ON garmin_activities(user_id, date DESC)
+    ''')    
  # Create admin user if not exists
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     cursor.execute('SELECT 1 FROM users WHERE email = %s', (admin_email,))
@@ -351,6 +442,26 @@ def init_db():
             'Broccoli',
             7, 1.5, 2.6, 2.8, 0.4, 0.1, 0.03, 34, 100, 150, 300, 85, None
         ))
+    cursor.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name='users' AND column_name='auto_add_workout_calories'
+        ) THEN
+            ALTER TABLE users ADD COLUMN auto_add_workout_calories BOOLEAN DEFAULT FALSE;
+        END IF;
+        
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name='users' AND column_name='gender'
+        ) THEN
+            ALTER TABLE users ADD COLUMN gender TEXT;
+        END IF;
+    END
+    $$;
+    """)   
+    add_garmin_sync_preferences()     
     conn.commit()
     cursor.close()
     conn.close()
@@ -360,7 +471,6 @@ def init_workout_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Ensure 'users' table exists before creating foreign key references
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS exercises (
             id SERIAL PRIMARY KEY,
@@ -371,7 +481,6 @@ def init_workout_db():
         )
     """)
 
-    # Only create workout_sessions if 'users' table exists
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS workout_sessions (
             id SERIAL PRIMARY KEY,
@@ -382,6 +491,72 @@ def init_workout_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
+
+    # ========== CARDIO TABLES START HERE ==========
+    
+    # CREATE CARDIO EXERCISES TABLE
+    # CREATE CARDIO EXERCISES TABLE
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cardio_exercises (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            type TEXT NOT NULL DEFAULT 'cardio',
+            met_value REAL DEFAULT 5.0,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Check if table is empty before inserting defaults
+    cursor.execute("SELECT COUNT(*) FROM cardio_exercises")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        cursor.execute("""
+            INSERT INTO cardio_exercises (name, type, met_value) VALUES
+            ('Juoksu (Data)', 'juoksu', 9.8),
+            ('Pyöräily (Data)', 'pyöräily', 8.0),
+            ('Sisäpyöräily (Data))', 'pyöräily', 7.0),
+            ('Kävely (Data)', 'kävely', 3.5),
+            ('Vaellus (Data)', 'vaellus', 6.0),
+            ('Uinti (Data)', 'uinti', 6.0),
+            ('Crosstrainer (Data)', 'crosstrainer', 5.0),
+            ('Soutu (Data)', 'soutulaite', 7.0),
+            ('Muu Cardio', 'cardio', 5.0)
+        """)
+        print("[INIT] Inserted default cardio exercises")
+    # CREATE CARDIO SESSIONS TABLE
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cardio_sessions (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
+            cardio_exercise_id INTEGER NOT NULL REFERENCES cardio_exercises(id),
+            duration_minutes REAL NOT NULL,
+            distance_km REAL,
+            avg_pace_min_per_km REAL,
+            avg_heart_rate INTEGER,
+            max_heart_rate INTEGER,
+            watts REAL,
+            calories_burned REAL NOT NULL DEFAULT 0,
+            notes TEXT,
+            garmin_activity_id BIGINT UNIQUE,
+            is_saved BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_cardio_sessions_session_id 
+        ON cardio_sessions(session_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_cardio_sessions_garmin_activity 
+        ON cardio_sessions(garmin_activity_id) 
+        WHERE garmin_activity_id IS NOT NULL
+    """)
+    
+    # ========== CARDIO TABLES END HERE ==========
 
     # Only create workout_sets if 'exercises' and 'workout_sessions' exist
     cursor.execute("""
@@ -398,7 +573,6 @@ def init_workout_db():
             FOREIGN KEY (exercise_id) REFERENCES exercises(id)
         )
     """)
-
     # Add missing columns safely
     try:
         cursor.execute("ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS rir REAL")
@@ -1039,6 +1213,455 @@ def generate_date_range(center_date_str, range_days=3):
         dates.append((date_str, formatted_date))
     
     return dates
+@app.route('/garmin/connect', methods=['POST'])
+@login_required
+def connect_garmin():
+    """Authenticate user with Garmin and store session"""
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({'success': False, 'error': 'Sähköposti ja salasana vaadittu.'}), 400
+    
+    try:
+        # Create Garmin client
+        client = Garmin(email, password)
+        client.login()
+        
+        # Get session data (tokens) for storage
+        session_data = {
+            'oauth1_token': getattr(client, 'oauth1_token', None),
+            'oauth2_token': getattr(client, 'oauth2_token', None),
+        }
+        
+        # Store in database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO garmin_connections (user_id, garmin_email, garmin_session_data, is_active)
+            VALUES (%s, %s, %s, TRUE)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET 
+                garmin_email = EXCLUDED.garmin_email,
+                garmin_session_data = EXCLUDED.garmin_session_data,
+                is_active = TRUE,
+                last_sync = CURRENT_TIMESTAMP
+        ''', (current_user.id, email, json.dumps(session_data)))
+        
+        conn.commit()
+        conn.close()
+        
+        # Store client in memory for this session
+        garmin_clients[current_user.id] = client
+        
+        # Perform initial sync
+        sync_result = sync_garmin_data_internal(client, current_user.id, days=7)
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Yhdistetty garminiin onnistuneesti!',
+            'synced_days': sync_result.get('synced_days', 0)
+        })
+        
+    except Exception as e:
+        print(f"Garmin connection error: {e}")
+        return jsonify({'success': False, 'error': f'Failed to connect: {str(e)}'}), 401
+@app.route('/garmin/disconnect', methods=['POST'])
+@login_required
+def disconnect_garmin():
+    """Disconnect Garmin account"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Mark as inactive instead of deleting (keep historical data)
+        cursor.execute('''
+            UPDATE garmin_connections 
+            SET is_active = FALSE 
+            WHERE user_id = %s
+        ''', (current_user.id,))
+        
+        conn.commit()
+        conn.close()
+        
+        # Remove from memory
+        if current_user.id in garmin_clients:
+            del garmin_clients[current_user.id]
+        
+        return jsonify({'success': True, 'message': 'Garmin disconnected'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+        
+@app.route('/garmin/status', methods=['GET'])
+@login_required
+def garmin_status():
+    """Check if user has Garmin connected"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT garmin_email, last_sync, is_active 
+            FROM garmin_connections 
+            WHERE user_id = %s
+        ''', (current_user.id,))
+        
+        connection = cursor.fetchone()
+        conn.close()
+        
+        if connection and connection['is_active']:
+            return jsonify({
+                'connected': True,
+                'email': connection['garmin_email'],
+                'last_sync': connection['last_sync'].isoformat() if connection['last_sync'] else None
+            })
+        else:
+            return jsonify({'connected': False})
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def get_or_create_garmin_client(user_id):
+    """Get existing client or create new one from stored session"""
+    
+    # Check memory cache first
+    if user_id in garmin_clients:
+        try:
+            client = garmin_clients[user_id]
+            # Quick validation - try to get today's stats
+            client.get_stats(date.today().strftime('%Y-%m-%d'))
+            return client
+        except Exception as e:
+            logging.warning(f"Cached Garmin client expired for user {user_id}: {e}")
+            # Remove expired client
+            del garmin_clients[user_id]
+    
+    # Try to restore from database session data
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT garmin_email, garmin_session_data
+            FROM garmin_connections
+            WHERE user_id = %s AND is_active = TRUE
+        ''', (user_id,))
+        
+        connection = cursor.fetchone()
+        conn.close()
+        
+        if not connection:
+            return None
+        
+        # Note: garminconnect library doesn't support session restoration
+        # Users will need to re-authenticate when sessions expire
+        # Consider implementing credential storage with encryption for full automation
+        
+        logging.info(f"No valid session for user {user_id} - re-authentication required")
+        return None
+        
+    except Exception as e:
+        logging.error(f"Error restoring Garmin session for user {user_id}: {e}")
+        return None
+
+
+@app.route('/garmin/sync', methods=['POST'])
+@login_required
+def sync_garmin_data():
+    """Manually trigger Garmin data sync with optional auto-import"""
+    try:
+        days = int(request.form.get('days', 7))
+        
+        # Get or create client
+        client = get_or_create_garmin_client(current_user.id)
+        
+        if not client:
+            return jsonify({
+                'success': False, 
+                'error': 'Garmin yhteys vanhentunut. Ole hyvä ja yhdistä uudelleen.',
+                'needs_reconnect': True
+            }), 401
+        
+        # Perform sync
+        result = sync_garmin_data_internal(client, current_user.id, days)
+        
+        if result['success']:
+            # Check if auto-import is enabled
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            
+            try:
+                cursor.execute('''
+                    SELECT auto_import_garmin_cardio 
+                    FROM users 
+                    WHERE id = %s
+                ''', (current_user.id,))
+                
+                user_settings = cursor.fetchone()
+                auto_import = user_settings.get('auto_import_garmin_cardio', False) if user_settings else False
+                
+                if auto_import:
+                    # Get recently synced activities that haven't been imported
+                    cursor.execute('''
+                        SELECT * FROM garmin_activities 
+                        WHERE user_id = %s 
+                        AND synced_at > NOW() - INTERVAL '5 minutes'
+                        ORDER BY date DESC
+                    ''', (current_user.id,))
+                    
+                    recent_activities = cursor.fetchall()
+                    
+                    # Import each activity
+                    imported_count = 0
+                    for activity in recent_activities:
+                        import_result = import_garmin_activity_as_cardio(dict(activity), current_user.id)
+                        if import_result['success']:
+                            imported_count += 1
+                    
+                    result['auto_imported'] = imported_count
+                else:
+                    result['auto_imported'] = 0
+                    
+            finally:
+                conn.close()
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Sync error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False, 
+            'error': 'Synkronointi epäonnistui. Yritä uudelleen myöhemmin.',
+            'needs_reconnect': True
+        }), 500
+
+
+def sync_garmin_data_internal(client, user_id, days=7):
+    """Internal function to sync Garmin data to database"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    synced_days = 0
+    synced_activities = 0
+    
+    try:
+        # Sync daily summaries for last N days
+        print(f"\n=== STARTING SYNC FOR USER {user_id} - {days} DAYS ===")
+        
+        for i in range(days):
+            date_obj = date.today() - timedelta(days=i)
+            date_str = date_obj.strftime('%Y-%m-%d')
+            
+            try:
+                print(f"\n--- Syncing date: {date_str} ---")
+                
+                # Get daily stats - THIS HAS EVERYTHING WE NEED!
+                stats = client.get_stats(date_str)
+                print(f"Stats response keys: {stats.keys()}")
+                
+                # Try to get heart rate (may fail for some days)
+                try:
+                    heart_rate = client.get_heart_rates(date_str)
+                    resting_hr = heart_rate.get('restingHeartRate')
+                    max_hr = heart_rate.get('maxHeartRate')
+                    avg_hr = heart_rate.get('averageHeartRate')
+                    print(f"Heart rate: Resting={resting_hr}, Max={max_hr}, Avg={avg_hr}")
+                except Exception as hr_err:
+                    print(f"Heart rate error: {hr_err}")
+                    resting_hr = None
+                    max_hr = None
+                    avg_hr = None
+                
+                # Extract values from stats (NOT from steps_data)
+                steps = stats.get('totalSteps', 0)
+                total_cals = stats.get('totalKilocalories', 0)
+                active_cals = stats.get('activeKilocalories', 0)
+                distance = stats.get('totalDistanceMeters', 0)
+                floors = stats.get('floorsAscended', 0)
+                
+                # Get heart rate from stats if not from get_heart_rates
+                if resting_hr is None:
+                    resting_hr = stats.get('restingHeartRate')
+                if max_hr is None:
+                    max_hr = stats.get('maxHeartRate')
+                
+                print(f"Extracted - Steps: {steps}, Total Cals: {total_cals}, Active Cals: {active_cals}")
+                
+                # Insert/update daily data
+                cursor.execute("""
+                    INSERT INTO garmin_daily_data 
+                    (user_id, date, steps, calories_total, calories_active, 
+                     distance_meters, floors_climbed, resting_hr, max_hr, avg_hr)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (user_id, date) 
+                    DO UPDATE SET 
+                        steps = EXCLUDED.steps,
+                        calories_total = EXCLUDED.calories_total,
+                        calories_active = EXCLUDED.calories_active,
+                        distance_meters = EXCLUDED.distance_meters,
+                        floors_climbed = EXCLUDED.floors_climbed,
+                        resting_hr = EXCLUDED.resting_hr,
+                        max_hr = EXCLUDED.max_hr,
+                        avg_hr = EXCLUDED.avg_hr,
+                        synced_at = CURRENT_TIMESTAMP
+                """, (
+                    user_id, 
+                    date_str,
+                    steps,
+                    total_cals,
+                    active_cals,
+                    distance,
+                    floors,
+                    resting_hr,
+                    max_hr,
+                    avg_hr
+                ))
+                
+                print(f"✓ Successfully inserted/updated daily data for {date_str}")
+                synced_days += 1
+                
+            except Exception as e:
+                print(f"✗ Error syncing date {date_str}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+        
+        # Sync recent activities
+        print(f"\n--- Syncing activities ---")
+        try:
+            activities = client.get_activities(0, 20)  # Last 20 activities
+            print(f"Found {len(activities)} activities")
+            
+            for idx, activity in enumerate(activities):
+                try:
+                    # Parse start time
+                    start_time_str = activity.get('startTimeLocal', '')
+                    if start_time_str:
+                        # Handle different timestamp formats
+                        if 'Z' in start_time_str or '+' in start_time_str:
+                            activity_date = datetime.fromisoformat(
+                                start_time_str.replace('Z', '+00:00')
+                            ).date()
+                        else:
+                            # Try parsing without timezone
+                            activity_date = datetime.strptime(
+                                start_time_str.split('.')[0], '%Y-%m-%d %H:%M:%S'
+                            ).date()
+                    else:
+                        activity_date = date.today()
+                    
+                    # Handle activityType - might be dict or string
+                    activity_type_raw = activity.get('activityType')
+                    if isinstance(activity_type_raw, dict):
+                        activity_type = activity_type_raw.get('typeKey')
+                    else:
+                        activity_type = activity_type_raw
+                    
+                    cursor.execute("""
+                        INSERT INTO garmin_activities 
+                        (user_id, activity_id, activity_name, activity_type, start_time,
+                         duration_seconds, distance_meters, calories, avg_hr, max_hr, date)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (user_id, activity_id) 
+                        DO UPDATE SET
+                            activity_name = EXCLUDED.activity_name,
+                            duration_seconds = EXCLUDED.duration_seconds,
+                            calories = EXCLUDED.calories,
+                            synced_at = CURRENT_TIMESTAMP
+                    """, (
+                        user_id,
+                        activity.get('activityId'),
+                        activity.get('activityName'),
+                        activity_type,
+                        start_time_str if start_time_str else None,
+                        activity.get('duration'),
+                        activity.get('distance'),
+                        activity.get('calories'),
+                        activity.get('averageHR'),
+                        activity.get('maxHeartRate'),
+                        activity_date
+                    ))
+                    
+                    synced_activities += 1
+                    
+                except Exception as e:
+                    print(f"  ✗ Error syncing activity {activity.get('activityId')}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+                
+        except Exception as e:
+            print(f"✗ Error fetching activities: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        # Update last sync time
+        cursor.execute('''
+            UPDATE garmin_connections 
+            SET last_sync = CURRENT_TIMESTAMP 
+            WHERE user_id = %s
+        ''', (user_id,))
+        
+        conn.commit()
+        
+        print(f"\n=== SYNC COMPLETE ===")
+        print(f"Synced {synced_days} days")
+        print(f"Synced {synced_activities} activities")
+        
+        return {
+            'success': True,
+            'synced_days': synced_days,
+            'synced_activities': synced_activities
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"✗ MAJOR SYNC ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/garmin/activities', methods=['GET'])
+@login_required
+def get_garmin_activities():
+    """Get Garmin activities for date range"""
+    start_date = request.args.get('start_date', 
+                                  (date.today() - timedelta(days=7)).strftime('%Y-%m-%d'))
+    end_date = request.args.get('end_date', date.today().strftime('%Y-%m-%d'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT * FROM garmin_activities 
+            WHERE user_id = %s AND date BETWEEN %s AND %s
+            ORDER BY start_time DESC
+        ''', (current_user.id, start_date, end_date))
+        
+        activities = cursor.fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'activities': [dict(a) for a in activities]
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/load_more_dates', methods=['POST'])
 @login_required
 def load_more_dates():
@@ -1201,7 +1824,7 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        email = form.email.data.lower()  # normalize to lowercase
+        email = form.email.data.lower()
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
@@ -1216,7 +1839,14 @@ def login():
                 email=user['email'],
                 role=user['role']
             )
+            
+            # ✅ Make session permanent based on "remember me"
             login_user(user_obj, remember=form.remember.data)
+            
+            # ✅ NEW: Make session permanent
+            if form.remember.data:
+                session.permanent = True
+            
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
@@ -1941,9 +2571,9 @@ def update_session():
         # ✅ NEW: Include TDEE breakdown in response
         'tdee_data': {
             'base_tdee': tdee_data["base_tdee"],
-            'workout_calories': tdee_data["workout_calories"],
+            'garmin_source': tdee_data.get("garmin_source"),
             'daily_tdee': tdee_data["daily_tdee"],
-            'auto_enabled': tdee_data["auto_enabled"]
+            'auto_enabled': tdee_data.get("auto_enabled", False)
         }
     })
 
@@ -3310,13 +3940,12 @@ def workout_history():
 
     try:
         if period == 'daily':
-            # Get daily totals with NEW FIELDS: duration, calories, and workout names
+            # Get daily totals - calculate duration and calories from actual cardio sessions
             cursor.execute('''
                 SELECT 
                     s.date,
                     s.name as workout_name,
-                    s.total_duration_seconds,
-                    s.total_calories_burned,
+                    s.id as session_id,
                     COUNT(ws.id) AS total_sets,
                     SUM(ws.reps) AS total_reps,
                     SUM(ws.volume) AS total_volume
@@ -3324,15 +3953,53 @@ def workout_history():
                 LEFT JOIN workout_sets ws ON s.id = ws.session_id
                 LEFT JOIN exercises e ON ws.exercise_id = e.id
                 WHERE s.user_id = %s
-                GROUP BY s.date, s.id, s.name, s.total_duration_seconds, s.total_calories_burned
+                GROUP BY s.date, s.id, s.name
                 ORDER BY s.date DESC
                 LIMIT 30;
             ''', (user_id,))
             rows = cursor.fetchall()
 
-            history = []
+            # Group by date since we can have multiple sessions per day
+            daily_data = {}
             for row in rows:
                 date = row['date']
+                if date not in daily_data:
+                    daily_data[date] = {
+                        'workout_names': set(),
+                        'session_ids': set(),
+                        'total_sets': 0,
+                        'total_reps': 0,
+                        'total_volume': 0.0,
+                        'duration_seconds': 0,
+                        'calories_burned': 0.0
+                    }
+                
+                daily_data[date]['session_ids'].add(row['session_id'])
+                if row['workout_name']:
+                    daily_data[date]['workout_names'].add(row['workout_name'])
+                daily_data[date]['total_sets'] += (row['total_sets'] or 0)
+                daily_data[date]['total_reps'] += (row['total_reps'] or 0)
+                daily_data[date]['total_volume'] += float(row['total_volume'] or 0)
+
+            history = []
+            for date, data in sorted(daily_data.items(), reverse=True):
+                # Calculate ACTUAL duration and calories from cardio sessions
+                cursor.execute('''
+                    SELECT 
+                        COALESCE(SUM(cs.duration_minutes), 0) as total_duration_minutes,
+                        COALESCE(SUM(cs.calories_burned), 0) as total_calories
+                    FROM cardio_sessions cs
+                    JOIN workout_sessions ws ON cs.session_id = ws.id
+                    WHERE ws.user_id = %s AND ws.date = %s
+                ''', (user_id, date))
+                
+                cardio_totals = cursor.fetchone()
+                total_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
+                total_calories = float(cardio_totals['total_calories'] or 0)
+                
+                # Convert minutes to seconds for consistency
+                duration_seconds = int(total_duration_minutes * 60)
+                duration_formatted = format_duration(duration_seconds)
 
                 # Get muscles per day
                 cursor.execute('''
@@ -3355,21 +4022,26 @@ def workout_history():
                             'total_reps': m['reps'] or 0,
                             'total_volume': float(m['volume'] or 0)
                         }
-
-                # Format duration from seconds to human-readable
-                duration_seconds = row['total_duration_seconds'] or 0
-                duration_formatted = format_duration(duration_seconds)
+                
+                # Format workout names
+                workout_names_list = list(data['workout_names'])
+                if len(workout_names_list) > 1:
+                    workout_name_display = ', '.join(workout_names_list[:2])
+                    if len(workout_names_list) > 2:
+                        workout_name_display += f' +{len(workout_names_list)-2} more'
+                else:
+                    workout_name_display = workout_names_list[0] if workout_names_list else 'Unnamed Workout'
                 
                 history.append({
                     'date': date,
-                    'workout_name': row['workout_name'] or 'Unnamed Workout',  # ✅ NEW
-                    'duration_seconds': duration_seconds,                      # ✅ NEW  
-                    'duration_formatted': duration_formatted,                  # ✅ NEW
-                    'calories_burned': float(row['total_calories_burned'] or 0), # ✅ NEW
-                    'sessions_count': len(set([date])),
-                    'total_sets': row['total_sets'] or 0,
-                    'total_reps': row['total_reps'] or 0,
-                    'total_volume': float(row['total_volume'] or 0),
+                    'workout_name': workout_name_display,
+                    'duration_seconds': duration_seconds,
+                    'duration_formatted': duration_formatted,
+                    'calories_burned': total_calories,
+                    'sessions_count': len(data['session_ids']),
+                    'total_sets': data['total_sets'],
+                    'total_reps': data['total_reps'],
+                    'total_volume': data['total_volume'],
                     'muscles': muscles
                 })
 
@@ -3377,14 +4049,12 @@ def workout_history():
             date_trunc = 'week' if period == 'weekly' else 'month'
             period_limit = 12 if period == 'weekly' else 6
 
-            # Updated query to include duration and calories for weekly/monthly
+            # Get all workout sessions with muscle data
             cursor.execute(f'''
                 SELECT 
                     DATE_TRUNC('{date_trunc}', s.date)::DATE AS period_start,
                     s.id AS session_id,
                     s.name as workout_name,
-                    s.total_duration_seconds,
-                    s.total_calories_burned,
                     e.muscle_group,
                     ws.reps,
                     ws.volume
@@ -3402,16 +4072,14 @@ def workout_history():
                 if period_start not in period_map:
                     period_map[period_start] = {
                         'sessions': set(),
-                        'workout_names': set(),          # ✅ NEW: Track unique workout names
-                        'total_duration_seconds': 0,    # ✅ NEW
-                        'total_calories_burned': 0.0,   # ✅ NEW
+                        'workout_names': set(),
                         'muscles': {},
                         'total_sets': 0,
                         'total_reps': 0,
                         'total_volume': 0.0
                     }
 
-                # Track sessions and aggregate duration/calories
+                # Track sessions
                 if row['session_id']:
                     period_map[period_start]['sessions'].add(row['session_id'])
                     
@@ -3439,26 +4107,28 @@ def workout_history():
                         period_map[period_start]['total_reps'] += row['reps']
                         period_map[period_start]['total_volume'] += float(row['volume'] or 0)
 
-            # Convert to final history list and fix double-counting
+            # Convert to final history list
             history = []
             for period_start, data in sorted(period_map.items(), reverse=True):
                 
-                # Get actual session totals to avoid double counting
+                # Calculate ACTUAL duration and calories from cardio sessions for this period
                 cursor.execute(f'''
                     SELECT 
-                        SUM(DISTINCT s.total_duration_seconds) as actual_duration,
-                        SUM(DISTINCT s.total_calories_burned) as actual_calories
-                    FROM workout_sessions s
-                    WHERE s.user_id = %s 
-                    AND DATE_TRUNC('{date_trunc}', s.date)::DATE = %s
+                        COALESCE(SUM(cs.duration_minutes), 0) as total_duration_minutes,
+                        COALESCE(SUM(cs.calories_burned), 0) as total_calories
+                    FROM cardio_sessions cs
+                    JOIN workout_sessions ws ON cs.session_id = ws.id
+                    WHERE ws.user_id = %s 
+                    AND DATE_TRUNC('{date_trunc}', ws.date)::DATE = %s
                 ''', (user_id, period_start))
                 
-                actual_totals = cursor.fetchone()
-                actual_duration = actual_totals['actual_duration'] if actual_totals else 0
-                actual_calories = actual_totals['actual_calories'] if actual_totals else 0
+                cardio_totals = cursor.fetchone()
+                total_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
+                total_calories = float(cardio_totals['total_calories'] or 0)
                 
-                # Format duration
-                duration_formatted = format_duration(actual_duration or 0)
+                # Convert to seconds
+                duration_seconds = int(total_duration_minutes * 60)
+                duration_formatted = format_duration(duration_seconds)
                 
                 # Create workout names summary
                 workout_names_list = list(data['workout_names'])
@@ -3468,11 +4138,11 @@ def workout_history():
                     workout_names_display = ', '.join(workout_names_list) if workout_names_list else 'Various Workouts'
 
                 entry = {
-                    'workout_names': workout_names_list,                    # ✅ NEW: List of all workout names
-                    'workout_names_display': workout_names_display,        # ✅ NEW: Formatted display string
-                    'duration_seconds': actual_duration or 0,              # ✅ NEW
-                    'duration_formatted': duration_formatted,              # ✅ NEW
-                    'calories_burned': float(actual_calories or 0),        # ✅ NEW
+                    'workout_names': workout_names_list,
+                    'workout_names_display': workout_names_display,
+                    'duration_seconds': duration_seconds,
+                    'duration_formatted': duration_formatted,
+                    'calories_burned': total_calories,
                     'sessions_count': len(data['sessions']),
                     'total_sets': data['total_sets'],
                     'total_reps': data['total_reps'],
@@ -3500,6 +4170,8 @@ def workout_history():
 
     except Exception as e:
         app.logger.error(f"Workout History Error: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify(error="Could not load workout history"), 500
     finally:
         conn.close()
@@ -5604,6 +6276,506 @@ def workout_history_cardio():
         return jsonify(error="Could not load cardio sessions"), 500
     finally:
         conn.close()
+GARMIN_TO_CARDIO_MAP = {
+    'running':'Juoksu (Data)',
+    'trail_running':'Juoksu (Data)',
+    'indoor_cycling':'Sisäpyöräily (Data)',
+    'cycling':'Pyöräily (Data)',
+    'walking':'Kävely (Data)',
+    'swimming':'Uinti (Data)',
+    'strength_training': None,  # Don't import strength as cardio
+    'hiking':'Vaellus (Data)',
+    'elliptical':'Crosstrainer (Data)',
+    'rowing':'Soutu (Data)',
+    'yoga': None,  # Skip yoga
+    'treadmill_running':'Juoksu (Data)',
+    'cardio':'Muu Cardio',
+    'indoor_cardio':'Muu Cardio',
+    'other':'Muu Cardio'
+}
+
+
+def get_cardio_exercise_by_name(name):
+    """Get cardio exercise from database by name"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    cursor.execute('SELECT * FROM cardio_exercises WHERE name = %s', (name,))
+    exercise = cursor.fetchone()
+    conn.close()
+    
+    return dict(exercise) if exercise else None
+
+
+def import_garmin_activity_as_cardio(activity, user_id):
+    """
+    Import a Garmin activity as a cardio session
+    Returns dict with success status and details
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        activity_id = activity['activity_id']
+        activity_name = activity['activity_name']
+        activity_type = activity['activity_type']
+        
+        # ========== DEBUG: Print what Garmin sent ==========
+        print(f"\n=== GARMIN ACTIVITY DEBUG ===")
+        print(f"Activity ID: {activity_id}")
+        print(f"Activity Name: {activity_name}")
+        print(f"Activity Type: '{activity_type}'")  # See exact value
+        print(f"Activity Type in map: {activity_type in GARMIN_TO_CARDIO_MAP}")
+        print(f"Mapped to: {GARMIN_TO_CARDIO_MAP.get(activity_type)}")
+        print(f"Full activity data: {activity}")
+        print(f"============================\n")
+        # ===================================================
+        
+        # Parse date
+        activity_date = activity['date']
+        if isinstance(activity_date, str):
+            activity_date = datetime.strptime(activity_date, '%Y-%m-%d').date()
+        
+        # Check if activity type should be imported
+        cardio_name = GARMIN_TO_CARDIO_MAP.get(activity_type)
+        if cardio_name is None:
+            print(f"❌ Activity type '{activity_type}' not in GARMIN_TO_CARDIO_MAP")
+            print(f"Available types: {list(GARMIN_TO_CARDIO_MAP.keys())}")
+            return {
+                'success': False, 
+                'reason': f'Activity type "{activity_type}" not configured for import'
+            }
+        
+        # Check for duplicates by garmin_activity_id
+        cursor.execute("""
+            SELECT cs.id 
+            FROM cardio_sessions cs
+            WHERE cs.garmin_activity_id = %s
+        """, (activity_id,))
+        
+        if cursor.fetchone():
+            return {
+                'success': False, 
+                'reason': 'Already imported',
+                'activity_id': activity_id
+            }
+        
+        # Get cardio exercise from database
+        print(f"Looking for cardio exercise: '{cardio_name}'")
+        cardio_exercise = get_cardio_exercise_by_name(cardio_name)
+        if not cardio_exercise:
+            print(f"❌ Cardio exercise '{cardio_name}' not found in database")
+            # Show what's in the database
+            cursor.execute("SELECT name FROM cardio_exercises")
+            available = [row['name'] for row in cursor.fetchall()]
+            print(f"Available exercises: {available}")
+            return {
+                'success': False, 
+                'reason': f'Cardio exercise "{cardio_name}" not found in database'
+            }
+        
+        print(f"✅ Found cardio exercise: {cardio_exercise}")
+        cardio_exercise_id = cardio_exercise['id']
+        
+        # Calculate duration and distance
+        duration_seconds = activity['duration_seconds']
+        duration_minutes = round(duration_seconds / 60.0, 1)
+        distance_km = round(activity['distance_meters'] / 1000.0, 2) if activity['distance_meters'] else None
+        calories_burned = activity.get('calories', 0)
+        avg_hr = activity.get('avg_hr')
+        max_hr = activity.get('max_hr')
+        
+        # Calculate avg pace if distance exists
+        avg_pace_min_per_km = None
+        if distance_km and distance_km > 0:
+            avg_pace_min_per_km = round(duration_minutes / distance_km, 2)
+        
+        # Get or create workout session for this date
+        cursor.execute("""
+            SELECT id FROM workout_sessions 
+            WHERE user_id = %s AND date = %s
+        """, (user_id, activity_date))
+        
+        session = cursor.fetchone()
+        if not session:
+            cursor.execute("""
+                INSERT INTO workout_sessions 
+                (user_id, date, name, focus_type, workout_type, muscle_group)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (user_id, activity_date, f'Garmin: {activity_name}', 'cardio', 'cardio', 'Cardio'))
+            session_id = cursor.fetchone()['id']
+            print(f"✅ Created new workout session: {session_id}")
+        else:
+            session_id = session['id']
+            print(f"✅ Using existing workout session: {session_id}")
+        
+        # Create notes with Garmin activity ID
+        notes = f'Imported from Garmin\nActivity: {activity_name}\nActivity ID: {activity_id}'
+        
+        # INSERT cardio session with proper column names
+        cursor.execute("""
+            INSERT INTO cardio_sessions 
+            (session_id, cardio_exercise_id, duration_minutes, 
+             distance_km, avg_pace_min_per_km, avg_heart_rate, max_heart_rate,
+             calories_burned, notes, garmin_activity_id, is_saved, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, FALSE, NOW())
+            RETURNING id
+        """, (session_id, cardio_exercise_id, duration_minutes, 
+              distance_km, avg_pace_min_per_km, avg_hr, max_hr,
+              calories_burned, notes, activity_id))
+        
+        cardio_session_id = cursor.fetchone()['id']
+        
+        conn.commit()
+        
+        print(f"✅ Successfully imported cardio session: {cardio_session_id}")
+        
+        return {
+            'success': True,
+            'cardio_session_id': cardio_session_id,
+            'session_id': session_id,
+            'activity_name': activity_name,
+            'calories_burned': round(calories_burned, 1),
+            'duration_minutes': round(duration_minutes, 1),
+            'activity_id': activity_id,
+            'date': activity_date.strftime('%Y-%m-%d')
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        print(f'❌ Error importing Garmin activity: {e}')
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'reason': str(e)}
+    finally:
+        cursor.close()
+        conn.close()
+
+# ===== API ROUTES =====
+
+@app.route('/garmin/importable-activities', methods=['GET'])
+@login_required
+def get_importable_activities():
+    """Get Garmin activities that can be imported as cardio"""
+    try:
+        start_date = request.args.get('start_date', (date.today() - timedelta(days=7)).strftime('%Y-%m-%d'))
+        end_date = request.args.get('end_date', date.today().strftime('%Y-%m-%d'))
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        # Get Garmin activities
+        cursor.execute("""
+            SELECT ga.activity_id, ga.activity_name, ga.activity_type, 
+                   ga.date, ga.duration_seconds, ga.distance_meters, 
+                   ga.calories, ga.avg_hr, ga.start_time
+            FROM garmin_activities ga
+            WHERE ga.user_id = %s 
+            AND ga.date BETWEEN %s AND %s
+            ORDER BY ga.date DESC, ga.start_time DESC
+        """, (current_user.id, start_date, end_date))
+        
+        activities = cursor.fetchall()
+        
+        importable = []
+        for activity_dict in activities:
+            # Check if activity type is importable
+            if activity_dict['activity_type'] not in GARMIN_TO_CARDIO_MAP:
+                continue
+            
+            cardio_name = GARMIN_TO_CARDIO_MAP[activity_dict['activity_type']]
+            if cardio_name is None:
+                continue
+            
+            # ===== FIXED: Type casting for garmin_activity_id =====
+            # Method 1: By garmin_activity_id
+            cursor.execute("""
+                SELECT cs.id 
+                FROM cardio_sessions cs
+                JOIN workout_sessions ws ON cs.session_id = ws.id
+                WHERE ws.user_id = %s 
+                AND cs.garmin_activity_id = %s
+            """, (current_user.id, str(activity_dict['activity_id'])))
+            
+            already_imported_by_id = cursor.fetchone() is not None
+            
+            # Method 2: By notes (fallback for old imports)
+            cursor.execute("""
+                SELECT cs.id 
+                FROM cardio_sessions cs
+                JOIN workout_sessions ws ON cs.session_id = ws.id
+                WHERE ws.user_id = %s 
+                AND ws.date = %s 
+                AND cs.notes LIKE %s
+            """, (current_user.id, activity_dict['date'], 
+                  f'%Garmin Activity ID: {activity_dict["activity_id"]}%'))
+            
+            already_imported_by_notes = cursor.fetchone() is not None
+            
+            already_imported = already_imported_by_id or already_imported_by_notes
+            
+            importable.append({
+                'activity_id': activity_dict['activity_id'],
+                'activity_name': activity_dict['activity_name'],
+                'activity_type': activity_dict['activity_type'],
+                'date': activity_dict['date'].strftime('%Y-%m-%d'),
+                'duration_minutes': round(activity_dict['duration_seconds'] / 60.0, 1),
+                'distance_km': round(activity_dict['distance_meters'] / 1000.0, 2) if activity_dict['distance_meters'] else None,
+                'calories': activity_dict['calories'],
+                'avg_hr': activity_dict['avg_hr'],
+                'mapped_cardio_name': cardio_name,
+                'already_imported': already_imported
+            })
+        
+        conn.close()
+        return jsonify({'success': True, 'activities': importable})
+        
+    except Exception as e:
+        print(f'Error getting importable activities: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/garmin/import-activity', methods=['POST'])
+@login_required
+def import_single_activity():
+    """Import a specific Garmin activity as cardio"""
+    try:
+        activity_id = request.form.get('activity_id')
+        
+        if not activity_id:
+            return jsonify({'success': False, 'error': 'Activity ID required'}), 400
+        
+        # Get activity from database
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT * FROM garmin_activities 
+            WHERE user_id = %s AND activity_id = %s
+        ''', (current_user.id, activity_id))
+        
+        activity = cursor.fetchone()
+        conn.close()
+        
+        if not activity:
+            return jsonify({'success': False, 'error': 'Activity not found'}), 404
+        
+        # Import the activity
+        result = import_garmin_activity_as_cardio(dict(activity), current_user.id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error importing activity: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/garmin/import-activities-bulk', methods=['POST'])
+@login_required
+def import_activities_bulk():
+    """Import multiple Garmin activities to workout log as cardio sessions"""
+    try:
+        data = request.get_json()
+        activity_ids = data.get('activity_ids', [])
+        
+        if not activity_ids:
+            return jsonify({'success': False, 'error': 'No activity IDs provided'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        imported_count = 0
+        failed_count = 0
+        failed_activities = []
+        
+        for activity_id in activity_ids:
+            try:
+                # Get activity from garmin_activities table
+                cursor.execute('''
+                    SELECT * FROM garmin_activities
+                    WHERE user_id = %s AND activity_id = %s
+                ''', (current_user.id, activity_id))
+                
+                garmin_activity = cursor.fetchone()
+                
+                if not garmin_activity:
+                    failed_count += 1
+                    failed_activities.append({
+                        'activity_id': activity_id, 
+                        'error': 'Activity not found'
+                    })
+                    continue
+                
+                # Use the fixed import function
+                import_result = import_garmin_activity_as_cardio(
+                    dict(garmin_activity), 
+                    current_user.id
+                )
+                
+                if import_result['success']:
+                    imported_count += 1
+                else:
+                    failed_count += 1
+                    failed_activities.append({
+                        'activity_id': activity_id,
+                        'error': import_result.get('reason', 'Unknown error')
+                    })
+                
+            except Exception as e:
+                conn.rollback()
+                failed_count += 1
+                failed_activities.append({
+                    'activity_id': activity_id,
+                    'error': str(e)
+                })
+                print(f"Error importing activity {activity_id}: {e}")
+                continue
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'imported_count': imported_count,
+            'failed_count': failed_count,
+            'failed_activities': failed_activities
+        })
+        
+    except Exception as e:
+        print(f"Error in bulk import: {e}}}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def auto_sync_all_garmin_users():
+    """
+    Background job that automatically syncs Garmin data for all connected users
+    Runs periodically based on scheduler configuration
+    """
+    logging.info("🔄 Starting automatic Garmin sync for all users...")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Get all active Garmin connections
+        cursor.execute('''
+            SELECT gc.user_id, gc.garmin_email, u.username,
+                   gc.last_sync, u.garmin_sync_interval
+            FROM garmin_connections gc
+            JOIN users u ON gc.user_id = u.id
+            WHERE gc.is_active = TRUE
+        ''')
+        
+        active_connections = cursor.fetchall()
+        
+        if not active_connections:
+            logging.info("No active Garmin connections found.")
+            return
+        
+        logging.info(f"Found {len(active_connections)} active Garmin connection(s)")
+        
+        synced_count = 0
+        failed_count = 0
+        
+        for connection in active_connections:
+            user_id = connection['user_id']
+            username = connection['username']
+            last_sync = connection['last_sync']
+            sync_interval = connection.get('garmin_sync_interval', 60)  # Default 60 minutes
+            
+            # Check if sync is needed based on user's interval preference
+            if last_sync:
+                time_since_sync = (datetime.now() - last_sync).total_seconds() / 60  # minutes
+                if time_since_sync < sync_interval:
+                    logging.info(f"⏭️  Skipping {username} - synced {time_since_sync:.0f}min ago (interval: {sync_interval}min)")
+                    continue
+            
+            logging.info(f"🔄 Syncing user: {username} (ID: {user_id})")
+            
+            try:
+                # Get or create Garmin client
+                client = get_or_create_garmin_client(user_id)
+                
+                if not client:
+                    logging.warning(f"⚠️  No valid Garmin session for {username} - attempting to reconnect")
+                    # Try to reconnect using stored credentials
+                    client = reconnect_garmin_user(user_id)
+                    
+                    if not client:
+                        logging.error(f"❌ Failed to reconnect {username} - user needs to re-authenticate")
+                        failed_count += 1
+                        continue
+                
+                # Sync data (last 2 days to catch any missed data)
+                result = sync_garmin_data_internal(client, user_id, days=2)
+                
+                if result['success']:
+                    logging.info(f"✅ Synced {username}: {result['synced_days']} days, {result['synced_activities']} activities")
+                    synced_count += 1
+                    
+                    # Store the client for reuse
+                    garmin_clients[user_id] = client
+                else:
+                    logging.error(f"❌ Sync failed for {username}: {result.get('error', 'Unknown error')}")
+                    failed_count += 1
+                    
+            except Exception as e:
+                logging.error(f"❌ Error syncing {username}: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                failed_count += 1
+                continue
+        
+        logging.info(f"✅ Auto-sync complete: {synced_count} successful, {failed_count} failed")
+        
+    except Exception as e:
+        logging.error(f"❌ Critical error in auto_sync_all_garmin_users: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def reconnect_garmin_user(user_id):
+    """
+    Attempt to reconnect a user whose Garmin session has expired
+    Note: This will only work if you're storing encrypted credentials
+    Otherwise, user must manually re-authenticate
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT garmin_email, garmin_session_data 
+            FROM garmin_connections 
+            WHERE user_id = %s AND is_active = TRUE
+        ''', (user_id,))
+        
+        connection = cursor.fetchone()
+        conn.close()
+        
+        if not connection:
+            return None
+        
+        session_data = json.loads(connection['garmin_session_data']) if connection['garmin_session_data'] else {}
+        
+        # Try to restore session using tokens
+        if session_data.get('oauth1_token') or session_data.get('oauth2_token'):
+            client = Garmin()
+            # Attempt to restore session (this may not work with garminconnect library)
+            # You may need to store encrypted passwords for full auto-reconnect
+            logging.warning("Session restoration not fully implemented - user may need to re-authenticate")
+            return None
+        
+        return None
+        
+    except Exception as e:
+        logging.error(f"Error reconnecting user {user_id}: {e}")
+        return None    
+            
 @app.route('/manifest.json')
 def serve_manifest():
     return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
@@ -5649,19 +6821,41 @@ def sitemap():
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
-        init_db()  # must run first: creates users, foods, etc.
+        init_db()
         print("[INIT] Main database initialized.")
 
         print("[INIT] Initializing workout database...")
-        init_workout_db()  # now safe: users table exists
+        init_workout_db()
         print("[INIT] Workout database initialized.")
 
         print("[INIT] Updating food keys normalization...")
         update_food_keys_normalization()
         print("[INIT] Food keys updated.")
 
-
-
+        # ===== NEW: Initialize Scheduler =====
+        print("[INIT] Configuring automatic Garmin sync scheduler...")
+        
+        # Configure scheduler
+        app.config['SCHEDULER_API_ENABLED'] = False  # Disable REST API for security
+        app.config['SCHEDULER_TIMEZONE'] = 'UTC'     # Use UTC for consistency
+        
+        # Initialize scheduler with app
+        scheduler.init_app(app)
+        
+        # Add the auto-sync job - runs every 30 minutes
+        scheduler.add_job(
+            id='auto_sync_garmin',
+            func=auto_sync_all_garmin_users,
+            trigger='interval',
+            minutes=30,  # Sync every 30 minutes
+            max_instances=1,  # Prevent overlapping runs
+            replace_existing=True
+        )
+        
+        # Start the scheduler
+        scheduler.start()
+        print("[SCHEDULER] ✅ Automatic Garmin sync enabled - running every 30 minutes")
+        
         print("[START] Running Flask app...")
         app.run(debug=True)
 
