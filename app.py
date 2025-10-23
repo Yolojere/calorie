@@ -35,16 +35,17 @@ from flask import send_from_directory
 from flask import Response
 from garminconnect import Garmin
 from flask_apscheduler import APScheduler
+from openai import OpenAI
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
+client = OpenAI()
 print("=== Environment Variables Debug ===")
 print(f"MAIL_SERVER from env: '{os.getenv('MAIL_SERVER')}'")
 print(f"MAIL_PORT from env: '{os.getenv('MAIL_PORT')}'")  
 print(f"MAIL_USERNAME from env: '{os.getenv('MAIL_USERNAME')}'")
 print(f"MAIL_USE_SSL from env: '{os.getenv('MAIL_USE_SSL')}'")
-print("API key:", os.getenv("OPENAI_API_KEY"))
 print("=====================================")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
@@ -134,7 +135,6 @@ github = oauth.register(
 )
 scheduler = APScheduler()
 garmin_clients = {}
-
 _nutrition_scanner = OpenAINutritionScanner()
 def get_scanner():
     return _nutrition_scanner
@@ -4935,27 +4935,16 @@ def save_workout():
         safe_add_user_level_columns(cursor)
         conn.commit()
 
-        # Get or create workout session
+        # ============================================================================
+        # CRITICAL CHANGE: Always create a NEW session to allow multiple per day
+        # ============================================================================
         cursor.execute(
-            "SELECT id FROM workout_sessions WHERE user_id = %s AND date = %s",
-            (user_id, date)
+            "INSERT INTO workout_sessions (user_id, date, name, focus_type) "
+            "VALUES (%s, %s, %s, %s) RETURNING id",
+            (user_id, date, name, focus_type)
         )
-        session = cursor.fetchone()
-
-        if not session:
-            cursor.execute(
-                "INSERT INTO workout_sessions (user_id, date, name, focus_type) "
-                "VALUES (%s, %s, %s, %s) RETURNING id",
-                (user_id, date, name, focus_type)
-            )
-            session_id = cursor.fetchone()[0]
-        else:
-            session_id = session[0]
-            cursor.execute(
-                "UPDATE workout_sessions SET name = %s, focus_type = %s "
-                "WHERE id = %s",
-                (name, focus_type, session_id)
-            )
+        session_id = cursor.fetchone()[0]
+        app.logger.info(f"Created new workout session {session_id} named '{name}' for {date}")
 
         # SAVE TIMER DATA
         if timer_data.get('totalSeconds') is not None:
@@ -4971,29 +4960,73 @@ def save_workout():
                 )
             )
 
-        # CRITICAL FIX: Get IDs of sets that are currently UNSAVED before we mark them as saved
-        cursor.execute(
-            "SELECT id, exercise_id, reps, weight FROM workout_sets "
-            "WHERE session_id = %s AND is_saved = false",
-            (session_id,)
-        )
+        # ============================================================================
+        # CRITICAL CHANGE: Get unsaved sets from the CURRENT active workout
+        # We need to transfer unsaved sets from any previous unsaved session to this new one
+        # ============================================================================
+        cursor.execute("""
+            SELECT id, exercise_id, reps, weight, rir, comments
+            FROM workout_sets 
+            WHERE session_id IN (
+                SELECT id FROM workout_sessions 
+                WHERE user_id = %s AND date = %s AND id != %s
+            )
+            AND is_saved = false
+        """, (user_id, date, session_id))
         unsaved_sets = cursor.fetchall()
 
-        # MARK ALL CURRENT UNSAVED SETS AS SAVED
-        cursor.execute(
-            "UPDATE workout_sets SET is_saved = true "
-            "WHERE session_id = %s AND is_saved = false",
-            (session_id,)
-        )
+        # Transfer unsaved sets to the new session and mark as saved
+        for set_id, exercise_id, reps, weight, rir, comments in unsaved_sets:
+            cursor.execute("""
+                INSERT INTO workout_sets (session_id, exercise_id, reps, weight, rir, comments, is_saved)
+                VALUES (%s, %s, %s, %s, %s, %s, true)
+            """, (session_id, exercise_id, reps, weight, rir, comments))
+        
+        # Delete the old unsaved sets (they've been transferred)
+        if unsaved_sets:
+            cursor.execute("""
+                DELETE FROM workout_sets 
+                WHERE session_id IN (
+                    SELECT id FROM workout_sessions 
+                    WHERE user_id = %s AND date = %s AND id != %s
+                )
+                AND is_saved = false
+            """, (user_id, date, session_id))
 
-        # MARK ALL CURRENT UNSAVED CARDIO AS SAVED  
-        cursor.execute(
-            "UPDATE cardio_sessions SET is_saved = true "
-            "WHERE session_id = %s AND is_saved = false",
-            (session_id,)
-        )
+        # Transfer unsaved cardio sessions
+        cursor.execute("""
+            SELECT cardio_exercise_id, duration_minutes, distance_km, avg_pace_min_per_km,
+                   avg_heart_rate, max_heart_rate, watts, calories_burned, notes
+            FROM cardio_sessions
+            WHERE session_id IN (
+                SELECT id FROM workout_sessions 
+                WHERE user_id = %s AND date = %s AND id != %s
+            )
+            AND is_saved = false
+        """, (user_id, date, session_id))
+        unsaved_cardio = cursor.fetchall()
 
-        # Calculate total calories (weights + cardio) - ALL sessions
+        for cardio_data in unsaved_cardio:
+            cursor.execute("""
+                INSERT INTO cardio_sessions 
+                (session_id, cardio_exercise_id, duration_minutes, distance_km, 
+                 avg_pace_min_per_km, avg_heart_rate, max_heart_rate, watts, 
+                 calories_burned, notes, is_saved)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, true)
+            """, (session_id, *cardio_data))
+
+        # Delete old unsaved cardio
+        if unsaved_cardio:
+            cursor.execute("""
+                DELETE FROM cardio_sessions
+                WHERE session_id IN (
+                    SELECT id FROM workout_sessions 
+                    WHERE user_id = %s AND date = %s AND id != %s
+                )
+                AND is_saved = false
+            """, (user_id, date, session_id))
+
+        # Calculate total calories (weights + cardio)
         total_calories = float(timer_data.get('calories', 0) or 0.0)
         total_duration_seconds = int(timer_data.get('totalSeconds', 0) or 0)
 
@@ -5006,7 +5039,7 @@ def save_workout():
                 SELECT COALESCE(SUM(cs.calories_burned), 0) as total_cardio_calories,
                        COALESCE(SUM(cs.duration_minutes * 60), 0) as total_cardio_seconds
                 FROM cardio_sessions cs
-                WHERE cs.session_id = %s AND cs.is_saved = false
+                WHERE cs.session_id = %s
                 """,
                 (session_id,)
             )
@@ -5038,9 +5071,16 @@ def save_workout():
         volume_improvements = 0
         sets_improvements = 0
 
-        # Group unsaved sets by exercise_id for processing
+        # Group sets by exercise_id for processing (now they're all saved in this session)
         unsaved_sets_by_exercise = {}
-        for set_id, exercise_id, reps, weight in unsaved_sets:
+        cursor.execute("""
+            SELECT exercise_id, reps, weight
+            FROM workout_sets
+            WHERE session_id = %s
+        """, (session_id,))
+        all_sets = cursor.fetchall()
+        
+        for exercise_id, reps, weight in all_sets:
             if exercise_id not in unsaved_sets_by_exercise:
                 unsaved_sets_by_exercise[exercise_id] = []
             unsaved_sets_by_exercise[exercise_id].append({
@@ -5048,7 +5088,7 @@ def save_workout():
                 "weight": float(weight)
             })
 
-        # ONLY PROCESS EXERCISES THAT HAD UNSAVED SETS
+        # ONLY PROCESS EXERCISES THAT ARE IN THIS SESSION
         for exercise_id, current_sets in unsaved_sets_by_exercise.items():
             # Get exercise name from the exercises data or database
             exercise_name = "Unknown Exercise"
@@ -5211,7 +5251,7 @@ def save_workout():
                         "isNew": True
                     })
 
-        # Get previous session totals for same focus_type (exclude current date)
+        # Get previous session totals for same focus_type (exclude current date and current session)
         cursor.execute("""
             SELECT id
             FROM workout_sessions
@@ -5277,7 +5317,16 @@ def save_workout():
             if user_settings and user_settings[0]:
                 auto_calories_enabled = True
                 base_tdee = float(user_settings[1] or 0.0)
-                daily_tdee = base_tdee + float(total_calories)
+                
+                # Get total workout calories for the entire day (all sessions)
+                cursor.execute("""
+                    SELECT COALESCE(SUM(total_calories_burned), 0)
+                    FROM workout_sessions
+                    WHERE user_id = %s AND date = %s
+                """, (user_id, date))
+                day_total_calories = float(cursor.fetchone()[0] or 0.0)
+                
+                daily_tdee = base_tdee + day_total_calories
 
                 cursor.execute("""
                     INSERT INTO daily_tdee_adjustments (user_id, date, base_tdee, workout_calories, adjusted_tdee)
@@ -5288,7 +5337,7 @@ def save_workout():
                         workout_calories = EXCLUDED.workout_calories,
                         adjusted_tdee = EXCLUDED.adjusted_tdee,
                         updated_at = NOW()
-                """, (user_id, date, base_tdee, float(total_calories), float(daily_tdee)))
+                """, (user_id, date, base_tdee, day_total_calories, daily_tdee))
         except Exception:
             pass
 
@@ -5335,7 +5384,8 @@ def save_workout():
         return jsonify({
             "success": True,
             "session_id": session_id,
-            "exercises_saved": len(unsaved_sets_by_exercise),  # Number of exercises that were just saved
+            "session_name": name,
+            "exercises_saved": len(unsaved_sets_by_exercise),
             "timer_data": {
                 "totalSeconds": int(timer_data.get('totalSeconds') or 0),
                 "calories": float(timer_data.get('calories', 0) or 0.0)
