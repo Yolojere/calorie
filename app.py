@@ -30,7 +30,7 @@ import base64
 import requests
 from flask_wtf.csrf import CSRFProtect
 from authlib.integrations.flask_client import OAuth
-from easyocr_nutrition_scanner_clean import EnhancedSimpleScanner
+from openai_nutrition_final import OpenAINutritionScanner
 from flask import send_from_directory
 from flask import Response
 from garminconnect import Garmin
@@ -44,6 +44,7 @@ print(f"MAIL_SERVER from env: '{os.getenv('MAIL_SERVER')}'")
 print(f"MAIL_PORT from env: '{os.getenv('MAIL_PORT')}'")  
 print(f"MAIL_USERNAME from env: '{os.getenv('MAIL_USERNAME')}'")
 print(f"MAIL_USE_SSL from env: '{os.getenv('MAIL_USE_SSL')}'")
+print("API key:", os.getenv("OPENAI_API_KEY"))
 print("=====================================")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
@@ -134,7 +135,7 @@ github = oauth.register(
 scheduler = APScheduler()
 garmin_clients = {}
 
-_nutrition_scanner = EnhancedSimpleScanner()
+_nutrition_scanner = OpenAINutritionScanner()
 def get_scanner():
     return _nutrition_scanner
 def normalize_key(key):
@@ -5005,7 +5006,7 @@ def save_workout():
                 SELECT COALESCE(SUM(cs.calories_burned), 0) as total_cardio_calories,
                        COALESCE(SUM(cs.duration_minutes * 60), 0) as total_cardio_seconds
                 FROM cardio_sessions cs
-                WHERE cs.session_id = %s
+                WHERE cs.session_id = %s AND cs.is_saved = false
                 """,
                 (session_id,)
             )
@@ -6857,7 +6858,7 @@ if __name__ == '__main__':
         print("[SCHEDULER] ✅ Automatic Garmin sync enabled - running every 30 minutes")
         
         print("[START] Running Flask app...")
-        app.run(debug=True)
+        app.run(debug=False)
 
     except Exception as e:
         print(f"[ERROR] Initialization failed: {e}")
