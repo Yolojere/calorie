@@ -3699,93 +3699,122 @@ container.find('.pr-tooltip').on('touchstart click', function(e) {
         }
                     
                     // NEW: Render workout history as cards
-            function renderWorkoutHistoryCards(history, period) {
-                const container = $("#" + period + "-workout-list");
-                container.empty();
+ function renderWorkoutHistoryCards(history, period) {
+    const container = $(`#${period}-workout-list`);
+    container.empty();
 
-                if (!history || history.length === 0) {
-                    container.html(`
-                        <div class="empty-state">
-                            <i class="fas fa-dumbbell"></i>
-                            <h4>No workout data available</h4>
-                            <p>Start tracking your workouts to see ${period} history</p>
-                        </div>`);
-                    return;
+    if (!history || history.length === 0) {
+        container.html(`
+            <div class="empty-state">
+                <i class="fas fa-dumbbell"></i>
+                <h4>No workout data available</h4>
+                <p>Start tracking your workouts to see ${period} history</p>
+            </div>`);
+        return;
+    }
+
+    history.forEach(item => {
+        let periodLabel = '';
+        let muscleGroupCount = Object.keys(item.muscles || {}).length;
+        let workoutName = '';
+
+        if (period === 'daily') {
+            const date = new Date(item.date);
+            const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+            const translatedWeekday = translateWeekday(weekday);
+            periodLabel = `${translatedWeekday}, ${date.getDate()}/${date.getMonth() + 1}`;
+            
+            // Handle multiple workout names with limit
+            if (item.workout_name) {
+                const names = item.workout_name.split(' + ');
+                if (names.length > 2) {
+                    // Show first 2 names + "lisää"
+                    workoutName = names.slice(0, 2).join(' + ') + ` + ${names.length - 2} lisää`;
+                } else {
+                    workoutName = item.workout_name;
                 }
-
-                history.forEach(item => {
-                    let periodLabel = '';
-                    let muscleGroupCount = Object.keys(item.muscles || {}).length;
-
-                    if (period === 'daily') {
-                        const date = new Date(item.date);
-                        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
-                        const translatedWeekday = translateWeekday(weekday);
-                        periodLabel = `${translatedWeekday}, ${date.getDate()}/${date.getMonth() + 1}`;
-                        
-                        // For daily view, show individual workout name
-                        workoutName = item.workout_name || 'Unnamed Workout';
-                    } else if (period === 'weekly') {
-                        const startDate = new Date(item.week_start);
-                        const weekEnd = new Date(startDate); 
-                        weekEnd.setDate(weekEnd.getDate() + 6);
-                        const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-                        const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-                        periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
-                        
-                        // For weekly/monthly view, show workout names summary
-                        workoutName = item.workout_names_display || 'Various Workouts';
-                    } else {
-                        const startDate = new Date(item.month_start);
-                        const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
-                        periodLabel = `${monthName} ${startDate.getFullYear()}`;
-                        
-                        workoutName = item.workout_names_display || 'Various Workouts';
-                    }
-
-                    const cardHtml = `
-                        <div class="workout-period-card" data-period="${period}" data-item='${JSON.stringify(item)}'>
-                            <div class="period-title">${periodLabel}</div>
-                            <div class="workout-name" style="font-size: 12px; color: #888; margin-bottom: 8px;">${workoutName}</div>
-                            <div class="period-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${item.sessions_count || 0}</div>
-                                    <div class="stat-label">Harjoitukset</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${item.duration_formatted || '0m'}</div>
-                                    <div class="stat-label">Aika</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${Math.round(item.calories_burned || 0)}</div>
-                                    <div class="stat-label">Kalorit</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${muscleGroupCount}</div>
-                                    <div class="stat-label" data-i18n="muscles">Lihasryhmät</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${item.total_sets || 0}</div>
-                                    <div class="stat-label" data-i18n="sets">Sarjat</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${parseFloat(item.total_volume || 0).toFixed(0)}</div>
-                                    <div class="stat-label">Volyymi (kg)</div>
-                                </div>
-                            </div>
-                        </div>`;
-                    
-                    container.append(cardHtml);
-                });
-
-                // Add click handlers for cards
-                $('.workout-period-card').click(function() {
-                    const period = $(this).data('period');
-                    const item = $(this).data('item');
-                    showWorkoutDetail(period, item);
-                });
+            } else {
+                workoutName = 'Unnamed Workout';
             }
+        } else if (period === 'weekly') {
+            const startDate = new Date(item.week_start);
+            const weekEnd = new Date(startDate); 
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            const startMonth = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+            const endMonth = translateMonth(weekEnd.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+            periodLabel = `${startDate.getDate()} ${startMonth} - ${weekEnd.getDate()} ${endMonth}`;
+            
+            // Handle multiple workout names for weekly
+            if (item.workout_names_display) {
+                const names = item.workout_names_display.split(' + ');
+                if (names.length > 3) {
+                    workoutName = names.slice(0, 3).join(' + ') + ` + ${names.length - 3} lisää`;
+                } else {
+                    workoutName = item.workout_names_display;
+                }
+            } else {
+                workoutName = 'Various Workouts';
+            }
+        } else {
+            const startDate = new Date(item.month_start);
+            const monthName = translateMonth(startDate.toLocaleDateString('en-US', {month:'long'}).toLowerCase());
+            periodLabel = `${monthName} ${startDate.getFullYear()}`;
+            
+            // Handle multiple workout names for monthly
+            if (item.workout_names_display) {
+                const names = item.workout_names_display.split(' + ');
+                if (names.length > 3) {
+                    workoutName = names.slice(0, 3).join(' + ') + ` + ${names.length - 3} lisää`;
+                } else {
+                    workoutName = item.workout_names_display;
+                }
+            } else {
+                workoutName = 'Various Workouts';
+            }
+        }
 
+        const cardHtml = `
+            <div class="workout-period-card" data-period="${period}" data-item='${JSON.stringify(item)}'>
+                <div class="period-title">${periodLabel}</div>
+                <div class="workout-name" style="font-size: 12px; color: #888; margin-bottom: 8px;">${workoutName}</div>
+                <div class="period-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${item.sessions_count || 0}</div>
+                        <div class="stat-label">Harjoitukset</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${item.duration_formatted || '0m'}</div>
+                        <div class="stat-label">Aika</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Math.round(item.calories_burned || 0)}</div>
+                        <div class="stat-label">Kalorit</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${muscleGroupCount}</div>
+                        <div class="stat-label" data-i18n="muscles">Lihasryhmät</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${item.total_sets || 0}</div>
+                        <div class="stat-label" data-i18n="sets">Sarjat</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${parseFloat(item.total_volume || 0).toFixed(0)}</div>
+                        <div class="stat-label">Volyymi (kg)</div>
+                    </div>
+                </div>
+            </div>`;
+        
+        container.append(cardHtml);
+    });
+
+    // Add click handlers for cards
+    $('.workout-period-card').click(function() {
+        const period = $(this).data('period');
+        const item = $(this).data('item');
+        showWorkoutDetail(period, item);
+    });
+}
         // Show workout detail view
 
         
