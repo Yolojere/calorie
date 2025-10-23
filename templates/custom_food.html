@@ -1237,7 +1237,7 @@
                             <h6 class="processing-title">Prosessoidaan</h6>
                             <p class="processing-subtitle">Hetki pieni..</p>
                             <div class="processing-tips">
-                                <small class="text-muted">
+                                <small>
                                     💡 Huolehdi hyväistä valaistuksesta ja yritä ottaa selvä kuva
                                 </small>
                             </div>
@@ -1248,7 +1248,7 @@
                     <div class="beta-warning">
                         <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                         <small>
-                            <strong>Beta Ominaisuus:</strong> Kokeilu versio, toimii vain todella selkeisiin ravintotaulukoihin :D
+                            <strong>Beta Ominaisuus:</strong> Tämä on kokeellinen ominaisuus. Tulokset voivat vaihdella.
                         </small>
                     </div>
                     
@@ -1345,7 +1345,7 @@ $(document).ready(function() {
 
             if (['carbs', 'fats', 'proteins', 'grams'].includes(name)) {
                 if (value === '') {
-                    showError('Carbs, fats, proteins, and base grams are required');
+                    showError('Hiilarit, rasvat ja proteiinit ovat tarvittavia kenttiä.');
                     throw 'ValidationError';
                 }
             }
@@ -1385,7 +1385,7 @@ $(document).ready(function() {
             $('input[name="grams"]').val('100');
         }, 1000);
     } else {
-        showError(response.error || 'Failed to save food');
+        showError(response.error || 'En pysty tallentamaan ruokaa');
     }
 
             },
@@ -1437,7 +1437,7 @@ function handlePhotoCapture(file) {
 
     // Check file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-        showMessage('Image file is too large. Please select a file smaller than 10MB.', 'error');
+        showMessage('Liian iso tiedosto, alle 10mb, kiitos!.', 'error');
         return;
     }
 
@@ -1626,10 +1626,10 @@ function processPhoto() {
 
                 if (fieldsPopulated === 0 && response.raw_text && response.raw_text.length > 0) {
                     const rawTextPreview = response.raw_text.slice(0, 10).join(', ');
-                    showMessage(`Raw text detected: ${rawTextPreview}... Please check the image quality and try again.`, 'info');
+                    showMessage(`Raw text detected: ${rawTextPreview}... Tarkista kuvan laatu ja yritä uudelleen!`, 'info');
                 }
             } else {
-                const errorMessage = response.error || 'Could not extract nutrition information from the image.';
+                const errorMessage = response.error || 'En pystynyt erottamaan tarvittavia tietoja kuvasta.';
                 showMessage(errorMessage, 'error');
             }
         }
