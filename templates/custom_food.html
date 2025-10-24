@@ -1615,15 +1615,15 @@ function processPhoto() {
                     }
                 });
 
-                let message = 'Successfully scanned nutrition label!';
+                let message = 'Onnistui!';
                 if (fieldsPopulated > 0) {
-                    message = `Populated ${fieldsPopulated} fields: ${populatedFields.join(', ')}.`;
+                    message = `Täytetty ${fieldsPopulated} kentät: ${populatedFields.join(', ')}.`;
                 } else {
-                    message = 'No nutrition values could be automatically extracted.';
+                    message = 'Epäonnistui ravintotietojen hakemisessa';
                 }
 
                 if (response.per_100g) {
-                    message += ' Values appear to be per 100g.';
+                    message += ' Arvot ovat per 100g.';
                 }
 
                 showMessage(message, 'success');
