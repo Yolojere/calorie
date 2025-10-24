@@ -462,6 +462,18 @@ def init_db():
     END
     $$;
     """)   
+    cursor.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name='users' AND column_name='auto_import_garmin_cardio'
+            ) THEN
+                ALTER TABLE users ADD COLUMN auto_import_garmin_cardio BOOLEAN DEFAULT TRUE;
+            END IF;
+        END
+        $$;
+    """)
     add_garmin_sync_preferences()     
     conn.commit()
     cursor.close()
@@ -6736,6 +6748,7 @@ def import_activities_bulk():
 def auto_sync_all_garmin_users():
     """
     Background job that automatically syncs Garmin data for all connected users
+    AND auto-imports cardio activities to workout log
     Runs periodically based on scheduler configuration
     """
     logging.info("🔄 Starting automatic Garmin sync for all users...")
@@ -6744,10 +6757,11 @@ def auto_sync_all_garmin_users():
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
-        # Get all active Garmin connections
+        # Get all active Garmin connections with auto-import preference
         cursor.execute('''
             SELECT gc.user_id, gc.garmin_email, u.username,
-                   gc.last_sync, u.garmin_sync_interval
+                   gc.last_sync, u.garmin_sync_interval,
+                   u.auto_import_garmin_cardio
             FROM garmin_connections gc
             JOIN users u ON gc.user_id = u.id
             WHERE gc.is_active = TRUE
@@ -6763,12 +6777,14 @@ def auto_sync_all_garmin_users():
         
         synced_count = 0
         failed_count = 0
+        total_imported = 0
         
         for connection in active_connections:
             user_id = connection['user_id']
             username = connection['username']
             last_sync = connection['last_sync']
             sync_interval = connection.get('garmin_sync_interval', 60)  # Default 60 minutes
+            auto_import_enabled = connection.get('auto_import_garmin_cardio', True)
             
             # Check if sync is needed based on user's interval preference
             if last_sync:
@@ -6785,7 +6801,6 @@ def auto_sync_all_garmin_users():
                 
                 if not client:
                     logging.warning(f"⚠️  No valid Garmin session for {username} - attempting to reconnect")
-                    # Try to reconnect using stored credentials
                     client = reconnect_garmin_user(user_id)
                     
                     if not client:
@@ -6802,6 +6817,48 @@ def auto_sync_all_garmin_users():
                     
                     # Store the client for reuse
                     garmin_clients[user_id] = client
+                    
+                    # ========== NEW: AUTO-IMPORT CARDIO ACTIVITIES ==========
+                    if auto_import_enabled:
+                        logging.info(f"🏃 Auto-importing cardio activities for {username}...")
+                        
+                        # Get recently synced activities (last 2 days)
+                        cursor.execute('''
+                            SELECT * FROM garmin_activities 
+                            WHERE user_id = %s 
+                            AND synced_at > NOW() - INTERVAL '2 days'
+                            ORDER BY date DESC
+                        ''', (user_id,))
+                        
+                        recent_activities = cursor.fetchall()
+                        imported_count = 0
+                        
+                        for activity in recent_activities:
+                            try:
+                                import_result = import_garmin_activity_as_cardio(
+                                    dict(activity), 
+                                    user_id
+                                )
+                                
+                                if import_result['success']:
+                                    imported_count += 1
+                                    logging.info(f"  ✅ Imported: {import_result['activity_name']} ({import_result['calories_burned']} cal)")
+                                else:
+                                    # Log reason but don't count as error (might be already imported or unsupported type)
+                                    reason = import_result.get('reason', 'Unknown')
+                                    if 'Already imported' not in reason:
+                                        logging.debug(f"  ⏭️  Skipped: {activity['activity_name']} - {reason}")
+                                        
+                            except Exception as e:
+                                logging.error(f"  ❌ Error importing activity {activity['activity_id']}: {e}")
+                                continue
+                        
+                        total_imported += imported_count
+                        logging.info(f"✅ Auto-imported {imported_count} activities for {username}")
+                    else:
+                        logging.info(f"⏭️  Auto-import disabled for {username}")
+                    # ========== END AUTO-IMPORT SECTION ==========
+                    
                 else:
                     logging.error(f"❌ Sync failed for {username}: {result.get('error', 'Unknown error')}")
                     failed_count += 1
@@ -6813,7 +6870,7 @@ def auto_sync_all_garmin_users():
                 failed_count += 1
                 continue
         
-        logging.info(f"✅ Auto-sync complete: {synced_count} successful, {failed_count} failed")
+        logging.info(f"✅ Auto-sync complete: {synced_count} successful, {failed_count} failed, {total_imported} activities imported")
         
     except Exception as e:
         logging.error(f"❌ Critical error in auto_sync_all_garmin_users: {str(e)}")
@@ -6824,7 +6881,63 @@ def auto_sync_all_garmin_users():
         cursor.close()
         conn.close()
 
+@app.route('/garmin/toggle-auto-import', methods=['POST'])
+@login_required
+def toggle_auto_import():
+    """Toggle automatic import of cardio sessions during Garmin sync"""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', True)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE users 
+            SET auto_import_garmin_cardio = %s 
+            WHERE id = %s
+        ''', (enabled, current_user.id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'enabled': enabled,
+            'message': 'Auto-import asetukset päivitetty'
+        })
+        
+    except Exception as e:
+        print(f"Error toggling auto-import: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@app.route('/garmin/auto-import-status', methods=['GET'])
+@login_required
+def get_auto_import_status():
+    """Get current auto-import preference"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute('''
+            SELECT auto_import_garmin_cardio 
+            FROM users 
+            WHERE id = %s
+        ''', (current_user.id,))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        enabled = user.get('auto_import_garmin_cardio', True) if user else True
+        
+        return jsonify({
+            'success': True,
+            'enabled': enabled
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 def reconnect_garmin_user(user_id):
     """
     Attempt to reconnect a user whose Garmin session has expired
