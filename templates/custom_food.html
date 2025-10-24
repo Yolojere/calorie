@@ -688,18 +688,23 @@
     margin-bottom: 10px;
 }
 
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(0, 123, 255, 0.3);
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+/* Replace spinner with logo animation */
+.logo-pulse {
+    width: 80px;
+    height: 80px;
+    animation: shimmer-glow 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(139, 52, 246, 0.3));
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes shimmer-glow {
+    0%, 100% {
+        transform: scale(0.95);
+        filter: drop-shadow(0 0 5px rgba(139, 52, 246, 0.3)) brightness(0.9);
+    }
+    50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 20px rgba(139, 52, 246, 0.8)) brightness(1.2);
+    }
 }
 
 .processing-title {
@@ -1228,21 +1233,20 @@
                         </div>
                     </div>
 
-                    <!-- Processing Section -->
-                    <div id="processingSection" class="processing-section d-none">
-                        <div class="processing-content">
-                            <div class="processing-spinner">
-                                <div class="spinner"></div>
-                            </div>
-                            <h6 class="processing-title">Prosessoidaan</h6>
-                            <p class="processing-subtitle">Hetki pieni..</p>
-                            <div class="processing-tips">
-                                <small>
-                                    💡 Huolehdi hyväistä valaistuksesta ja yritä ottaa selvä kuva
-                                </small>
-                            </div>
-                        </div>
+                            <!-- Processing Section -->
+            <div id="processingSection" class="processing-section d-none">
+                <div class="processing-content">
+                    <div class="processing-spinner">
+                        <img src="static/images/trackyoulogo.png" alt="Processing" class="logo-pulse">
                     </div>
+                    <h6 class="processing-title">Prosessoidaan</h6>
+                    <p class="processing-subtitle">Hetki pieni...</p>
+                    <div class="processing-tips">
+                        <small>🤖 Huolehdi hyvistä valaistuksesta ja yritä ottaa selvä kuva</small>
+                    </div>
+                </div>
+            </div>
+
 
                     <!-- Beta Warning -->
                     <div class="beta-warning">
