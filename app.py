@@ -187,7 +187,6 @@ def get_db_connection():
     except Exception as e:
         print(f"Database connection failed: {e}")
         raise
-    
 def add_garmin_sync_preferences():
     """Add user preferences for Garmin sync intervals"""
     conn = get_db_connection()
@@ -1923,6 +1922,7 @@ def profile():
     user_level = 1
     user_xp = 0
     xp_to_next = 100
+    user_socials = "[]"  # Initialize here at the top
 
     predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
@@ -1969,6 +1969,11 @@ def profile():
             
             # Calculate XP needed for next level
             xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
+            
+            # Get socials data
+            user_socials = user_data.get('socials') or "[]"
+            if isinstance(user_socials, (list, dict)):
+                user_socials = json.dumps(user_socials)
 
         if form.validate_on_submit():
             # Handle email lowercase
@@ -2012,11 +2017,13 @@ def profile():
                 if col in privacy_fields:
                     continue  # Already handled above
                 elif col == "socials":
-                    # Parse socials JSON safely
-                    socials_json = request.form.get("socials", "[]")
+                    # Parse socials JSON safely - CORRECTED to use 'socials-data'
+                    socials_json = request.form.get("socials-data", "[]")
+                    print(f"DEBUG: Received socials-data: {socials_json}")  # Debug line
                     try:
                         socials_data = json.loads(socials_json)
                     except json.JSONDecodeError:
+                        print("DEBUG: JSON decode error, using empty array")  # Debug line
                         socials_data = []
                     update_query += ", socials = %s"
                     update_params.append(json.dumps(socials_data))
@@ -2026,6 +2033,9 @@ def profile():
 
             update_query += " WHERE id = %s"
             update_params.append(current_user.id)
+
+            print(f"DEBUG: Final query: {update_query}")  # Debug line
+            print(f"DEBUG: Parameters: {update_params}")  # Debug line
 
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
@@ -2038,10 +2048,10 @@ def profile():
             # Pre-fill form
             form.username.data = user_data.get('username', '')
             form.email.data = user_data.get('email', '')
+            
             for col in columns:
                 if col == "socials":
-                    # Preload socials JSON into hidden input
-                    form.socials.data = user_data.get('socials') or "[]"
+                    continue  # Skip - we handle this separately via user_socials variable
                 elif hasattr(form, col):
                     getattr(form, col).data = user_data.get(col, '')
             form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
@@ -2071,7 +2081,8 @@ def profile():
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
         viewed_user=None,
-        is_owner=True
+        is_owner=True,
+        user_socials=user_socials
     )
 
 
