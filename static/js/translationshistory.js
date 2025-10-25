@@ -626,7 +626,7 @@ const translations = {
     monthly_volume: "KUUKAUSAUSIVOLYYMI",
     best_set: "PARAS SARJA",
     estimated_1rm: "ARVIOITU 1 REP MAX",
-    session_history: "Sessiohistoria",
+    session_history: "Harjoitushistoria",
     volume: "Volyymi",
     expand_all: "Laajenna kaikki",
     collapse_all: "Sulje kaikki",
