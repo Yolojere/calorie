@@ -4041,7 +4041,7 @@ def workout_history():
                 if len(workout_names_list) > 1:
                     workout_name_display = ', '.join(workout_names_list[:2])
                     if len(workout_names_list) > 2:
-                        workout_name_display += f' +{len(workout_names_list)-2} more'
+                        workout_name_display += f' +{len(workout_names_list)-2} lisää'
                 else:
                     workout_name_display = workout_names_list[0] if workout_names_list else 'Unnamed Workout'
                 
@@ -4146,7 +4146,7 @@ def workout_history():
                 # Create workout names summary
                 workout_names_list = list(data['workout_names'])
                 if len(workout_names_list) > 2:
-                    workout_names_display = f"{', '.join(workout_names_list[:2])} +{len(workout_names_list)-2} more"
+                    workout_names_display = f"{', '.join(workout_names_list[:2])} +{len(workout_names_list)-2} lisää"
                 else:
                     workout_names_display = ', '.join(workout_names_list) if workout_names_list else 'Various Workouts'
 
