@@ -1238,6 +1238,7 @@ function ensureCheckboxValue() {
             genderButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentGender = this.dataset.gender;
+            console.log('👤 Gender set to:', currentGender);
             saveFormState();
         });
     });
@@ -1335,6 +1336,7 @@ function ensureCheckboxValue() {
         console.log('🔧 Sending to save_metrics:', {
             tdee: tdeeValue,
             weight: weightValue,
+            gender: currentGender,
             auto_add_workout_calories: autoWorkoutCalories
         });
         
@@ -1346,6 +1348,7 @@ function ensureCheckboxValue() {
             data: {
                 'tdee': tdeeValue,
                 'weight': weightValue,
+                'gender': currentGender,
                 'auto_add_workout_calories': autoWorkoutCalories ? 'true' : 'false',
                 'mode': currentMode  // Also send the mode
             },
