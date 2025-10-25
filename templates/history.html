@@ -1003,10 +1003,11 @@
 
         /* Sortable Table Headers */
         .sortable-header {
+            width: 50%;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s ease;
-            position: relative;
+            position: flex;
         }
 
         .sortable-header:hover {
@@ -1472,6 +1473,7 @@
 }
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
+
                 .clickable-exercise {
           font-size: var(--font-size-base);
             }
@@ -1635,8 +1637,42 @@
     .exercise-filters {
         gap: 6px;
     }
-        }
+.sortable-header {
+    text-align:start !important;
+    align-items: center;
+    justify-content: space-between; /* keeps text + icon neatly aligned */
+    white-space: nowrap; /* optional: prevents breaking words */
+}
+    #exercises-list td:last-child {
+        text-align: start !important;
+    }
+
+}
     @media (max-width: 480px) {
+            .sortable-header {
+        padding: 6px 2px !important;
+        font-size: 9px !important;
+    }
+    .table-custom {
+    width: 100%;
+    table-layout: auto; /* allows dynamic width */
+    word-wrap: break-word; /* wraps long exercise names */
+}
+
+    
+    .sort-icon {
+        margin-left: 1px;
+        font-size: 7px;
+    }
+    
+    #exercises-list td:first-child {
+        font-size: 10px !important;
+    }
+    
+    #exercises-list td:last-child {
+        font-size: 10px !important;
+        text-align: start !important;
+    }
         .clickable-exercise {
             font-size: var(--font-size-base);
             gap: var(--space-6);
@@ -2725,11 +2761,11 @@ function applyMuscleFilter() {
 });
         
         // Sort exercises based on criteria
-        function sortExercises(criteria, direction = 'asc') {
-    console.log('Sorting exercises by:', criteria, direction); // Debug log
+        function sortExercises(criteria, direction = "asc") {
+    console.log("Sorting exercises by", criteria, direction); // Debug log
     
     if (!allExercises || allExercises.length === 0) {
-        console.warn('No exercises to sort');
+        console.warn("No exercises to sort");
         return;
     }
     
@@ -2739,37 +2775,29 @@ function applyMuscleFilter() {
         let valueA, valueB;
         
         switch(criteria) {
-            case 'name':
-                valueA = (a.name || '').toLowerCase();
-                valueB = (b.name || '').toLowerCase();
+            case "name":
+                valueA = a.name.toLowerCase();
+                valueB = b.name.toLowerCase();
                 break;
-            case 'pb':
-                valueA = parseFloat(a.personal_best) || 0;
-                valueB = parseFloat(b.personal_best) || 0;
-                break;
-            case 'volume':
-                valueA = parseFloat(a.total_volume) || 0;
-                valueB = parseFloat(b.total_volume) || 0;
-                break;
-            case 'trend':
-                valueA = parseFloat(a.volume_trend) || 0;
-                valueB = parseFloat(b.volume_trend) || 0;
+            case "pb":
+                valueA = parseFloat(a.personalbest || 0);
+                valueB = parseFloat(b.personalbest || 0);
                 break;
             default:
-                console.warn('Unknown sort criteria:', criteria);
+                console.warn("Unknown sort criteria:", criteria);
                 return 0;
         }
         
-        if (typeof valueA === 'string') {
+        if (typeof valueA === "string") {
             const comparison = valueA.localeCompare(valueB);
-            return direction === 'asc' ? comparison : -comparison;
+            return direction === "asc" ? comparison : -comparison;
         } else {
             const comparison = valueA - valueB;
-            return direction === 'asc' ? comparison : -comparison;
+            return direction === "asc" ? comparison : -comparison;
         }
     });
     
-    console.log('Sorted exercises:', sorted.length); // Debug log
+    console.log("Sorted exercises:", sorted.length); // Debug log
     renderExercisesList(sorted);
 }
 
@@ -3447,26 +3475,41 @@ function formatPace(paceMinutes) {
     
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
+
 function loadExercises(callback) {
-    $.get('/workout/exercises', function(data) {
-        renderExercisesList(data.exercises);
+    $.get("/workout/exercises", function(data) {
+        console.log("Loaded exercises:", data.exercises.length); // Debug log
         
-        // ✅ NEW: Call callback if provided
-        if (typeof callback === 'function') {
+        // CRITICAL: Store exercises in the global array for sorting
+        allExercises = data.exercises;
+        
+        // Apply default sort by name
+        sortExercises("name", "asc");
+        
+        // Call callback if provided (for scroll/highlight functionality)
+        if (typeof callback === "function") {
             callback();
         }
         
-        // ✅ NEW: Check if there's a stored exercise ID to select
-        const selectedExerciseId = sessionStorage.getItem('selectedExerciseId');
+        // Check if there's a stored exercise ID to select
+        const selectedExerciseId = sessionStorage.getItem("selectedExerciseId");
         if (selectedExerciseId) {
-            sessionStorage.removeItem('selectedExerciseId');
+            sessionStorage.removeItem("selectedExerciseId");
             setTimeout(function() {
                 scrollToAndHighlightExercise(parseInt(selectedExerciseId));
             }, 300);
         }
-    }).fail(function() {
-        alert('Failed to load exercises');
-        if (typeof callback === 'function') {
+    }).fail(function(xhr, status, error) {
+        console.error("Failed to load exercises:", error);
+        $("#exercises-list").html(`
+            <tr>
+                <td colspan="2" class="text-center py-4 text-warning">
+                    Failed to load exercises. Please try again.
+                </td>
+            </tr>`);
+        
+        // Call callback even on failure
+        if (typeof callback === "function") {
             callback();
         }
     });
