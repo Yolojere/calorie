@@ -7,7 +7,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>TrackYou treenit</title>
+    <title>TrackYou treenipäiväkirja</title>
+    <meta name="description" content="TrackYou Kalorilaskuri ja treenipäiväkirja — moderni, ilmainen ravinnon, kaloreiden ja treenien seurantasovellus verkossa.">
+    <meta property="og:title" content="TrackYou - Treenipäiväkirja">
+    <meta property="og:description" content="Tallenna treenit ja seuraa edistymistäsi helposti.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://trackyou.fi/static/images/favicon-48x48.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="TrackYou - Treenipäiväkirja">
+    <meta name="theme-color" content="#8b34f6">
+    <link rel="canonical" href="{{ request.url }}">
+    <meta name="twitter:description" content="Moderni kalorilaskuri ja ravintopäiväkirja verkossa.">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
