@@ -5895,14 +5895,14 @@ $(document).on('sessionUpdated', function() {
                                     <div id="ean-alert" 
                                         class="alert alert-warning alert-dismissible fade show text-center p-2 small" 
                                         role="alert">
-                                        <span data-i18n="ean_not_found">Barcode</span> <strong>${query}</strong> <span data-i18n="in_data_base">not found in database</span><br>
+                                        <span data-i18n="ean_not_found">Barcode</span> <strong>${query}</strong> <span data-i18n="in_data_base">ei löydy tietokannasta</span><br>
                                         <button id="create-custom-food" class="btn portion-btn btn-primary mt-2" data-i18n="create_new_food">
-                                            Create New Food
+                                            Lisää uusi ruoka
                                         </button>
                                     </div>
                                 `;
                             } else {
-                                resultsHtml = '<div class="text-center p-2 small">No results found</div>';
+                                resultsHtml = '<div class="text-center p-2 small">Ei hakutuloksia</div>';
                             }
                         }
                         
@@ -5914,7 +5914,7 @@ $(document).on('sessionUpdated', function() {
                         });
                     }).fail(function(xhr, status) {
                         if (status !== 'abort') {
-                            $('#search-results').html('<div class="text-center p-2 small">Search failed. Please try again.</div>');
+                            $('#search-results').html('<div class="text-center p-2 small">Haku epäonnistui, yritä uudelleen.</div>');
                         }
                     }).always(function() {
                         currentSearchRequest = null;
