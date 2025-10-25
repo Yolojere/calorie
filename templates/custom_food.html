@@ -1599,7 +1599,16 @@ function processPhoto() {
             if (response.success && response.form_data) {
                 let fieldsPopulated = 0;
                 let populatedFields = [];
-
+                const fieldTranslations = {
+                calories: t('calories_per'),
+                fats: t('fats_g'),
+                saturated: t('saturated_g'),
+                carbs: t('carbs_g'),
+                sugars: t('sugars_g'),
+                fiber: t('fiber_g'),
+                proteins: t('proteins_g'),
+                salt: t('salt_g')
+             };
                 Object.keys(response.form_data).forEach(field => {
                     const value = response.form_data[field];
                     const input = document.querySelector(`input[name="${field}"]`);
@@ -1611,7 +1620,7 @@ function processPhoto() {
                         input.value = displayValue;
                         input.classList.add('field-populated');
                         fieldsPopulated++;
-                        populatedFields.push(field);
+                        populatedFields.push(fieldTranslations[field] || field);
                         
                         setTimeout(() => input.classList.remove('field-populated'), 2000);
                     }
