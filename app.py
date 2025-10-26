@@ -1916,15 +1916,7 @@ def profile():
     print(f"Request method: {request.method}")
 
     if request.method == 'POST':
-        print("="*60)
-        print("POST REQUEST DEBUG")
-        print("="*60)
-        print(f"Request method: {request.method}")
-        print(f"Form data keys: {list(request.form.keys())}")
-        print(f"Form validates: {form.validate_on_submit()}")
         if not form.validate_on_submit():
-            print(f"VALIDATION FAILED!")
-            print(f"Form errors: {form.errors}")
             for field, errors in form.errors.items():
                 print(f"  Field '{field}': {errors}")
         print("="*60)
@@ -2036,13 +2028,13 @@ def profile():
                 elif col == "socials":
                     # Get socials from form field (uses name="socials")
                     socials_json = request.form.get("socials", "[]")
-                    print(f"DEBUG: Received socials: {socials_json}")
+                    
                     
                     try:
                         socials_data = json.loads(socials_json)
-                        print(f"DEBUG: Parsed socials_data: {socials_data}")
+                        
                     except json.JSONDecodeError as e:
-                        print(f"DEBUG: JSON decode error: {e}")
+                       
                         socials_data = []
                     
                     update_query += ", socials = %s"
@@ -2051,8 +2043,7 @@ def profile():
             update_query += " WHERE id = %s"
             update_params.append(current_user.id)
 
-            print(f"DEBUG: Final query: {update_query}")  # Debug line
-            print(f"DEBUG: Parameters: {update_params}")  # Debug line
+
 
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
@@ -2060,8 +2051,7 @@ def profile():
             user_data = cursor.fetchone()
             if user_data:
                 form.socials.data = user_data.get('socials', '[]')
-                print("DEBUG: Database commit successful")
-                print("=" * 50)
+
                 return redirect(
                         url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
                     )
@@ -2191,7 +2181,7 @@ def view_profile(user_id):
             elif col == "socials":
                 # Parse socials JSON safely - CORRECTED to use 'socials' (matches HTML name attribute)
                 socials_json = request.form.get("socials", "[]")
-                print(f"DEBUG: Received socials: {socials_json}")  # Debug line
+                
             elif hasattr(form, col):
                 getattr(form, col).data = user_data.get(col, '')
 
@@ -5097,17 +5087,6 @@ def save_workout():
                 WHERE user_id = %s AND date != %s
             )
         """, (user_id, date))
-
-        # Delete empty workout sessions (sessions with no sets and no cardio)
-        cursor.execute("""
-            DELETE FROM workout_sessions
-            WHERE user_id = %s
-            AND id NOT IN (
-                SELECT DISTINCT session_id FROM workout_sets
-                UNION
-                SELECT DISTINCT session_id FROM cardio_sessions
-            )
-        """, (user_id,))
 
         # Calculate total calories (weights + cardio)
         total_calories = float(timer_data.get('calories', 0) or 0.0)
