@@ -1390,6 +1390,22 @@ input.form-control:-webkit-autofill {
                         <!-- EDITABLE FORM for owner -->
                         <form method="POST" enctype="multipart/form-data" id="profile-form">
                             {{ form.hidden_tag() }}
+                                <div class="form-group mb-4 d-none">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group profile-field">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            {{ form.username(class="form-control", id="username") }}
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-group mb- d-none">
+                        <label for="email" class="form-label">Email</label>
+                        <div class="input-group profile-field">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            {{ form.email(class="form-control", id="email") }}
+                        </div>
+                    </div>
 
                             <!-- Tab Navigation - Only for Personal Profile -->
                             <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist" style="border-bottom: 1px solid #444;">
@@ -1420,7 +1436,7 @@ input.form-control:-webkit-autofill {
                             <div class="tab-content" id="profileTabContent">
                                 <!-- Main Tab -->
                                 <div class="tab-pane fade show active" id="main-content" role="tabpanel" aria-labelledby="main-tab">
-
+                                    
 
                             {% if extra_columns_exist %}
 
@@ -1705,7 +1721,8 @@ input.form-control:-webkit-autofill {
                     <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
                 </div>
                 <div class="social-modal-body">
-                    <input type="text" id="social-handle-input" data-i18n="enter_handle" placeholder="Enter your handle" autocomplete="off">
+                    <label for="social-handle-input" class="form-label">Social Handle</label>
+                    <input type="text" id="social-handle-input" placeholder="Enter your handle" autocomplete="off">
                     <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
                 </div>
                 <div class="social-modal-footer">
@@ -2147,36 +2164,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Save social handle
-    function handleSaveSocial() {
+        function handleSaveSocial() {
         const handle = socialHandleInput.value.trim();
-        
-        if (!handle || !currentPlatform) {
-            alert('Please enter a valid handle');
+
+        if (!currentPlatform) {
+            alert('Please select a platform first.');
+            return;
+        }
+
+        const platformInfo = platformData[currentPlatform];
+        if (!platformInfo) {
+            alert('Invalid platform selected.');
+            return;
+        }
+
+        if (!handle) {
+            alert('Please enter a valid handle.');
             return;
         }
 
         if (!validateHandle(currentPlatform, handle)) {
-            alert('Invalid handle or already exists');
+            alert('Invalid handle or already exists.');
             return;
         }
 
-        // Add to socials data
-        socialsData.push({ 
-            platform: currentPlatform, 
-            handle: handle 
-        });
-
-        // Update hidden input
+        socialsData.push({ platform: currentPlatform, handle });
         socialsDataInput.value = JSON.stringify(socialsData);
-        
-        // Re-render pills
         renderSocialPills();
-        
-        // Close modal
         closeSocialModal();
-        
-        // Show success message
-        console.log(`${platformData[currentPlatform].name} added successfully`);
+        console.log(`${platformInfo.name} added successfully`);
     }
 
     // Render social pills
@@ -2341,7 +2357,7 @@ function updateGarminUI(isConnected, email = null, lastSync = null) {
         }
     } else {
         garminStatusBtn.setAttribute('data-status', 'inactive');
-        garminStatusBtn.querySelector('.status-text').textContent = 'Ei päällä';
+        garminStatusBtn.querySelector('.status-text').textContent = 'Ei päältä';
         garminDetails.style.display = 'none';
     }
 }
@@ -2501,4 +2517,3 @@ checkGarminStatus();
 </script>
 
 {% endblock %}
-
