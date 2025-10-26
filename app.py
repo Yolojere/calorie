@@ -36,6 +36,8 @@ from flask import Response
 from garminconnect import Garmin
 from flask_apscheduler import APScheduler
 from openai import OpenAI
+from wtforms.validators import Optional
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
@@ -682,7 +684,7 @@ class UpdateProfileForm(FlaskForm):
     socials = StringField('(@) Socials')
 
     # Avatar fields
-    avatar_choice = RadioField("Choose Avatar", choices=[], default="default.png")
+    avatar_choice = RadioField("Choose Avatar", choices=[], default="default.png", validators=[Optional()])
     avatar_upload = FileField("Or Upload Avatar")
 
     submit = SubmitField('Update')
@@ -1908,6 +1910,24 @@ def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
 @login_required
 def profile():
     form = UpdateProfileForm()
+    print(f"Request method: {request.method}")
+    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
+    form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
+    print(f"Request method: {request.method}")
+
+    if request.method == 'POST':
+        print("="*60)
+        print("POST REQUEST DEBUG")
+        print("="*60)
+        print(f"Request method: {request.method}")
+        print(f"Form data keys: {list(request.form.keys())}")
+        print(f"Form validates: {form.validate_on_submit()}")
+        if not form.validate_on_submit():
+            print(f"VALIDATION FAILED!")
+            print(f"Form errors: {form.errors}")
+            for field, errors in form.errors.items():
+                print(f"  Field '{field}': {errors}")
+        print("="*60)
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
@@ -1923,9 +1943,6 @@ def profile():
     user_xp = 0
     xp_to_next = 100
     user_socials = "[]"  # Initialize here at the top
-
-    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
-    form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
 
     try:
         # Check for extra columns including privacy controls
@@ -2017,19 +2034,19 @@ def profile():
                 if col in privacy_fields:
                     continue  # Already handled above
                 elif col == "socials":
-                    # Parse socials JSON safely - CORRECTED to use 'socials-data'
-                    socials_json = request.form.get("socials-data", "[]")
-                    print(f"DEBUG: Received socials-data: {socials_json}")  # Debug line
+                    # Get socials from form field (uses name="socials")
+                    socials_json = request.form.get("socials", "[]")
+                    print(f"DEBUG: Received socials: {socials_json}")
+                    
                     try:
                         socials_data = json.loads(socials_json)
-                    except json.JSONDecodeError:
-                        print("DEBUG: JSON decode error, using empty array")  # Debug line
+                        print(f"DEBUG: Parsed socials_data: {socials_data}")
+                    except json.JSONDecodeError as e:
+                        print(f"DEBUG: JSON decode error: {e}")
                         socials_data = []
+                    
                     update_query += ", socials = %s"
                     update_params.append(json.dumps(socials_data))
-                else:
-                    update_query += f", {col} = %s"
-                    update_params.append(getattr(form, col).data if hasattr(form, col) else '')
 
             update_query += " WHERE id = %s"
             update_params.append(current_user.id)
@@ -2039,15 +2056,21 @@ def profile():
 
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
-            
-            return redirect(
-                url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
-            )
+            cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
+            user_data = cursor.fetchone()
+            if user_data:
+                form.socials.data = user_data.get('socials', '[]')
+                print("DEBUG: Database commit successful")
+                print("=" * 50)
+                return redirect(
+                        url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
+                    )
 
         elif user_data:
             # Pre-fill form
             form.username.data = user_data.get('username', '')
             form.email.data = user_data.get('email', '')
+            form.socials.data = user_data.get('socials', '[]')
             
             for col in columns:
                 if col == "socials":
@@ -2166,7 +2189,9 @@ def view_profile(user_id):
             if col.startswith('show_'):
                 continue  # Skip privacy controls
             elif col == "socials":
-                form.socials.data = user_data.get(col) or "[]"
+                # Parse socials JSON safely - CORRECTED to use 'socials' (matches HTML name attribute)
+                socials_json = request.form.get("socials", "[]")
+                print(f"DEBUG: Received socials: {socials_json}")  # Debug line
             elif hasattr(form, col):
                 getattr(form, col).data = user_data.get(col, '')
 
