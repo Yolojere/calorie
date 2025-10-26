@@ -750,7 +750,31 @@ input.form-control:-webkit-autofill {
     font-weight: 900;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-
+/* FOOTER */
+.profile-footer-btns {
+  border-top: 1px solid #222;
+  padding-top: 14px;
+  margin-top: 20px;
+  background: none;
+}
+.profile-footer-btns .btn {
+  min-width: 130px;
+  border-radius: 18px !important;
+  font-size: 13px !important;
+  padding: 8px 0;
+  background: #232323;
+  color: #fff;
+  border: none;
+  transition: background 0.2s;
+}
+.profile-footer-btns .btn-outline-secondary {
+  background: transparent;
+  color: #bbb;
+  border: 1px solid #444;
+}
+.profile-footer-btns .btn:hover {
+  background: #444;
+}
 /* Different badge styles based on level tier */
 .level-badge.tier-beginner {
     background: linear-gradient(135deg, #C0C0C0, #808080);
@@ -982,7 +1006,7 @@ input.form-control:-webkit-autofill {
 .device-status-btn {
     margin-left:35px;
     display: flex;
-    max-width: 50%;
+    max-width: 120px;
     gap: 2px;
     padding: 6px 16px;
     border-radius: 25px;
@@ -1815,15 +1839,9 @@ input.form-control:-webkit-autofill {
     
     {% if is_owner %}
     <!-- Password Reset Link - only for owner -->
-    <div class="border-top pt-3 mt-4 text-center">
-        <a href="{{ url_for('reset_request') }}" class="accent-color fw-bold">
-            <i class="fas fa-key me-1"></i> <span data-i18n="request_password_reset">Request Password Reset</span>
-        </a>
-    </div>
-
-    <a href="https://paypal.me/trackyou" target="_blank" class="btn">
-  💖 Sivu pyörii lahjoitusten voimalla 💖
-</a>
+<div class="profile-footer-btns d-flex justify-content-center gap-2 mt-4">
+  <a href="{{ url_for('reset_request') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-key me-1"></i><span>Nollaa Salasana</span></a>
+  <a href="https://paypal.me/trackyou" class="btn btn-dark btn-sm" target="_blank">💖 Lahjoitus</a>
 </div>
     {% endif %}
 
