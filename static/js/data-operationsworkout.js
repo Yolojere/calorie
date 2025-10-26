@@ -1401,7 +1401,7 @@ async function syncGarminActivities() {
         const syncResult = await syncResponse.json();
         
         if (!syncResult.success) {
-            throw new Error(syncResult.error || 'Failed to sync with Garmin');
+            throw new Error(syncResult.error || 'Garmin synkronointi epäonnistui');
         }
         
         console.log('Garmin sync successful:', syncResult);
@@ -1417,7 +1417,7 @@ async function syncGarminActivities() {
         const importableResult = await importableResponse.json();
         
         if (!importableResult.success || !importableResult.activities || importableResult.activities.length === 0) {
-            alert('No new activities to import from Garmin');
+            alert('Ei uusia harjoituksia Garminista.');
             return;
         }
         
@@ -1451,7 +1451,7 @@ async function syncGarminActivities() {
         
         // Show success message
         const importedCount = importResult.imported_count || importableResult.activities.length;
-        alert(`Successfully imported ${importedCount} cardio activities from Garmin!`);
+        alert(`Onnistui! lisätty ${importedCount} kestävyys harjoitusta Garminista!`);
         
         // Invalidate cache for affected dates and refresh current view
         if (typeof invalidateDateCache === 'function') {
