@@ -5172,17 +5172,20 @@ def save_workout():
             WHERE is_saved = false
             AND session_id IN (
                 SELECT id FROM workout_sessions
-                WHERE user_id = %s AND date != %s
+                WHERE user_id = %s 
+                AND date != %s
+                AND date < CURRENT_DATE - INTERVAL '5 day'
             )
         """, (user_id, date))
 
-        # Delete orphaned unsaved cardio from other dates
         cursor.execute("""
             DELETE FROM cardio_sessions
             WHERE is_saved = false
             AND session_id IN (
                 SELECT id FROM workout_sessions
-                WHERE user_id = %s AND date != %s
+                WHERE user_id = %s 
+                AND date != %s
+                AND date < CURRENT_DATE - INTERVAL '5 day'
             )
         """, (user_id, date))
 
@@ -5538,6 +5541,21 @@ def save_workout():
             "UPDATE users SET xp_points = %s, level = %s WHERE id = %s",
             (int(pool), int(level_cursor), user_id)
         )
+
+        cursor.execute("""
+        UPDATE workout_sets
+        SET is_saved = true
+        WHERE session_id = %s
+    """, (session_id,))
+
+        # ============================================================================
+        # MARK CURRENT SESSION AS SAVED
+        # ============================================================================
+        cursor.execute("""
+            UPDATE workout_sessions
+            SET is_saved = true
+            WHERE id = %s
+        """, (session_id,))
 
         conn.commit()
 
