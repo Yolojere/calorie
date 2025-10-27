@@ -1841,8 +1841,12 @@ input.form-control:-webkit-autofill {
     <!-- Password Reset Link - only for owner -->
 <div class="profile-footer-btns d-flex justify-content-center gap-2 mt-4">
   <a href="{{ url_for('reset_request') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-key me-1"></i><span>Nollaa Salasana</span></a>
-  <a href="https://paypal.me/trackyou" class="btn btn-dark btn-sm" target="_blank">💖 Lahjoitus</a>
+    <a href="https://qr.mobilepay.fi/box/2f1193ac-1ae2-42de-b3ff-d7a7c5f7f901/pay-in" class="btn btn-sm" style="background: #5A78FF; color: white; border: none;" target="_blank">
+    <i class="fas fa-mobile-alt me-1"></i>MobilePay</a>
+    <a href="https://paypal.me/trackyou" class="btn btn-sm" style="background: #0070ba; color: white; border: none;" target="_blank">
+    <i class="fab fa-paypal me-1"></i>PayPal</a>
 </div>
+<span style="text-align: center; left: 50%; font-weight: 600;">Sivu pyörii lahjoituksilla!</span>
     {% endif %}
 
 
