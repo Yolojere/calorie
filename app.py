@@ -953,8 +953,23 @@ def get_current_session(user_id, date=None):
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
     
-    session_history = get_session_history(user_id)
-    return session_history.get(date, []), date
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            SELECT data FROM user_sessions 
+            WHERE user_id = %s AND date = %s
+        ''', (user_id, date))
+        
+        result = cursor.fetchone()
+        
+        if result:
+            return json.loads(result[0]), date
+        else:
+            return [], date
+    finally:
+        conn.close()
 
 def save_current_session(user_id, eaten_items, date):
     conn = get_db_connection()
@@ -3408,6 +3423,89 @@ def debug_templates():
     finally:
         if conn:
             conn.close()
+@app.route('/delete_template_food', methods=['POST'])
+@login_required
+def delete_template_food():
+    try:
+        template_id = request.form.get('template_id')
+        
+        if not template_id:
+            return jsonify({'success': False, 'error': 'Template ID is required'})
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verify the template belongs to the current user
+        cursor.execute(
+            'SELECT id FROM food_templates WHERE id = %s AND user_id = %s',
+            (template_id, current_user.id)
+        )
+        
+        if not cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'error': 'Template not found or access denied'})
+        
+        # Delete template items first (foreign key constraint)
+        cursor.execute(
+            'DELETE FROM food_template_items WHERE template_id = %s',
+            (template_id,)
+        )
+        
+        # Delete the template
+        cursor.execute(
+            'DELETE FROM food_templates WHERE id = %s',
+            (template_id,)
+        )
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error deleting template: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        if 'conn' in locals():
+            conn.rollback()
+            conn.close()
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+@app.route('/get_template_preview', methods=['GET'])
+@login_required
+def get_template_preview():
+    try:
+        template_id = request.args.get('template_id')
+        
+        if not template_id:
+            return jsonify({'success': False, 'error': 'Template ID required'})
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get template items with food details
+        cursor.execute('''
+            SELECT f.name, fti.grams
+            FROM food_template_items fti
+            JOIN foods f ON fti.food_key = f.key
+            WHERE fti.template_id = %s
+            ORDER BY fti.id
+        ''', (template_id,))
+        
+        items = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'items': [{'name': item[0], 'grams': item[1]} for item in items]
+        })
+        
+    except Exception as e:
+        print(f"Error getting template preview: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/save_recipe', methods=['POST'])
 @login_required
