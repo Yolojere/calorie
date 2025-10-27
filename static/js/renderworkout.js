@@ -648,6 +648,11 @@ function renderWorkoutSession(session, exercises, options = {}) {
     }
 
     const currentDate = $(".workout-date.active").data("date");
+    
+    // ✅ Define today and isCurrentDay ONCE at the top
+    const today = new Date().toISOString().split('T')[0];
+    const isCurrentDay = currentDate === today;
+    
     if (!collapseState.groups[currentDate]) collapseState.groups[currentDate] = {};
     if (!collapseState.exercises[currentDate]) collapseState.exercises[currentDate] = {};
 
@@ -659,12 +664,12 @@ function renderWorkoutSession(session, exercises, options = {}) {
 
         const uniqueSets = Array.isArray(exercise.sets) ? [...exercise.sets] : [];
         const exerciseVolume = uniqueSets.reduce((sum, set) => {
-        const reps = Number(set.reps) || 0;
-        const weight = Number(set.weight) || 0;
-        const volume = reps * weight;
-        set.volume = volume; // ✅ ensures .volume is always available for later rendering
-        return sum + volume;
-    }, 0);
+            const reps = Number(set.reps) || 0;
+            const weight = Number(set.weight) || 0;
+            const volume = reps * weight;
+            set.volume = volume;
+            return sum + volume;
+        }, 0);
         const exerciseSets = uniqueSets.length;
 
         groups[group].exercises.push({ ...exercise, sets: uniqueSets, exerciseSets, exerciseVolume });
@@ -688,8 +693,19 @@ function renderWorkoutSession(session, exercises, options = {}) {
     for (const groupName in groups) {
         const groupData = groups[groupName];
 
-        // Ensure collapse state exists
-        if (!collapseState.groups[currentDate][groupName]) collapseState.groups[currentDate][groupName] = { collapsed: false };
+        // ✅ FIXED: Group collapse initialization with today check
+        // Ensure collapse state exists - default to collapsed (true)
+        if (!collapseState.groups[currentDate][groupName]) {
+            collapseState.groups[currentDate][groupName] = { collapsed: true };
+        }
+
+        // For non-current days, always force collapsed
+        // For current day, keep whatever state is in localStorage
+        if (!isCurrentDay) {
+            collapseState.groups[currentDate][groupName].collapsed = true;
+        }
+
+        // Get the collapse state (will be from localStorage for current day)
         const groupCollapsed = collapseState.groups[currentDate][groupName].collapsed;
 
         let translatedGroupName = t(groupName.toLowerCase()) || groupName;
@@ -729,7 +745,21 @@ function renderWorkoutSession(session, exercises, options = {}) {
 
         // Exercises
         groupData.exercises.forEach(exercise => {
-            const exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] || false;
+            // ✅ FIXED: Exercise collapse initialization (no duplicate today/isCurrentDay)
+            // Default to collapsed (true) for all exercises
+            // For current day: use saved state (or default to true if first time)
+            // For other days: always force collapsed (true)
+            let exerciseCollapsed;
+            if (isCurrentDay) {
+                // Current day: use saved state, default to collapsed if not set
+                exerciseCollapsed = collapseState.exercises[currentDate][exercise.id] !== undefined 
+                    ? collapseState.exercises[currentDate][exercise.id] 
+                    : true;
+            } else {
+                // Other days: always collapsed
+                exerciseCollapsed = true;
+            }
+            
             const expandedClass = exerciseCollapsed ? '' : 'expanded';
             const isCompleted = completedExercises[currentDate]?.[exercise.id] || false;
             const completedClass = isCompleted ? 'completed' : '';
@@ -817,9 +847,8 @@ function renderWorkoutSession(session, exercises, options = {}) {
     setupRirDropdowns();
     setupCommentTooltips();
     setupExerciseCompletion();
-    
 
-    // Group toggle
+    // ✅ Group toggle handler
     $(".toggle-group").off("click").on("click", function() {
         const $group = $(this).closest(".workout-group");
         const groupName = $group.data("group");
@@ -830,11 +859,14 @@ function renderWorkoutSession(session, exercises, options = {}) {
         $(this).html(`<i class="fas fa-${isExpanded ? 'plus' : 'minus'}"></i>`);
         $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
 
-        collapseState.groups[currentDate][groupName].collapsed = isExpanded;
-        saveCollapseState();
+        // Only save state for current day
+        if (isCurrentDay) {
+            collapseState.groups[currentDate][groupName].collapsed = isExpanded;
+            saveCollapseState();
+        }
     });
 
-    // Exercise toggle
+    // ✅ Exercise toggle handler
     $(".toggle-exercise").off("click").on("click", function() {
         const $exercise = $(this).closest(".exercise");
         const exerciseId = $exercise.data("exercise-id");
@@ -846,8 +878,11 @@ function renderWorkoutSession(session, exercises, options = {}) {
         $(this).attr('title', isExpanded ? 'Expand' : 'Collapse');
         $exercise.find(".exercise-header").toggleClass("expanded", !isExpanded);
 
-        collapseState.exercises[currentDate][exerciseId] = isExpanded;
-        saveCollapseState();
+        // Only save state for current day
+        if (isCurrentDay) {
+            collapseState.exercises[currentDate][exerciseId] = isExpanded;
+            saveCollapseState();
+        }
     });
 
     $(document).trigger('workoutContentChanged');
@@ -1557,7 +1592,7 @@ function displayCardioSessions(cardioSessions, containerOverride = null) {
         <div class="group-header">
             <div class="group-header-content">
                 <div class="group-icon">
-                    <i class="fas fa-heart-pulse"></i>
+                    <i class="fas fa-heart"></i>
                 </div>
                 <div class="group-title">Cardio</div>
             </div>
