@@ -5119,15 +5119,15 @@ def save_workout():
             """, (session_id, exercise_id, reps, weight, rir, comments))
         
         # Delete the old unsaved sets from THIS DATE (they've been transferred)
-        if unsaved_sets:
-            cursor.execute("""
-                DELETE FROM workout_sets 
-                WHERE session_id IN (
-                    SELECT id FROM workout_sessions 
-                    WHERE user_id = %s AND date = %s AND id != %s
-                )
-                AND is_saved = false
-            """, (user_id, date, session_id))
+       # if unsaved_sets:
+           # cursor.execute("""
+               # DELETE FROM workout_sets 
+               # WHERE session_id IN (
+                  #  SELECT id FROM workout_sessions 
+                    #WHERE user_id = %s AND date = %s AND id != %s
+              #  )
+              #  AND is_saved = false
+           # """, (user_id, date, session_id))
 
         # Transfer unsaved cardio sessions from THIS DATE
         cursor.execute("""
@@ -5152,42 +5152,42 @@ def save_workout():
             """, (session_id, *cardio_data))
 
         # Delete old unsaved cardio from THIS DATE
-        if unsaved_cardio:
-            cursor.execute("""
-                DELETE FROM cardio_sessions
-                WHERE session_id IN (
-                    SELECT id FROM workout_sessions 
-                    WHERE user_id = %s AND date = %s AND id != %s
-                )
-                AND is_saved = false
-            """, (user_id, date, session_id))
+       # if unsaved_cardio:
+           # cursor.execute("""
+              #  DELETE FROM cardio_sessions
+               # WHERE session_id IN (
+                   # SELECT id FROM workout_sessions 
+                   # WHERE user_id = %s AND date = %s AND id != %s
+                #)
+               # AND is_saved = false
+           # """, (user_id, date, session_id))
 
         # ============================================================================
         # CLEANUP: Delete orphaned unsaved data from OTHER dates
         # This removes abandoned/temporary workouts from other sessions
         # ============================================================================
         # Delete orphaned unsaved sets from other dates
-        cursor.execute("""
-            DELETE FROM workout_sets
-            WHERE is_saved = false
-            AND session_id IN (
-                SELECT id FROM workout_sessions
-                WHERE user_id = %s 
-                AND date != %s
-                AND date < CURRENT_DATE - INTERVAL '5 day'
-            )
-        """, (user_id, date))
+        #cursor.execute("""
+           # DELETE FROM workout_sets
+           # WHERE is_saved = false
+          #  AND session_id IN (
+                #SELECT id FROM workout_sessions
+               # WHERE user_id = %s 
+               # AND date != %s
+               # AND date < CURRENT_DATE - INTERVAL '5 day'
+           # )
+       # """, (user_id, date))
 
-        cursor.execute("""
-            DELETE FROM cardio_sessions
-            WHERE is_saved = false
-            AND session_id IN (
-                SELECT id FROM workout_sessions
-                WHERE user_id = %s 
-                AND date != %s
-                AND date < CURRENT_DATE - INTERVAL '5 day'
-            )
-        """, (user_id, date))
+       # cursor.execute("""
+          #  DELETE FROM cardio_sessions
+           # WHERE is_saved = false
+           # AND session_id IN (
+                #SELECT id FROM workout_sessions
+                #WHERE user_id = %s 
+              #  AND date != %s
+               # AND date < CURRENT_DATE - INTERVAL '5 day'
+           # )
+       # """, (user_id, date))
 
         # Calculate total calories (weights + cardio)
         total_calories = float(timer_data.get('calories', 0) or 0.0)
