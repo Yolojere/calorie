@@ -1477,7 +1477,7 @@ function retakePhoto() {
 // Updated processPhoto function
 function processPhoto() {
     if (!capturedPhoto) {
-        showMessage('No photo to process', 'error');
+        showMessage('Kuva puuttuu!', 'error');
         return;
     }
 
@@ -1628,7 +1628,7 @@ function processPhoto() {
 
                 let message = 'Onnistui!';
                 if (fieldsPopulated > 0) {
-                    message = `Täytetty ${fieldsPopulated} kentät: ${populatedFields.join(', ')}.`;
+                    message = `Täytetty ${fieldsPopulated} kenttää: ${populatedFields.join(', ')}.`;
                 } else {
                     message = 'Epäonnistui ravintotietojen hakemisessa';
                 }
