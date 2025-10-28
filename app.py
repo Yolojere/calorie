@@ -5247,7 +5247,7 @@ def save_workout():
         cursor.execute("""
             SELECT exercise_id, reps, weight
             FROM workout_sets
-            WHERE session_id = %s
+            WHERE session_id = %s AND is_saved = false
         """, (session_id,))
         all_sets = cursor.fetchall()
         
