@@ -2525,13 +2525,10 @@
 /* Enhanced Achievement Grid */
 .achievement-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 25px;
-    padding: 15px;
-    background: rgba(15, 15, 25, 0.6);
-    border-radius: 16px;
-    border: 1px solid rgba(108, 192, 213, 0.2);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 8px;
 }
 
 /* Premium Achievement Cards */
@@ -2543,8 +2540,10 @@
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(108, 192, 213, 0.3);
+    min-height: 85px;
     border-radius: 16px;
     padding: 20px;
+    text-align: center;
     position: relative;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -2591,9 +2590,9 @@
 
 /* Enhanced Achievement Icons */
 .achievement-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     transition: all 0.3s ease;
 }
 
@@ -2604,12 +2603,13 @@
 
 /* Enhanced Typography */
 .achievement-title {
-    font-size: 1.1rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 3px;
     color: #6dc0d5;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     transition: color 0.3s ease;
+    letter-spacing: 0.3px;
 }
 
 .achievement-card:hover .achievement-title {
@@ -2617,18 +2617,19 @@
 }
 
 .achievement-value {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: white;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1;
 }
 
 .achievement-change {
-    font-size: 0.95rem;
+    font-size: 0.65rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 3px;
     font-weight: 500;
 }
 
@@ -2686,10 +2687,11 @@
         rgba(255, 215, 0, 0.95) 0%, 
         rgba(255, 165, 0, 0.9) 100%);
     border: 2px solid rgba(255, 215, 0, 0.6);
-    padding: 25px;
-    border-radius: 20px;
-    margin-bottom: 25px;
-    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
     animation: prCelebration 0.8s ease;
     box-shadow: 
         0 12px 30px rgba(255, 215, 0, 0.4),
@@ -2697,9 +2699,11 @@
 }
 
 .pr-trophy {
-    font-size: 3.5rem;
+    font-size: 2rem;
     color: #FFD700;
     margin-bottom: 15px;
+    margin: 0;
+    flex-shrink: 0;
     filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.8));
     animation: trophyBounce 2s infinite;
 }
@@ -2710,18 +2714,21 @@
 }
 
 .pr-text {
-    font-size: 1.4rem;
+   font-size: 0.95rem;
     font-weight: 700;
     color: #1a1a1a;
-    margin-bottom: 8px;
+    margin-bottom: 3px;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
-
+.pr-content {
+    flex: 1;
+    text-align: left;
+}
 .pr-details {
-    font-size: 1.05rem;
+    font-size: 0.75rem;
     color: #333;
     font-weight: 600;
-    margin-bottom: 3px;
+    margin-bottom: 1px;
 }
 
 /* Enhanced Improvement Details */
@@ -2998,16 +3005,30 @@
 /* Mobile Responsive */
 
 @media (max-width: 768px) {
+    
     .achievement-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+        gap: 8px;
+        padding: 8px;
+    }
+    
+      .achievement-card {
         padding: 10px;
+        min-height: 90px;
     }
-    
-    .achievement-card {
-        padding: 16px;
+      .achievement-icon {
+        font-size: 1.4rem;
     }
-    
+       .achievement-title {
+        font-size: 0.65rem;
+    }
+        .achievement-value {
+        font-size: 1.1rem;
+    }
+        .pr-celebration {
+        padding: 12px;
+    }
+
     .achievement-card:hover {
         transform: translateY(-4px) scale(1.01);
     }
@@ -3022,8 +3043,8 @@
         padding: 20px;
     }
     
-    .pr-trophy {
-        font-size: 2.8rem;
+     .pr-trophy {
+        font-size: 1.8rem;
     }
     .workout-results-modal {
         width: 95%;
@@ -3033,10 +3054,6 @@
     .results-body {
         padding: 15px;
         max-height: 400px;
-    }
-    
-    .achievement-grid {
-        grid-template-columns: 1fr;
     }
     
     .spinning-dumbbell {
