@@ -5864,7 +5864,7 @@ function updateSessionDisplay(session, totals, breakdown) {
                     select.empty();
                     select.append('<option value="">-- Valitse Pohja/Resepti --</option>');
                     if (templates.length === 0) {
-                        select.append(t('<option value="">no_template_available</option>'));
+                        select.append(t('<option value="">Ei pohjia</option>'));
                         $('#confirm-apply-template').prop('disabled', true);
                     } else {
                         templates.forEach(template => {
