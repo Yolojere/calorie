@@ -2335,18 +2335,21 @@ def search_foods():
     # Visibility clause & parameters
     if is_admin:
         visibility_clause = "TRUE"
-        params = [user_id]  # for usage join
+        params = [user_id]  # for user usage join
     else:
         visibility_clause = "(f.owner_id IS NULL OR f.owner_id = %s)"
-        params = [user_id, user_id]  # one for JOIN, one for visibility
+        params = [user_id, user_id]  # one for user usage JOIN, one for visibility
 
     if not query:
         sql = f"""
-            SELECT f.*, COALESCE(u.count, 0) AS usage
+            SELECT f.*, 
+                   COALESCE(u.count, 0) AS usage,
+                   COALESCE(g.count, 0) AS global_usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
+            LEFT JOIN food_usage_global g ON f.key = g.food_key
             WHERE {visibility_clause}
-            ORDER BY usage DESC, name ASC
+            ORDER BY usage DESC, global_usage DESC, name ASC
             LIMIT %s OFFSET %s
         """
         cursor.execute(sql, params + [limit, offset])
@@ -2360,9 +2363,12 @@ def search_foods():
         word_params = [f"%{w}%" for w in words]
 
         sql = f"""
-            SELECT f.*, COALESCE(u.count, 0) AS usage
+            SELECT f.*, 
+                   COALESCE(u.count, 0) AS usage,
+                   COALESCE(g.count, 0) AS global_usage
             FROM foods f
             LEFT JOIN food_usage u ON f.key = u.food_key AND u.user_id = %s
+            LEFT JOIN food_usage_global g ON f.key = g.food_key
             WHERE {visibility_clause}
               AND (
                     {word_conditions}
@@ -2370,6 +2376,7 @@ def search_foods():
                   )
             ORDER BY 
                 usage DESC,
+                global_usage DESC,
                 name ASC
             LIMIT %s OFFSET %s
         """
@@ -2395,6 +2402,7 @@ def search_foods():
         result.append(d)
 
     return jsonify(result)
+
     
 
 @app.route('/get_food_details', methods=['POST'])
