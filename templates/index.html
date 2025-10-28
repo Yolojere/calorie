@@ -1700,6 +1700,37 @@
             white-space: nowrap;
             color: #000000 !important;
         }
+        #save-template-preview-items{
+                            overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 300px;
+        }
+        #save-template-preview-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+#save-template-preview-items::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#save-template-preview-items::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 3px;
+}
+
+#save-template-preview-items::-webkit-scrollbar-thumb:hover {
+    background: rgba(188, 187, 189, 0.7);
+}
+.save-template-item:hover {
+                    background-color: rgba(99, 99, 99, 0.1) !important;
+                    border-left-width: 4px !important;
+                    transform: translateX(2px);
+                }
+        #template-preview-items {
+                overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 300px;
+        }
         #template-preview-items::-webkit-scrollbar {
     width: 6px;
 }
@@ -3293,8 +3324,7 @@
             overflow-y: auto; 
             background-color: rgba(23, 23, 23, 0.2);
             border: 1px solid rgba(138, 138, 138, 0.2);
-            scrollbar-width: thin;
-            scrollbar-color: rgb(192, 141, 255) rgba(50, 50, 50, 0.2);">
+            scrollbar-width: thin;">
                         <!-- Preview items will be loaded here -->
                     </div>
                 </div>
@@ -4810,7 +4840,7 @@ function displaySaveTemplatePreview() {
     
     html += `
         <div class="d-flex justify-content-center align-items-center py-2 mt-1" 
-             style="background-color: rgba(39, 39, 39, 0.7);">
+             style="background-color: rgba(39, 39, 39, 0.7); position: sticky; bottom: 0; z-index: 2;">
             <small style="font-size: 11px;">
                 <i class="fas fa-check-circle" style="color: white;"></i> 
                 ${selectedItems.length} ruoka${selectedItems.length !== 1 ? 'a' : ''} valmiina tallennettavaksi
@@ -5087,6 +5117,34 @@ function displayTemplatePreview(items) {
     // Add CSS for hover effects (add this to your CSS file or in a <style> tag)
     if (!$('#template-preview-styles').length) {
         $('head').append(`
+        <style id="template-preview-styles">
+                #template-preview-items {
+                    max-height: 300px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    border: 1px solid rgba(138, 138, 138, 0.3);
+                    border-radius: 6px;
+                    background-color: rgba(28, 28, 28, 0.9);
+                }
+                
+                #template-preview-items::-webkit-scrollbar {
+                    width: 6px;
+                }
+                
+                #template-preview-items::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 3px;
+                }
+                
+                #template-preview-items::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 3px;
+                }
+                
+                #template-preview-items::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.5);
+                }
+            </style>
         `);
     }
     
@@ -5109,7 +5167,7 @@ function displayTemplatePreview(items) {
     
     html += `
         <div class="d-flex justify-content-center align-items-center py-2 mt-1" 
-             style="background-color: rgba(39, 39, 39, 0.7);">
+             style="background-color: rgba(39, 39, 39, 0.7); position: sticky; bottom: 0; z-index: 2;">
             <small style="font-size: 11px;">
                 <i class="fas fa-check-circle" style="color: #white;"></i> 
                 ${items.length} ruoka${items.length !== 1 ? 'a' : ''} valmiina käyttöön
