@@ -510,6 +510,8 @@ const translations = {
     "Reverse crunch": "Käänteinen vatsarutistus",
     "Sit up": "Istumaannousu",
     "Static hold": "Staattinen pito",
+    "focus_strength": "voima",
+    "focus_hypertrophy": "hypertrofia"
     
   }
 };
