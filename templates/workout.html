@@ -2449,40 +2449,7 @@
     margin-top: 2px;
     text-align: center;
 }
-/* Achievement Cards */
 
-
-.achievement-card:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: #6dc0d5;
-    box-shadow: 0 5px 15px rgba(108, 192, 213, 0.2);
-}
-
-.achievement-icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
-}
-
-.achievement-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #6dc0d5;
-}
-
-.achievement-value {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 3px;
-}
-
-.achievement-change {
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
 /* Enhanced Glass Morphism Base */
 .style-glass {
     background: rgba(20, 20, 30, 0.85);
@@ -2613,13 +2580,17 @@
     gap: 3px;
     font-weight: 500;
     text-align: center;
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
+    flex-wrap: wrap;
 }
 .improvement-details,
 .time-breakdown,
 .calories-breakdown {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     width: 100%;
 }
 .improvement-bullet,
@@ -2628,13 +2599,14 @@
     font-size: 0.6rem;
     color: #ccc;
     text-align: center;
-    margin: 1px 0;
+    margin: 0;
+    line-height: 1.3;
 }
 .improvement-header {
     font-size: 0.7rem;
     color: #7bc8a4;
     font-weight: 600;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 /* Enhanced New Exercises Toast */
 .new-exercises-toast {
@@ -2789,6 +2761,29 @@
 
 .neutral {
     color: #FFC107;
+}
+.achievement-change.improvement {
+    color: #7bc8a4;
+}
+
+.achievement-change.improvement i {
+    color: #7bc8a4;
+}
+
+.achievement-change.decline {
+    color: #ff6b6b;
+}
+
+.achievement-change.decline i {
+    color: #ff6b6b;
+}
+
+.achievement-change.neutral {
+    color: #ccc;
+}
+
+.achievement-change.neutral i {
+    color: #ccc;
 }
 .workout-name-input {
     background-color: #1b1b1b !important;
@@ -3090,6 +3085,14 @@
 }
 /* Mobile optimization */
 @media (max-width: 576px) {
+        .achievement-change {
+        font-size: 0.6rem;
+        gap: 3px;
+    }
+    
+    .achievement-change i {
+        font-size: 0.6rem;
+    }
     .pr-celebration {
         padding: 10px;
         gap: 10px;
