@@ -5131,9 +5131,9 @@ def save_workout():
         if unsaved_sets_rows:
             cursor.execute("""
                 UPDATE workout_sets
-                SET is_saved = true
+                SET session_id = %s, is_saved = true
                 WHERE id = ANY(%s)
-            """, ([row[0] for row in unsaved_sets_rows],))
+            """, (session_id, [row[0] for row in unsaved_sets_rows]))
         
         # Find all unsaved cardio sessions for this user on this date
         # cardio_sessions only has session_id, so find those attached to unsaved sessions
