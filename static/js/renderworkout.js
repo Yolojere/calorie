@@ -1329,29 +1329,33 @@ function showWorkoutResults(comparisonData, achievements) {
     
     // Show PR celebrations only for meaningful PRs (not first-time 0kg comparisons)
     if (personalRecords.length > 0) {
-        personalRecords.forEach(pr => {
-            // Only show PRs where previousBest is meaningful (not 0)
-            if (pr.previousBest.weight > 0 || pr.previousBest.reps > 0) {
-                if (pr.type === 'bestSet') {
-                    resultsHTML += `
-                        <div class="pr-celebration">
-                            <div class="pr-trophy"><img src="static/images/gold-medal.png"></div>
+    personalRecords.forEach(pr => {
+        // Only show PRs where previousBest is meaningful (not 0)
+        if (pr.previousBest.weight > 0 || pr.previousBest.reps > 0) {
+            if (pr.type === 'bestSet') {
+                resultsHTML += `
+                    <div class="pr-celebration">
+                        <div class="pr-trophy"><img src="static/images/gold-medal.png"></div>
+                        <div class="pr-content">
                             <div class="pr-text">${t('newBestSet')}</div>
-                            <div class="pr-details">${pr.exercise}: ${pr.weight}kg x ${pr.reps} toistoa</div>
-                            <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} toistoa</div>
-                        </div>`;
-                } else if (pr.type === 'heaviestWeight') {
-                    resultsHTML += `
-                        <div class="pr-celebration">
-                            <div class="pr-trophy"><img src="static/images/trophy1.png"></div>
+                            <div class="pr-details pr-new-best">${pr.exercise}: ${pr.weight}kg x ${pr.reps} ${t('reps')}</div>
+                            <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg x ${pr.previousBest.reps} ${t('reps')}</div>
+                        </div>
+                    </div>`;
+            } else if (pr.type === 'heaviestWeight') {
+                resultsHTML += `
+                    <div class="pr-celebration">
+                        <div class="pr-trophy"><img src="static/images/trophy1.png"></div>
+                        <div class="pr-content">
                             <div class="pr-text">${t('heaviestWeight')}</div>
-                            <div class="pr-details">${pr.exercise}: ${pr.weight}kg</div>
+                            <div class="pr-details pr-new-best">${pr.exercise}: ${pr.weight}kg</div>
                             <div class="pr-details">${t('previousBest')}: ${pr.previousBest.weight}kg</div>
-                        </div>`;
-                }
+                        </div>
+                    </div>`;
             }
-        });
-    }
+        }
+    });
+}
     
     // Achievement cards
     resultsHTML += `
