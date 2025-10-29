@@ -444,7 +444,7 @@ function handleSetUpdate() {
                 revertToOriginal();
             }
         }).fail(function() {
-            alert("Network error. Please try again.");
+            alert("Yhteys ongelma! yritä uudelleen");
             revertToOriginal();
         });
     }
@@ -584,10 +584,10 @@ $(document).on("click", "#confirm-save-template-btn", function() {
     data: JSON.stringify({ workoutId, templateName }),
     success: function(response) {
       $("#copyTemplateModal").modal("hide");
-      alert("Template saved successfully!");
+      alert("Pohja tallennettu onnistuneesti!");
     },
     error: function(err) {
-      console.error("Template save failed", err);
+      console.error("Pohjan tallennus epäonnistui", err);
     }
   });
 });
