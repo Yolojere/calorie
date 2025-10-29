@@ -2441,34 +2441,7 @@
     overflow-y: auto;
 }
 
-/* PR Celebration Styles */
-.pr-celebration {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    padding: 20px;
-    border-radius: 15px;
-    margin-bottom: 20px;
-    text-align: center;
-    animation: prCelebration 0.8s ease;
-}
 
-.pr-trophy {
-    font-size: 3rem;
-    color: #FFD700;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
-}
-
-.pr-text {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 5px;
-}
-
-.pr-details {
-    font-size: 1rem;
-    color: #555;
-}
 .set-progress-indicator.first-session {
     color: #FFD700;
     font-weight: 700;
@@ -2542,12 +2515,16 @@
     border: 1px solid rgba(108, 192, 213, 0.3);
     min-height: 85px;
     border-radius: 16px;
-    padding: 20px;
+    padding: 15px;
     text-align: center;
     position: relative;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform: translateY(0);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Card glow effect */
@@ -2586,11 +2563,12 @@
 .achievement-card > * {
     position: relative;
     z-index: 1;
+    text-align: center;
 }
 
 /* Enhanced Achievement Icons */
 .achievement-icon {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin-bottom: 4px;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     transition: all 0.3s ease;
@@ -2610,6 +2588,7 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     transition: color 0.3s ease;
     letter-spacing: 0.3px;
+    text-align: center;
 }
 
 .achievement-card:hover .achievement-title {
@@ -2623,16 +2602,40 @@
     margin-bottom: 2px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     line-height: 1;
+    text-align: center;
 }
 
 .achievement-change {
     font-size: 0.65rem;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 3px;
     font-weight: 500;
+    text-align: center;
+    flex-direction: column;
+    width: 100%;
 }
-
+.improvement-details,
+.time-breakdown,
+.calories-breakdown {
+    text-align: center;
+    width: 100%;
+}
+.improvement-bullet,
+.time-item,
+.calories-item {
+    font-size: 0.6rem;
+    color: #ccc;
+    text-align: center;
+    margin: 1px 0;
+}
+.improvement-header {
+    font-size: 0.7rem;
+    color: #7bc8a4;
+    font-weight: 600;
+    margin-top: 2px;
+}
 /* Enhanced New Exercises Toast */
 .new-exercises-toast {
     background: linear-gradient(135deg, 
@@ -2692,6 +2695,7 @@
     margin-bottom: 12px;
     display: flex;
     align-items: center;
+    gap: 12px;
     animation: prCelebration 0.8s ease;
     box-shadow: 
         0 12px 30px rgba(255, 215, 0, 0.4),
@@ -2699,38 +2703,53 @@
 }
 
 .pr-trophy {
-    font-size: 2rem;
-    color: #FFD700;
-    margin-bottom: 15px;
-    margin: 0;
     flex-shrink: 0;
+    margin: 0;
     filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.8));
     animation: trophyBounce 2s infinite;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
+.pr-trophy img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
 @keyframes trophyBounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-5px); }
 }
 
+
 .pr-text {
-   font-size: 0.95rem;
+    font-size: 1.0rem;
     font-weight: 700;
     color: #1a1a1a;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
 }
 .pr-content {
     flex: 1;
-    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
+
 .pr-details {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #333;
     font-weight: 600;
     margin-bottom: 1px;
+    line-height: 1.4;
 }
-
+.pr-details.pr-new-best {
+    font-weight: 700;
+    color: #1a1a1a;
+}
 /* Enhanced Improvement Details */
 .improvement-details {
     margin-top: 5px;
@@ -3026,7 +3045,7 @@
         font-size: 1.1rem;
     }
         .pr-celebration {
-        padding: 12px;
+        padding: 16px;
     }
 
     .achievement-card:hover {
@@ -3040,11 +3059,11 @@
     }
     
     .pr-celebration {
-        padding: 20px;
+        padding: 24px;
     }
     
      .pr-trophy {
-        font-size: 1.8rem;
+        font-size: 2.4rem;
     }
     .workout-results-modal {
         width: 95%;
@@ -3053,7 +3072,7 @@
     
     .results-body {
         padding: 15px;
-        max-height: 400px;
+        max-height: 500px;
     }
     
     .spinning-dumbbell {
@@ -3067,6 +3086,32 @@
     @media (max-width: 360px) {
     .navbar-brand.d-md-inline {
         display: none !important; /* Hide brand text completely */
+    }
+}
+/* Mobile optimization */
+@media (max-width: 576px) {
+    .pr-celebration {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .pr-trophy {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .pr-trophy img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .pr-text {
+        font-size: 0.85rem;
+        margin-bottom: 3px;
+    }
+    
+    .pr-details {
+        font-size: 0.70rem;
     }
 }
     </style>
