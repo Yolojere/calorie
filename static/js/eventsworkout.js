@@ -715,7 +715,7 @@ function displayWorkoutSuggestionsInline(suggestions) {
             <div class="suggestion-item" data-session-id="${suggestion.session_id}" data-name="${suggestion.name}">
                 <div class="suggestion-name">${suggestion.name}</div>
                 <div class="suggestion-details">
-                    ${formatDateForDisplay(suggestion.date)} • ${suggestion.focus_type}
+                    ${formatDateForDisplay(suggestion.date)} • ${t(suggestion.focus_type)}
                 </div>
                 <div class="copy-workout-hint">Kopioi pohjaksi</div>
             </div>
@@ -795,7 +795,7 @@ $(document).on('click', '#confirm-copy-workout-inline', function() {
 function copyWorkoutFromSessionInline(sessionId, targetDate) {
     const $btn = $('#confirm-copy-workout-inline');
     const originalText = $btn.text();
-    $btn.text('Copying...').prop('disabled', true);
+    $btn.text('Kopioi...').prop('disabled', true);
     
     $.ajax({
         url: '/workout/copy_from_session',
