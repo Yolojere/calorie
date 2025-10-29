@@ -63,7 +63,7 @@ function deleteSet(setId, button) {
     
     if (!date) {
         console.error('No valid date context for deleteSet');
-        alert('Error: Could not determine which day\'s workout to update.');
+        alert('Virhe!');
         return;
     }
     
@@ -84,12 +84,12 @@ function deleteSet(setId, button) {
             });
         } else {
             console.error('Failed to delete set:', response.error);
-            alert('Error deleting set: ' + (response.error || 'Unknown error'));
+            alert('Virhe: yhteysongelma ' + (response.error || 'Unknown error'));
         }
     })
     .fail(function(xhr, status, error) {
         console.error('Network error deleting set:', error);
-        alert('Network error deleting set. Please check your connection.');
+        alert('Yhteys katkesi! tarkista yhteys');
     });
 }
 
@@ -100,7 +100,7 @@ function addExercise() {
     
     // Validate input
     if (!name || !muscleGroup) {
-        alert("Exercise name and muscle group are required!");
+        alert("Liikkeen nimi ja lihasryhmä vaadittu!");
         return;
     }
     
@@ -122,12 +122,12 @@ function addExercise() {
             });
             $("#addExerciseModal").modal("hide");
             resetExerciseForm();
-            alert("Exercise added successfully!");
+            alert("Liike lisätty onnistuneesti!");
         } else {
             alert("Error: " + response.error);
         }
     }).fail(function() {
-        alert("Network error. Please try again.");
+        alert("Ongelma internet yhteydessä");
     });
 }
 
@@ -139,7 +139,7 @@ function updateRir(setId, rirValue) {
         data: JSON.stringify({ set_id: setId, rir: rirValue }),
         success: function(response) {
             if (!response.success) {
-                alert('Error updating RiR');
+                alert('Virhe RiR päivittämisessä');
                 const date = $(".workout-date.active").data("date");
                 
                 // Use cached version of session loading
@@ -159,7 +159,7 @@ function updateComment(setId, comment) {
         data: JSON.stringify({ set_id: setId, comment: comment }),
         success: function(response) {
             if (!response.success) {
-                alert('Error updating comment');
+                alert('Virhe kommentin päivityksessä');
                 const date = $(".workout-date.active").data("date");
                 // Use cached version of session loading
                 getSessionWithCache(date, function(data) {
@@ -536,12 +536,12 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
     
     // Validation
     if (!focus_type) {
-        alert("Please select a focus type");
+        alert("Valitse voima tai hypertrofia!");
         return;
     }
     
     if (!exercises || exercises.length === 0) {
-        alert("Please add at least one exercise");
+        alert("Sinun täytyy lisätä edes yksi liike!");
         return;
     }
     
@@ -600,13 +600,13 @@ $(document).off("click", "#save-workout-btn").on("click", "#save-workout-btn", f
                 
             } else {
                 hideWorkoutAnalysis();
-                alert("Error saving workout: " + response.error);
+                alert("Virhe treenin tallentamisessa " + response.error);
             }
         },
         error: function(xhr, status, error) {
             hideWorkoutAnalysis();
             console.error("AJAX Error:", status, error);
-            alert("An error occurred while saving the workout.");
+            alert("Virhe! treenin tallentamisessa");
         }
     });
 });
@@ -1238,7 +1238,7 @@ async function addCardioSession(isMobile = false) {
     try {
         // Validate required fields
         if (!durationInput || !durationInput.value) {
-            alert('Please enter duration');
+            alert('Merkitse harjoituksen aika');
             return;
         }
         
@@ -1296,7 +1296,7 @@ async function addCardioSession(isMobile = false) {
             }
         } else {
             console.error('Failed to add cardio session:', result);
-            alert(result.error || 'Error cardion lisäämisessä');
+            alert(result.error || 'Virhe cardion lisäämisessä');
         }
     } catch (error) {
         console.error('Error adding cardio session:', error);
@@ -1481,7 +1481,7 @@ async function syncGarminActivities() {
         
     } catch (error) {
         console.error('Error during Garmin sync:', error);
-        alert(`Garmin sync failed: ${error.message}`);
+        alert(`Garmin synkronointi epäonnistui: ${error.message}`);
     } finally {
         // Re-enable buttons
         [garminSyncBtn, garminSyncBtnMobile].forEach(btn => {
