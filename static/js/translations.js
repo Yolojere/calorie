@@ -120,7 +120,7 @@ const translations = {
     favourite: "Favourite",
     bigserving_g: "Big Serving (g)",
     add_custom_food: "Add Custom Food",
-    scan_label: "Scan Label (Incoming)",
+    scan_label: "Scan Label",
     ean_barcode: "EAN/Barcode",
     calories_per: "Calories (per 100g)",
     not_required: "not required",
@@ -486,7 +486,7 @@ const translations = {
     bigserving: "Iso Annos",
     bigserving_g: "Iso Annos (g)",
     add_custom_food: "Lisää uusi ruoka",
-    scan_label: "Skannaa Ravintoarvot (Tulossa)",
+    scan_label: "Skannaa Ravintoarvot",
     ean_barcode: "EAN/Viivakoodi",
     calories_per: "Kalorit (per 100g)",
     not_required: "ei vaadita",
@@ -541,7 +541,7 @@ const translations = {
     totals: "Yhteenveto",
     ean_not_found: "Viivakoodia",
     in_data_base: "ei löydetty tietokannasta",
-    create_new_food: "Luo Uusi Ruoka",
+    create_new_food: "Luo uusi ruoka",
     no_results_found: "Ei tuloksia",
 
     // Days
