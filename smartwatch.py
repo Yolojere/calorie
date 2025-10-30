@@ -989,3 +989,58 @@ def reconnect_garmin_user(user_id):
     except Exception as e:
         logging.error(f"Error reconnecting user {user_id}: {e}")
         return None
+@smartwatch_bp.route('/get_garmin_steps', methods=['POST'])
+@login_required
+def get_garmin_steps():
+    """
+    Get steps from Garmin daily data for a specific date
+    Returns steps count to be used in TDEE calculation
+    """
+    try:
+        data = request.get_json()
+        target_date = data.get('date', date.today().strftime('%Y-%m-%d'))
+        user_id = current_user.id
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Fetch steps from garmin_daily_data for the target date
+        cursor.execute("""
+            SELECT steps, synced_at
+            FROM garmin_daily_data
+            WHERE user_id = %s AND date = %s
+            ORDER BY synced_at DESC
+            LIMIT 1
+        """, (user_id, target_date))
+        
+        result = cursor.fetchone()
+        
+        if result:
+            steps, synced_at = result
+            return jsonify({
+                'success': True,
+                'steps': int(steps) if steps else 0,
+                'date': target_date,
+                'synced_at': synced_at.isoformat() if synced_at else None
+            })
+        else:
+            # No Garmin data found for this date
+            return jsonify({
+                'success': False,
+                'error': 'No Garmin data found for this date',
+                'steps': 0
+            }), 404
+            
+    except Exception as e:
+        print(f"Error fetching Garmin steps: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    
