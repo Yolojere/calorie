@@ -4557,6 +4557,7 @@ def save_metrics():
         calc_mode = request.form.get('mode', 'unknown')
 
         auto_add_workout_calories = request.form.get('auto_add_workout_calories') == 'true'
+        auto_garmin_steps = request.form.get('auto_garmin_steps') == 'true'
         
         # Validate inputs
         if not weight or weight <= 0:
@@ -4572,8 +4573,8 @@ def save_metrics():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE users SET tdee = %s, weight = %s, gender = %s, auto_add_workout_calories = %s WHERE id = %s",
-            (tdee, weight, gender, auto_add_workout_calories, current_user.id)
+            "UPDATE users SET tdee = %s, weight = %s, gender = %s, auto_add_workout_calories = %s WHERE id = %s, auto_garmin_steps = %s, WHERE id = %s",
+            (tdee, weight, gender, auto_add_workout_calories, auto_garmin_steps, current_user.id)
         )
         conn.commit()
         
@@ -4585,7 +4586,8 @@ def save_metrics():
                 "weight": weight,
                 "gender": gender,
                 "mode": calc_mode,
-                "auto_add_workout_calories": auto_add_workout_calories
+                "auto_add_workout_calories": auto_add_workout_calories,
+                "auto_garmin_steps": auto_garmin_steps
             }
         )
         
