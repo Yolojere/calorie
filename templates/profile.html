@@ -51,7 +51,7 @@ input.form-control:-webkit-autofill {
 /* Optional: chain input to image for smooth rounded edges */
 .input-group {
     border-radius: 20px;
-    overflow: hidden;
+    overflow: hidden;   
 }
 .input-group .input-group-text:first-child {
     border-radius: 20px 0 0 20px;
@@ -70,7 +70,7 @@ input.form-control:-webkit-autofill {
         .form-control:focus, .form-select:focus {
             border-color: #555 !important;
             box-shadow: none !important;
-            background-color: #181818 !important;
+            background-color: #121212 !important;
             color: #eee !important;
         }
 
@@ -436,7 +436,7 @@ input.form-control:-webkit-autofill {
 .profile-field .form-control {
     border: none !important;
     border-radius: 0 25px 25px 0;
-    background-color: transparent;
+    background-color: #121212 !important;
     color: #fff;
     box-shadow: none;
     transition: color 0.3s ease;
@@ -450,11 +450,12 @@ input.form-control:-webkit-autofill {
 /* Active (clicked/focused) effect */
 .profile-field:focus-within {
     border-color: #777;
-    background-color: #181818;
+    background-color: #121212 !important;
     box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
 }
 .profile-field:focus-within .form-control {
     color: #eee;
+    background-color: #121212 !important;
 }
  
     /* Icons */
@@ -1716,7 +1717,7 @@ input.form-control:-webkit-autofill {
 
                                 {% if viewed_user.get('socials') and viewed_user.socials != '[]' and (viewed_user.get('show_socials', True) or is_owner) %}
                                 <div class="form-group mb-4">
-                                    <label class="form-label">Social Media</label>
+                                    <label class="form-label" style="font-weight: 600;">Social Media</label>
                                     <div class="social-pills-container">
                                         <!-- Parse JSON socials safely in Python, not Jinja2 -->
                                         {% set socials_raw = viewed_user.socials %}
