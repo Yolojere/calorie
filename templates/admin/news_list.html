@@ -1,0 +1,275 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="glass-card">
+        <div class="glass-card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-newspaper me-2"></i>Manage News Posts</h5>
+            <a href="{{ url_for('admin_news_create') }}" class="btn-index">
+                <i class="fas fa-plus me-1"></i> Create New Post
+            </a>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if posts %}
+            <div class="table-responsive">
+                <table class="table table-glass">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>
+                                <i class="{{ post['icon_class'] }} {{ post['icon_color'] }} me-2"></i>
+                                {{ post['title'] }}
+                            </td>
+                            <td>{{ post['username'] }}</td>
+                            <td>{{ post['created_at'].strftime('%Y-%m-%d %H:%M') if post['created_at'] else 'N/A' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if post['is_published'] else 'secondary' }}">
+                                    {{ 'Published' if post['is_published'] else 'Draft' }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                    onclick="togglePublish({{ post['id'] }})"
+                                    title="{{ 'Unpublish' if post['is_published'] else 'Publish' }}">
+                                <i class="fas fa-eye{{ '' if post['is_published'] else '-slash' }}"></i>
+                            </button>
+                            
+                            <!-- EDIT BUTTON -->
+                            <a href="{{ url_for('admin_news_edit', post_id=post['id']) }}" 
+                            class="btn btn-sm btn-outline-warning"
+                            title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            
+                            <!-- DELETE BUTTON -->
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="deletePost({{ post['id'] }}, '{{ post['title'] }}')"
+                                    title="Delete">
+                                <i class="fas fa-trash"></i>
+            </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-glass">
+                <i class="fas fa-newspaper fa-3x mb-3"></i>
+                <p>No news posts yet. Create your first post!</p>
+                <a href="{{ url_for('admin_news_create') }}" class="btn-index">
+                    <i class="fas fa-plus me-1"></i> Create Post
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}         
+function togglePublish(postId) {
+    if (!confirm('Toggle publish status for this post?')) return;
+    const csrfToken = getCSRFToken();
+    fetch(`/admin/news/toggle/${postId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to toggle publish status');
+    });
+}
+
+function deletePost(postId, title) {
+    if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis action cannot be undone.`)) return;
+    const csrfToken = getCSRFToken();
+    fetch(`/admin/news/delete/${postId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(() => {
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete post');
+    });
+}
+</script>
+
+<style>
+/* Glass Effect Cards */
+.glass-card {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    background: rgba(30, 30, 30, 0.7) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+.glass-card-header {
+    background: rgba(39, 39, 39, 0.7) !important;
+    border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+    padding: 20px;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.glass-card-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.card-body {
+    padding: 20px;
+    color: #e0e0e0;
+}
+
+/* Buttons */
+.btn-index {
+    display: inline-block;
+    background-color: #1b1b1b;
+    color: #ffffff;
+    border: 1px solid #444 !important;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-index:hover {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
+    transform: scale(1.02);
+}
+
+.btn-outline-info {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-info:hover, .btn-outline-warning:hover, .btn-outline-danger:hover {
+    color: #000;
+    opacity: 0.9;
+}
+
+/* Table */
+.table-glass {
+    color: #ffffff;
+    margin-bottom: 0;
+    background-color: transparent;
+}
+
+.table-glass th {
+    background: rgba(39, 39, 39, 0.6) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.table-glass td {
+    padding: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+}
+
+.table-glass tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Empty State */
+.empty-state-glass {
+    padding: 40px 20px;
+    text-align: center;
+    color: #888;
+}
+
+.empty-state-glass i {
+    opacity: 0.5;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-color: rgba(40, 167, 69, 0.3);
+    color: #a8e6a3;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #f5c6cb;
+}
+
+@media (max-width: 768px) {
+    .glass-card-header.d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 5px;
+    }
+}
+</style>
+{% endblock %}
