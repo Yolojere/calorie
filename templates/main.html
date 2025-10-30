@@ -1,0 +1,419 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Workout of the Week Card -->
+    <div class="glass-card mb-4">
+        <div class="glass-card-header">
+            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Workout of the Week</h5>
+        </div>
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="mb-1 fw-bold">Full Body Strength Circuit</h6>
+                    <p class="mb-0 small text-muted">
+                        Focus on compound movements: Squats, Deadlifts, Bench Press, and Rows
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('workout') }}" class="btn-index">
+                        <i class="fas fa-dumbbell me-1"></i> Start Workout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="row">
+        <!-- Left Column: News -->
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100">
+                <div class="glass-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-newspaper me-2"></i>News & Updates</h5>
+                    {% if is_authenticated and is_admin %}
+                    <a href="{{ url_for('admin_news_list') }}" class="btn-index btn-sm">
+                        <i class="fas fa-cog me-1"></i> Manage
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="news-feed">
+                        {% if news_posts %}
+                            {% for post in news_posts %}
+                            <div class="news-item mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                <div class="d-flex align-items-start">
+                                    <div class="news-icon me-3">
+                                        <i class="{{ post['icon_class'] }} {{ post['icon_color'] }} fa-2x"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{ post['title'] }}</h6>
+                                        <div class="mb-1 small text-muted news-content">
+                                            {{ post['content']|safe }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {% if post['created_at'] %}
+                                                {{ post['created_at'].strftime('%B %d, %Y') }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Fallback to default news if no posts in database -->
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-start">
+                                    <div class="news-icon me-3">
+                                        <i class="fas fa-star text-warning fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">New Feature: XP & Leveling System</h6>
+                                        <p class="mb-1 small text-muted">
+                                            Earn XP for completing workouts, hitting PRs, and maintaining streaks!
+                                        </p>
+                                        <small class="text-muted">2 days ago</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-start">
+                                    <div class="news-icon me-3">
+                                        <i class="fas fa-chart-line text-success fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Community Milestone</h6>
+                                        <p class="mb-1 small text-muted">
+                                            Our community has collectively lifted over 1 million kg this month!
+                                        </p>
+                                        <small class="text-muted">5 days ago</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-start">
+                                    <div class="news-icon me-3">
+                                        <i class="fas fa-clock text-primary fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Garmin Integration Live</h6>
+                                        <p class="mb-1 small text-muted">
+                                            Sync your cardio activities automatically from Garmin devices.
+                                        </p>
+                                        <small class="text-muted">1 week ago</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="news-item mb-0">
+                                <div class="d-flex align-items-start">
+                                    <div class="news-icon me-3">
+                                        <i class="fas fa-camera text-danger fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">OCR Nutrition Scanner Updated</h6>
+                                        <p class="mb-1 small text-muted">
+                                            Improved accuracy for scanning nutrition labels with AI.
+                                        </p>
+                                        <small class="text-muted">2 weeks ago</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Best Lifts of Today -->
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100">
+                <div class="glass-card-header">
+                    <h5 class="mb-0"><i class="fas fa-medal me-2"></i>Best Lifts Today</h5>
+                </div>
+                <div class="card-body">
+                    {% if best_lifts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 table-glass">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>User</th>
+                                    <th>Best Set</th>
+                                    <th class="text-end">Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lift in best_lifts %}
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-secondary">{{ loop.index }}</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <!-- Avatar with Level Badge -->
+                                            <div class="position-relative me-2" style="width: 40px; height: 40px;">
+                                                <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                     alt="{{ lift.username }}" 
+                                                     class="rounded-circle"
+                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                                <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                      style="font-size: 0.6rem; padding: 2px 5px;">
+                                                    {{ lift.level }}
+                                                </span>
+                                            </div>
+                                            <!-- Username -->
+                                            <div>
+                                                <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                   class="text-decoration-none fw-bold text-white">
+                                                    {{ lift.username }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div>
+                                            <strong>{{ lift.exercise_name }}</strong><br>
+                                            <small class="text-muted">{{ lift.reps }} × {{ lift.weight }}kg</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <span class="badge bg-primary">{{ "%.1f"|format(lift.volume) }} kg</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-glass">
+                        <i class="fas fa-dumbbell fa-3x mb-3"></i>
+                        <p>No lifts recorded today yet. Be the first!</p>
+                        <a href="{{ url_for('workout') }}" class="btn-index">
+                            <i class="fas fa-plus me-1"></i> Start Your Workout
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== MAIN PAGE STYLES - MATCHING INDEX PAGE ===== */
+
+/* Glass Effect Cards - matching index page grid-panel */
+.glass-card {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px !important;
+    background: rgba(30, 30, 30, 0.7) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+/* Glass Card Header - matching index card-header */
+.glass-card-header {
+    background: rgba(39, 39, 39, 0.7) !important;
+    border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+    padding: 20px;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #e0e0e0;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.glass-card-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Card Body */
+.glass-card .card-body {
+    padding: 20px;
+    color: #e0e0e0;
+}
+
+/* Button Style - matching index page buttons */
+.btn-index {
+    display: inline-block;
+    background-color: #1b1b1b;
+    color: #ffffff;
+    border: 1px solid #444 !important;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-index:hover {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
+    transform: scale(1.02);
+    text-decoration: none;
+}
+
+.btn-index.btn-sm {
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+/* News Feed Styles */
+.news-feed {
+    color: #e0e0e0;
+}
+
+.news-item {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.news-item:last-child {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+.news-icon {
+    flex-shrink: 0;
+}
+
+.news-content {
+    line-height: 1.5;
+}
+
+.news-content p {
+    margin-bottom: 0.5rem;
+}
+
+.news-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Text Utilities */
+.text-muted {
+    color: #888 !important;
+}
+
+/* Table Styles - matching index page glass effect */
+.table-glass {
+    color: #ffffff;
+    margin-bottom: 0;
+    background-color: transparent;
+}
+
+.table-glass th {
+    background: rgba(39, 39, 39, 0.6) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    font-weight: 600;
+    text-align: left;
+    color: #e0e0e0;
+}
+
+.table-glass td {
+    padding: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: transparent;
+    color: #e0e0e0;
+}
+
+.table-glass tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table-glass tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table-glass tbody tr:hover td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table-glass tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Avatar styling */
+.rounded-circle {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Empty State - matching index page */
+.empty-state-glass {
+    padding: 40px 20px;
+    text-align: center;
+    color: #888;
+}
+
+.empty-state-glass i {
+    font-size: 50px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+    color: #888;
+}
+
+.empty-state-glass p {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .news-icon i {
+        font-size: 1.5rem !important;
+    }
+    
+    .table td, .table th {
+        font-size: 0.875rem;
+        padding: 8px;
+    }
+    
+    .glass-card-header {
+        padding: 15px;
+        font-size: 1.2rem;
+    }
+    
+    .glass-card .card-body {
+        padding: 15px;
+    }
+    
+    .glass-card-header.d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+    
+    .glass-card-header .btn-index {
+        align-self: flex-end;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animated {
+    animation: fadeIn 0.5s ease-out;
+}
+</style>
+{% endblock %}
