@@ -96,8 +96,8 @@ body {
 /* Hide number input arrows (Chrome, Safari, Edge, Opera) */
 .input-group .form-control[type=number]::-webkit-inner-spin-button,
 .input-group .form-control[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+    -webkit-appearance: none !important;
+    margin: 0 !important;
 }
 
 /* Hide number input arrows (Firefox) */
@@ -963,43 +963,56 @@ object-fit: contain;
                     </div>
                 </div>
 
-                <!-- Advanced Mode -->
-                <div id="advanced-mode" class="mode-content" style="display: none;">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label"><i class="fas fa-shoe-prints me-2"></i><span data-i18n="step_count">Step Count</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="step-count" min="0" max="100000" value="" placeholder="Enter steps" data-i18n="enter_steps">
-                                <span class="input-group-text" data-i18n="steps">steps</span>
-                            </div>
-                            <small> Keskimääräinen askelmäärä on noin 5000-8000 askelta päivässä</small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label"><i class="fas fa-fire me-2"></i><span data-i18n="activity_calories">Activity Calories</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="activity-calories" min="0" max="2000" value="" placeholder="Additional calories" data-i18n="additional_calories">
-                                <span class="input-group-text" data-i18n="kcal">kcal</span>
-                            </div>
-                            <small>Kulutetut kalorit harjoituksista</small>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="autoWorkoutCalories" name="auto_add_workout_calories" value="true">
-                        <label class="form-check-label" for="autoWorkoutCalories">
-                            <strong>Tallenna kalorit harjoituksista</strong>
-                            <li>
-                            <small>Kun ruksattu, päivän kalorit muodostuvat askeleista ja tallennetuista harjoituksista.</small>
-                            </li>
-                        </label>
-                    </div>
-                </div>
-                <input type="hidden" name="auto_add_workout_calories" value="false">
-                    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Edistynyt:</strong> Kokonaiskulutus = BMR + Kalorit askeleista + harjoituksista
-                    </div>
-                </div>
+               <!-- Advanced Mode -->
+<div id="advanced-mode" class="mode-content" style="display: none;">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="fas fa-shoe-prints me-2"></i><span data-i18n="stepcount">Step Count</span></label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="step-count" min="0" max="100000" value="" placeholder="Enter steps" data-i18n="entersteps">
+                <span class="input-group-text" data-i18n="steps">steps</span>
+            </div>
+            <small>Keskimääräinen askelmäärä on noin 5000-8000 askelta päivässä</small>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="fas fa-fire me-2"></i><span data-i18n="activitycalories">Activity Calories</span></label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="activity-calories" min="0" max="2000" value="" placeholder="Additional calories" data-i18n="additionalcalories">
+                <span class="input-group-text" data-i18n="kcal">kcal</span>
+            </div>
+            <small>Kulutetut kalorit harjoituksista</small>
+        </div>
+    </div>
+    
+    <!-- NEW: Steps from Device Checkbox -->
+    <div class="form-group mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="autoGarminSteps" name="auto_garmin_steps" value="true">
+            <label class="form-check-label" for="autoGarminSteps">
+                <strong>Askeleet laitteesta</strong><br>
+                <small>Kun ruksattu, päivän askeleet haetaan automaattisesti Garmin-laitteesta ja kalorit lasketaan painosi perusteella.</small>
+            </label>
+        </div>
+    </div>
+    
+    <!-- Existing workout calories checkbox -->
+    <div class="form-group">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="autoWorkoutCalories" name="auto_add_workout_calories" value="true">
+            <label class="form-check-label" for="autoWorkoutCalories">
+                <strong>Tallenna kalorit harjoituksista</strong><br>
+                <small>Kun ruksattu, päivän kalorit muodostuvat askeleista ja tallennetuista harjoituksista.</small>
+            </label>
+        </div>
+    </div>
+    <input type="hidden" name="auto_add_workout_calories" value="false">
+    
+    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Edistynyt:</strong> Kokonaiskulutus = BMR + Kalorit askeleista + harjoituksista
+    </div>
+</div>
 
                 <!-- Custom Mode -->
                 <div id="custom-mode" class="mode-content" style="display: none;">
@@ -1449,7 +1462,71 @@ document.getElementById('autoWorkoutCalories').addEventListener('change', functi
         console.log('Auto workout calories disabled - activity field shown');
     }
 });
+// NEW: Handle Garmin steps checkbox
+document.getElementById('autoGarminSteps').addEventListener('change', function() {
+    const stepCountField = document.getElementById('step-count');
+    const weightInput = document.getElementById('weight');
+    
+    if (this.checked) {
+        // Disable manual step input
+        stepCountField.disabled = true;
+        stepCountField.placeholder = 'Ladataan laitteesta...';
+        
+        // Fetch steps from Garmin
+        fetchGarminSteps().then(data => {
+            if (data.success) {
+                stepCountField.value = data.steps;
+                stepCountField.placeholder = `Garmin: ${data.steps} askelta`;
+                console.log('Garmin steps loaded:', data.steps);
+            } else {
+                alert('Askeleita ei voitu ladata laitteesta. Tarkista Garmin-yhteys.');
+                this.checked = false;
+                stepCountField.disabled = false;
+                stepCountField.placeholder = 'Enter steps';
+            }
+        }).catch(error => {
+            console.error('Error fetching Garmin steps:', error);
+            alert('Virhe ladattaessa askeleita.');
+            this.checked = false;
+            stepCountField.disabled = false;
+            stepCountField.placeholder = 'Enter steps';
+        });
+    } else {
+        // Re-enable manual step input
+        stepCountField.disabled = false;
+        stepCountField.value = '';
+        stepCountField.placeholder = 'Enter steps';
+    }
+    
+    saveFormState();
+});
 
+// Function to fetch Garmin steps for today
+async function fetchGarminSteps() {
+    try {
+        const response = await fetch('/garmin/get_garmin_steps', {  // FIXED: Added /garmin prefix
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD
+            })
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error(`Network response was not ok: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
 // ✅ NEW: Load saved preference on page load
 document.addEventListener('DOMContentLoaded', function() {
     try {
@@ -1745,27 +1822,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Form state management
-    function saveFormState() {
-        const formState = {
-            mode: currentMode,
-            gender: currentGender,
-            age: document.getElementById('age').value,
-            weight: document.getElementById('weight').value,
-            height: document.getElementById('height').value,
-            sleepHours: document.getElementById('sleep-hours').value,
-            sleepMinutes: document.getElementById('sleep-minutes').value,
-            intenseHours: document.getElementById('intense-hours').value,
-            intenseMinutes: document.getElementById('intense-minutes').value,
-            moderateHours: document.getElementById('moderate-hours').value,
-            moderateMinutes: document.getElementById('moderate-minutes').value,
-            walkingHours: document.getElementById('walking-hours').value,
-            walkingMinutes: document.getElementById('walking-minutes').value,
-            stepCount: document.getElementById('step-count').value,
-            activityCalories: document.getElementById('activity-calories').value,
-            customTdee: document.getElementById('custom-tdee').value
-        };
-        localStorage.setItem('activityFormState', JSON.stringify(formState));
-    }
+function saveFormState() {
+    const formState = {
+        mode: currentMode,
+        gender: currentGender,
+        age: document.getElementById('age').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        sleepHours: document.getElementById('sleep-hours').value,
+        sleepMinutes: document.getElementById('sleep-minutes').value,
+        intenseHours: document.getElementById('intense-hours').value,
+        intenseMinutes: document.getElementById('intense-minutes').value,
+        moderateHours: document.getElementById('moderate-hours').value,
+        moderateMinutes: document.getElementById('moderate-minutes').value,
+        walkingHours: document.getElementById('walking-hours').value,
+        walkingMinutes: document.getElementById('walking-minutes').value,
+        stepCount: document.getElementById('step-count').value,
+        activityCalories: document.getElementById('activity-calories').value,
+        customTdee: document.getElementById('custom-tdee').value,
+        autoGarminSteps: document.getElementById('autoGarminSteps').checked, // NEW
+        autoWorkoutCalories: document.getElementById('autoWorkoutCalories').checked
+    };
+    localStorage.setItem('activityFormState', JSON.stringify(formState));
+}
 
     function loadFormState() {
         const savedState = localStorage.getItem('activityFormState');
@@ -1805,9 +1884,20 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('step-count').value = state.stepCount || '';
             document.getElementById('activity-calories').value = state.activityCalories || '';
             document.getElementById('custom-tdee').value = state.customTdee || '';
+           if (state.autoGarminSteps !== undefined) {
+            const garminCheckbox = document.getElementById('autoGarminSteps');
+            garminCheckbox.checked = state.autoGarminSteps;
+            if (state.autoGarminSteps) {
+                garminCheckbox.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // ✅ Restore workout calories checkbox
+        if (state.autoWorkoutCalories !== undefined) {
+            document.getElementById('autoWorkoutCalories').checked = state.autoWorkoutCalories;
         }
     }
-
+}
     // Helper function for translations (if exists)
     window.t = function(key) {
         // Simple fallback if translation system isn't available
