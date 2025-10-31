@@ -1334,7 +1334,106 @@ def calculate_calorie_status(calorie_difference):
             'class': 'status-loss',
             'display': f"{abs_diff:.0f}"
         }
+def update_daily_tdee_with_steps(user_id, target_date, steps):
+    """
+    Update daily TDEE adjustment with steps calories
+    Called whenever Garmin steps are synced
     
+    Args:
+        user_id: User ID
+        target_date: Date to update (datetime.date object or string)
+        steps: Number of steps for that day
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Convert date if needed
+        if isinstance(target_date, str):
+            target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
+        
+        # Get user's weight and base TDEE
+        cursor.execute("""
+            SELECT current_weight, tdee, auto_garmin_steps 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            return {'success': False, 'error': 'User not found'}
+        
+        weight, base_tdee, auto_garmin_steps = user_data
+        
+        # Check if auto_garmin_steps is enabled
+        if not auto_garmin_steps:
+            return {'success': False, 'error': 'Auto Garmin steps not enabled'}
+        
+        # Calculate calories from steps using your formula
+        # Formula: calories = steps × (0.04 × (weight_kg / 70))
+        calories_per_step = 0.04 * (weight / 70)
+        steps_calories = round(steps * calories_per_step)
+        
+        print(f"Calculating steps calories: {steps} steps × {calories_per_step:.4f} cal/step = {steps_calories} cal")
+        
+        # Check if adjustment record exists for this date
+        cursor.execute("""
+            SELECT id, workout_calories 
+            FROM daily_tdee_adjustments 
+            WHERE user_id = %s AND date = %s
+        """, (user_id, target_date))
+        
+        existing = cursor.fetchone()
+        
+        if existing:
+            adjustment_id, workout_calories = existing
+            workout_calories = workout_calories or 0
+            
+            # Update existing record with steps calories
+            adjusted_tdee = base_tdee + workout_calories + steps_calories
+            
+            cursor.execute("""
+                UPDATE daily_tdee_adjustments 
+                SET steps_calories = %s,
+                    adjusted_tdee = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (steps_calories, adjusted_tdee, adjustment_id))
+            
+            print(f"Updated TDEE adjustment: Base={base_tdee}, Workout={workout_calories}, Steps={steps_calories}, Total={adjusted_tdee}")
+        else:
+            # Create new record
+            adjusted_tdee = base_tdee + steps_calories
+            
+            cursor.execute("""
+                INSERT INTO daily_tdee_adjustments 
+                (user_id, date, base_tdee, workout_calories, steps_calories, adjusted_tdee)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_id, target_date, base_tdee, 0, steps_calories, adjusted_tdee))
+            
+            print(f"Created TDEE adjustment: Base={base_tdee}, Steps={steps_calories}, Total={adjusted_tdee}")
+        
+        conn.commit()
+        
+        return {
+            'success': True,
+            'steps': steps,
+            'steps_calories': steps_calories,
+            'adjusted_tdee': adjusted_tdee,
+            'date': target_date.strftime('%Y-%m-%d')
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error updating TDEE with steps: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+        
+    finally:
+        cursor.close()
+        conn.close()        
 # Initialize database and migrate data
 init_db()
 update_food_keys_normalization()
@@ -4546,37 +4645,56 @@ def save_metrics():
     try:
         # Get basic metrics that are always required
         weight = float(request.form.get('weight', 0))
-        
-        # Get TDEE based on calculation mode
         tdee = float(request.form.get('tdee', 0))
-
-        # Get gender (optional, defaults to None if not provided)
         gender = request.form.get('gender', None)
-        
-        # Optional: Get calculation mode for logging/analytics
         calc_mode = request.form.get('mode', 'unknown')
-
         auto_add_workout_calories = request.form.get('auto_add_workout_calories') == 'true'
         auto_garmin_steps = request.form.get('auto_garmin_steps') == 'true'
         
+        # DEBUG OUTPUT
+        print(f"\n=== SAVE METRICS DEBUG ===")
+        print(f"Raw form data: {dict(request.form)}")
+        print(f"Parsed - weight={weight}, tdee={tdee}, gender={gender}, mode={calc_mode}")
+        print(f"Checkboxes - autoWorkout={auto_add_workout_calories}, autoSteps={auto_garmin_steps}")
+        
         # Validate inputs
         if not weight or weight <= 0:
+            print(f"ERROR: Invalid weight: {weight}")
             return jsonify(success=False, error="Valid weight is required"), 400
             
         if not tdee or tdee <= 0:
+            print(f"ERROR: Invalid tdee: {tdee}")
             return jsonify(success=False, error="Valid TDEE is required"), 400
             
-        # Optional: Log the calculation mode for analytics
-        print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight},Gender={gender}")
+        print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight}, Gender={gender}")
 
         # Update database
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET tdee = %s, weight = %s, gender = %s, auto_add_workout_calories = %s WHERE id = %s, auto_garmin_steps = %s, WHERE id = %s",
-            (tdee, weight, gender, auto_add_workout_calories, auto_garmin_steps, current_user.id)
-        )
+        cursor.execute("""
+            UPDATE users 
+            SET tdee = %s, 
+                weight = %s, 
+                gender = %s, 
+                auto_add_workout_calories = %s,
+                auto_garmin_steps = %s
+            WHERE id = %s
+        """, (tdee, weight, gender, auto_add_workout_calories, auto_garmin_steps, current_user.id))
+        
         conn.commit()
+        
+        # DEBUG: Verify what was saved
+        cursor.execute("""
+            SELECT tdee, weight, auto_garmin_steps, auto_add_workout_calories 
+            FROM users 
+            WHERE id = %s
+        """, (current_user.id,))
+        
+        result = cursor.fetchone()
+        print(f"VERIFIED IN DB: tdee={result[0]}, weight={result[1]}, autoSteps={result[2]}, autoWorkout={result[3]}")
+        
+        cursor.close()
+        conn.close()
         
         return jsonify(
             success=True, 
@@ -4593,15 +4711,20 @@ def save_metrics():
         
     except ValueError as e:
         print(f"ValueError in save_metrics: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify(success=False, error="Invalid numeric values provided"), 400
         
     except Exception as e:
         print(f"Error saving metrics: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify(success=False, error=str(e)), 500
         
     finally:
-        if 'conn' in locals() and conn:
+        if 'conn' in locals():
             conn.close()
+
 
 
 # Optional: Add a separate endpoint for step-to-calorie calculations if needed elsewhere
@@ -4719,7 +4842,7 @@ from datetime import datetime  # ensure this import
 
 def get_user_current_tdee(user_id, target_date=None):
     """
-    Get user's current TDEE, including workout adjustments if auto calories is enabled
+    Get user's current TDEE, including workout and steps adjustments
     
     Args:
         user_id: User ID
@@ -4729,8 +4852,10 @@ def get_user_current_tdee(user_id, target_date=None):
         dict: {
             "base_tdee": float,
             "workout_calories": float,
+            "steps_calories": float,
             "daily_tdee": float,
-            "auto_enabled": bool
+            "auto_workout_enabled": bool,
+            "auto_steps_enabled": bool
         }
     """
     if target_date is None:
@@ -4741,51 +4866,75 @@ def get_user_current_tdee(user_id, target_date=None):
     
     try:
         # Get user settings
-        cursor.execute(
-            "SELECT auto_add_workout_calories, tdee FROM users WHERE id = %s",
-            (user_id,)
-        )
+        cursor.execute("""
+            SELECT auto_add_workout_calories, auto_garmin_steps, tdee 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        
         user_data = cursor.fetchone()
         
         if not user_data:
-            return {"base_tdee": 0, "workout_calories": 0, "daily_tdee": 0, "auto_enabled": False}
+            return {
+                "base_tdee": 0,
+                "workout_calories": 0,
+                "steps_calories": 0,
+                "daily_tdee": 0,
+                "auto_workout_enabled": False,
+                "auto_steps_enabled": False
+            }
         
-        auto_enabled, base_tdee = user_data
-        base_tdee = float(base_tdee or 0)
+        auto_workout_enabled = bool(user_data[0]) if user_data[0] is not None else False
+        auto_steps_enabled = bool(user_data[1]) if user_data[1] is not None else False
+        base_tdee = float(user_data[2]) if user_data[2] else 0.0
         
-        if not auto_enabled:
+        # If neither feature is enabled, return base TDEE
+        if not auto_workout_enabled and not auto_steps_enabled:
             return {
                 "base_tdee": base_tdee,
                 "workout_calories": 0,
+                "steps_calories": 0,
                 "daily_tdee": base_tdee,
-                "auto_enabled": False
+                "auto_workout_enabled": False,
+                "auto_steps_enabled": False
             }
         
-        # Get daily adjustment if auto calories is enabled
-        cursor.execute(
-            "SELECT workout_calories, adjusted_tdee FROM daily_tdee_adjustments WHERE user_id = %s AND date = %s",
-            (user_id, target_date)
-        )
+        # Get daily adjustment from daily_tdee_adjustments table
+        cursor.execute("""
+            SELECT workout_calories, steps_calories, adjusted_tdee
+            FROM daily_tdee_adjustments 
+            WHERE user_id = %s AND date = %s
+        """, (user_id, target_date))
+        
         adjustment = cursor.fetchone()
         
         if adjustment:
-            workout_calories, adjusted_tdee = adjustment
+            # We have adjustments for this date
+            workout_calories = float(adjustment[0]) if adjustment[0] else 0.0
+            steps_calories = float(adjustment[1]) if adjustment[1] else 0.0
+            adjusted_tdee = float(adjustment[2]) if adjustment[2] else base_tdee
+            
             return {
                 "base_tdee": base_tdee,
-                "workout_calories": float(workout_calories or 0),
-                "daily_tdee": float(adjusted_tdee or base_tdee),
-                "auto_enabled": True
+                "workout_calories": workout_calories,
+                "steps_calories": steps_calories,
+                "daily_tdee": adjusted_tdee,
+                "auto_workout_enabled": auto_workout_enabled,
+                "auto_steps_enabled": auto_steps_enabled
             }
         else:
-            # No workout today, return base TDEE
+            # No adjustments today, return base TDEE
             return {
                 "base_tdee": base_tdee,
                 "workout_calories": 0,
+                "steps_calories": 0,
                 "daily_tdee": base_tdee,
-                "auto_enabled": True
+                "auto_workout_enabled": auto_workout_enabled,
+                "auto_steps_enabled": auto_steps_enabled
             }
     
     finally:
+        cursor.close()
         conn.close()
 LEVEL_CAP = 999
 
@@ -5231,40 +5380,86 @@ def save_workout():
         # STEP 6: Auto-add workout calories to TDEE if enabled
         # ============================================================================
         auto_calories_enabled = False
+        auto_steps_enabled = False
         daily_tdee = None
         base_tdee = None
         try:
-            cursor.execute(
-                "SELECT auto_add_workout_calories, tdee FROM users WHERE id = %s",
-                (user_id,)
-            )
+            # Get user settings including auto_garmin_steps
+            cursor.execute("""
+                SELECT auto_add_workout_calories, auto_garmin_steps, tdee, current_weight 
+                FROM users 
+                WHERE id = %s
+            """, (user_id,))
+            
             user_settings = cursor.fetchone()
 
-            if user_settings and user_settings[0]:
-                auto_calories_enabled = True
-                base_tdee = float(user_settings[1] or 0.0)
+            if user_settings:
+                auto_calories_enabled = user_settings[0] or False
+                auto_steps_enabled = user_settings[1] or False
+                base_tdee = float(user_settings[2] or 0.0)
+                user_weight = float(user_settings[3] or 70.0)
                 
-                # Get total workout calories for the entire day (all saved sessions)
-                cursor.execute("""
-                    SELECT COALESCE(SUM(total_calories_burned), 0)
-                    FROM workout_sessions
-                    WHERE user_id = %s AND date = %s AND is_saved = true
-                """, (user_id, date))
-                day_total_calories = float(cursor.fetchone()[0] or 0.0)
+                # Initialize with base TDEE
+                daily_tdee = base_tdee
+                day_total_workout_calories = 0.0
                 
-                daily_tdee = base_tdee + day_total_calories
+                # Get workout calories if auto_add_workout_calories is enabled
+                if auto_calories_enabled:
+                    # Get total workout calories for the entire day (all saved sessions)
+                    cursor.execute("""
+                        SELECT COALESCE(SUM(total_calories_burned), 0)
+                        FROM workout_sessions
+                        WHERE user_id = %s AND date = %s AND is_saved = true
+                    """, (user_id, date))
+                    day_total_workout_calories = float(cursor.fetchone()[0] or 0.0)
+                    daily_tdee += day_total_workout_calories
+                
+                # Get steps calories if auto_garmin_steps is enabled
+                if auto_steps_enabled:
+                    # Get steps from Garmin data for this date
+                    cursor.execute("""
+                        SELECT steps 
+                        FROM garmin_daily_data 
+                        WHERE user_id = %s AND date = %s
+                        ORDER BY synced_at DESC
+                        LIMIT 1
+                    """, (user_id, date))
+                    
+                    steps_result = cursor.fetchone()
+                    
+                    if steps_result and steps_result[0]:
+                        steps = int(steps_result[0])
+                        
+                        # Calculate calories from steps using your formula
+                        # Formula: calories = steps × (0.04 × (weight_kg / 70))
+                        calories_per_step = 0.04 * (user_weight / 70)
+                        steps_calories = round(steps * calories_per_step)
+                        
+                        daily_tdee += steps_calories
+                        
+                        print(f"Steps TDEE calculation: {steps} steps × {calories_per_step:.4f} = {steps_calories} cal")
+                
+                # Update daily_tdee_adjustments table with both workout and steps calories
+                if auto_calories_enabled or auto_steps_enabled:
+                    cursor.execute("""
+                        INSERT INTO daily_tdee_adjustments 
+                        (user_id, date, base_tdee, workout_calories, steps_calories, adjusted_tdee)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (user_id, date)
+                        DO UPDATE SET
+                            base_tdee = EXCLUDED.base_tdee,
+                            workout_calories = EXCLUDED.workout_calories,
+                            steps_calories = EXCLUDED.steps_calories,
+                            adjusted_tdee = EXCLUDED.adjusted_tdee,
+                            updated_at = NOW()
+                    """, (user_id, date, base_tdee, day_total_workout_calories, steps_calories, daily_tdee))
+                    
+                    print(f"TDEE Updated: Base={base_tdee}, Workout={day_total_workout_calories}, Steps={steps_calories}, Total={daily_tdee}")
 
-                cursor.execute("""
-                    INSERT INTO daily_tdee_adjustments (user_id, date, base_tdee, workout_calories, adjusted_tdee)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (user_id, date)
-                    DO UPDATE SET
-                        base_tdee = EXCLUDED.base_tdee,
-                        workout_calories = EXCLUDED.workout_calories,
-                        adjusted_tdee = EXCLUDED.adjusted_tdee,
-                        updated_at = NOW()
-                """, (user_id, date, base_tdee, day_total_calories, daily_tdee))
-        except Exception:
+        except Exception as e:
+            print(f"Error calculating daily TDEE: {e}")
+            import traceback
+            traceback.print_exc()
             pass
 
         # ============================================================================
@@ -6432,7 +6627,7 @@ if __name__ == '__main__':
             id='auto_sync_garmin',
             func=auto_sync_all_garmin_users,
             trigger='interval',
-            minutes=30,  # Sync every 30 minutes
+            minutes=15,  # Sync every 30 minutes
             max_instances=1,  # Prevent overlapping runs
             replace_existing=True
         )
