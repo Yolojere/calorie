@@ -1337,71 +1337,110 @@ function ensureCheckboxValue() {
     });
 }
     // Save TDEE & Weight button
- if (saveTdeeBtn) {
+// Save TDEE & Weight button
+if (saveTdeeBtn) {
     saveTdeeBtn.addEventListener('click', function() {
-        const tdeeValue = parseFloat(tdeeInput.textContent.replace(/[^\d.-]/g, '')) || 0;
+        // FIXED: Don't read from tdeeInput, recalculate or get from visible display
+        let tdeeValue = 0;
+        
+        // Get TDEE based on current mode
+        if (currentMode === 'easy') {
+            // For easy mode, read from the result display
+            const tdeeText = document.getElementById('tdee-result').textContent;
+            tdeeValue = parseFloat(tdeeText.replace(/\./g, '').replace(',', '.')) || 0;
+        } else if (currentMode === 'advanced') {
+            // For advanced mode, calculate it here
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const weight = parseFloat(weightInput.value) || 0;
+            const height = parseInt(document.getElementById('height').value) || 0;
+            const steps = parseInt(document.getElementById('step-count').value) || 0;
+            const activityCals = parseInt(document.getElementById('activity-calories').value) || 0;
+            
+            // Recalculate using the same function
+            const results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, steps, activityCals);
+            tdeeValue = results.tdee;
+        } else if (currentMode === 'custom') {
+            // For custom mode, get from custom input
+            tdeeValue = parseInt(document.getElementById('custom-tdee').value) || 0;
+        }
+        
         const weightValue = parseFloat(weightInput.value) || 0;
         
-        // ✅ NEW: Get checkbox value
-        const checkbox = document.getElementById('autoWorkoutCalories');
-        const autoWorkoutCalories = checkbox ? checkbox.checked : false;
+        // Get checkbox values
+        const workoutCheckbox = document.getElementById('autoWorkoutCalories');
+        const stepsCheckbox = document.getElementById('autoGarminSteps');
+        const autoWorkoutCalories = workoutCheckbox ? workoutCheckbox.checked : false;
+        const autoGarminSteps = stepsCheckbox ? stepsCheckbox.checked : false;
         
-        console.log('🔧 Sending to save_metrics:', {
+        // DEBUG: Log what we're sending
+        console.log('=== SAVE METRICS DEBUG ===');
+        console.log('Mode:', currentMode);
+        console.log('TDEE Value:', tdeeValue);
+        console.log('Weight Value:', weightValue);
+        console.log('Sending data:', {
             tdee: tdeeValue,
             weight: weightValue,
             gender: currentGender,
-            auto_add_workout_calories: autoWorkoutCalories
+            auto_add_workout_calories: autoWorkoutCalories,
+            auto_garmin_steps: autoGarminSteps,
+            mode: currentMode
         });
+        
+        if (tdeeValue <= 0 || weightValue <= 0) {
+            alert('Please calculate TDEE first!');
+            return;
+        }
         
         loadingOverlay.classList.add('active');
         
-        $.ajax({
-            type: 'POST',
-            url: '/save_metrics',
-            data: {
-                'tdee': tdeeValue,
-                'weight': weightValue,
-                'gender': currentGender,
-                'auto_add_workout_calories': autoWorkoutCalories ? 'true' : 'false',
-                'mode': currentMode  // Also send the mode
-            },
+        // Use FormData for proper form submission
+        const formData = new FormData();
+        formData.append('tdee', tdeeValue);
+        formData.append('weight', weightValue);
+        formData.append('gender', currentGender);
+        formData.append('auto_add_workout_calories', autoWorkoutCalories ? 'true' : 'false');
+        formData.append('auto_garmin_steps', autoGarminSteps ? 'true' : 'false');
+        formData.append('mode', currentMode);
+        
+        fetch('/save_metrics', {
+            method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken
             },
-            success: function(response) {
-                if (response.success) {
-                    saveFormState();
-                    const btn = saveTdeeBtn;
-                    // Change to success style & text
-                    btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
-                    btn.classList.add('btn-flash-success');
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('save_metrics');
-                        btn.classList.remove('btn-flash-success');
-                    }, 2000);
-                } else {
-                    alert(t('errorsaving') + ': ' + (response.error || t('unknownerror')));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
-                alert(t('errorsavingconsole'));
-            },
-            complete: function() {
-                loadingOverlay.classList.remove('active');
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Save response:', data);
+            
+            if (data.success) {
+                saveFormState();
+                
+                // Success feedback
+                const btn = saveTdeeBtn;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
+                btn.classList.add('btn-flash-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('savemetrics');
+                    btn.classList.remove('btn-flash-success');
+                }, 2000);
+                
+                console.log('Save successful:', data);
+            } else {
+                alert(t('errorsaving') + ': ' + (data.error || t('unknownerror')));
             }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert(t('errorsavingconsole'));
+        })
+        .finally(() => {
+            loadingOverlay.classList.remove('active');
         });
     });
 }
-document.getElementById('calculate-btn').addEventListener('click', function() {
-    ensureCheckboxValue();
-    
-    // Debug: Check what will be sent
-    const checkbox = document.getElementById('autoWorkoutCalories');
-    if (checkbox) {
-        console.log('🔧 Final checkbox state - checked:', checkbox.checked, 'value:', checkbox.value);
-    }
-});
+
     // Mode switching function
 function switchMode(mode) {
     // Hide all mode content
