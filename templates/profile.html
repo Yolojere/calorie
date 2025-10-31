@@ -1812,12 +1812,12 @@ input.form-control:-webkit-autofill {
 <div class="col-md-6 mb-4">
     <div class="health-card">
         <div class="metric-icon"><i class="fas fa-fire"></i></div>
-        <div class="metric-label" data-i18n="dailyenergy">Daily Energy Expenditure</div>
+        <div class="metric-label" data-i18n="daily_energy">Daily Energy Expenditure</div>
         <div class="metric-value">
             {% if current_tdee %}
                 {{ (current_tdee|round(0))|int }} kcal
             {% else %}
-                <span data-i18n="notcalculated">Not calculated</span>
+                <span data-i18n="not_calculated">Not calculated</span>
             {% endif %}
         </div>
         
@@ -1838,7 +1838,7 @@ input.form-control:-webkit-autofill {
             <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">Dynaaminen TDEE Aktiivisena</span>
         {% else %}
             <!-- Static TDEE -->
-            <small class="metric-label" data-i18n="basedonactivity">Based on your activity level</small>
+            <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
         {% endif %}
     </div>
 </div>
@@ -1865,7 +1865,7 @@ input.form-control:-webkit-autofill {
     <a href="https://paypal.me/trackyou" class="btn btn-sm" style="color: white; border: none;" target="_blank">
     <i class="fab fa-paypal me-1"></i>PayPal</a>
 </div>
-<span style="text-align: center; left: 50%; font-weight: 600;">Sivu pyörii lahjoituksilla!</span>
+<span style="display: block; text-align: center; font-weight: 600; margin-top: 10px;">Sivu pyörii lahjoituksilla!</span>
     {% endif %}
 
 
