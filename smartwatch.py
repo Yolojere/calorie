@@ -1,3 +1,4 @@
+
 # smartwatch.py - Garmin/Smartwatch Integration Routes
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
@@ -576,6 +577,30 @@ def sync_garmin_data_internal(client, user_id, days=7):
     try:
         print(f"\n=== STARTING SYNC FOR USER {user_id} - {days} DAYS ===")
         
+        # Get user settings ONCE at the beginning
+        cursor.execute("""
+            SELECT auto_garmin_steps, weight, tdee 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        
+        user_settings = cursor.fetchone()
+        if not user_settings:
+            print(f"User {user_id} not found")
+            return {'success': False, 'error': 'User not found'}
+        
+        # Convert all to proper Python types
+        auto_steps_enabled = bool(user_settings[0]) if user_settings[0] is not None else False
+        user_weight = float(user_settings[1]) if user_settings[1] else 70.0
+        base_tdee = float(user_settings[2]) if user_settings[2] else 0.0
+
+        # DEBUG: Print what we actually fetched
+        print(f"DEBUG: Raw from DB - auto_steps={user_settings[0]}, weight={user_settings[1]}, tdee={user_settings[2]}")
+        print(f"DEBUG: Converted - auto_steps={auto_steps_enabled}, weight={user_weight}, tdee={base_tdee}")
+
+        if base_tdee <= 1.0:
+            print(f"WARNING: base_tdee is suspiciously low ({base_tdee}). Check if save_metrics is working correctly!")
+        
         for i in range(days):
             date_obj = date.today() - timedelta(days=i)
             date_str = date_obj.strftime('%Y-%m-%d')
@@ -598,7 +623,7 @@ def sync_garmin_data_internal(client, user_id, days=7):
                     avg_hr = None
                 
                 # Extract values from stats
-                steps = stats.get('totalSteps', 0)
+                steps = int(stats.get('totalSteps', 0))
                 total_cals = stats.get('totalKilocalories', 0)
                 active_cals = stats.get('activeKilocalories', 0)
                 distance = stats.get('totalDistanceMeters', 0)
@@ -640,33 +665,82 @@ def sync_garmin_data_internal(client, user_id, days=7):
                     avg_hr
                 ))
                 
+                print(f"✓ Synced steps: {steps}")
                 synced_days += 1
+                
+                # ============================================================
+                # AUTOMATICALLY UPDATE TDEE WITH STEPS
+                # ============================================================
+                if auto_steps_enabled and steps > 0:
+                    print(f"Auto-calculating steps calories for {date_str}...")
+                    
+                    # Calculate calories from steps
+                    # Formula: calories = steps × (0.04 × (weight_kg / 70))
+                    calories_per_step = 0.04 * (user_weight / 70.0)
+                    steps_calories = int(round(steps * calories_per_step))
+                    print(f"  {steps} steps × {calories_per_step:.4f} = {steps_calories} cal")
+                    
+                    # Get existing workout calories for this date (if any)
+                    cursor.execute("""
+                        SELECT COALESCE(workout_calories, 0)
+                        FROM daily_tdee_adjustments 
+                        WHERE user_id = %s AND date = %s
+                    """, (user_id, date_str))
+                    
+                    result = cursor.fetchone()
+                    workout_calories = int(float(result[0])) if result and result[0] else 0
+                    
+                    # Calculate adjusted TDEE - ensure all are float for addition
+                    adjusted_tdee = float(base_tdee) + float(workout_calories) + float(steps_calories)
+                    
+                    # Upsert into daily_tdee_adjustments
+                    cursor.execute("""
+                        INSERT INTO daily_tdee_adjustments 
+                        (user_id, date, base_tdee, workout_calories, steps_calories, adjusted_tdee)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (user_id, date)
+                        DO UPDATE SET
+                            steps_calories = EXCLUDED.steps_calories,
+                            adjusted_tdee = EXCLUDED.adjusted_tdee,
+                            updated_at = NOW()
+                    """, (user_id, date_str, base_tdee, workout_calories, steps_calories, adjusted_tdee))
+                    
+                    print(f"  ✓ TDEE updated: {base_tdee} + {workout_calories} + {steps_calories} = {adjusted_tdee}")
+                
+                conn.commit()  # IMPORTANT: Commit after each day
                 
             except Exception as e:
                 print(f"✗ Error syncing date {date_str}: {e}")
+                import traceback
+                traceback.print_exc()
+                conn.rollback()
                 continue
         
         # Sync recent activities
+        print(f"\n--- Syncing activities ---")
         try:
             activities = client.get_activities(0, 20)  # Last 20 activities
+            print(f"Found {len(activities)} activities")
             
-            for activity in activities:
+            for idx, activity in enumerate(activities):
                 try:
                     # Parse start time
                     start_time_str = activity.get('startTimeLocal', '')
                     if start_time_str:
+                        # Handle different timestamp formats
                         if 'Z' in start_time_str or '+' in start_time_str:
                             activity_date = datetime.fromisoformat(
                                 start_time_str.replace('Z', '+00:00')
                             ).date()
                         else:
+                            # Try parsing without timezone
                             activity_date = datetime.strptime(
                                 start_time_str.split('.')[0], '%Y-%m-%d %H:%M:%S'
                             ).date()
                     else:
                         activity_date = date.today()
                     
-                    # Handle activityType
+                    # Handle activityType - might be dict or string
                     activity_type_raw = activity.get('activityType')
                     if isinstance(activity_type_raw, dict):
                         activity_type = activity_type_raw.get('typeKey')
@@ -701,11 +775,15 @@ def sync_garmin_data_internal(client, user_id, days=7):
                     synced_activities += 1
                     
                 except Exception as e:
-                    print(f"Error syncing activity: {e}")
+                    print(f"  ✗ Error syncing activity {activity.get('activityId')}: {e}")
+                    import traceback
+                    traceback.print_exc()
                     continue
                 
         except Exception as e:
             print(f"✗ Error fetching activities: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Update last sync time
         cursor.execute('''
@@ -716,6 +794,10 @@ def sync_garmin_data_internal(client, user_id, days=7):
         
         conn.commit()
         
+        print(f"\n=== SYNC COMPLETE ===")
+        print(f"Synced {synced_days} days")
+        print(f"Synced {synced_activities} activities")
+        
         return {
             'success': True,
             'synced_days': synced_days,
@@ -725,11 +807,14 @@ def sync_garmin_data_internal(client, user_id, days=7):
     except Exception as e:
         conn.rollback()
         print(f"✗ MAJOR SYNC ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'error': str(e)}
         
     finally:
         cursor.close()
         conn.close()
+
 
 
 def get_cardio_exercise_by_name(name):
@@ -989,6 +1074,7 @@ def reconnect_garmin_user(user_id):
     except Exception as e:
         logging.error(f"Error reconnecting user {user_id}: {e}")
         return None
+
 @smartwatch_bp.route('/get_garmin_steps', methods=['POST'])
 @login_required
 def get_garmin_steps():
