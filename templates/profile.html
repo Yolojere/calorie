@@ -14,7 +14,2566 @@
             font-family: 'Roboto', sans-serif;
             font-size: 12px;
             background-color: #161616 !important;
+            color: #e0e0e0;{% extends "layout.html" %}
+
+{% block title %}
+    {% if viewed_user %}
+        Profile - {{ viewed_user.username }}
+    {% else %}
+        Account - {{ current_user.username }}
+    {% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: #161616 !important;
             color: #e0e0e0;
+        }
+        
+        .bg-black, .modal-header, .modal-footer {
+    background-color: #0c0c0c !important;
+    border-color: #444;
+}
+        
+        .card, .list-group-item, .modal-content {
+            background-color: #1d1d1d;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        .card-header {
+            background: rgba(39, 39, 39, 0.7);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            padding: 20px !important;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #e0e0e0;
+        }
+        /* Autofill overrides (Chrome) */
+input.form-control:-webkit-autofill {
+    box-shadow: 0 0 0px 1000px #121212 inset !important;
+    -webkit-text-fill-color: #eee !important;
+    border-color: #333 !important;
+    color: white !important;
+}
+.input-group-text img {
+    outline: none !important;
+    border: none !important;
+}
+
+/* Optional: chain input to image for smooth rounded edges */
+.input-group {
+    border-radius: 20px;
+    overflow: hidden;
+}
+.input-group .input-group-text:first-child {
+    border-radius: 20px 0 0 20px;
+}
+        .form-control, .form-select {
+        background-color: #121212 !important;
+        border: 1px solid #333 !important;
+        color: #eee;
+        border-radius: 20px !important;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        height: 36px !important;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+         }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #555 !important;
+            box-shadow: none !important;
+            background-color: #181818 !important;
+            color: #eee !important;
+        }
+
+        .form-control::placeholder, .form-select::placeholder {
+            color: #ddd !important;
+            opacity: 0.6;
+        }
+        
+        .navbar-brand {
+            font-size: 26px;
+        }
+                .content-section {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            border-radius: 16px !important; /* Rounded corners */
+            background: rgba(30, 30, 30, 0.7) !important; /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1); /* Depth and inner highlight */
+        }
+        .content-section .card {
+    border-radius: 16px;
+    background: transparent;
+    border: none;
+        }
+        .content-section .card-header {
+    border-radius: 16px!important;
+    background-color: #121212 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+.content-section .card-body {
+    border-radius: 0 0 16px 16px;
+}
+.group-header {
+    user-select: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: linear-gradient(135deg, var(--group-color), rgba(0,0,0,0.6)) !important;
+}
+/* ===== DROPDOWNS & MODALS ===== */
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        right: 0 !important;
+        width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: absolute;
+    }
+
+    .dropdown-item {
+        color: #fff;
+    }
+
+    .dropdown-item:hover {
+        background-color: #333;
+        color: #ffffff;
+    }
+
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background: #2a2a2a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #aaa;
+    }
+
+    .account-heading {
+        color: #fff;
+        font-size: 1.6rem;
+        font-weight: 600;
+    }
+
+    .text-secondary {
+        color: #bbb !important;
+    }
+
+    legend {
+        color: #fff;
+        font-size: 1.2rem;
+        border-bottom: 1px solid #2a2a2a;
+        padding-bottom: 6px;
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #ddd;
+    }
+
+    .input-group-text {
+        background-color: #1e1e1e !important;
+        color: #ccc !important;
+        border: 1px solid #333 !important;
+        border-radius: 20px 0 0 20px;
+    }
+    /* Button styles */
+    .btn, .btn-accent, .btn-outline-light, a.accent-color {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 25px !important;
+        font-size: 14px;
+        font-family: Roboto, sans-serif;
+        color: #ffffff !important;
+        background-color: #1b1b1b !important;
+        border: 1px solid #444 !important;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn:hover, .btn-accent:hover, .btn-outline-light:hover, a.accent-color:hover {
+        background-color: #3f3f3f;
+        transform: scale(1.02);
+    }
+
+    .btn:active, .btn-accent:active, .btn-outline-light:active, a.accent-color:active {
+        transform: scale(0.99);
+        background-color: #1b1b1b !important;
+ 
+    }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 20px;
+    }
+
+    .health-metrics {
+        background: #1b1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 20px;
+        padding: 20px;
+        margin-top: 30px;
+    }
+
+    .health-card {
+        text-align: center;
+        padding: 15px;
+        border-radius: 20px;
+        background: #121212;
+        border: 1px solid #2a2a2a;
+    }
+
+    .metric-value {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 10px 0;
+    }
+
+    .metric-label {
+        color: #bbb;
+        font-size: 0.9rem;
+    }
+
+    .metric-icon {
+        font-size: 1.5rem;
+        color: #888;
+        margin-bottom: 8px;
+    }
+
+    a {
+        color: #ddd;
+        text-decoration: none;
+    }
+    a:hover {
+        color: #fff;
+    }
+
+    .border-top {
+        border-top: 1px solid #2a2a2a !important;
+    }
+
+    /* Avatar modal styles */
+        .avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--border-color);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .avatar-container:hover .avatar-img {
+        border-color: var(--accent-color);
+        transform: scale(1.03);
+    }
+
+    .avatar-edit-indicator {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        opacity: 0;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .avatar-container:hover .avatar-edit-indicator {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+     .avatar-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .avatar-modal-content {
+        background-color: var(--card-bg);
+        border-radius: 20px;
+        padding: 25px;
+        width: 90%;
+        max-width: 560px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border-color);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+.avatar-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+
+.avatar-option {
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    aspect-ratio: 1/1;
+    border: 2px solid transparent;
+    /* Ensure minimum touch target */
+    min-width: 60px;
+    min-height: 60px;
+}
+
+    .avatar-option img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-option:hover {
+        transform: scale(1.1);
+        border-color: var(--accent-color);
+    }
+
+    .avatar-option.selected {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgb(148, 40, 255);
+        animation: glow 1s ease-in-out infinite alternate;
+}
+
+
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 18px;
+        background-color: #2a2a2a;
+        color: #fff;
+        border-radius: 20px;
+        cursor: pointer;
+        text-align: center;
+        margin: 12px 0;
+        transition: all 0.3s ease;
+        border: 1px dashed #555;
+    }
+
+    .upload-btn:hover {
+        background-color: #333;
+        border-color: var(--accent-color);
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    /* spinner load */
+    /* Loading spinner */
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    /* Icon side (left) */
+/* Base look for profile fields */
+.profile-field {
+    overflow: hidden;
+    display: flex;
+    border-radius: 25px;
+    border: 1px solid #444;
+    background-color: #121212;
+    transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.profile-field .input-group-text {
+    border: none !important;
+    background-color: transparent !important;
+    color: #fff;
+    border-radius: 25px 0 0 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0 12px;
+}
+.profile-field .input-group-text i {
+    font-size: 1.2rem;
+}
+.profile-field .form-control {
+    border: none !important;
+    border-radius: 0 25px 25px 0;
+    background-color: transparent;
+    color: #fff;
+    box-shadow: none;
+    transition: color 0.3s ease;
+}
+.profile-field .input-group-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+/* Active (clicked/focused) effect */
+.profile-field:focus-within {
+    border-color: #777;
+    background-color: #181818;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+}
+.profile-field:focus-within .form-control {
+    color: #eee;
+}
+ 
+    /* Icons */
+    .fa-shield-alt, .fa-lock, .fa-user-shield {
+        color:#fff !important;
+        transition: transform 0.2s ease;
+    }
+    .fa-shield-alt:hover, .fa-lock:hover, .fa-user-shield:hover {
+        transform: scale(1.15);
+    }
+    /* SOCIALS */
+    .socials-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Container for social pills - initially empty */
+.social-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+    min-height: 6px; /* Maintain space even when empty */
+}
+
+/* Individual social pill styling */
+.social-pill {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+    border: 1px solid #444;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-pill:hover {
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.social-pill a {
+    display: flex;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.social-pill a:hover {
+    color: inherit;
+}
+
+.social-pill i {
+    margin-right: 6px;
+    font-size: 14px;
+    width: 16px;
+    text-align: center;
+}
+
+/* Platform-specific colors */
+.social-pill[data-platform="instagram"] { border-left: 3px solid #E4405F; }
+.social-pill[data-platform="tiktok"] { border-left: 3px solid #FF0050; }
+.social-pill[data-platform="spotify"] { border-left: 3px solid #1DB954; }
+.social-pill[data-platform="strava"] { border-left: 3px solid #FC4C02; }
+.social-pill[data-platform="facebook"] { border-left: 3px solid #1877F2; }
+.social-pill[data-platform="twitter"] { border-left: 3px solid #1DA1F2; }
+
+/* Delete button styling */
+.social-pill .delete-btn {
+    background: rgba(255, 59, 59, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 4px;
+}
+
+.social-pill .delete-btn:hover {
+    background: rgba(255, 59, 59, 1);
+    transform: scale(1.1);
+}
+
+/* Add social button */
+.add-social-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #2a2a2a;
+    border: 2px dashed #555;
+    border-radius: 50%;
+    color: #ccc;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.add-social-btn:hover {
+    background: #3a3a3a;
+    border-color: #777;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+/* Social platform dropdown */
+.social-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    z-index: 1000;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.social-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.social-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 8px;
+    margin: 4px;
+}
+
+.social-option:hover {
+    background: #2a2a2a;
+}
+
+.social-option i {
+    margin-right: 12px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Social handle input modal */
+.social-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.social-modal-content {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+.social-modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+}
+
+.social-modal-header i {
+    font-size: 24px;
+    margin-right: 12px;
+    color: #fff;
+}
+
+.social-modal-header h5 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+}
+
+.social-modal-body {
+    margin-bottom: 20px;
+}
+
+.social-modal-body input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #121212;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.social-modal-body input:focus {
+    outline: none;
+    border-color: #666;
+    box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
+}
+
+.social-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Empty state message */
+.socials-empty-state {
+    color: #888;
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+.level-badge {
+    position: absolute;
+    top: 95px;
+    right: 85px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    font-weight: bold;
+    font-size: 12px;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5),
+                0 0 20px rgba(255, 215, 0, 0.3);
+    border: 2px solid #fff;
+    z-index: 10;
+    animation: levelBadgePulse 3s ease-in-out infinite;
+    transition: transform 0.3s ease;
+}
+
+.level-badge:hover {
+    transform: scale(1.1);
+    animation: none;
+}
+
+@keyframes levelBadgePulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.5); }
+}
+
+.level-badge-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.level-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.level-number {
+    font-size: 14px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+/* FOOTER */
+.profile-footer-btns {
+  border-top: 1px solid #222;
+  padding-top: 14px;
+  margin-top: 20px;
+  background: none;
+}
+.profile-footer-btns .btn {
+  min-width: 130px;
+  border-radius: 18px !important;
+  font-size: 13px !important;
+  padding: 8px 0;
+  background: #232323;
+  color: #fff;
+  border: none;
+  transition: background 0.2s;
+}
+.profile-footer-btns .btn-outline-secondary {
+  background: transparent;
+  color: #bbb;
+  border: 1px solid #444;
+}
+.profile-footer-btns .btn:hover {
+  background: #444;
+}
+/* Different badge styles based on level tier */
+.level-badge.tier-beginner {
+    background: linear-gradient(135deg, #C0C0C0, #808080);
+}
+
+.level-badge.tier-intermediate {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.level-badge.tier-advanced {
+    background: linear-gradient(135deg, #FF6B6B, #C92A2A);
+}
+
+.level-badge.tier-expert {
+    background: linear-gradient(135deg, #7B68EE, #4B0082);
+}
+
+.level-badge.tier-master {
+    background: linear-gradient(135deg, #00D9FF, #0080FF);
+    animation: masterBadgeGlow 2s ease-in-out infinite;
+}
+
+@keyframes masterBadgeGlow {
+    0%, 100% { 
+        box-shadow: 0 4px 12px rgba(0, 217, 255, 0.6), 
+                    0 0 25px rgba(0, 217, 255, 0.4);
+    }
+    50% { 
+        box-shadow: 0 4px 20px rgba(0, 217, 255, 0.9), 
+                    0 0 40px rgba(0, 217, 255, 0.6);
+    }
+}
+
+/* XP progress tooltip (optional enhancement) */
+.level-badge-tooltip {
+    position: absolute;
+    bottom: -65px;
+    right: -10px;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.level-badge:hover .level-badge-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.level-badge-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+/* Read-only field styling */
+.readonly-field {
+    background-color: #1a1a1a !important;
+    border: 1px solid #555 !important;
+    color: #ccc !important;
+    cursor: not-allowed;
+}
+
+/* Privacy control styling */
+.privacy-controls {
+    background: #1b1b1b;
+    border: 1px solid #2a2a2a;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.privacy-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #333;
+}
+
+.privacy-control:last-child {
+    border-bottom: none;
+}
+
+.privacy-label {
+    font-weight: 500;
+    color: #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.privacy-label i {
+    margin-right: 8px;
+    color: #888;
+}
+
+.privacy-toggle {
+    position: relative;
+    width: 50px;
+    height: 26px;
+}
+
+.privacy-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.privacy-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.privacy-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.privacy-toggle input:checked + .privacy-slider {
+    background-color: #4CAF50;
+}
+
+.privacy-toggle input:checked + .privacy-slider:before {
+    transform: translateX(24px);
+}
+
+    /* Tab Navigation Styles */
+    .nav-tabs .nav-link:hover {
+        color: #fff !important;
+        border-bottom: 2px solid #555 !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: #fff !important;
+        border-bottom: 2px solid #7bc8a4 !important;
+        font-weight: 600;
+    }
+    .nav-tabs {
+        border-bottom: 1px solid #444 !important;
+    }
+/* Connected Devices Styles */
+.devices-container {
+    background: #1b1b1b;
+    border: 1px solid #2a2a2a;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.device-card {
+    background: #121212;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.device-card:hover {
+    border-color: #555;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.device-info {
+    display: flex;
+    align-items: start;
+    gap: 5px;
+    flex: 1;
+}
+
+.device-icon {
+    font-size: 2rem;
+    color: #7bc8a4;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(123, 200, 164, 0.1);
+    border-radius: 12px;
+}
+
+.device-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.device-description {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.device-status-btn {
+    margin-left:35px;
+    display: flex;
+    max-width: 120px;
+    gap: 2px;
+    padding: 6px 16px;
+    border-radius: 25px;
+    border: 1px solid #444;
+    background: #1e1e1e;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    text-align: center !important;
+}
+
+.device-status-btn:hover {
+    background: #2a2a2a;
+    border-color: #555;
+}
+
+.status-indicator {
+    margin-top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #666;
+    transition: background 0.3s ease;
+}
+
+.device-status-btn[data-status="active"] .status-indicator {
+    background: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+}
+
+.device-status-btn[data-status="inactive"] .status-indicator {
+    background: #666;
+}
+
+.device-details {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #aaa;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Garmin Modal Styles */
+.garmin-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.garmin-modal-content {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+.garmin-modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+}
+
+.garmin-modal-header i {
+    font-size: 24px;
+    margin-right: 12px;
+    color: #7bc8a4;
+}
+
+.garmin-modal-header h5 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+}
+
+.garmin-modal-body .form-label {
+    color: #ddd;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.garmin-modal-body .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    background: #121212;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.garmin-modal-body .form-control:focus {
+    outline: none;
+    border-color: #7bc8a4;
+    box-shadow: 0 0 0 2px rgba(123, 200, 164, 0.2);
+}
+
+.garmin-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+    /* Responsive adjustments */
+@media (min-width: 768px) {
+        .device-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .device-status-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .detail-row {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 4px;
+    }
+  .avatar-modal {
+    align-items: flex-start;
+    padding-top: 30px;
+  }
+}
+@media (max-width: 576px) {
+    .social-dropdown {
+        right: 0;
+        left: auto;
+        min-width: 140px;
+    }
+    
+    .social-modal-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+    
+    .social-modal-footer {
+        flex-direction: column;
+    }
+    
+    .social-modal-footer .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+    /* Responsive */
+    @media (max-width: 768px) {
+            .level-badge {
+        min-width: 30px;
+        height: 30px;
+        font-size: 12px;
+        top: 85px;
+        right: 85px;
+    }
+    
+    .level-number {
+        font-size: 14px;
+    }
+    
+    .level-label {
+        font-size: 7px;
+    }
+        .social-dropdown {
+    position:absolute;
+    display:block;
+    top: 100%;
+    left: 0;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    z-index: 1000;
+    width: min-content;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+            .avatar-modal {
+        align-items: flex-start; /* align to top */
+        padding-top: 40px;       /* optional spacing from top */
+        overflow-y: auto;        /* allow scrolling if modal is taller than screen */
+    }
+        .avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        .account-heading {
+            font-size: 1.3rem;
+        }
+        
+        .avatar-options {
+            grid-template-columns: repeat(4, 1fr);
+        }
+                .d-flex.flex-column.flex-md-row {
+            flex-direction: column;
+        }
+                
+        .modal-buttons {
+            flex-direction: column;
+        }
+               .modal-buttons button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+    }
+     @media (max-width: 576px) {
+        
+            .avatar-options {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 8px;
+        max-height: 250px;
+    }
+            .avatar-modal {
+        align-items: flex-start; /* align to top */
+        padding-top: 40px;       /* optional spacing from top */
+        overflow-y: auto;        /* allow scrolling if modal is taller than screen */
+    }
+        .avatar-options {
+            grid-template-columns: repeat(3, 1fr);
+        }
+            .avatar-option {
+        min-width: 50px;
+        min-height: 50px;
+    }
+        .card-body.p-4 {
+            padding: 1.5rem !important;
+        }
+        
+        .health-metrics {
+            padding: 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+        }
+            .avatar-modal-content {
+        width: 95%;
+        max-width: none;
+        padding: 20px;
+        margin: 10px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .avatar-modal {
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+    }
+    @media (max-width: 480px) {
+            .level-badge {
+        min-width: 28px;
+        height: 28px;
+        top: 86px;
+        right: 86px;
+    }
+    
+    .level-number {
+        font-size: 12px;
+    }
+    .avatar-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        padding: 6px;
+    }
+    
+    .avatar-option {
+        min-width: 45px;
+        min-height: 45px;
+    }
+        .avatar-modal-content {
+        padding: 15px;
+        margin: 5px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+@media (max-width: 360px) {
+    .avatar-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 4px;
+        max-height: 200px;
+    }
+    
+    .avatar-option {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-center" data-i18n="account_profile">
+                {% if is_owner %}
+                    Your Account Profile
+                {% else %}
+                    {{ viewed_user.username }}'s Profile
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row gap-4">
+                
+                <!-- Left Section: Avatar + User Info -->
+                <div class="text-center flex-shrink-0">
+                    <!-- Determine avatar folder based on whether it's a predefined avatar or uploaded -->
+                   {% set show_avatar = viewed_user.avatar if viewed_user else current_avatar %}
+                   {% if show_avatar in predefined_avatars %}
+                       {% set avatar_folder = 'avatars' %}
+                   {% else %}
+                       {% set avatar_folder = 'uploads' %}
+                   {% endif %}
+                    
+                    <!-- Main Avatar - Clickable only if owner -->
+                    <div class="avatar-container" id="avatar-container" {% if is_owner %}style="cursor: pointer;"{% endif %}>
+                        <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ show_avatar) }}"
+                            class="avatar-img"
+                            id="main-avatar"
+                            alt="{{ viewed_user.username if viewed_user else current_user.username }}'s avatar"
+                            onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                        
+                        <!-- Level Badge with Progress Bar -->
+                        <div class="level-badge {% if user_level < 5 %}tier-beginner{% elif user_level < 15 %}tier-intermediate{% elif user_level < 30 %}tier-advanced{% elif user_level < 50 %}tier-expert{% else %}tier-master{% endif %}">
+                            <div class="level-badge-text">
+                                <span class="level-number">{{ user_level }}</span>
+                            </div>
+                            
+                            <!-- Enhanced Tooltip with Progress -->
+                            <div class="level-badge-tooltip">
+                                <div style="margin-bottom: 5px;">
+                                    <strong>Level {{ user_level }}</strong>
+                                </div>
+                                <div style="font-size: 11px; color: #7bc8a4;">
+                                    {{ user_xp }} / {{ xp_to_next_level }} XP
+                                </div>
+                                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 5px; overflow: hidden;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) if xp_to_next_level else 0 }}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                                            
+                    <!-- User Info -->
+                    <h2 class="account-heading">{{ viewed_user.username if viewed_user else current_user.username }}</h2>
+                    <p class="text-secondary mb-1">{% if not viewed_user or viewed_user.id == current_user.id %}{{ current_user.email }}{% else %}<!-- Hidden -->{% endif %}</p>
+                    <p class="text-info mb-0">
+                        <i class="fas fa-user-shield me-1"></i> <span data-i18n="account_type">Account Type</span>: {{ role|capitalize }}
+                    </p>
+                </div>
+
+                <!-- Right Section: Form or Read-only display -->
+                <div class="flex-grow-1">
+                    {% if is_owner %}
+                        <!-- EDITABLE FORM for owner -->
+                        <form method="POST" enctype="multipart/form-data" id="profile-form">
+                            {{ form.hidden_tag() }}
+                                <div class="form-group mb-4 d-none">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group profile-field">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            {{ form.username(class="form-control", id="username") }}
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-group mb- d-none">
+                        <label for="email" class="form-label">Email</label>
+                        <div class="input-group profile-field">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            {{ form.email(class="form-control", id="email") }}
+                        </div>
+                    </div>
+
+                            <!-- Tab Navigation - Only for Personal Profile -->
+                            <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist" style="border-bottom: 1px solid #444;">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="main-tab" data-bs-toggle="tab" data-bs-target="#main-content" 
+                                            type="button" role="tab" aria-controls="main-content" aria-selected="true"
+                                            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                                        <i class="fas fa-user me-2"></i>Profiili
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" data-bs-target="#privacy-content" 
+                                            type="button" role="tab" aria-controls="privacy-content" aria-selected="false"
+                                            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                                        <i class="fas fa-eye-slash me-2"></i>Yksityisyys
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+    <button class="nav-link" id="devices-tab" data-bs-toggle="tab" data-bs-target="#devices-content" 
+            type="button" role="tab" aria-controls="devices-content" aria-selected="false" 
+            style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+        <i class="fas fa-link me-2"></i>Yhdistetyt Laitteet
+    </button>
+</li>
+                            </ul>
+                            
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="profileTabContent">
+                                <!-- Main Tab -->
+                                <div class="tab-pane fade show active" id="main-content" role="tabpanel" aria-labelledby="main-tab">
+                                    
+
+                            {% if extra_columns_exist %}
+
+                                <!-- Full Name Field -->
+                                <div class="form-group mb-4">
+                                    <label for="full_name" class="form-label" data-i18n="full_name">Full Name</label>
+                                    <div class="input-group profile-field">
+                                        <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                                               value="{{ form.full_name.data or '' }}" data-i18n="full_name_placeholder" placeholder="e.g. Arnold Schwarzenegger">
+                                    </div>
+                                </div>
+
+                                <!-- Main Sport Field -->
+                                <div class="form-group mb-4">
+                                    <label for="main_sport" class="form-label" data-i18n="main_sport">Main Sport / Activity</label>
+                                    <div class="input-group profile-field">
+                                        <span class="input-group-text"><i class="fas fa-dumbbell"></i></span>
+                                        <input type="text" class="form-control" id="main_sport" name="main_sport" 
+                                               value="{{ form.main_sport.data or '' }}" data-i18n="main_sport_placeholder" placeholder="e.g. Weightlifting, Running, Cycling">
+                                    </div>
+                                </div>
+                                
+                                <!-- Social Media Section -->
+                                <div class="form-group mb-4 socials-container">
+                                    <label class="form-label" data-i18n="social_media">Social Media</label>
+                                    
+                                    <!-- Container for social media pills - starts empty -->
+                                    <div class="social-pills-container" id="social-pills-container">
+                                        <!-- Pills will be dynamically inserted here by JavaScript -->
+                                    </div>
+                                    
+                                    <!-- Add social button and dropdown -->
+                                    <div class="position-relative">
+                                        <button type="button" class="add-social-btn" id="add-social-btn" data-i18n="add_social_media" title="Add social media">+</button>
+                                        <div class="social-dropdown" id="social-dropdown">
+                                            <div class="social-option" data-platform="instagram">
+                                                <i class="fa-brands fa-instagram"></i>
+                                                <span data-i18n="instagram">Instagram</span>
+                                            </div>
+                                            <div class="social-option" data-platform="tiktok">
+                                                <i class="fa-brands fa-tiktok"></i>
+                                                <span data-i18n="tiktok">TikTok</span>
+                                            </div>
+                                            <div class="social-option" data-platform="spotify">
+                                                <i class="fa-brands fa-spotify"></i>
+                                                <span data-i18n="spotify">Spotify</span>
+                                            </div>
+                                            <div class="social-option" data-platform="strava">
+                                                <i class="fa-solid fa-person-running"></i>
+                                                <span data-i18n="strava">Strava</span>
+                                            </div>
+                                            <div class="social-option" data-platform="facebook">
+                                                <i class="fa-brands fa-facebook"></i>
+                                                <span data-i18n="facebook">Facebook</span>
+                                            </div>
+                                            <div class="social-option" data-platform="twitter">
+                                                <i class="fa-brands fa-twitter"></i>
+                                                <span data-i18n="twitter">Twitter</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hidden input to store socials data as JSON -->
+                                    <input type="hidden" id="socials-data" name="socials" value='{{ form.socials.data or "[]" }}'>
+                                </div>
+
+                                
+                                </div>
+
+                                <!-- Privacy Tab -->
+                                <div class="tab-pane fade" id="privacy-content" role="tabpanel" aria-labelledby="privacy-tab">
+<!-- Privacy Controls Section -->
+                                <div class="privacy-controls">
+                                    <legend class="border-bottom mb-4">
+                                        <i class="fas fa-eye-slash me-2"></i> Yksityisyysasetukset
+                                    </legend>
+                                    <p class="text-secondary mb-3">Hallitse mitä muut näkevät profiilissasi:</p>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-id-badge"></i>
+                                            <span>Näytä koko nimi</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_full_name" {% if viewed_user.get('show_full_name', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_full_name" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-dumbbell"></i>
+                                            <span>Pääurheilu/ Aktiviteetti</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_main_sport" {% if viewed_user.get('show_main_sport', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_main_sport" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-heartbeat"></i>
+                                            <span>Näytä terveysmittarit</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_health_metrics" {% if viewed_user.get('show_health_metrics', False) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_health_metrics">
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="privacy-control">
+                                        <div class="privacy-label">
+                                            <i class="fas fa-share-alt"></i>
+                                            <span>Näytä Sosiaalinenmedia</span>
+                                        </div>
+                                        <label class="privacy-toggle">
+                                            {% if viewed_user %}
+                                                <input type="checkbox" name="show_socials" {% if viewed_user.get('show_socials', True) %}checked{% endif %}>
+                                            {% else %}
+                                                <input type="checkbox" name="show_socials" checked>
+                                            {% endif %}
+                                            <span class="privacy-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+                                </div>
+                                                        <!-- Devices Tab -->
+<div class="tab-pane fade" id="devices-content" role="tabpanel" aria-labelledby="devices-tab">
+    <!-- Connected Devices Section -->
+    <div class="devices-container">
+        <legend class="border-bottom mb-4">
+            <i class="fas fa-link me-2"></i> Yhdistetyt Laitteet
+        </legend>
+        <p class="text-secondary mb-4">Yhdistä treenisovelluksesi synkronoidaksesi treenit automaattisesti.</p>
+        
+        <!-- Garmin Connection Card -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-info">
+                    <i class="fas fa-running device-icon"></i>
+                    <div>
+                        <h5 class="device-name">Garmin Connect</h5>
+                        <p class="device-description">Synkronoi treenit ja aktiviteetit Garmin Connectista</p>
+                    </div>
+                </div>
+            </div>
+                            <button type="button" class="device-status-btn" id="garmin-status-btn" data-status="inactive">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Inactive</span>
+                </button>
+            <!-- Connection Details (shown when active) -->
+            <div class="device-details" id="garmin-details" style="display: none;">
+                <div class="detail-row">
+                    <i class="fas fa-envelope me-2"></i>
+                    <class="detail-value" id="garmin-email">
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-sync me-2"></i>Viimeisin synkronointi:</span>
+                    <span class="detail-value" id="garmin-last-sync">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Garmin Connection Modal -->
+<div class="garmin-modal" id="garmin-modal">
+    <div class="garmin-modal-content">
+        <div class="garmin-modal-header">
+            <i class="fas fa-running"></i>
+            <h5>Yhdistä Garmin Tiliin</h5>
+        </div>
+        <div class="garmin-modal-body">
+            <div class="mb-3">
+                <label for="garmin-email-input" class="form-label">Garmin Sähköposti</label>
+                <input type="email" class="form-control" id="garmin-email-input" placeholder="teidän@email.com">
+            </div>
+            <div class="mb-3">
+                <label for="garmin-password-input" class="form-label">Garmin Salasana</label>
+                <input type="password" class="form-control" id="garmin-password-input" placeholder="Kirjoita salansana">
+            </div>
+            <div class="alert alert-danger" id="garmin-error" style="display: none;"></div>
+        </div>
+        <div class="garmin-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" id="cancel-garmin">Peruuta</button>
+            <button type="button" class="btn btn-primary" id="connect-garmin">
+                <span id="connect-text">Yhdistä</span>
+                <span id="connect-spinner" class="d-none"><span class="spinner"></span> Yhdistetään...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+                            <!-- Hidden avatar selection fields -->
+                            <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
+                            <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
+
+                            <button type="submit" class="btn btn-primary" id="submit-button">
+                                <span id="submit-text" data-i18n="update_profile">Update Profile</span>
+                                <span id="submit-spinner" class="d-none"><span class="spinner"></span><span data-i18n="updating">Updating...</span></span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- READ-ONLY DISPLAY for other users -->
+                        <div>
+                            {% if not viewed_user or viewed_user.id == current_user.id %}
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <div class="form-control readonly-field">
+                                    {{ viewed_user.username if viewed_user else current_user.username }}
+                                </div>
+                            </div>
+                             {% endif %}
+                            {% if not viewed_user or viewed_user.id == current_user.id %}
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="form-control readonly-field">
+                                    {{ current_user.email }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                            {% if extra_columns_exist %}
+
+                                {% if viewed_user.get('full_name') and (viewed_user.get('show_full_name', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Full Name</label>
+                                    <div class="form-control readonly-field">{{ viewed_user.full_name }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if viewed_user.get('main_sport') and (viewed_user.get('show_main_sport', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Main Sport / Activity</label>
+                                    <div class="form-control readonly-field">{{ viewed_user.main_sport }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if viewed_user.get('socials') and viewed_user.socials != '[]' and (viewed_user.get('show_socials', True) or is_owner) %}
+                                <div class="form-group mb-4">
+                                    <label class="form-label">Social Media</label>
+                                    <div class="social-pills-container">
+                                        <!-- Parse JSON socials safely in Python, not Jinja2 -->
+                                        {% set socials_raw = viewed_user.socials %}
+                                        {% if socials_raw and socials_raw != '[]' %}
+                                            <!-- We'll handle JSON parsing in JavaScript instead -->
+                                            <div id="readonly-socials" data-socials="{{ socials_raw }}"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    {% if is_owner %}
+        <!-- Social Media Handle Input Modal - only for owner -->
+        <div class="social-modal" id="social-modal">
+            <div class="social-modal-content">
+                <div class="social-modal-header">
+                    <i id="modal-platform-icon" class="fa-brands fa-question"></i>
+                    <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
+                </div>
+                <div class="social-modal-body">
+                    <label for="social-handle-input" class="form-label">Social Handle</label>
+                    <input type="text" id="social-handle-input" placeholder="Enter your handle" autocomplete="off">
+                    <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
+                </div>
+                <div class="social-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="cancel-social-handle" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-social-handle" data-i18n="save">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avatar Selection Modal - only for owner -->
+        <div class="avatar-modal" id="avatarModal">
+            <div class="avatar-modal-content">
+                <h4 class="text-center mb-3" data-i18n="choose_avatar">Choose Your Avatar</h4>
+                <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Select from our options</p>
+                
+                <div class="avatar-options">
+                    {% for value, label in form.avatar_choice.choices %}
+                        {% set thumb_path = url_for('static', filename='avatars/' ~ value) %}
+                        <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
+                             data-value="{{ value }}">
+                            <img src="{{ thumb_path }}" 
+                                 alt="Avatar option {{ value }}"
+                                 onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Change Avatar</button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Health Metrics Section - Only show if allowed -->
+    {% if (viewed_user and (viewed_user.get('show_health_metrics', False) or is_owner)) or (not viewed_user and is_owner) %}
+    <div class="health-metrics">
+        <legend class="border-bottom mb-4">
+            <i class="fas fa-heartbeat me-2" ></i><span data-i18n="health_metrics">Health Metrics</span>
+        </legend>
+        
+        <div class="row">
+            <!-- Weight Card -->
+            <div class="col-md-6 mb-4">
+                <div class="health-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-weight-scale"></i>
+                    </div>
+                    <div class="metric-label" data-i18n="current_weight">Current Weight</div>
+                    <div class="metric-value">
+                        {% if current_weight %}
+                            {{ current_weight|round(1) }} kg
+                        {% else %}
+                            <span data-i18n="not_set">Not set</span>
+                        {% endif %}
+                    </div>
+                    <small class="metric-label" data-i18n="last_updated">Last updated from activity calculator</small>
+                </div>
+            </div>
+            
+           <!-- TDEE Card -->
+<div class="col-md-6 mb-4">
+    <div class="health-card">
+        <div class="metric-icon"><i class="fas fa-fire"></i></div>
+        <div class="metric-label" data-i18n="dailyenergy">Daily Energy Expenditure</div>
+        <div class="metric-value">
+            {% if current_tdee %}
+                {{ (current_tdee|round(0))|int }} kcal
+            {% else %}
+                <span data-i18n="notcalculated">Not calculated</span>
+            {% endif %}
+        </div>
+        
+        <!-- NEW: TDEE Breakdown Display -->
+        {% if tdee_data.auto_workout_enabled or tdee_data.auto_steps_enabled %}
+            <!-- Dynamic TDEE Active -->
+            <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
+                <small>
+                    Perus: {{ (base_tdee|round(0))|int }} kcal
+                    {% if tdee_data.workout_calories > 0 %}
+                        + Treenit: {{ (tdee_data.workout_calories|round(0))|int }} kcal
+                    {% endif %}
+                    {% if tdee_data.steps_calories > 0 %}
+                        + Askeleet: {{ (tdee_data.steps_calories|round(0))|int }} kcal
+                    {% endif %}
+                </small>
+            </div>
+            <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">Dynaaminen TDEE Aktiivisena</span>
+        {% else %}
+            <!-- Static TDEE -->
+            <small class="metric-label" data-i18n="basedonactivity">Based on your activity level</small>
+        {% endif %}
+    </div>
+</div>
+
+        
+        {% if is_owner %}
+        <div class="text-center mt-3">
+            <a href="/activity" class="btn btn">
+                <i class="fas fa-calculator me-1"></i> <span data-i18n="update_metrics">Update Metrics</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if is_owner %}
+    <!-- Password Reset Link - only for owner -->
+<div class="profile-footer-btns d-flex justify-content-center">
+  <a href="{{ url_for('reset_request') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-key me-1"></i><span>Nollaa Salasana</span></a>
+</div>
+<div class="profile-footer-btns d-flex justify-content-center gap-2 mt-4">
+    <a href="https://qr.mobilepay.fi/box/2f1193ac-1ae2-42de-b3ff-d7a7c5f7f901/pay-in" class="btn btn-sm" style="color: white; border: none;" target="_blank">
+    <i class="fas fa-mobile-alt me-1"></i>MobilePay</a>
+    <a href="https://paypal.me/trackyou" class="btn btn-sm" style="color: white; border: none;" target="_blank">
+    <i class="fab fa-paypal me-1"></i>PayPal</a>
+</div>
+<span style="text-align: center; left: 50%; font-weight: 600;">Sivu pyörii lahjoituksilla!</span>
+    {% endif %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle read-only social media display for other users' profiles
+    const readOnlySocials = document.getElementById('readonly-socials');
+    if (readOnlySocials) {
+        const socialsData = readOnlySocials.getAttribute('data-socials');
+        if (socialsData && socialsData !== '[]') {
+            try {
+                const socials = JSON.parse(socialsData);
+                const container = readOnlySocials.parentElement;
+                container.innerHTML = ''; // Clear the container
+                
+                const platformData = {
+                    instagram: { name: 'Instagram', baseUrl: 'https://instagram.com/', icon: 'fa-brands fa-instagram' },
+                    tiktok: { name: 'TikTok', baseUrl: 'https://tiktok.com/@', icon: 'fa-brands fa-tiktok' },
+                    spotify: { name: 'Spotify', baseUrl: 'https://open.spotify.com/user/', icon: 'fa-brands fa-spotify' },
+                    strava: { name: 'Strava', baseUrl: 'https://strava.com/athletes/', icon: 'fa-solid fa-person-running' },
+                    facebook: { name: 'Facebook', baseUrl: 'https://facebook.com/', icon: 'fa-brands fa-facebook' },
+                    twitter: { name: 'Twitter', baseUrl: 'https://twitter.com/', icon: 'fa-brands fa-twitter' }
+                };
+                
+                socials.forEach(social => {
+                    const platformInfo = platformData[social.platform];
+                    if (platformInfo) {
+                        const pill = document.createElement('div');
+                        pill.className = 'social-pill';
+                        pill.setAttribute('data-platform', social.platform);
+                        
+                        const link = document.createElement('a');
+                        link.href = platformInfo.baseUrl + social.handle;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        
+                        const icon = document.createElement('i');
+                        icon.className = platformInfo.icon;
+                        
+                        const handleSpan = document.createElement('span');
+                        handleSpan.textContent = '@' + social.handle;
+                        
+                        link.appendChild(icon);
+                        link.appendChild(handleSpan);
+                        pill.appendChild(link);
+                        container.appendChild(pill);
+                    }
+                });
+            } catch (e) {
+                console.error('Error parsing social media data:', e);
+            }
+        }
+    }
+
+    // Only run interactive JavaScript for profile owners
+    {% if is_owner %}
+    // DOM elements
+    const avatarModal = document.getElementById('avatarModal');
+    const avatarContainer = document.getElementById('avatar-container');
+    const mainAvatar = document.getElementById('main-avatar');
+    const selectedAvatarInput = document.getElementById('selected_avatar');
+    const avatarUploadInput = document.getElementById('avatar_upload_input');
+    const cancelAvatarBtn = document.getElementById('cancelAvatar');
+    const updateAvatarBtn = document.getElementById('updateAvatar');
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    const profileForm = document.getElementById('profile-form');
+    const submitButton = document.getElementById('submit-button');
+    const submitText = document.getElementById('submit-text');
+    const submitSpinner = document.getElementById('submit-spinner');
+    const levelBadge = document.querySelector('.level-badge');
+    const garminStatusBtn = document.getElementById('garmin-status-btn');
+    const garminModal = document.getElementById('garmin-modal');
+    const garminEmailInput = document.getElementById('garmin-email-input');
+    const garminPasswordInput = document.getElementById('garmin-password-input');
+    const connectGarminBtn = document.getElementById('connect-garmin');
+    const cancelGarminBtn = document.getElementById('cancel-garmin');
+    const garminDetails = document.getElementById('garmin-details');
+    const garminError = document.getElementById('garmin-error');
+    const connectText = document.getElementById('connect-text');
+    const connectSpinner = document.getElementById('connect-spinner');
+    
+    if (levelBadge) {
+        levelBadge.addEventListener('click', function(e) {
+            e.stopPropagation(); // This prevents the avatar container click event
+        });
+    }
+    // Initial avatar state
+    let selectedAvatar = '{{ form.avatar_choice.data or "default.png" }}';
+    let uploadedAvatarFile = null;
+    
+
+    // Open modal when clicking avatar
+    if (avatarContainer) {
+        avatarContainer.addEventListener('click', function() {
+            avatarModal.style.display = 'flex';
+        });
+    }
+
+    // Close modal
+    function closeModal() {
+        avatarModal.style.display = 'none';
+        resetAvatarSelection();
+    }
+
+    if (cancelAvatarBtn) {
+        cancelAvatarBtn.addEventListener('click', closeModal);
+    }
+
+    // Update avatar
+    if (updateAvatarBtn) {
+        updateAvatarBtn.addEventListener('click', function() {
+            if (!selectedAvatarInput || !mainAvatar) return;
+
+            selectedAvatarInput.value = selectedAvatar;
+
+            if (uploadedAvatarFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    mainAvatar.src = e.target.result;
+                };
+                reader.readAsDataURL(uploadedAvatarFile);
+            } else if (selectedAvatar) {
+                mainAvatar.src = '/static/avatars/' + selectedAvatar;
+            }
+            showToast(t('avatar_updated'));
+            closeModal();
+        });
+    }
+
+    // Avatar option selection
+    avatarOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            avatarOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedAvatar = this.getAttribute('data-value');
+
+            // Clear uploaded file
+            uploadedAvatarFile = null;
+            if (avatarUploadInput) avatarUploadInput.value = '';
+        });
+    });
+
+    // File upload handling
+    if (avatarUploadInput) {
+        avatarUploadInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image too large. Please select an image under 2MB');
+                    this.value = '';
+                    return;
+                }
+
+                uploadedAvatarFile = file;
+                avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                selectedAvatar = '';
+            }
+        });
+    }
+
+    // Reset avatar selection
+    function resetAvatarSelection() {
+        avatarOptions.forEach(opt => {
+            if (opt.getAttribute('data-value') === selectedAvatar) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+
+        if (avatarUploadInput) avatarUploadInput.value = '';
+        uploadedAvatarFile = null;
+    }
+
+    // Form submission handling
+    if (profileForm) {
+        profileForm.addEventListener('submit', function() {
+            if (!submitText || !submitSpinner || !submitButton) return;
+            submitText.classList.add('d-none');
+            submitSpinner.classList.remove('d-none');
+            submitButton.disabled = true;
+        });
+    }
+
+    // Input focus enhancement
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', function() {
+            if (this.parentElement) this.parentElement.classList.add('focused');
+        });
+        input.addEventListener('blur', function() {
+            if (this.parentElement) this.parentElement.classList.remove('focused');
+        });
+    });
+
+    // Escape key closes modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && avatarModal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
+// Social platform data with Font Awesome icons
+    const platformData = {
+        instagram: {
+            name: 'Instagram',
+            baseUrl: 'https://instagram.com/',
+            icon: 'fa-brands fa-instagram',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._]{1,30}$/
+        },
+        tiktok: {
+            name: 'TikTok',
+            baseUrl: 'https://tiktok.com/@',
+            icon: 'fa-brands fa-tiktok',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._]{1,24}$/
+        },
+        spotify: {
+            name: 'Spotify',
+            baseUrl: 'https://open.spotify.com/user/',
+            icon: 'fa-brands fa-spotify',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9._-]{1,30}$/
+        },
+        strava: {
+            name: 'Strava',
+            baseUrl: 'https://strava.com/athletes/',
+            icon: 'fa-solid fa-person-running',
+            placeholder: 'athlete_id',
+            validation: /^[0-9]{1,15}$/
+        },
+        facebook: {
+            name: 'Facebook',
+            baseUrl: 'https://facebook.com/',
+            icon: 'fa-brands fa-facebook',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9.]{1,50}$/
+        },
+        twitter: {
+            name: 'Twitter',
+            baseUrl: 'https://twitter.com/',
+            icon: 'fa-brands fa-twitter',
+            placeholder: 'username',
+            validation: /^[a-zA-Z0-9_]{1,15}$/
+        }
+    };
+    // DOM Elements
+    const addSocialBtn = document.getElementById('add-social-btn');
+    const socialDropdown = document.getElementById('social-dropdown');
+    const socialModal = document.getElementById('social-modal');
+    const modalPlatformIcon = document.getElementById('modal-platform-icon');
+    const modalPlatformName = document.getElementById('modal-platform-name');
+    const socialHandleInput = document.getElementById('social-handle-input');
+    const saveSocialHandle = document.getElementById('save-social-handle');
+    const cancelSocialHandle = document.getElementById('cancel-social-handle');
+    const socialPillsContainer = document.getElementById('social-pills-container');
+    const socialsDataInput = document.getElementById('socials-data');
+
+    // Social media data
+    let socialsData = [];
+    let currentPlatform = null;
+
+   // Initialize socials from hidden input
+    function initializeSocials() {
+        try {
+            const rawData = socialsDataInput.value || '[]';
+            socialsData = JSON.parse(rawData);
+            
+            // Only render pills if there's actual data
+            if (socialsData.length > 0) {
+                renderSocialPills();
+            }
+        } catch (e) {
+            console.error('Error parsing socials data:', e);
+            socialsData = [];
+        }
+    }
+
+    // Toggle dropdown visibility
+    function toggleDropdown(e) {
+        e.stopPropagation();
+        socialDropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    function closeDropdown(e) {
+        if (!addSocialBtn.contains(e.target) && !socialDropdown.contains(e.target)) {
+            socialDropdown.classList.remove('show');
+        }
+    }
+
+    // Open modal for platform selection
+    function openPlatformModal(platform) {
+        currentPlatform = platform;
+        const platformInfo = platformData[platform];
+
+        // Set modal content
+        modalPlatformIcon.className = platformInfo.icon;
+        modalPlatformName.textContent = `Add ${platformInfo.name}`;
+        
+        // Clear and focus input
+        socialHandleInput.value = '';
+        socialHandleInput.placeholder = `Enter your ${platformInfo.placeholder}`;
+        
+        // Show modal
+        socialModal.style.display = 'flex';
+        socialDropdown.classList.remove('show');
+        
+        // Focus input after modal animation
+        setTimeout(() => socialHandleInput.focus(), 100);
+    }
+
+    // Close modal
+    function closeSocialModal() {
+        socialModal.style.display = 'none';
+        currentPlatform = null;
+    }
+
+    // Validate handle input
+    function validateHandle(platform, handle) {
+        const platformInfo = platformData[platform];
+        if (!platformInfo.validation.test(handle)) {
+            return false;
+        }
+        
+        // Check for duplicates
+        return !socialsData.some(social => 
+            social.platform === platform && social.handle.toLowerCase() === handle.toLowerCase()
+        );
+    }
+
+    // Save social handle
+        function handleSaveSocial() {
+        const handle = socialHandleInput.value.trim();
+
+        if (!currentPlatform) {
+            alert('Please select a platform first.');
+            return;
+        }
+
+        const platformInfo = platformData[currentPlatform];
+        if (!platformInfo) {
+            alert('Invalid platform selected.');
+            return;
+        }
+
+        if (!handle) {
+            alert('Please enter a valid handle.');
+            return;
+        }
+
+        if (!validateHandle(currentPlatform, handle)) {
+            alert('Invalid handle or already exists.');
+            return;
+        }
+
+        socialsData.push({ platform: currentPlatform, handle });
+        socialsDataInput.value = JSON.stringify(socialsData);
+        renderSocialPills();
+        closeSocialModal();
+        console.log(`${platformInfo.name} added successfully`);
+    }
+
+    // Render social pills
+    function renderSocialPills() {
+        // Clear container
+        socialPillsContainer.innerHTML = '';
+
+        // If no socials, don't show anything (clean empty state)
+        if (socialsData.length === 0) {
+            return;
+        }
+
+        // Create pills for each social
+        socialsData.forEach((social, index) => {
+            const { platform, handle } = social;
+            const platformInfo = platformData[platform];
+            
+            if (!platformInfo) return; // Skip invalid platforms
+
+            // Create pill container
+            const pill = document.createElement('div');
+            pill.className = 'social-pill';
+            pill.setAttribute('data-platform', platform);
+
+            // Create clickable link
+            const link = document.createElement('a');
+            link.href = platformInfo.baseUrl + handle;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.title = `Visit ${handle} on ${platformInfo.name}`;
+
+            // Create icon
+            const icon = document.createElement('i');
+            icon.className = platformInfo.icon;
+
+            // Create handle text
+            const handleSpan = document.createElement('span');
+            handleSpan.textContent = `@${handle}`;
+
+            // Assemble link
+            link.appendChild(icon);
+            link.appendChild(handleSpan);
+
+            // Create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.type = 'button';
+            deleteBtn.title = 'Remove social';
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteSocial(index);
+            });
+
+            // Assemble pill
+            pill.appendChild(link);
+            pill.appendChild(deleteBtn);
+
+            // Add to container
+            socialPillsContainer.appendChild(pill);
+        });
+    }
+
+    // Delete a social entry
+    function deleteSocial(index) {
+        if (index >= 0 && index < socialsData.length) {
+            const deletedSocial = socialsData[index];
+            socialsData.splice(index, 1);
+            socialsDataInput.value = JSON.stringify(socialsData);
+            renderSocialPills();
+            console.log(`${platformData[deletedSocial.platform].name} removed`);
+        }
+    }
+
+    // Event Listeners
+    if (addSocialBtn) {
+        addSocialBtn.addEventListener('click', toggleDropdown);
+    }
+
+    document.addEventListener('click', closeDropdown);
+
+    // Platform selection
+    const socialOptions = document.querySelectorAll('.social-option');
+    socialOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const platform = this.getAttribute('data-platform');
+            openPlatformModal(platform);
+        });
+    });
+
+    // Modal controls
+    if (saveSocialHandle) {
+        saveSocialHandle.addEventListener('click', handleSaveSocial);
+    }
+
+    if (cancelSocialHandle) {
+        cancelSocialHandle.addEventListener('click', closeSocialModal);
+    }
+
+    // Handle Enter key in input
+    if (socialHandleInput) {
+        socialHandleInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSaveSocial();
+            }
+        });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && socialModal.style.display === 'flex') {
+            closeSocialModal();
+        }
+    });
+
+    // Close modal when clicking outside
+    if (socialModal) {
+        socialModal.addEventListener('click', function(e) {
+            if (e.target === socialModal) {
+                closeSocialModal();
+            }
+        });
+    }
+// Check Garmin connection status on page load
+async function checkGarminStatus() {
+    try {
+        const response = await fetch('/garmin/status', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.connected) {
+            updateGarminUI(true, data.email, data.last_sync);
+        } else {
+            updateGarminUI(false);
+        }
+    } catch (error) {
+        console.error('Error checking Garmin status:', error);
+    }
+}
+
+// Update UI based on connection status
+function updateGarminUI(isConnected, email = null, lastSync = null) {
+    if (isConnected) {
+        garminStatusBtn.setAttribute('data-status', 'active');
+        garminStatusBtn.querySelector('.status-text').textContent = 'Päällä';
+        garminDetails.style.display = 'block';
+        
+        if (email) {
+            document.getElementById('garmin-email').textContent = email;
+        }
+        
+        if (lastSync) {
+            const syncDate = new Date(lastSync);
+            document.getElementById('garmin-last-sync').textContent = syncDate.toLocaleString('fi-FI');
+        }
+    } else {
+        garminStatusBtn.setAttribute('data-status', 'inactive');
+        garminStatusBtn.querySelector('.status-text').textContent = 'Ei päällä';
+        garminDetails.style.display = 'none';
+    }
+}
+
+// Open Garmin modal
+function openGarminModal() {
+    const currentStatus = garminStatusBtn.getAttribute('data-status');
+    
+    if (currentStatus === 'active') {
+        // If already connected, offer to disconnect
+        if (confirm('Haluatko katkaista yhteyden Garmin Connectiin?')) {
+            disconnectGarmin();
+        }
+    } else {
+        // Show login modal
+        garminModal.style.display = 'flex';
+        garminEmailInput.focus();
+        garminError.style.display = 'none';
+    }
+}
+
+// Close Garmin modal
+function closeGarminModal() {
+    garminModal.style.display = 'none';
+    garminEmailInput.value = '';
+    garminPasswordInput.value = '';
+    garminError.style.display = 'none';
+}
+
+// Connect to Garmin
+async function connectGarmin() {
+    const email = garminEmailInput.value.trim();
+    const password = garminPasswordInput.value;
+    
+    if (!email || !password) {
+        showGarminError('Syötä sähköposti ja salasana.');
+        return;
+    }
+    
+    // Show loading state
+    connectText.classList.add('d-none');
+    connectSpinner.classList.remove('d-none');
+    connectGarminBtn.disabled = true;
+    garminError.style.display = 'none';
+    
+    try {
+        const response = await fetch('/garmin/connect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Success!
+            updateGarminUI(true, email, new Date().toISOString());
+            closeGarminModal();
+            showToast('Garmin Connect yhdistetty onnistuneesti!', 'success');
+        } else {
+            showGarminError(data.error || 'Yhdistäminen epäonnistui. Tarkista kirjautumistietosi.');
+        }
+    } catch (error) {
+        console.error('Error connecting to Garmin:', error);
+        showGarminError('Verkkovirhe. Yritä uudelleen.');
+    } finally {
+        // Reset button state
+        connectText.classList.remove('d-none');
+        connectSpinner.classList.add('d-none');
+        connectGarminBtn.disabled = false;
+    }
+}
+
+// Disconnect from Garmin
+async function disconnectGarmin() {
+    try {
+        const response = await fetch('/garmin/disconnect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateGarminUI(false);
+            showToast('Garmin Connect yhteys katkaistu', 'info');
+        }
+    } catch (error) {
+        console.error('Error disconnecting Garmin:', error);
+        showToast('Virhe yhteyden katkaisussa', 'error');
+    }
+}
+
+// Show error in modal
+function showGarminError(message) {
+    garminError.textContent = message;
+    garminError.style.display = 'block';
+}
+
+// Get CSRF token
+function getCsrfToken() {
+    const tokenInput = document.querySelector('input[name="csrf_token"]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+// Event Listeners
+if (garminStatusBtn) {
+    garminStatusBtn.addEventListener('click', openGarminModal);
+}
+
+if (connectGarminBtn) {
+    connectGarminBtn.addEventListener('click', connectGarmin);
+}
+
+if (cancelGarminBtn) {
+    cancelGarminBtn.addEventListener('click', closeGarminModal);
+}
+
+// Enter key to submit in modal
+if (garminPasswordInput) {
+    garminPasswordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            connectGarmin();
+        }
+    });
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && garminModal && garminModal.style.display === 'flex') {
+        closeGarminModal();
+    }
+});
+
+// Close modal when clicking outside
+if (garminModal) {
+    garminModal.addEventListener('click', function(e) {
+        if (e.target === garminModal) {
+            closeGarminModal();
+        }
+    });
+}
+
+// Check status on page load
+checkGarminStatus();
+    // Initialize on page load
+    initializeSocials();
+    {% endif %}
+});
+</script>
+
+{% endblock %}
         }
         
         .bg-black, .modal-header, .modal-footer {
@@ -2542,3 +5101,4 @@ checkGarminStatus();
 </script>
 
 {% endblock %}
+
