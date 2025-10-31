@@ -4634,8 +4634,8 @@ def get_exercise_history(exercise_id):
 def save_metrics():
     """
     Enhanced save_metrics route that handles TDEE calculations from different modes:
-    - Easy mode: Uses original activity-based calculation
-    - Advanced mode: Uses steps + activity calories (BMR + steps_calories + activity_calories)
+    - Easy mode: Saves the calculated TDEE with activity breakdown (static)
+    - Advanced mode: Saves only BMR, steps/workouts added dynamically
     - Custom mode: Uses user-provided TDEE directly
     """
     try:
@@ -4661,6 +4661,24 @@ def save_metrics():
         if not tdee or tdee <= 0:
             print(f"ERROR: Invalid tdee: {tdee}")
             return jsonify(success=False, error="Valid TDEE is required"), 400
+        
+        # For advanced mode with dynamic features enabled, clear daily_tdee_adjustments
+        # so it recalculates from scratch (without the old step count)
+        if calc_mode == 'advanced' and (auto_add_workout_calories or auto_garmin_steps):
+            print(f"Advanced mode with dynamic features detected - resetting daily TDEE adjustments")
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Clear today's adjustment so it recalculates with new workouts/steps
+            cursor.execute("""
+                DELETE FROM daily_tdee_adjustments
+                WHERE user_id = %s AND date = %s
+            """, (current_user.id, date.today()))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print(f"Cleared daily_tdee_adjustments for {date.today()}")
             
         print(f"User {current_user.id} updated metrics via {calc_mode} mode: TDEE={tdee}, Weight={weight}, Gender={gender}")
 
@@ -4720,6 +4738,7 @@ def save_metrics():
     finally:
         if 'conn' in locals():
             conn.close()
+
 
 
 
@@ -5379,10 +5398,13 @@ def save_workout():
         auto_steps_enabled = False
         daily_tdee = None
         base_tdee = None
+        steps_calories = 0  # FIXED: Initialize here so it's always defined
+        day_total_workout_calories = 0.0  # FIXED: Initialize here
+        
         try:
             # Get user settings including auto_garmin_steps
             cursor.execute("""
-                SELECT auto_add_workout_calories, auto_garmin_steps, tdee, current_weight 
+                SELECT auto_add_workout_calories, auto_garmin_steps, tdee, weight 
                 FROM users 
                 WHERE id = %s
             """, (user_id,))
@@ -5397,7 +5419,6 @@ def save_workout():
                 
                 # Initialize with base TDEE
                 daily_tdee = base_tdee
-                day_total_workout_calories = 0.0
                 
                 # Get workout calories if auto_add_workout_calories is enabled
                 if auto_calories_enabled:
@@ -5409,6 +5430,7 @@ def save_workout():
                     """, (user_id, date))
                     day_total_workout_calories = float(cursor.fetchone()[0] or 0.0)
                     daily_tdee += day_total_workout_calories
+                    print(f"Workout calories for {date}: {day_total_workout_calories}")
                 
                 # Get steps calories if auto_garmin_steps is enabled
                 if auto_steps_enabled:
@@ -5450,8 +5472,9 @@ def save_workout():
                             updated_at = NOW()
                     """, (user_id, date, base_tdee, day_total_workout_calories, steps_calories, daily_tdee))
                     
+                    conn.commit()
+                    
                     print(f"TDEE Updated: Base={base_tdee}, Workout={day_total_workout_calories}, Steps={steps_calories}, Total={daily_tdee}")
-
         except Exception as e:
             print(f"Error calculating daily TDEE: {e}")
             import traceback
@@ -5559,6 +5582,7 @@ def save_workout():
     finally:
         cursor.close()
         conn.close()
+
 
 
 
