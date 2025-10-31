@@ -1734,28 +1734,33 @@ def profile():
     print(f"Request method: {request.method}")
     predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
     form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
-    print(f"Request method: {request.method}")
 
     if request.method == 'POST':
         if not form.validate_on_submit():
             for field, errors in form.errors.items():
                 print(f"  Field '{field}': {errors}")
         print("="*60)
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
 
     current_weight = None
-    current_tdee = None
     current_avatar = 'default.png'
     extra_columns_exist = False
     role = getattr(current_user, 'role', 'user')
+    
+    # NEW: Get dynamic TDEE data (includes base, workout, and steps)
     tdee_data = get_user_current_tdee(current_user.id)
+    
+    # Use daily_tdee (adjusted) if features are enabled, otherwise use base_tdee
+    current_tdee = tdee_data['daily_tdee']  # This is the adjusted TDEE
+    base_tdee = tdee_data['base_tdee']      # This is the base TDEE from settings
     
     # XP/Level defaults
     user_level = 1
     user_xp = 0
     xp_to_next = 100
-    user_socials = "[]"  # Initialize here at the top
+    user_socials = "[]"
 
     try:
         # Check for extra columns including privacy controls
@@ -1769,7 +1774,7 @@ def profile():
         extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
 
         # Build select query with level/xp and privacy controls
-        select_cols = ['username', 'email', 'weight', 'tdee', 'avatar'] + columns
+        select_cols = ['username', 'email', 'weight', 'avatar'] + columns
         
         # Check if level and xp_points columns exist
         cursor.execute("""
@@ -1790,7 +1795,6 @@ def profile():
 
         if user_data:
             current_weight = user_data.get('weight')
-            current_tdee = user_data.get('tdee')
             current_avatar = user_data.get('avatar') or 'default.png'
             
             # Extract level and XP
@@ -1838,44 +1842,34 @@ def profile():
             privacy_fields = ['show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials']
             for privacy_field in privacy_fields:
                 if privacy_field in columns:
-                    # Get checkbox value (True if checked, False if not)
                     privacy_value = request.form.get(privacy_field) == 'on'
                     update_query += f", {privacy_field} = %s"
                     update_params.append(privacy_value)
 
             for col in columns:
                 if col in privacy_fields:
-                    continue  # Already handled above
+                    continue
                 elif col == "socials":
-                    # Get socials from form field (uses name="socials")
                     socials_json = request.form.get("socials", "[]")
-                    
-                    
                     try:
                         socials_data = json.loads(socials_json)
-                        
-                    except json.JSONDecodeError as e:
-                       
+                    except json.JSONDecodeError:
                         socials_data = []
-                    
                     update_query += ", socials = %s"
                     update_params.append(json.dumps(socials_data))
 
             update_query += " WHERE id = %s"
             update_params.append(current_user.id)
 
-
-
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
+            
             cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
             user_data = cursor.fetchone()
             if user_data:
                 form.socials.data = user_data.get('socials', '[]')
 
-                return redirect(
-                        url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success')
-                    )
+            return redirect(url_for('profile', toast_msg='Profiili päivitetty!', toast_cat='success'))
 
         elif user_data:
             # Pre-fill form
@@ -1885,7 +1879,7 @@ def profile():
             
             for col in columns:
                 if col == "socials":
-                    continue  # Skip - we handle this separately via user_socials variable
+                    continue
                 elif hasattr(form, col):
                     getattr(form, col).data = user_data.get(col, '')
             form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
@@ -1905,12 +1899,13 @@ def profile():
         title='Profile',
         form=form,
         current_weight=current_weight,
-        current_tdee=current_tdee,
+        current_tdee=current_tdee,        # Dynamic adjusted TDEE
+        base_tdee=base_tdee,              # NEW: Base TDEE from settings
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
         predefined_avatars=predefined_avatars,
-        tdee_data=tdee_data,
+        tdee_data=tdee_data,              # Full breakdown
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
@@ -1918,6 +1913,7 @@ def profile():
         is_owner=True,
         user_socials=user_socials
     )
+
 
 
 @app.route('/profile/<int:user_id>', methods=['GET'])
