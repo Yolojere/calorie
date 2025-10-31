@@ -6633,7 +6633,7 @@ if __name__ == '__main__':
         print("[SCHEDULER] ✅ Automatic Garmin sync enabled - running every 30 minutes")
         
         print("[START] Running Flask app...")
-        app.run(debug=False)
+        app.run(debug=True)
 
     except Exception as e:
         print(f"[ERROR] Initialization failed: {e}")
