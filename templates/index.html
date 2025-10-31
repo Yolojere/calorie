@@ -1748,7 +1748,17 @@
                     border-left-width: 4px !important;
                     transform: translateX(2px);
                 }
-                
+                .nutrition-grid-container,
+.activity-grid-container {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.nutrition-grid-container.hidden,
+.activity-grid-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
         .progress-proteins .progress-icon {
             background: linear-gradient(to right, #b989f0, #835fac); color:#000000; }
         .progress-carbs .progress-icon { background: linear-gradient(to right, #6dc0d5, #929292); color:#000000; }
@@ -3440,6 +3450,23 @@
                     loadTopFoods();
                     positionNutritionGrid();
                     initPortionControls();
+                    const savedGridVisible = localStorage.getItem('gridVisible');
+                    if (savedGridVisible !== null) {
+                    gridVisible = savedGridVisible === 'true';
+                    const btn = $('#toggle-grid-btn');
+                    const nutritionGrid = $('.nutrition-grid-container');
+                    const activityGrid = $('.activity-grid-container');
+                        
+                    if (!gridVisible) {
+                    nutritionGrid.addClass('hidden').hide();
+                    activityGrid.addClass('hidden').hide();
+                    btn.removeClass('active');
+                    } else {
+                    nutritionGrid.removeClass('hidden').show();
+                    activityGrid.removeClass('hidden').show();
+                    btn.addClass('active');
+                    }
+                    }
 
                     
                     // If we have a current food, update portion buttons
@@ -3941,10 +3968,27 @@ function hideEmptyGroups() {
                 }
                 
                 function toggleGridVisibility() {
-                    gridVisible = !gridVisible;
-                    updateGridVisibility();
-                    $(this).toggleClass('active', gridVisible);
+                const btn = $('#toggle-grid-btn');
+                const nutritionGrid = $('.nutrition-grid-container');
+                const activityGrid = $('.activity-grid-container');
+                
+                gridVisible = !gridVisible;
+                
+                if (gridVisible) {
+                    // Show both grids
+                    nutritionGrid.removeClass('hidden')
+                    activityGrid.removeClass('hidden')
+                    btn.addClass('active');
+                } else {
+                    // Hide both grids
+                    nutritionGrid.addClass('hidden')
+                    activityGrid.addClass('hidden')
+                    btn.removeClass('active');
                 }
+                
+                // Save preference
+                localStorage.setItem('gridVisible', gridVisible);
+            }
                 
                 function updateGridVisibility() {
                     gridVisible ? $('.nutrition-grid-container').show() : $('.nutrition-grid-container').hide();
