@@ -3916,7 +3916,6 @@ def workout_history():
     cursor = conn.cursor(cursor_factory=DictCursor)
 
     try:
-        # In /workout/history, update the daily section:
         if period == 'daily':
             # Get all workout sessions - filter by saved sessions
             cursor.execute('''
@@ -3969,7 +3968,7 @@ def workout_history():
                 if not data['session_ids']:
                     continue
 
-                # Calculate ACTUAL duration and calories from ALL saved cardio sessions for this day
+                # Get cardio duration and calories
                 cursor.execute('''
                     SELECT 
                         COALESCE(SUM(cs.duration_minutes), 0) as total_duration_minutes,
@@ -3980,12 +3979,23 @@ def workout_history():
                 ''', (user_id, date))
                 
                 cardio_totals = cursor.fetchone()
-                total_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
+                cardio_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
                 total_calories = float(cardio_totals['total_calories'] or 0)
                 
-                # Convert minutes to seconds for consistency
-                duration_seconds = int(total_duration_minutes * 60)
-                duration_formatted = format_duration(duration_seconds)
+                # Get strength training duration from workout_sessions
+                cursor.execute('''
+                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds
+                    FROM workout_sessions
+                    WHERE user_id = %s AND date = %s AND is_saved = true
+                ''', (user_id, date))
+                
+                strength_totals = cursor.fetchone()
+                strength_duration_seconds = float(strength_totals['strength_duration_seconds'] or 0)
+                
+                # Convert cardio minutes to seconds and combine
+                cardio_duration_seconds = cardio_duration_minutes * 60
+                total_duration_seconds = int(cardio_duration_seconds + strength_duration_seconds)
+                duration_formatted = format_duration(total_duration_seconds)
 
                 # Get muscles per day (only saved sets from saved sessions)
                 cursor.execute('''
@@ -4021,16 +4031,15 @@ def workout_history():
                 history.append({
                     'date': date,
                     'workout_name': workout_name_display,
-                    'duration_seconds': duration_seconds,
+                    'duration_seconds': total_duration_seconds,
                     'duration_formatted': duration_formatted,
                     'calories_burned': total_calories,
-                    'sessions_count': len(data['session_ids']),  # This will now show "2" for 2 sessions
+                    'sessions_count': len(data['session_ids']),
                     'total_sets': data['total_sets'],
                     'total_reps': data['total_reps'],
                     'total_volume': data['total_volume'],
                     'muscles': muscles
                 })
-
 
         else:
             date_trunc = 'week' if period == 'weekly' else 'month'
@@ -4104,7 +4113,7 @@ def workout_history():
                 if not data['has_saved_sets']:
                     continue
                 
-                # Calculate ACTUAL duration and calories from cardio sessions for this period
+                # Get cardio duration and calories for the period
                 cursor.execute(f'''
                     SELECT 
                         COALESCE(SUM(cs.duration_minutes), 0) as total_duration_minutes,
@@ -4117,12 +4126,25 @@ def workout_history():
                 ''', (user_id, period_start))
                 
                 cardio_totals = cursor.fetchone()
-                total_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
+                cardio_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
                 total_calories = float(cardio_totals['total_calories'] or 0)
                 
-                # Convert to seconds
-                duration_seconds = int(total_duration_minutes * 60)
-                duration_formatted = format_duration(duration_seconds)
+                # Get strength training duration from workout_sessions
+                cursor.execute(f'''
+                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds
+                    FROM workout_sessions
+                    WHERE user_id = %s 
+                    AND DATE_TRUNC('{date_trunc}', date)::DATE = %s
+                    AND is_saved = true
+                ''', (user_id, period_start))
+                
+                strength_totals = cursor.fetchone()
+                strength_duration_seconds = float(strength_totals['strength_duration_seconds'] or 0)
+                
+                # Convert to seconds and combine
+                cardio_duration_seconds = cardio_duration_minutes * 60
+                total_duration_seconds = int(cardio_duration_seconds + strength_duration_seconds)
+                duration_formatted = format_duration(total_duration_seconds)
                 
                 # Create workout names summary
                 workout_names_list = list(data['workout_names'])
@@ -4134,7 +4156,7 @@ def workout_history():
                 entry = {
                     'workout_names': workout_names_list,
                     'workout_names_display': workout_names_display,
-                    'duration_seconds': duration_seconds,
+                    'duration_seconds': total_duration_seconds,
                     'duration_formatted': duration_formatted,
                     'calories_burned': total_calories,
                     'sessions_count': len(data['sessions_with_saved_sets']),
@@ -4169,6 +4191,7 @@ def workout_history():
         return jsonify(error="Could not load workout history"), 500
     finally:
         conn.close()
+
 
 
 
@@ -6657,7 +6680,7 @@ if __name__ == '__main__':
         print("[SCHEDULER] ✅ Automatic Garmin sync enabled - running every 30 minutes")
         
         print("[START] Running Flask app...")
-        app.run(debug=True)
+        app.run(debug=False)
 
     except Exception as e:
         print(f"[ERROR] Initialization failed: {e}")
