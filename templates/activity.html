@@ -1338,30 +1338,57 @@ function ensureCheckboxValue() {
 }
     // Save TDEE & Weight button
 // Save TDEE & Weight button
+// Save TDEE & Weight button
+// Save TDEE & Weight button
 if (saveTdeeBtn) {
     saveTdeeBtn.addEventListener('click', function() {
-        // FIXED: Don't read from tdeeInput, recalculate or get from visible display
+        // === SAVE METRICS DEBUG ===
+        console.log('=== SAVE METRICS DEBUG ===');
+        console.log('Mode:', currentMode);
+        
         let tdeeValue = 0;
         
         // Get TDEE based on current mode
         if (currentMode === 'easy') {
-            // For easy mode, read from the result display
-            const tdeeText = document.getElementById('tdee-result').textContent;
-            tdeeValue = parseFloat(tdeeText.replace(/\./g, '').replace(',', '.')) || 0;
-        } else if (currentMode === 'advanced') {
-            // For advanced mode, calculate it here
+            // For easy mode, recalculate to get exact value
             const age = parseInt(document.getElementById('age').value) || 0;
             const weight = parseFloat(weightInput.value) || 0;
             const height = parseInt(document.getElementById('height').value) || 0;
-            const steps = parseInt(document.getElementById('step-count').value) || 0;
-            const activityCals = parseInt(document.getElementById('activity-calories').value) || 0;
+            const sleepMin = parseInt(document.getElementById('sleep-hours').value || 0) * 60 + parseInt(document.getElementById('sleep-minutes').value || 0);
+            const intenseMin = parseInt(document.getElementById('intense-hours').value || 0) * 60 + parseInt(document.getElementById('intense-minutes').value || 0);
+            const moderateMin = parseInt(document.getElementById('moderate-hours').value || 0) * 60 + parseInt(document.getElementById('moderate-minutes').value || 0);
+            const lightMin = 0;
+            const walkingMin = parseInt(document.getElementById('walking-hours').value || 0) * 60 + parseInt(document.getElementById('walking-minutes').value || 0);
             
-            // Recalculate using the same function
-            const results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, steps, activityCals);
+            const results = calculateEnergyExpenditureEasy(currentGender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
             tdeeValue = results.tdee;
+            console.log('Easy mode result:', results);
+        } else if (currentMode === 'advanced') {
+            // For advanced mode, save ONLY BMR (no steps/activity calories)
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const weight = parseFloat(weightInput.value) || 0;
+            const height = parseInt(document.getElementById('height').value) || 0;
+            
+            // Calculate BMR only (no steps, no activity calories)
+            const results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, 0, 0);
+            console.log('Advanced mode result:', results);
+            
+            // Check what properties are available
+            if (results.bmr) {
+                tdeeValue = results.bmr;
+                console.log('Using bmr:', tdeeValue);
+            } else if (results.tdee) {
+                // Fallback to tdee if bmr doesn't exist
+                tdeeValue = results.tdee;
+                console.log('Using tdee (bmr not found):', tdeeValue);
+            } else {
+                console.error('No bmr or tdee found in results:', results);
+                tdeeValue = 0;
+            }
         } else if (currentMode === 'custom') {
             // For custom mode, get from custom input
             tdeeValue = parseInt(document.getElementById('custom-tdee').value) || 0;
+            console.log('Custom mode value:', tdeeValue);
         }
         
         const weightValue = parseFloat(weightInput.value) || 0;
@@ -1372,9 +1399,6 @@ if (saveTdeeBtn) {
         const autoWorkoutCalories = workoutCheckbox ? workoutCheckbox.checked : false;
         const autoGarminSteps = stepsCheckbox ? stepsCheckbox.checked : false;
         
-        // DEBUG: Log what we're sending
-        console.log('=== SAVE METRICS DEBUG ===');
-        console.log('Mode:', currentMode);
         console.log('TDEE Value:', tdeeValue);
         console.log('Weight Value:', weightValue);
         console.log('Sending data:', {
@@ -1395,12 +1419,21 @@ if (saveTdeeBtn) {
         
         // Use FormData for proper form submission
         const formData = new FormData();
-        formData.append('tdee', tdeeValue);
+        formData.append('tdee', Math.round(tdeeValue));  // Ensure it's a valid number
         formData.append('weight', weightValue);
         formData.append('gender', currentGender);
         formData.append('auto_add_workout_calories', autoWorkoutCalories ? 'true' : 'false');
         formData.append('auto_garmin_steps', autoGarminSteps ? 'true' : 'false');
         formData.append('mode', currentMode);
+        
+        console.log('FormData being sent:', {
+            tdee: Math.round(tdeeValue),
+            weight: weightValue,
+            gender: currentGender,
+            auto_add_workout_calories: autoWorkoutCalories ? 'true' : 'false',
+            auto_garmin_steps: autoGarminSteps ? 'true' : 'false',
+            mode: currentMode
+        });
         
         fetch('/save_metrics', {
             method: 'POST',
@@ -1440,6 +1473,8 @@ if (saveTdeeBtn) {
         });
     });
 }
+
+
 
     // Mode switching function
 function switchMode(mode) {
