@@ -648,6 +648,22 @@ def admin_news_list():
     
     return render_template('admin/news_list.html', posts=posts)
 
+import bleach
+
+def sanitize_html_content(html_content):
+    """Sanitize HTML content to prevent XSS attacks"""
+    allowed_tags = [
+        'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'blockquote', 'code', 'pre', 'ul', 'ol', 'li', 'a', 'img', 'video',
+        'span', 'div', 'sub', 'sup'
+    ]
+    allowed_attrs = {
+        '*': ['class', 'style'],
+        'a': ['href', 'title', 'target'],
+        'img': ['src', 'alt', 'width', 'height'],
+        'video': ['src', 'controls', 'width', 'height']
+    }
+    return bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs, strip=True)
 # Create news post
 @app.route('/admin/news/create', methods=['GET', 'POST'])
 @login_required
@@ -655,10 +671,10 @@ def admin_news_list():
 def admin_news_create():
     if request.method == 'POST':
         title = request.form.get('title')
-        content = request.form.get('content')
+        content = request.form.get('content')  # This now contains rich HTML from Quill
         icon_class = request.form.get('icon_class', 'fas fa-newspaper')
         icon_color = request.form.get('icon_color', 'text-primary')
-        
+
         conn = get_db_connection()
         cur = conn.cursor()
         
@@ -676,13 +692,13 @@ def admin_news_create():
     
     return render_template('admin/news_form.html', post=None)
 
-# Edit news post
+
 @app.route('/admin/news/edit/<int:post_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def admin_news_edit(post_id):
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur = conn.cursor()
     
     if request.method == 'POST':
         title = request.form.get('title')
@@ -692,7 +708,7 @@ def admin_news_edit(post_id):
         
         cur.execute("""
             UPDATE news_post 
-            SET title = %s, content = %s, icon_class = %s, icon_color = %s, updated_at = CURRENT_TIMESTAMP
+            SET title = %s, content = %s, icon_class = %s, icon_color = %s, updated_at = NOW()
             WHERE id = %s
         """, (title, content, icon_class, icon_color, post_id))
         
@@ -703,10 +719,12 @@ def admin_news_edit(post_id):
         flash('News post updated successfully!', 'success')
         return redirect(url_for('admin_news_list'))
     
-    # GET request - fetch post data
-    cur.execute('SELECT * FROM news_post WHERE id = %s', (post_id,))
+    # GET request - load post data
+    cur.execute("""
+        SELECT id, title, content, icon_class, icon_color, author_id, created_at, is_published
+        FROM news_post WHERE id = %s
+    """, (post_id,))
     post = cur.fetchone()
-    
     cur.close()
     conn.close()
     
@@ -730,7 +748,7 @@ def admin_news_delete(post_id):
         cur.close()
         conn.close()
         
-        return jsonify({'success': True, 'message': 'News post deleted successfully!'})
+        return jsonify({'success': True, 'message': 'Poistettu onnistuneesti!'})
     except Exception as e:
         conn.rollback()
         cur.close()
@@ -3980,22 +3998,26 @@ def workout_history():
                 
                 cardio_totals = cursor.fetchone()
                 cardio_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
-                total_calories = float(cardio_totals['total_calories'] or 0)
+                cardio_calories = float(cardio_totals['total_calories'] or 0)
                 
                 # Get strength training duration from workout_sessions
                 cursor.execute('''
-                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds
+                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds,
+                    COALESCE(SUM(weight_calories_burned), 0) as strength_calories
                     FROM workout_sessions
                     WHERE user_id = %s AND date = %s AND is_saved = true
                 ''', (user_id, date))
                 
                 strength_totals = cursor.fetchone()
                 strength_duration_seconds = float(strength_totals['strength_duration_seconds'] or 0)
+                strength_calories = float(strength_totals['strength_calories'] or 0)
                 
                 # Convert cardio minutes to seconds and combine
                 cardio_duration_seconds = cardio_duration_minutes * 60
                 total_duration_seconds = int(cardio_duration_seconds + strength_duration_seconds)
                 duration_formatted = format_duration(total_duration_seconds)
+
+                total_calories = cardio_calories + strength_calories
 
                 # Get muscles per day (only saved sets from saved sessions)
                 cursor.execute('''
@@ -4127,11 +4149,12 @@ def workout_history():
                 
                 cardio_totals = cursor.fetchone()
                 cardio_duration_minutes = float(cardio_totals['total_duration_minutes'] or 0)
-                total_calories = float(cardio_totals['total_calories'] or 0)
+                cardio_calories = float(cardio_totals['total_calories'] or 0)
                 
                 # Get strength training duration from workout_sessions
                 cursor.execute(f'''
-                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds
+                    SELECT COALESCE(SUM(workout_duration_seconds), 0) as strength_duration_seconds,
+                    COALESCE(SUM(weight_calories_burned), 0) as strength_calories
                     FROM workout_sessions
                     WHERE user_id = %s 
                     AND DATE_TRUNC('{date_trunc}', date)::DATE = %s
@@ -4140,12 +4163,14 @@ def workout_history():
                 
                 strength_totals = cursor.fetchone()
                 strength_duration_seconds = float(strength_totals['strength_duration_seconds'] or 0)
+                strength_calories = float(strength_totals['strength_calories'] or 0)
                 
                 # Convert to seconds and combine
                 cardio_duration_seconds = cardio_duration_minutes * 60
                 total_duration_seconds = int(cardio_duration_seconds + strength_duration_seconds)
                 duration_formatted = format_duration(total_duration_seconds)
                 
+                total_calories = cardio_calories + strength_calories
                 # Create workout names summary
                 workout_names_list = list(data['workout_names'])
                 if len(workout_names_list) > 2:
@@ -6643,7 +6668,7 @@ def main():
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
-               
+
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
