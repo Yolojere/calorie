@@ -6640,7 +6640,10 @@ def main():
         conn.close()
         return redirect(url_for('index'))
  
-
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+               
 if __name__ == '__main__':
     try:
         print("[INIT] Initializing main database...")
