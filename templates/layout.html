@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TrackYou Kalorilaskuri ja Treeni App — Ilmainen Fitness-sovellus{% endblock %}</title>
     <meta name="description" content="TrackYou Kalorilaskuri — moderni, ilmainen ravinnon ja kaloreiden seurantasovellus verkossa.">
+    <meta name="keywords" content="kalorilaskuri, fitness, päiväkirja, treeni, ilmainen">
     <meta property="og:title" content="TrackYou Kalorilaskuri ja Treeni App">
     <meta property="og:description" content="Seuraa kaloreita, makroja ja aterioita helposti, sekä hallinnoi treenejäsi yhdessä paikassa.">
     <meta property="og:type" content="website">
@@ -363,7 +364,67 @@
     min-width: 300px;       /* optional, ensures a good width */
     text-align: center;     /* centers the text */
         }
-        
+        .news-post-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.news-post-author .position-relative {
+    width: 48px;
+    height: 48px;
+    margin-right: 12px;
+}
+
+.news-post-author img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.news-post-author .badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 0.65rem;
+    padding: 3px 6px;
+    background-color: #ffc107 !important;
+    color: #000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.news-post-author .author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.news-post-author .author-name {
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: 2px;
+}
+
+.news-post-author .author-name:hover {
+    color: #6464c8;
+}
+
+/* Best lifts avatar (keep smaller at 40px) */
+.best-lifts-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.best-lifts-avatar img {
+    width: 40px;
+    height: 40px;
+}
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container-page {
