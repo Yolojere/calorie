@@ -636,7 +636,7 @@ def admin_news_list():
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute("""
-        SELECT np.*, u.username 
+        SELECT np.*, u.username, u.avatar, u.level
         FROM news_post np
         JOIN users u ON np.author_id = u.id
         ORDER BY np.created_at DESC
@@ -648,7 +648,9 @@ def admin_news_list():
     
     return render_template('admin/news_list.html', posts=posts)
 
+
 import bleach
+
 
 def sanitize_html_content(html_content):
     """Sanitize HTML content to prevent XSS attacks"""
@@ -664,6 +666,8 @@ def sanitize_html_content(html_content):
         'video': ['src', 'controls', 'width', 'height']
     }
     return bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+
+
 # Create news post
 @app.route('/admin/news/create', methods=['GET', 'POST'])
 @login_required
@@ -719,10 +723,14 @@ def admin_news_edit(post_id):
         flash('News post updated successfully!', 'success')
         return redirect(url_for('admin_news_list'))
     
-    # GET request - load post data
+    # GET request - load post data with author info
     cur.execute("""
-        SELECT id, title, content, icon_class, icon_color, author_id, created_at, is_published
-        FROM news_post WHERE id = %s
+        SELECT np.id, np.title, np.content, np.icon_class, np.icon_color, 
+               np.author_id, np.created_at, np.is_published,
+               u.username, u.avatar, u.level
+        FROM news_post np
+        JOIN users u ON np.author_id = u.id
+        WHERE np.id = %s
     """, (post_id,))
     post = cur.fetchone()
     cur.close()
@@ -733,6 +741,7 @@ def admin_news_edit(post_id):
         return redirect(url_for('admin_news_list'))
     
     return render_template('admin/news_form.html', post=post)
+
 
 # Delete news post
 @app.route('/admin/news/delete/<int:post_id>', methods=['POST'])
@@ -754,6 +763,7 @@ def admin_news_delete(post_id):
         cur.close()
         conn.close()
         return jsonify({'success': False, 'message': str(e)}), 500
+
 
 # Toggle publish status
 @app.route('/admin/news/toggle/<int:post_id>', methods=['POST'])
@@ -2945,20 +2955,17 @@ def calculate_weekly_averages(session_history):
     result.sort(key=lambda x: x["end_date"], reverse=True)
     return result
 
-def calculate_weekly_projection(tdee, weekly_avg):
+def calculate_weekly_projection(weekly_avg_tdee, weekly_avg_calories):
     """
-    Calculate projected weekly weight change based on TDEE vs weekly average calories.
-
-    Args:
-        tdee (float): User's daily maintenance calories.
-        weekly_avg (float): Average daily calories over the past 7 days.
-
-    Returns:
-        dict: projected weight change in kg and daily balance.
+    Calculate projected weekly weight change based on weekly average TDEE vs weekly average intake.
     """
-    daily_balance = weekly_avg - tdee               # calories/day above/below TDEE
-    projected_change_kg = (daily_balance * 7) / 7700  # 7700 kcal ~ 1 kg fat
-
+    # Convert to float to avoid Decimal type issues from PostgreSQL
+    weekly_avg_tdee = float(weekly_avg_tdee) if weekly_avg_tdee else 0
+    weekly_avg_calories = float(weekly_avg_calories) if weekly_avg_calories else 0
+    
+    daily_balance = weekly_avg_calories - weekly_avg_tdee
+    projected_change_kg = (daily_balance * 7) / 7700
+    
     return {
         "daily_balance": daily_balance,
         "projected_change_kg": projected_change_kg
@@ -2968,13 +2975,58 @@ def calculate_weekly_projection(tdee, weekly_avg):
 def history():
     user_id = current_user.id
     
-    # ✅ Fetch user_tdee from users table
+    # ✅ Fetch user settings and default TDEE
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
-    cursor.execute("SELECT tdee FROM users WHERE id = %s", (user_id,))
-    row = cursor.fetchone()
+    cursor.execute("""
+        SELECT tdee, auto_garmin_steps, auto_add_workout_calories 
+        FROM users 
+        WHERE id = %s
+    """, (user_id,))
+    user_row = cursor.fetchone()
+    
+    # Determine which TDEE to use
+    user_tdee = 0
+    weekly_avg_tdee = 0
+    
+    if user_row:
+        auto_garmin_steps = user_row.get("auto_garmin_steps", False)
+        auto_add_workout_calories = user_row.get("auto_add_workout_calories", False)
+        default_tdee = user_row["tdee"] if user_row["tdee"] is not None else 0
+        
+        # If dynamic TDEE is enabled, fetch from daily_tdee_adjustments
+        if auto_garmin_steps or auto_add_workout_calories:
+            # Get today's adjusted TDEE
+            cursor.execute("""
+                SELECT adjusted_tdee 
+                FROM daily_tdee_adjustments 
+                WHERE user_id = %s AND date = CURRENT_DATE
+            """, (user_id,))
+            today_tdee_row = cursor.fetchone()
+            user_tdee = today_tdee_row["adjusted_tdee"] if today_tdee_row and today_tdee_row["adjusted_tdee"] else default_tdee
+            
+            # Get weekly average adjusted TDEE (last 7 days)
+            cursor.execute("""
+                SELECT AVG(adjusted_tdee) as avg_tdee
+                FROM (
+                    SELECT adjusted_tdee, date
+                    FROM daily_tdee_adjustments
+                    WHERE user_id = %s
+                    AND date >= CURRENT_DATE - INTERVAL '6 days'
+                    AND date <= CURRENT_DATE
+                    AND adjusted_tdee IS NOT NULL
+                    ORDER BY date DESC
+                    LIMIT 7
+                ) subquery
+            """, (user_id,))
+            avg_tdee_row = cursor.fetchone()
+            weekly_avg_tdee = avg_tdee_row["avg_tdee"] if avg_tdee_row and avg_tdee_row["avg_tdee"] else default_tdee
+        else:
+            # Static TDEE mode - use default TDEE for both
+            user_tdee = default_tdee
+            weekly_avg_tdee = default_tdee
+    
     conn.close()
-    user_tdee = row["tdee"] if row and row["tdee"] is not None else 0  # default 0 if not set
 
     session_history = get_session_history(user_id)
     today = datetime.today()
@@ -3007,14 +3059,14 @@ def history():
     # Weekly averages
     weekly_data = calculate_weekly_averages(session_history)
     
-    # ✅ Calculate weekly projection using the provided function
+    # ✅ Calculate weekly projection using weekly average TDEE
     weekly_projection = None
     daily_balance = 0
     projected_change_kg = 0
     
-    if weekly_data and len(weekly_data) > 0 and user_tdee > 0:
-        weekly_avg_calories = weekly_data[0]['avg_calories']  # Get current week's average
-        weekly_projection = calculate_weekly_projection(user_tdee, weekly_avg_calories)
+    if weekly_data and len(weekly_data) > 0 and weekly_avg_tdee > 0:
+        weekly_avg_calories = weekly_data[0]['avg_calories']
+        weekly_projection = calculate_weekly_projection(weekly_avg_tdee, weekly_avg_calories)
         daily_balance = weekly_projection['daily_balance']
         projected_change_kg = weekly_projection['projected_change_kg']
 
@@ -3030,8 +3082,8 @@ def history():
         today_saturated=today_saturated,
         today_fiber=today_fiber,
         user_tdee=user_tdee,
-        daily_balance=daily_balance,  # ✅ New variable
-        projected_change_kg=projected_change_kg  # ✅ New variable
+        daily_balance=daily_balance,
+        projected_change_kg=projected_change_kg
     )
 
 
@@ -6586,8 +6638,6 @@ def sitemap():
     return Response(sitemap_xml, mimetype='application/xml')
 
 @app.route('/main')
-@login_required
-@admin_required
 def main():
     """Main page with workout of the week, news, and best lifts of today"""
     conn = get_db_connection()
@@ -6596,28 +6646,46 @@ def main():
     # User is already authenticated and verified as admin by the decorators above
     # No need to check is_admin or role here
     
-    # Fetch published news posts
+    # Fetch published news posts with author avatar and level
     cursor.execute("""
-        SELECT np.*, u.username 
+        SELECT np.*, u.username, u.avatar, u.level
         FROM news_post np
         JOIN "users" u ON np.author_id = u.id
         WHERE np.is_published = TRUE
         ORDER BY np.created_at DESC
         LIMIT 4
     """)
-    news_posts = cursor.fetchall()
+    news_posts_raw = cursor.fetchall()
+    
+    # Format news posts
+    news_posts = []
+    for post in news_posts_raw:
+        news_posts.append({
+            'id': post['id'],
+            'title': post['title'],
+            'content': post['content'],
+            'icon_class': post['icon_class'],
+            'icon_color': post['icon_color'],
+            'created_at': post['created_at'],
+            'title_key': post.get('title_key'),
+            'content_key': post.get('content_key'),
+            'author_id': post['author_id'],
+            'author_username': post['username'],
+            'author_avatar': post['avatar'] if post['avatar'] else 'default.png',
+            'author_level': post['level'] if post['level'] else 1
+        })
     
     try:
         # Get today's date
         today = datetime.now().date()
         
-        # Get top 20 best lifts of today (highest volume in a single set)
+        # Get all qualifying lifts of today (minimum volume threshold to filter out warm-ups)
         cursor.execute("""
             SELECT 
                 u.id as user_id,
                 u.username,
                 u.avatar,
-                COALESCE(u.level, 1) as level,
+                u.level,
                 e.name as exercise_name,
                 ws.reps,
                 ws.weight,
@@ -6628,25 +6696,59 @@ def main():
             JOIN exercises e ON ws.exercise_id = e.id
             WHERE wses.date = %s
             AND ws.is_saved = true
+            AND (ws.reps * ws.weight) >= 20
             ORDER BY volume DESC
-            LIMIT 20
         """, (today,))
         
-        best_lifts = cursor.fetchall()
+        all_lifts_raw = cursor.fetchall()
         
-        # Format best lifts data
-        lifts_data = []
-        for lift in best_lifts:
-            lifts_data.append({
+        # Group lifts by user
+        lifts_by_user = {}
+        for lift in all_lifts_raw:
+            user_id = lift['user_id']
+            if user_id not in lifts_by_user:
+                lifts_by_user[user_id] = []
+            
+            lifts_by_user[user_id].append({
                 'user_id': lift['user_id'],
                 'username': lift['username'],
                 'avatar': lift['avatar'] or 'default.png',
-                'level': lift['level'],
+                'level': lift['level'] if lift['level'] else 1,
                 'exercise_name': lift['exercise_name'],
                 'reps': lift['reps'],
                 'weight': lift['weight'],
                 'volume': lift['volume']
             })
+        
+        # Randomize and select 1-2 lifts per user
+        import random
+        best_lifts = []
+        
+        # Get list of users and shuffle them
+        users = list(lifts_by_user.keys())
+        random.shuffle(users)
+        
+        # For each user, randomly select 1-2 of their best lifts
+        for user_id in users:
+            user_lifts = lifts_by_user[user_id]
+            # Sort by volume to get their best lifts
+            user_lifts.sort(key=lambda x: x['volume'], reverse=True)
+            
+            # Randomly decide if we take 1 or 2 lifts (70% chance for 1, 30% chance for 2)
+            num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
+            
+            # Take the top lifts for this user
+            best_lifts.extend(user_lifts[:num_lifts])
+            
+            # Stop if we have enough lifts (limit to ~15-20 total)
+            if len(best_lifts) >= 15:
+                break
+        
+        # Final shuffle of the selected lifts for display order
+        random.shuffle(best_lifts)
+        
+        # Limit to top 15 for display
+        best_lifts = best_lifts[:15]
         
         cursor.close()
         conn.close()
@@ -6664,6 +6766,7 @@ def main():
         cursor.close()
         conn.close()
         return redirect(url_for('index'))
+
  
 @app.route('/favicon.ico')
 def favicon():
