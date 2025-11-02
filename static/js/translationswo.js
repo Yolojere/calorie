@@ -46,15 +46,32 @@ const translations = {
     thu: "Thu",
     fri: "Fri",
     sat: "Sat",
-    sun: "Sun",
 
     grams: "g",
+    kg: "kg",
+
+    // Main page / Home page
+    workout_of_the_week: "Workout of the Week",
+    full_body_strength_circuit: "Full Body Strength Circuit",
+    compound_movements_desc: "Focus on compound movements: Squats, Deadlifts, Bench Press, and Rows",
+    start_workout: "Start Workout",
+    news_updates: "News & Updates",
+    manage: "Manage",
+    best_lifts_today: "Best Lifts Today",
+    user: "User",
+    best_set: "Best Set",
+    no_lifts_yet: "No lifts recorded today yet. Be the first!",
+    start_your_workout: "Start Your Workout",
+    days_ago_2: "2 days ago",
+    days_ago_5: "5 days ago",
+    week_ago_1: "1 week ago",
+    weeks_ago_2: "2 weeks ago",
 
     // Workouts
     selectCardio: "Select cardio exercise...",
     distanceKm: "Distance (KM)",
     avgPace: "Average Pace",
-    avgHeartRate: "Avgerage Heartrate",
+    avgHeartRate: "Average Heartrate",
     watts: "Watts",
     notes: "Comments",
     addCardio: "Add Cardio",
@@ -83,6 +100,7 @@ const translations = {
     set: "Set",
     sets: "Sets",
     reps: "Reps",
+    repss: "Reps",
     volume: "Volume",
     delete: "Delete",
     chest: "Chest",
@@ -127,12 +145,12 @@ const translations = {
     loading_templates: "Loading templates...",
     no_template_available: "No templates available",
     error_loading_template: "Error loading templates",
-    workoutCopiedSuccess: "Workout copied succesfully!",
+    workoutCopiedSuccess: "Workout copied successfully!",
     applying: "Applying",
     adding: "Adding",
     searchCardio: "Search Cardio",
 
-    // Progress bars - NEW
+    // Progress bars
     proteins_upper: "PROTEINS",
     carbs_upper: "CARBS", 
     fats_upper: "FATS",
@@ -141,7 +159,7 @@ const translations = {
     fiber_upper: "FIBER",
     salt_upper: "SALT",
 
-    // Placeholders - NEW
+    // Placeholders
     search_food_placeholder: "Search food or scan EAN...",
     insert_yourself: "Insert Yourself",
     enter_template_name: "Enter template name",
@@ -167,7 +185,7 @@ const translations = {
     // Additional status messages
     action: "Action",
     newExercisesDetected: "New exercises detected!",
-        weekDisplay: "Week",
+    weekDisplay: "Week",
     selectExercise: "Select Exercise",
     noTemplatesFound: "No templates found",
     analyzingWorkout: "Analyzing Your Workout",
@@ -189,7 +207,6 @@ const translations = {
     keepPushing: "Keep pushing!",
     setsImproved: "Sets improved from last time",
     greatEffort: "Great effort today!",
-    close: "Close",
     shareResults: "Share Results",
     firstSession: "First session of this focus type!",
     expand: "Expand",
@@ -247,6 +264,26 @@ const translations = {
     sun: "Su",
 
     grams: "g",
+    kg: "kg",
+
+    // Main page / Home page
+    workout_of_the_week: "Viikon Treeni",
+    full_body_strength_circuit: "Koko Kehon Voimapiiri",
+    compound_movements_desc: "Keskity moninikivellukiin: Kyykky, Maastaveto, Penkkipunnerrus ja Soutu",
+    start_workout: "Aloita Treeni",
+    news_updates: "Uutiset & Päivitykset",
+    manage: "Hallinnoi",
+    best_lifts_today: "Parhaat Nostot Tänään",
+    user: "Käyttäjä",
+    best_set: "Paras Sarja",
+    no_lifts_yet: "Ei vielä tallennettuja nostoja tänään. Ole ensimmäinen!",
+    start_your_workout: "Aloita Treenisi",
+    
+    // News items (fallback)
+    days_ago_2: "2 päivää sitten",
+    days_ago_5: "5 päivää sitten",
+    week_ago_1: "viikko sitten",
+    weeks_ago_2: "2 viikkoa sitten",
 
     // Workouts
     selectCardio: "Valitse harjoitus..",
@@ -298,6 +335,7 @@ const translations = {
     set: "Sarjat",
     sets: "Sarjaa",
     reps: "Toistot",
+    repss: "Toistoa",
     volume: "Volyymi",
     delete: "Poista",
     chest: "Rinta",
@@ -346,7 +384,7 @@ const translations = {
     adding: "Lisätään",
     searchCardio: "Etsi harjoitus",
 
-    // Placeholders - NEW
+    // Placeholders
     search_food_placeholder: "Hae ruokaa tai skannaa viivakoodi...",
     insert_yourself: "Syötä itse",
     enter_template_name: "Syötä pohjan nimi",
@@ -408,18 +446,12 @@ const translations = {
     valmis: "Valmis",
     hylkaa: "Hylkää",
     lisaaSarja: "Lisää Sarja",
-    applying: "Sovelletaan",
     template_applied_success: "Pohja sovellettu onnistuneesti!",
     error: "Virhe",
-    error_loading_template: "Virhe ladattaessa pohjaa",
     workoutCopiedSuccess: "Treeni tallennettu onnistuneesti!",
     copy_previous_workout: "Kopioidaanko viime treeni?",
     copy_workout_question: "Kopioidaanko \"{workoutName}\" tälle päivälle ({date})?",
     copy_workout_description: "Kopioi kaikki sarjat ja toistot viime treenistä.",
-    yes: "Kyllä",
-    no: "Ei",
-    
-    // You might also want to add these for other parts
     workout_copied_successfully: "Treeni kopioitu onnistuneesti!",
     copy_workout_error: "Virhe kopioitaessa treeniä",
     network_error: "Verkkovirhe tapahtui kopioitaessa treeniä",
@@ -452,7 +484,7 @@ const translations = {
     "Row (Machine)": "Soutu (Laite)",
     "Row (T-bar)": "Tankosoutu (T-bar)",
     "Seated cable row": "Alasoutu taljassa",
-    // LEEEEGS
+    // LEGS
     "Calf (Seated)": "Pohkeet (Istuen)",
     "Calf (Standing)": "Pohkeet (Seisten)",
     "Leg curl (Lying)": "Reiden koukistus (Maaten)",
@@ -512,9 +544,9 @@ const translations = {
     "Static hold": "Staattinen pito",
     "focus_strength": "voima",
     "focus_hypertrophy": "hypertrofia"
-    
   }
 };
+
 // Function to add dynamic exercises from DB
 function addDynamicExercisesToTranslations(dbExercises) {
   dbExercises.forEach(exercise => {
@@ -523,6 +555,7 @@ function addDynamicExercisesToTranslations(dbExercises) {
     }
   });
 }
+
 // current language
 let currentLang = localStorage.getItem("lang") || "fi";
 
@@ -544,6 +577,7 @@ function t(key) {
     // Finally, return the key itself if no translation found
     return key;
 }
+
 // Enhanced apply translations function
 function applyTranslations() {
     console.log("Applying translations, current language:", currentLang);
@@ -564,7 +598,6 @@ function applyTranslations() {
             }
         }
     });
- }
-
+}
 
 document.addEventListener("DOMContentLoaded", applyTranslations);
