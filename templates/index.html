@@ -4,6 +4,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="keywords" content="kalorilaskuri, fitness, päiväkirja, treeni, ilmainen">
         <title>TrackYou - Kalorilaskuri</title>
         <meta name="description" content="TrackYou Kalorilaskuri — moderni, ilmainen ravinnon ja kaloreiden seurantasovellus verkossa.">
         <meta property="og:title" content="TrackYou Kalorilaskuri">
@@ -21,7 +22,7 @@
         <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
         <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=CSalibri&display=swap" rel="stylesheet">
         <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -614,7 +615,7 @@
             }
             
             .delete-item i {
-                font-size: 12px !important;
+                font-size: 15px !important;
                 color: white !important;
             }
             
@@ -2371,6 +2372,7 @@
             }
             
             @media (max-width: 768px) {
+
                             .progress-item {
                     padding: 6px 10px;
                 }
@@ -2489,13 +2491,13 @@
                     line-height: 1.1;
                     min-width: 0;
                     height: 27px; 
-                    width: 82px;             /* fits inside footer */
+                    width: 79px;             /* fits inside footer */
                     flex: 1;                   /* all buttons equal width */
                     display: flex;
                     flex-direction: row;    /* icon above text */
                     align-items: center;
                     justify-content: center;     /* tiny gap between icon + text */
-                    margin: 0 2px;             /* spacing between buttons */
+                    margin: 0 1px;             /* spacing between buttons */
                 }
 
                 /* Icons smaller */
@@ -2519,6 +2521,24 @@
             }
             
             @media (max-width: 360px) {
+                .toggle-group {
+                overflow-y: hidden !important;
+                width: fit-content !important;
+                padding: 1px 2px !important;
+                font-size: 10px !important;
+                margin-left: 0px !important;
+                flex-shrink: 0;
+                height: 20px;
+                background-color: rgba(47, 47, 47, 0.2) !important;
+                color: white !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                transition: all 0.2s ease;
+            }
+                #date-selector {
+                    font-size: 12px !important;
+                    height: 36px !important;
+                    width: 140px;
+                }
                 .rtb-yay {
                     height: 55px !important;
                 }
@@ -2533,6 +2553,25 @@
                 
                 .icon-bg {
                     font-size: 18px !important;
+                }
+                                    .mobile-footer .btn {
+                    background-color: #1b1b1b !important;
+                    color: #ffffff !important;
+                    border: 1px solid #444 !important;
+                    border-radius: 10px;       /* slightly rounded */
+                    padding: 1px;              /* super tight padding */
+                    font-size: 11px;           /* compact labels */
+                    font-weight: 600;
+                    line-height: 1.1;
+                    min-width: 0;
+                    height: 27px; 
+                    width: 72px;             /* fits inside footer */
+                    flex: 1;                   /* all buttons equal width */
+                    display: flex;
+                    flex-direction: row;    /* icon above text */
+                    align-items: center;
+                    justify-content: center;     /* tiny gap between icon + text */
+                    margin: 0;          /* spacing between buttons */
                 }
             }
             
@@ -2551,6 +2590,25 @@
                 
                 .icon-bg {
                     font-size: 16px !important;
+                }
+                    .mobile-footer .btn {
+                    background-color: #1b1b1b !important;
+                    color: #ffffff !important;
+                    border: 1px solid #444 !important;
+                    border-radius: 10px;       /* slightly rounded */
+                    padding: 1px;              /* super tight padding */
+                    font-size: 11px;           /* compact labels */
+                    font-weight: 600;
+                    line-height: 1.1;
+                    min-width: 0;
+                    height: 27px; 
+                    width: 62px;             /* fits inside footer */
+                    flex: 1;                   /* all buttons equal width */
+                    display: flex;
+                    flex-direction: row;    /* icon above text */
+                    align-items: center;
+                    justify-content: center;     /* tiny gap between icon + text */
+                    margin: 0;          /* spacing between buttons */
                 }
             }
             
