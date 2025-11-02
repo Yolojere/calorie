@@ -319,6 +319,8 @@ input.form-control:-webkit-autofill {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         border: 1px solid var(--border-color);
         animation: modalFadeIn 0.3s ease;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     @keyframes modalFadeIn {
@@ -334,6 +336,9 @@ input.form-control:-webkit-autofill {
     max-height: 300px;
     overflow-y: auto;
     padding: 10px;
+    max-width: 100%;
+    overflow-x: hidden;
+    grid-auto-flow: row;
 }
 
 
@@ -345,8 +350,9 @@ input.form-control:-webkit-autofill {
     aspect-ratio: 1/1;
     border: 2px solid transparent;
     /* Ensure minimum touch target */
-    min-width: 60px;
-    min-height: 60px;
+    min-width: 0;  
+    align-self: start;
+    width: 100%;
 }
 
     .avatar-option img {
@@ -1004,7 +1010,8 @@ input.form-control:-webkit-autofill {
 }
 
 .device-status-btn {
-    margin-left:35px;
+    margin-top: 4px;
+    margin-left:0px;
     display: flex;
     max-width: 120px;
     gap: 2px;
@@ -1183,7 +1190,22 @@ input.form-control:-webkit-autofill {
         width: 100%;
         margin-bottom: 8px;
     }
+        .avatar-modal-content {
+        width: 95%;
+        max-width: none;
+        padding: 20px;
+        margin: 10px;
+        max-height: 85vh;  /* Reduce from 90vh to ensure fit */
+        overflow-y: auto;
+    }
+    
+    .avatar-modal {
+        align-items: flex-start;
+        padding-top: 20px;
+        -webkit-overflow-scrolling: touch;  /* Smooth scrolling on iOS */
+    }
 }
+
     /* Responsive */
     @media (max-width: 768px) {
             .level-badge {
@@ -1329,8 +1351,76 @@ input.form-control:-webkit-autofill {
     .modal-buttons button {
         width: 100%;
     }
+    .detail-row {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.detail-label {
+    color: #aaa;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #fff;
+    font-weight: 600;
+}
 }
 @media (max-width: 360px) {
+        .detail-row {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding: 4px 0;
+    font-size: 12px;
+}
+    .privacy-toggle {
+    position: relative;
+    width: 45px;
+    height: 21px;
+}
+
+.privacy-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.privacy-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.privacy-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+  .profile-footer-btns {
+    flex-direction: column !important;
+    align-items: center;
+  }
+
+  .profile-footer-btns a.btn {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+  }
     .avatar-options {
         grid-template-columns: repeat(3, 1fr);
         gap: 4px;
