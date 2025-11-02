@@ -1628,16 +1628,6 @@ def index():
         # ✅ NEW: Pass additional TDEE info for display
         tdee_data=tdee_data  # Contains base_tdee, workout_calories, daily_tdee, auto_enabled
     )
-@app.route("/delete-data", methods=["GET", "POST"])
-def delete_data():
-    if request.method == "POST":
-        user_id = request.form.get("user_id")  # Or however FB sends it
-        # TODO: implement deletion logic from your DB
-        # e.g., remove user account + related data
-        return jsonify({"status": "success", "message": f"Data deleted for user {user_id}"})
-    
-    # If accessed via browser, just show instructions
-    return render_template("delete_data.html")
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
