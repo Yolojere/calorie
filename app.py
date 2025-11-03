@@ -6124,6 +6124,7 @@ def add_cardio_session():
             return jsonify(error="Cardio exercise not found"), 404
 
         met_value = float(exercise['met_value'])
+        exercise_name = exercise['name'].lower()
         duration_minutes = float(data['duration_minutes'])
         duration_hours = duration_minutes / 60.0
 
@@ -6141,6 +6142,11 @@ def add_cardio_session():
         elif data.get('distance_km') and float(data['distance_km']) > 0:
             distance_km = float(data['distance_km'])
             speed_kmh = distance_km / duration_hours
+
+            if 'cycling' in exercise_name or 'pyöräily' in exercise_name or 'biking' in exercise_name:
+                # Cycling: 1 km = 0.28 × weight (kg)
+                calories_burned = distance_km * 0.28 * weight_kg
+                calculation_method = f"Distance-Cycling ({speed_kmh:.1f} km/h)"            
             
             if speed_kmh > 6:  # Running
                 if speed_kmh >= 16:
