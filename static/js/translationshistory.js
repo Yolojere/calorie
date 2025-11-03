@@ -23,6 +23,7 @@ const translations = {
 
 
     // Nutrition
+    ccalculator: "Calorie Calculator",
     bigserving: "Big Serving",
     favourite: "Favourite",
     bigserving_g: "Big Serving (g)",
@@ -340,6 +341,7 @@ const translations = {
 
 
     // Nutrition
+    ccalculator: "Kalorilaskuri",
     favourite: "Suosikki",
     bigserving: "Iso Annos",
     add_custom_food: "Lisää uusi ruoka",
