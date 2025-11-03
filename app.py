@@ -1587,9 +1587,9 @@ def load_more_dates():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-@app.route('/')
+@app.route('/main')
 @login_required
-def index():
+def main():
     # ✅ UPDATED: Use dynamic TDEE calculation instead of static current_user.tdee
     current_weight = current_user.weight or 0
     
@@ -1615,7 +1615,7 @@ def index():
                 item['key'] = item['id']
 
     return render_template(
-        'index.html',
+        'main.html',
         eaten_items=eaten_items,
         totals=totals,
         current_date=current_date,
@@ -1943,6 +1943,7 @@ def view_profile(user_id):
     extra_columns_exist = False
     role = 'user'
     tdee_data = None
+    base_tdee = None
     predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
     current_avatar = 'default.png'
     user_level = 1
@@ -1986,8 +1987,7 @@ def view_profile(user_id):
         if not user_data:
             flash('User not found', 'danger')
             return redirect(url_for('index'))
-
-        # Avatar
+        #Avatar
         current_avatar = user_data.get('avatar') or 'default.png'
         # Level/xp logic
         user_level = user_data.get('level', 1) or 1
@@ -1998,6 +1998,15 @@ def view_profile(user_id):
             current_weight = user_data.get('weight')
             current_tdee = user_data.get('tdee')
         role = user_data.get('role', 'user')
+        
+        # TDEE data only if health metrics are public or it's own profile
+        if user_data.get('show_health_metrics', False) or user_id == current_user.id:
+            tdee_data = get_user_current_tdee(user_data['id']) if callable(globals().get('get_user_current_tdee')) else None
+            # Add base_tdee calculation
+            if tdee_data and isinstance(tdee_data, dict):
+                base_tdee = tdee_data.get('base_tdee', 0)
+            else:
+                base_tdee = current_tdee if current_tdee else 0  # Fallback to current_tdee if no breakdown available
         
         # TDEE data only if health metrics are public or it's own profile
         if user_data.get('show_health_metrics', False) or user_id == current_user.id:
@@ -2039,6 +2048,7 @@ def view_profile(user_id):
         extra_columns_exist=extra_columns_exist,
         predefined_avatars=predefined_avatars,
         tdee_data=tdee_data,
+        base_tdee=base_tdee,
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
@@ -6633,135 +6643,178 @@ def sitemap():
 
     return Response(sitemap_xml, mimetype='application/xml')
 
-@app.route('/main')
-def main():
+@app.route('/')
+def index():
     """Main page with workout of the week, news, and best lifts of today"""
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=DictCursor)
     
-    # User is already authenticated and verified as admin by the decorators above
-    # No need to check is_admin or role here
-    
-    # Fetch published news posts with author avatar and level
-    cursor.execute("""
-        SELECT np.*, u.username, u.avatar, u.level
-        FROM news_post np
-        JOIN "users" u ON np.author_id = u.id
-        WHERE np.is_published = TRUE
-        ORDER BY np.created_at DESC
-        LIMIT 4
-    """)
-    news_posts_raw = cursor.fetchall()
-    
-    # Format news posts
+    # Initialize default values for ALL template variables
+
+    is_authenticated = False
+    is_admin = False
+    best_lifts = []
     news_posts = []
-    for post in news_posts_raw:
-        news_posts.append({
-            'id': post['id'],
-            'title': post['title'],
-            'content': post['content'],
-            'icon_class': post['icon_class'],
-            'icon_color': post['icon_color'],
-            'created_at': post['created_at'],
-            'title_key': post.get('title_key'),
-            'content_key': post.get('content_key'),
-            'author_id': post['author_id'],
-            'author_username': post['username'],
-            'author_avatar': post['avatar'] if post['avatar'] else 'default.png',
-            'author_level': post['level'] if post['level'] else 1
-        })
+    totals = {
+        'total_calories': 0,
+        'total_protein': 0,
+        'total_carbs': 0,
+        'total_fat': 0
+    }
+    tdee_data = None
+    base_tdee = None
     
     try:
-        # Get today's date
-        today = datetime.now().date()
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
         
-        # Get all qualifying lifts of today (minimum volume threshold to filter out warm-ups)
-        cursor.execute("""
-            SELECT 
-                u.id as user_id,
-                u.username,
-                u.avatar,
-                u.level,
-                e.name as exercise_name,
-                ws.reps,
-                ws.weight,
-                (ws.reps * ws.weight) as volume
-            FROM workout_sets ws
-            JOIN workout_sessions wses ON ws.session_id = wses.id
-            JOIN users u ON wses.user_id = u.id
-            JOIN exercises e ON ws.exercise_id = e.id
-            WHERE wses.date = %s
-            AND ws.is_saved = true
-            AND (ws.reps * ws.weight) >= 20
-            ORDER BY volume DESC
-        """, (today,))
-        
-        all_lifts_raw = cursor.fetchall()
-        
-        # Group lifts by user
-        lifts_by_user = {}
-        for lift in all_lifts_raw:
-            user_id = lift['user_id']
-            if user_id not in lifts_by_user:
-                lifts_by_user[user_id] = []
+        # Check if user is logged in
+        if 'user_id' in session:
+            is_authenticated = True
+            user_id = session['user_id']
             
-            lifts_by_user[user_id].append({
-                'user_id': lift['user_id'],
-                'username': lift['username'],
-                'avatar': lift['avatar'] or 'default.png',
-                'level': lift['level'] if lift['level'] else 1,
-                'exercise_name': lift['exercise_name'],
-                'reps': lift['reps'],
-                'weight': lift['weight'],
-                'volume': lift['volume']
+            # Check admin status
+            cursor.execute("SELECT is_admin FROM users WHERE id = %s", (user_id,))
+            user = cursor.fetchone()
+            if user and user['is_admin']:
+                is_admin = True
+            
+            # Fetch totals for logged-in users
+            cursor.execute("""
+                SELECT 
+                    COALESCE(SUM(calories), 0) as total_calories,
+                    COALESCE(SUM(protein), 0) as total_protein,
+                    COALESCE(SUM(carbs), 0) as total_carbs,
+                    COALESCE(SUM(fat), 0) as total_fat
+                FROM food_log
+                WHERE user_id = %s AND date = CURRENT_DATE
+            """, (user_id,))
+            totals_row = cursor.fetchone()
+            
+            if totals_row:
+                totals = {
+                    'total_calories': float(totals_row['total_calories'] or 0),
+                    'total_protein': float(totals_row['total_protein'] or 0),
+                    'total_carbs': float(totals_row['total_carbs'] or 0),
+                    'total_fat': float(totals_row['total_fat'] or 0)
+                }
+        
+        # Fetch published news posts (visible to everyone)
+        cursor.execute("""
+            SELECT np.*, u.username, u.avatar, u.level
+            FROM news_post np
+            JOIN "users" u ON np.author_id = u.id
+            WHERE np.is_published = TRUE
+            ORDER BY np.created_at DESC
+            LIMIT 4
+        """)
+        news_posts_raw = cursor.fetchall()
+        
+        # Format news posts
+        news_posts = []
+        for post in news_posts_raw:
+            news_posts.append({
+                'id': post['id'],
+                'title': post['title'],
+                'content': post['content'],
+                'icon_class': post['icon_class'],
+                'icon_color': post['icon_color'],
+                'created_at': post['created_at'],
+                'title_key': post.get('title_key'),
+                'content_key': post.get('content_key'),
+                'author_id': post['author_id'],
+                'author_username': post['username'],
+                'author_avatar': post['avatar'] if post['avatar'] else 'default.png',
+                'author_level': post['level'] if post['level'] else 1
             })
         
-        # Randomize and select 1-2 lifts per user
-        import random
-        best_lifts = []
-        
-        # Get list of users and shuffle them
-        users = list(lifts_by_user.keys())
-        random.shuffle(users)
-        
-        # For each user, randomly select 1-2 of their best lifts
-        for user_id in users:
-            user_lifts = lifts_by_user[user_id]
-            # Sort by volume to get their best lifts
-            user_lifts.sort(key=lambda x: x['volume'], reverse=True)
+        # Fetch best lifts only if user is authenticated
+        if is_authenticated:
+            today = datetime.now().date()
             
-            # Randomly decide if we take 1 or 2 lifts (70% chance for 1, 30% chance for 2)
-            num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id,
+                    u.username,
+                    u.avatar,
+                    u.level,
+                    e.name as exercise_name,
+                    ws.reps,
+                    ws.weight,
+                    (ws.reps * ws.weight) as volume
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                AND ws.is_saved = true
+                AND (ws.reps * ws.weight) >= 20
+                ORDER BY volume DESC
+            """, (today,))
             
-            # Take the top lifts for this user
-            best_lifts.extend(user_lifts[:num_lifts])
+            all_lifts_raw = cursor.fetchall()
             
-            # Stop if we have enough lifts (limit to ~15-20 total)
-            if len(best_lifts) >= 15:
-                break
-        
-        # Final shuffle of the selected lifts for display order
-        random.shuffle(best_lifts)
-        
-        # Limit to top 15 for display
-        best_lifts = best_lifts[:15]
+            # Group lifts by user
+            lifts_by_user = {}
+            for lift in all_lifts_raw:
+                user_id_lift = lift['user_id']
+                if user_id_lift not in lifts_by_user:
+                    lifts_by_user[user_id_lift] = []
+                
+                lifts_by_user[user_id_lift].append({
+                    'user_id': lift['user_id'],
+                    'username': lift['username'],
+                    'avatar': lift['avatar'] or 'default.png',
+                    'level': lift['level'] if lift['level'] else 1,
+                    'exercise_name': lift['exercise_name'],
+                    'reps': lift['reps'],
+                    'weight': lift['weight'],
+                    'volume': float(lift['volume'])
+                })
+            
+            # Randomize and select 1-2 lifts per user
+            import random
+            best_lifts = []
+            
+            users = list(lifts_by_user.keys())
+            random.shuffle(users)
+            
+            for user_id_lift in users:
+                user_lifts = lifts_by_user[user_id_lift]
+                user_lifts.sort(key=lambda x: x['volume'], reverse=True)
+                
+                num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
+                best_lifts.extend(user_lifts[:num_lifts])
+                
+                if len(best_lifts) >= 15:
+                    break
+            
+            random.shuffle(best_lifts)
+            best_lifts = best_lifts[:15]
         
         cursor.close()
         conn.close()
         
-        # Since user is verified as admin by decorator, is_admin is always True
-        return render_template('main.html', 
+        return render_template('index.html', 
                             news_posts=news_posts, 
                             best_lifts=best_lifts,
-                            is_admin=True,
-                            is_authenticated=True)
+                            is_admin=is_admin,
+                            is_authenticated=is_authenticated,
+                            totals=totals)
     
     except Exception as e:
         app.logger.error(f"Error loading main page: {e}")
-        flash('Error loading main page', 'danger')
-        cursor.close()
-        conn.close()
-        return redirect(url_for('index'))
+        import traceback
+        app.logger.error(traceback.format_exc())
+        
+        # CRITICAL: Return template, not redirect (prevents loop)
+        return render_template('index.html', 
+                            news_posts=[],
+                            best_lifts=[],
+                            is_admin=False,
+                            is_authenticated=False,
+                            totals=totals,
+                            tdee_data=None,
+                            base_tdee=None)
+
 
  
 @app.route('/favicon.ico')
