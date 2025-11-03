@@ -209,33 +209,33 @@
                 box-shadow: 0px 1px 5px rgb(179, 179, 180);
                 cursor:auto !important;
             }       
-                .mobile-settings-btn {
-            display: inline-block;
-            background-color: #1b1b1b;
-            color: rgb(255, 255, 255) !important;
-            border-radius: 50%;
-            padding: 10px !important;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-left: 10px
-                }
+            .mobile-settings-btn {
+                display: inline-block;
+                background-color: #1b1b1b;
+                color: rgb(255, 255, 255) !important;
+                border-radius: 50%;
+                padding: 10px !important;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                transition: all 0.3s ease;
+                margin-left: 10px
+                    }
+            
+                .mobile-settings-btn:hover {
+                background-color: #f0f0f0 !important;
+                transform: translateY(-4px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                color: #000 !important;
+            }
 
-        .mobile-settings-btn:hover {
-            background-color: #f0f0f0 !important;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            color: #000 !important;
-        }
-
-        .mobile-settings-btn i {
-            font-size: 20px !important;
-            margin: 0 !important;
-        }
+            .mobile-settings-btn i {
+                font-size: 20px !important;
+                margin: 0 !important;
+            }
 
         /* === LAYOUT SPECIFIC STYLES === */
         .container-page {
@@ -481,6 +481,13 @@
                                 <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Koti</span>
                             </a>
                         </li>
+                         <li>
+                                        <a class="dropdown-item" 
+                            href="/main"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-calculator me-2"></i><span data-i18n="ccalculator">Kalorilaskuri</span>
+                            </a>
+                        </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
@@ -502,13 +509,13 @@
                                 <i class="fas fa-fire me-2"></i><span data-i18n="activity">Aktiivisuus</span>
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="/custom_food"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Lisää Ruoka</span>
-                            </a>
-                        </li>
+                                 <li>
+                        <a class="dropdown-item" 
+                        href="/custom_food"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                        </a>
+                    </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
@@ -534,6 +541,11 @@
                             <a class="nav-link home-link nav-link-box" href="/" 
                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
                                 <i class="fa-solid fa-house-chimney-window"></i>
+                            </a>
+                                                    <li class="nav-item">
+                            <a class="nav-link home-link nav-link-box" href="/main" 
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Main" data-i18n="ccalculator" >
+                                <i class="fas fa-calculator"></i>
                             </a>
                             <li class="nav-item">
         <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
