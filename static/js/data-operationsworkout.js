@@ -1093,23 +1093,34 @@ function populateCardioSelects() {
 }
 
 // ✅ ENHANCED: Calculate estimated calories with multiple methods
-function calculateCardioCalories(metValue, durationMinutes, heartRate = null, watts = null, distance = null) {
+function calculateCardioCalories(metValue, durationMinutes, heartRate = null, watts = null, distance = null, exerciseName = '') {
     if (!metValue || !durationMinutes) return 0;
     
     let calories = 0;
     let method = "MET";
     const durationHours = durationMinutes / 60.0;
+    const exerciseNameLower = exerciseName.toLowerCase();
     
     // Method 1: Watts-based (most accurate for cycling)
     if (watts && watts > 0) {
         calories = watts * durationHours * 3.6;
         method = "Watts";
     }
-    // Method 2: Distance-based (good for running/walking)
+    // Method 2: Distance-based (cycling/running/walking)
     else if (distance && distance > 0) {
         const speedKmh = distance / durationHours;
         
-        if (speedKmh > 6) {
+        // Check if cycling (Finnish or English)
+        if (exerciseNameLower.includes('pyöräily') || 
+            exerciseNameLower.includes('cycling') || 
+            exerciseNameLower.includes('bike') || 
+            exerciseNameLower.includes('biking')) {
+            
+            // Cycling: 1 km = 0.28 × weight
+            calories = distance * 0.28 * userWeight;
+            method = `Cycling (${speedKmh.toFixed(1)} km/h)`;
+        }
+        else if (speedKmh > 6) {
             // Running METs based on speed
             let runningMet;
             if (speedKmh >= 16) runningMet = 15.0;
@@ -1153,6 +1164,7 @@ function calculateCardioCalories(metValue, durationMinutes, heartRate = null, wa
     return Math.max(0, calories);
 }
 
+
 // ✅ ENHANCED: Update calorie preview with multiple input methods
 function updateCaloriePreview(isMobile = false) {
     const suffix = isMobile ? '-mobile' : '';
@@ -1170,14 +1182,16 @@ function updateCaloriePreview(isMobile = false) {
     const heartRate = heartRateInput ? parseFloat(heartRateInput.value) : null;
     const watts = wattsInput ? parseFloat(wattsInput.value) : null;
     const distance = distanceInput ? parseFloat(distanceInput.value) : null;
+    const exerciseName = selectedExercise.name || '';
     
     if (metValue && duration) {
-        const calories = calculateCardioCalories(metValue, duration, heartRate, watts, distance);
+        const calories = calculateCardioCalories(metValue, duration, heartRate, watts, distance, exerciseName);
         caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: ${Math.round(calories)}`;
     } else {
         caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: --`;
     }
 }
+
 
 // Initialize search when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -1192,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
 // Also initialize when cardio exercises are loaded
 const originalPopulateCardioSelects = populateCardioSelects;
 populateCardioSelects = function() {
@@ -1203,6 +1218,7 @@ populateCardioSelects = function() {
     // Initialize search functionality
     initCardioSearch();
 };
+
 
 // ✅ UPDATED: Add cardio session without sending weight/gender (backend gets from DB)
 async function addCardioSession(isMobile = false) {
