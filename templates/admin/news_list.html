@@ -1,5 +1,243 @@
 {% extends "layout.html" %}
 
+{% block head %}
+<style>
+    /* Glass Effect Cards */
+    .glass-card {
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px !important;
+        background: rgba(30, 30, 30, 0.7) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        margin-bottom: 20px;
+    }
+
+    .glass-card-header {
+        background: rgba(39, 39, 39, 0.7) !important;
+        border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+        padding: 20px;
+        border-radius: 16px 16px 0 0 !important;
+    }
+
+    .glass-card-header h5 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #e0e0e0;
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 20px;
+        color: #e0e0e0;
+    }
+
+    /* Buttons */
+    .btn-index {
+        display: inline-block;
+        background-color: #1b1b1b;
+        color: #ffffff;
+        border: 1px solid #444 !important;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-index:hover {
+        background-color: #f0f0f0 !important;
+        color: #000000 !important;
+        transform: scale(1.02);
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .btn-outline-info {
+        color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+        background-color: transparent;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-info:hover {
+        background-color: rgba(23, 162, 184, 0.2) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-outline-warning {
+        color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        background-color: transparent;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-warning:hover {
+        background-color: rgba(255, 193, 7, 0.2) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-outline-danger {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        background-color: transparent;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: rgba(220, 53, 69, 0.2) !important;
+        color: #ffffff !important;
+    }
+
+    /* Table */
+    .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table-glass {
+        color: #e0e0e0;
+        margin-bottom: 0;
+        background-color: transparent;
+    }
+
+    .table-glass th {
+        background: rgba(39, 39, 39, 0.6) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-top: none !important;
+        padding: 12px;
+        font-weight: 600;
+        color: #e0e0e0;
+    }
+
+    .table-glass td {
+        padding: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #e0e0e0;
+    }
+
+    .table-glass tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table-glass tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Badge styling */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .bg-success {
+        background-color: rgba(40, 167, 69, 0.3) !important;
+        color: #a8e6a3 !important;
+        border: 1px solid rgba(40, 167, 69, 0.5);
+    }
+
+    .bg-secondary {
+        background-color: rgba(108, 117, 125, 0.3) !important;
+        color: #b0bac0 !important;
+        border: 1px solid rgba(108, 117, 125, 0.5);
+    }
+
+    /* Empty State */
+    .empty-state-glass {
+        padding: 60px 20px;
+        text-align: center;
+        color: #888;
+    }
+
+    .empty-state-glass i {
+        opacity: 0.5;
+        color: #888;
+    }
+
+    .empty-state-glass p {
+        margin: 20px 0;
+        font-size: 16px;
+    }
+
+    /* Alerts */
+    .alert {
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        background-color: rgba(40, 167, 69, 0.15) !important;
+        border-color: rgba(40, 167, 69, 0.3) !important;
+        color: #a8e6a3 !important;
+    }
+
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.15) !important;
+        border-color: rgba(220, 53, 69, 0.3) !important;
+        color: #f5a5a8 !important;
+    }
+
+    .btn-close {
+        opacity: 0.5;
+        filter: brightness(1.5);
+    }
+
+    .btn-close:hover {
+        opacity: 0.8;
+    }
+
+    /* Button group */
+    .btn-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .glass-card-header.d-flex {
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start !important;
+        }
+
+        .glass-card-header.d-flex > a {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-group .btn {
+            width: 100%;
+        }
+
+        .table-glass {
+            font-size: 12px;
+        }
+
+        .table-glass td {
+            padding: 8px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="glass-card">
@@ -15,7 +253,7 @@
                     {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     {% endfor %}
                 {% endif %}
@@ -38,7 +276,7 @@
                         <tr>
                             <td>
                                 <i class="{{ post['icon_class'] }} {{ post['icon_color'] }} me-2"></i>
-                                {{ post['title'] }}
+                                <span>{{ post['title'] }}</span>
                             </td>
                             <td>{{ post['username'] }}</td>
                             <td>{{ post['created_at'].strftime('%Y-%m-%d %H:%M') if post['created_at'] else 'N/A' }}</td>
@@ -48,26 +286,26 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <div class="btn-group" role="group">
+                                <div class="btn-group">
                                     <button type="button" class="btn btn-sm btn-outline-info" 
-                                    onclick="togglePublish({{ post['id'] }})"
-                                    title="{{ 'Unpublish' if post['is_published'] else 'Publish' }}">
-                                <i class="fas fa-eye{{ '' if post['is_published'] else '-slash' }}"></i>
-                            </button>
-                            
-                            <!-- EDIT BUTTON -->
-                            <a href="{{ url_for('admin_news_edit', post_id=post['id']) }}" 
-                            class="btn btn-sm btn-outline-warning"
-                            title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            
-                            <!-- DELETE BUTTON -->
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="deletePost({{ post['id'] }}, '{{ post['title'] }}')"
-                                    title="Delete">
-                                <i class="fas fa-trash"></i>
-            </button>
+                                            onclick="togglePublish({{ post['id'] }})"
+                                            title="{{ 'Unpublish' if post['is_published'] else 'Publish' }}">
+                                        <i class="fas fa-eye{{ '' if post['is_published'] else '-slash' }}"></i>
+                                    </button>
+                                    
+                                    <!-- EDIT BUTTON -->
+                                    <a href="{{ url_for('admin_news_edit', post_id=post['id']) }}" 
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- DELETE BUTTON -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="deletePost({{ post['id'] }}, '{{ post['title'] }}')"
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -91,7 +329,8 @@
 <script>
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content || '';
-}         
+}
+
 function togglePublish(postId) {
     if (!confirm('Toggle publish status for this post?')) return;
     const csrfToken = getCSRFToken();
@@ -133,143 +372,4 @@ function deletePost(postId, title) {
     });
 }
 </script>
-
-<style>
-/* Glass Effect Cards */
-.glass-card {
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 16px !important;
-    background: rgba(30, 30, 30, 0.7) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px;
-}
-
-.glass-card-header {
-    background: rgba(39, 39, 39, 0.7) !important;
-    border-bottom: 1px solid rgba(100, 100, 200, 0.3);
-    padding: 20px;
-    border-radius: 16px 16px 0 0 !important;
-}
-
-.glass-card-header h5 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #e0e0e0;
-}
-
-.card-body {
-    padding: 20px;
-    color: #e0e0e0;
-}
-
-/* Buttons */
-.btn-index {
-    display: inline-block;
-    background-color: #1b1b1b;
-    color: #ffffff;
-    border: 1px solid #444 !important;
-    border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.btn-index:hover {
-    background-color: #f0f0f0 !important;
-    color: #000000 !important;
-    transform: scale(1.02);
-}
-
-.btn-outline-info {
-    color: #17a2b8;
-    border-color: #17a2b8;
-}
-
-.btn-outline-warning {
-    color: #ffc107;
-    border-color: #ffc107;
-}
-
-.btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
-}
-
-.btn-outline-info:hover, .btn-outline-warning:hover, .btn-outline-danger:hover {
-    color: #000;
-    opacity: 0.9;
-}
-
-/* Table */
-.table-glass {
-    color: #ffffff;
-    margin-bottom: 0;
-    background-color: transparent;
-}
-
-.table-glass th {
-    background: rgba(39, 39, 39, 0.6) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px;
-    font-weight: 600;
-    color: #e0e0e0;
-}
-
-.table-glass td {
-    padding: 12px;
-    vertical-align: middle;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    color: #e0e0e0;
-}
-
-.table-glass tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* Empty State */
-.empty-state-glass {
-    padding: 40px 20px;
-    text-align: center;
-    color: #888;
-}
-
-.empty-state-glass i {
-    opacity: 0.5;
-}
-
-/* Alerts */
-.alert {
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.alert-success {
-    background-color: rgba(40, 167, 69, 0.2);
-    border-color: rgba(40, 167, 69, 0.3);
-    color: #a8e6a3;
-}
-
-.alert-danger {
-    background-color: rgba(220, 53, 69, 0.2);
-    border-color: rgba(220, 53, 69, 0.3);
-    color: #f5c6cb;
-}
-
-@media (max-width: 768px) {
-    .glass-card-header.d-flex {
-        flex-direction: column;
-        gap: 10px;
-        align-items: flex-start !important;
-    }
-    
-    .btn-group {
-        display: flex;
-        gap: 5px;
-    }
-}
-</style>
 {% endblock %}
