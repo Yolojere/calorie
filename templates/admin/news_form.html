@@ -4,6 +4,12 @@
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- Google Roboto Font -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<!-- Quill CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+
 <style>
     /* Glass Effect Cards */
     .glass-card {
@@ -62,24 +68,388 @@
         color: #888;
     }
 
-    /* Rich Text Editor (Simple textarea styling) */
-    #content {
+    /* ===== QUILL DARK THEME STYLING ===== */
+    
+    /* Main Editor Container */
+    #editor-container {
         background-color: rgba(30, 30, 30, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #e0e0e0;
         border-radius: 8px;
-        padding: 10px 15px;
-        font-size: 14px;
-        font-family: 'Courier New', monospace;
         min-height: 300px;
-        resize: vertical;
     }
 
-    #content:focus {
-        background-color: rgba(40, 40, 40, 0.8);
-        border-color: rgba(100, 100, 200, 0.5);
-        box-shadow: 0 0 0 0.2rem rgba(100, 100, 200, 0.25);
-        outline: none;
+    /* Toolbar */
+    #editor-container .ql-toolbar {
+        background: rgba(39, 39, 39, 0.7);
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px 8px 0 0;
+        padding: 10px 8px;
+    }
+
+    /* Editor Content Area */
+    #editor-container .ql-container {
+        border: none;
+        font-size: 14px;
+        min-height: 250px;
+    }
+
+    #editor-container .ql-editor {
+        color: #e0e0e0;
+        min-height: 250px;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    #editor-container .ql-editor.ql-blank::before {
+        color: #888;
+        font-style: italic;
+    }
+
+    /* Toolbar Buttons */
+    .ql-toolbar button,
+    .ql-toolbar .ql-picker-label {
+        color: #d0d0d0 !important;
+        cursor: pointer;
+    }
+
+    .ql-toolbar button:hover,
+    .ql-toolbar .ql-picker-label:hover {
+        color: #ffffff !important;
+    }
+
+    .ql-toolbar button.ql-active,
+    .ql-toolbar .ql-picker-label.ql-active {
+        color: #6464c8 !important;
+    }
+
+    /* SVG Icons in Toolbar */
+    .ql-stroke {
+        stroke: #d0d0d0 !important;
+    }
+
+    .ql-fill {
+        fill: #d0d0d0 !important;
+    }
+
+    .ql-toolbar button:hover .ql-stroke,
+    .ql-toolbar button.ql-active .ql-stroke {
+        stroke: #ffffff !important;
+    }
+
+    .ql-toolbar button:hover .ql-fill,
+    .ql-toolbar button.ql-active .ql-fill {
+        fill: #ffffff !important;
+    }
+
+    /* ===== DARK DROPDOWN STYLING ===== */
+    
+    /* Dropdown Container (when expanded) */
+    .ql-picker-options {
+        background-color: #1d1d1d !important;
+        border: solid 1px #ffffff !important;
+        color: #d0d0d0 !important;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Individual Dropdown Items */
+    .ql-picker-item {
+        color: #d0d0d0 !important;
+        padding: 8px 12px;
+    }
+
+    .ql-picker-item:hover {
+        background-color: rgba(100, 100, 200, 0.3) !important;
+        color: #ffffff !important;
+    }
+
+    .ql-picker-item.ql-selected {
+        background-color: rgba(100, 100, 200, 0.5) !important;
+        color: #ffffff !important;
+    }
+
+    /* Picker Label (the visible part when closed) */
+    .ql-picker-label {
+        color: #d0d0d0 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Color and Background Picker Buttons */
+    .ql-toolbar.ql-snow button.ql-color::before,
+    .ql-toolbar.ql-snow button.ql-background::before {
+        background-color: #d0d0d0 !important;
+    }
+
+    /* Color picker dropdown */
+    .ql-color-label,
+    .ql-background-label {
+        background-color: #d0d0d0 !important;
+    }
+
+    .ql-picker.ql-color .ql-picker-label,
+    .ql-picker.ql-background .ql-picker-label {
+        background: transparent !important;
+    }
+
+    /* ===== CUSTOM FONT SIZES ===== */
+    
+    /* Register custom font sizes with Quill */
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before {
+        content: 'Normal';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="8px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before {
+        content: '8px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before {
+        content: '10px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before {
+        content: '12px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before {
+        content: '14px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before {
+        content: '16px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before {
+        content: '18px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before {
+        content: '20px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before {
+        content: '24px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before {
+        content: '28px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before {
+        content: '32px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before {
+        content: '36px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before {
+        content: '48px';
+    }
+
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="64px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="64px"]::before {
+        content: '64px';
+    }
+
+    /* Apply font sizes to editor and preview content */
+    .ql-editor .ql-size-8px,
+    .ql-size-8px { font-size: 8px !important; }
+    
+    .ql-editor .ql-size-10px,
+    .ql-size-10px { font-size: 10px !important; }
+    
+    .ql-editor .ql-size-12px,
+    .ql-size-12px { font-size: 12px !important; }
+    
+    .ql-editor .ql-size-14px,
+    .ql-size-14px { font-size: 14px !important; }
+    
+    .ql-editor .ql-size-16px,
+    .ql-size-16px { font-size: 16px !important; }
+    
+    .ql-editor .ql-size-18px,
+    .ql-size-18px { font-size: 18px !important; }
+    
+    .ql-editor .ql-size-20px,
+    .ql-size-20px { font-size: 20px !important; }
+    
+    .ql-editor .ql-size-24px,
+    .ql-size-24px { font-size: 24px !important; }
+    
+    .ql-editor .ql-size-28px,
+    .ql-size-28px { font-size: 28px !important; }
+    
+    .ql-editor .ql-size-32px,
+    .ql-size-32px { font-size: 32px !important; }
+    
+    .ql-editor .ql-size-36px,
+    .ql-size-36px { font-size: 36px !important; }
+    
+    .ql-editor .ql-size-48px,
+    .ql-size-48px { font-size: 48px !important; }
+    
+    .ql-editor .ql-size-64px,
+    .ql-size-64px { font-size: 64px !important; }
+
+    /* ===== END QUILL STYLING ===== */
+
+    /* Preview Section */
+    #preview-container {
+        background-color: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 20px;
+        min-height: 200px;
+        margin-top: 20px;
+        color: #e0e0e0;
+    }
+
+    #preview-content {
+        color: #e0e0e0;
+        text-align: left;
+    }
+
+    #preview-content *,
+    #preview-content h1, 
+    #preview-content h2, 
+    #preview-content h3,
+    #preview-content h4,
+    #preview-content h5,
+    #preview-content h6,
+    #preview-content p,
+    #preview-content div,
+    #preview-content span {
+        color: #e0e0e0;
+        text-align: left !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+
+    #preview-content h1, 
+    #preview-content h2, 
+    #preview-content h3,
+    #preview-content h4,
+    #preview-content h5,
+    #preview-content h6 {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    #preview-content a {
+        color: #6464c8;
+        text-decoration: underline;
+    }
+
+    #preview-content ul, #preview-content ol {
+        padding-left: 20px;
+        text-align: left !important;
+    }
+
+    #preview-content blockquote {
+        border-left: 4px solid rgba(100, 100, 200, 0.5);
+        padding-left: 15px;
+        margin: 10px 0;
+        color: #aaa;
+        font-style: italic;
+        text-align: left !important;
+    }
+
+    #preview-content code {
+        background-color: rgba(100, 100, 200, 0.2);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        color: #d0d0d0;
+    }
+
+    #preview-content pre {
+        background-color: rgba(100, 100, 200, 0.2);
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+        color: #d0d0d0;
+        font-family: 'Courier New', monospace;
+        text-align: left !important;
+    }
+
+    /* Full Preview Tab Styling */
+    #preview-full-tab {
+        display: none;
+    }
+
+    #preview-full-tab .post-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    #preview-full-tab .post-icon-container {
+        flex-shrink: 0;
+        width: 50px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding-top: 2px;
+    }
+
+    #preview-full-tab .post-content-container {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+    }
+
+    #preview-title {
+        color: #e0e0e0;
+        margin: 0 0 15px 0;
+        padding: 0;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.3;
+        text-align: left !important;
+    }
+
+    #preview-content-full {
+        text-align: left !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    #preview-content-full *,
+    #preview-content-full p,
+    #preview-content-full div,
+    #preview-content-full span,
+    #preview-content-full h1,
+    #preview-content-full h2,
+    #preview-content-full h3,
+    #preview-content-full h4,
+    #preview-content-full h5,
+    #preview-content-full h6 {
+        text-align: left !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+
+    #preview-content-full ul,
+    #preview-content-full ol {
+        padding-left: 20px;
+        text-align: left !important;
     }
 
     /* Icon Preview */
@@ -97,6 +467,56 @@
 
     #icon-preview {
         transition: all 0.2s ease;
+        color: inherit;
+    }
+
+    /* Post Display Alignment - for actual news posts */
+    .news-post-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        margin-bottom: 20px;
+    }
+
+    .news-post-icon {
+        flex-shrink: 0;
+        width: 50px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding-top: 2px;
+    }
+
+    .news-post-content {
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+        margin: 0;
+        padding: 0;
+    }
+
+    .news-post-title {
+        margin: 0 0 15px 0;
+        padding: 0;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.3;
+        text-align: left !important;
+    }
+
+    .news-post-body {
+        text-align: left !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .news-post-body *,
+    .news-post-body p,
+    .news-post-body div,
+    .news-post-body span {
+        text-align: left !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
     }
 
     /* Buttons */
@@ -139,6 +559,22 @@
         color: #aaa;
     }
 
+    .btn-toggle {
+        background-color: rgba(100, 100, 200, 0.3);
+        color: #e0e0e0;
+        border: 1px solid rgba(100, 100, 200, 0.5);
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-toggle:hover {
+        background-color: rgba(100, 100, 200, 0.5);
+    }
+
     .text-muted {
         color: #888 !important;
         font-size: 0.875rem;
@@ -146,10 +582,54 @@
         margin-top: 5px;
     }
 
+    /* Tab styling */
+    .preview-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .preview-tab {
+        padding: 8px 16px;
+        background-color: rgba(39, 39, 39, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #888;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .preview-tab.active {
+        background-color: rgba(100, 100, 200, 0.3);
+        border-color: rgba(100, 100, 200, 0.5);
+        color: #e0e0e0;
+    }
+
+    .preview-tab:hover {
+        background-color: rgba(100, 100, 200, 0.2);
+        color: #aaa;
+    }
+
+    /* Custom text colors */
+    .text-purple { color: #9b59b6 !important; }
+    .text-pink { color: #e91e63 !important; }
+    .text-orange { color: #ff9800 !important; }
+
     /* Responsive */
     @media (max-width: 768px) {
         .card-body {
             padding: 15px;
+        }
+        
+        #editor-container .ql-toolbar {
+            padding: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ql-toolbar button,
+        .ql-picker {
+            width: auto !important;
+            margin: 2px;
         }
     }
 </style>
@@ -165,8 +645,9 @@
             </h5>
         </div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" id="news-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="content" id="content-input">
                 
                 <!-- Title -->
                 <div class="mb-3">
@@ -175,22 +656,18 @@
                            class="form-control form-control-dark" 
                            id="title" 
                            name="title" 
-                           value="{{ post['title'] if post else '' }}" 
+                           value="{{ post[1] if post else '' }}" 
                            required
                            placeholder="Enter post title"
                            maxlength="200">
                     <small class="text-muted">Maximum 200 characters</small>
                 </div>
 
-                <!-- Content -->
+                <!-- Rich Text Editor -->
                 <div class="mb-3">
-                    <label for="content" class="form-label">Content *</label>
-                    <textarea id="content" 
-                              name="content" 
-                              class="form-control"
-                              required
-                              placeholder="Write your news post content here...">{{ post['content'] if post else '' }}</textarea>
-                    <small class="text-muted">Enter your post content</small>
+                    <label for="editor-container" class="form-label">Content *</label>
+                    <div id="editor-container"></div>
+                    <small class="text-muted">Use the toolbar to format your content</small>
                 </div>
 
                 <!-- Icon Selection -->
@@ -198,30 +675,94 @@
                     <div class="col-md-6">
                         <label for="icon_class" class="form-label">Icon</label>
                         <select class="form-select form-control-dark" id="icon_class" name="icon_class">
-                            <option value="fas fa-star" {{ 'selected' if post and post['icon_class'] == 'fas fa-star' else '' }}>⭐ Star</option>
-                            <option value="fas fa-chart-line" {{ 'selected' if post and post['icon_class'] == 'fas fa-chart-line' else '' }}>📈 Chart Line</option>
-                            <option value="fas fa-clock" {{ 'selected' if post and post['icon_class'] == 'fas fa-clock' else '' }}>🕐 Clock</option>
-                            <option value="fas fa-camera" {{ 'selected' if post and post['icon_class'] == 'fas fa-camera' else '' }}>📷 Camera</option>
-                            <option value="fas fa-trophy" {{ 'selected' if post and post['icon_class'] == 'fas fa-trophy' else '' }}>🏆 Trophy</option>
-                            <option value="fas fa-dumbbell" {{ 'selected' if post and post['icon_class'] == 'fas fa-dumbbell' else '' }}>🏋️ Dumbbell</option>
-                            <option value="fas fa-newspaper" {{ 'selected' if post and post['icon_class'] == 'fas fa-newspaper' else '' }}>📰 Newspaper</option>
-                            <option value="fas fa-fire" {{ 'selected' if post and post['icon_class'] == 'fas fa-fire' else '' }}>🔥 Fire</option>
-                            <option value="fas fa-bolt" {{ 'selected' if post and post['icon_class'] == 'fas fa-bolt' else '' }}>⚡ Bolt</option>
-                            <option value="fas fa-heart" {{ 'selected' if post and post['icon_class'] == 'fas fa-heart' else '' }}>❤️ Heart</option>
-                            <option value="fas fa-bullhorn" {{ 'selected' if post and post['icon_class'] == 'fas fa-bullhorn' else '' }}>📢 Bullhorn</option>
-                            <option value="fas fa-gift" {{ 'selected' if post and post['icon_class'] == 'fas fa-gift' else '' }}>🎁 Gift</option>
+                            <!-- News & Updates -->
+                            <optgroup label="📰 News & Updates">
+                                <option value="fas fa-newspaper" {{ 'selected' if post and post[3] == 'fas fa-newspaper' else '' }}>📰 Newspaper</option>
+                                <option value="fas fa-bullhorn" {{ 'selected' if post and post[3] == 'fas fa-bullhorn' else '' }}>📢 Bullhorn</option>
+                                <option value="fas fa-rss" {{ 'selected' if post and post[3] == 'fas fa-rss' else '' }}>📡 RSS Feed</option>
+                                <option value="fas fa-bell" {{ 'selected' if post and post[3] == 'fas fa-bell' else '' }}>🔔 Bell</option>
+                                <option value="fas fa-info-circle" {{ 'selected' if post and post[3] == 'fas fa-info-circle' else '' }}>ℹ️ Info</option>
+                            </optgroup>
+                            
+                            <!-- Fitness & Health -->
+                            <optgroup label="💪 Fitness & Health">
+                                <option value="fas fa-dumbbell" {{ 'selected' if post and post[3] == 'fas fa-dumbbell' else '' }}>🏋️ Dumbbell</option>
+                                <option value="fas fa-heartbeat" {{ 'selected' if post and post[3] == 'fas fa-heartbeat' else '' }}>💓 Heartbeat</option>
+                                <option value="fas fa-running" {{ 'selected' if post and post[3] == 'fas fa-running' else '' }}>🏃 Running</option>
+                                <option value="fas fa-bicycle" {{ 'selected' if post and post[3] == 'fas fa-bicycle' else '' }}>🚴 Bicycle</option>
+                                <option value="fas fa-swimmer" {{ 'selected' if post and post[3] == 'fas fa-swimmer' else '' }}>🏊 Swimming</option>
+                                <option value="fas fa-apple-alt" {{ 'selected' if post and post[3] == 'fas fa-apple-alt' else '' }}>🍎 Apple</option>
+                            </optgroup>
+                            
+                            <!-- Achievement & Progress -->
+                            <optgroup label="🏆 Achievement & Progress">
+                                <option value="fas fa-trophy" {{ 'selected' if post and post[3] == 'fas fa-trophy' else '' }}>🏆 Trophy</option>
+                                <option value="fas fa-medal" {{ 'selected' if post and post[3] == 'fas fa-medal' else '' }}>🥇 Medal</option>
+                                <option value="fas fa-award" {{ 'selected' if post and post[3] == 'fas fa-award' else '' }}>🏅 Award</option>
+                                <option value="fas fa-chart-line" {{ 'selected' if post and post[3] == 'fas fa-chart-line' else '' }}>📈 Chart Line</option>
+                                <option value="fas fa-chart-bar" {{ 'selected' if post and post[3] == 'fas fa-chart-bar' else '' }}>📊 Chart Bar</option>
+                                <option value="fas fa-star" {{ 'selected' if post and post[3] == 'fas fa-star' else '' }}>⭐ Star</option>
+                            </optgroup>
+                            
+                            <!-- Features & Tools -->
+                            <optgroup label="🔧 Features & Tools">
+                                <option value="fas fa-rocket" {{ 'selected' if post and post[3] == 'fas fa-rocket' else '' }}>🚀 Rocket</option>
+                                <option value="fas fa-cog" {{ 'selected' if post and post[3] == 'fas fa-cog' else '' }}>⚙️ Settings</option>
+                                <option value="fas fa-wrench" {{ 'selected' if post and post[3] == 'fas fa-wrench' else '' }}>🔧 Wrench</option>
+                                <option value="fas fa-magic" {{ 'selected' if post and post[3] == 'fas fa-magic' else '' }}>✨ Magic</option>
+                                <option value="fas fa-lightbulb" {{ 'selected' if post and post[3] == 'fas fa-lightbulb' else '' }}>💡 Lightbulb</option>
+                                <option value="fas fa-plug" {{ 'selected' if post and post[3] == 'fas fa-plug' else '' }}>🔌 Plug</option>
+                            </optgroup>
+                            
+                            <!-- Events & Calendar -->
+                            <optgroup label="📅 Events & Calendar">
+                                <option value="fas fa-calendar" {{ 'selected' if post and post[3] == 'fas fa-calendar' else '' }}>📅 Calendar</option>
+                                <option value="fas fa-calendar-check" {{ 'selected' if post and post[3] == 'fas fa-calendar-check' else '' }}>✅ Calendar Check</option>
+                                <option value="fas fa-clock" {{ 'selected' if post and post[3] == 'fas fa-clock' else '' }}>🕐 Clock</option>
+                                <option value="fas fa-hourglass-half" {{ 'selected' if post and post[3] == 'fas fa-hourglass-half' else '' }}>⏳ Hourglass</option>
+                            </optgroup>
+                            
+                            <!-- Special Effects -->
+                            <optgroup label="✨ Special Effects">
+                                <option value="fas fa-fire" {{ 'selected' if post and post[3] == 'fas fa-fire' else '' }}>🔥 Fire</option>
+                                <option value="fas fa-bolt" {{ 'selected' if post and post[3] == 'fas fa-bolt' else '' }}>⚡ Bolt</option>
+                                <option value="fas fa-gem" {{ 'selected' if post and post[3] == 'fas fa-gem' else '' }}>💎 Gem</option>
+                                <option value="fas fa-gift" {{ 'selected' if post and post[3] == 'fas fa-gift' else '' }}>🎁 Gift</option>
+                                <option value="fas fa-heart" {{ 'selected' if post and post[3] == 'fas fa-heart' else '' }}>❤️ Heart</option>
+                                <option value="fas fa-thumbs-up" {{ 'selected' if post and post[3] == 'fas fa-thumbs-up' else '' }}>👍 Thumbs Up</option>
+                            </optgroup>
+                            
+                            <!-- Media & Content -->
+                            <optgroup label="📷 Media & Content">
+                                <option value="fas fa-camera" {{ 'selected' if post and post[3] == 'fas fa-camera' else '' }}>📷 Camera</option>
+                                <option value="fas fa-video" {{ 'selected' if post and post[3] == 'fas fa-video' else '' }}>🎥 Video</option>
+                                <option value="fas fa-image" {{ 'selected' if post and post[3] == 'fas fa-image' else '' }}>🖼️ Image</option>
+                                <option value="fas fa-book" {{ 'selected' if post and post[3] == 'fas fa-book' else '' }}>📖 Book</option>
+                                <option value="fas fa-file-alt" {{ 'selected' if post and post[3] == 'fas fa-file-alt' else '' }}>📄 Document</option>
+                            </optgroup>
+                            
+                            <!-- Community & Social -->
+                            <optgroup label="👥 Community & Social">
+                                <option value="fas fa-users" {{ 'selected' if post and post[3] == 'fas fa-users' else '' }}>👥 Users</option>
+                                <option value="fas fa-user-plus" {{ 'selected' if post and post[3] == 'fas fa-user-plus' else '' }}>➕ User Plus</option>
+                                <option value="fas fa-comments" {{ 'selected' if post and post[3] == 'fas fa-comments' else '' }}>💬 Comments</option>
+                                <option value="fas fa-share-alt" {{ 'selected' if post and post[3] == 'fas fa-share-alt' else '' }}>🔗 Share</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="icon_color" class="form-label">Icon Color</label>
                         <select class="form-select form-control-dark" id="icon_color" name="icon_color">
-                            <option value="text-primary" {{ 'selected' if post and post['icon_color'] == 'text-primary' else '' }}>🔵 Blue (Primary)</option>
-                            <option value="text-success" {{ 'selected' if post and post['icon_color'] == 'text-success' else '' }}>🟢 Green (Success)</option>
-                            <option value="text-warning" {{ 'selected' if post and post['icon_color'] == 'text-warning' else '' }}>🟡 Yellow (Warning)</option>
-                            <option value="text-danger" {{ 'selected' if post and post['icon_color'] == 'text-danger' else '' }}>🔴 Red (Danger)</option>
-                            <option value="text-info" {{ 'selected' if post and post['icon_color'] == 'text-info' else '' }}>🔷 Cyan (Info)</option>
-                            <option value="text-light" {{ 'selected' if post and post['icon_color'] == 'text-light' else '' }}>⚪ White (Light)</option>
-                            <option value="text-secondary" {{ 'selected' if post and post['icon_color'] == 'text-secondary' else '' }}>⚫ Gray (Secondary)</option>
+                            <option value="text-primary" {{ 'selected' if post and post[4] == 'text-primary' else '' }}>🔵 Blue (Primary)</option>
+                            <option value="text-success" {{ 'selected' if post and post[4] == 'text-success' else '' }}>🟢 Green (Success)</option>
+                            <option value="text-warning" {{ 'selected' if post and post[4] == 'text-warning' else '' }}>🟡 Yellow (Warning)</option>
+                            <option value="text-danger" {{ 'selected' if post and post[4] == 'text-danger' else '' }}>🔴 Red (Danger)</option>
+                            <option value="text-info" {{ 'selected' if post and post[4] == 'text-info' else '' }}>🔷 Cyan (Info)</option>
+                            <option value="text-light" {{ 'selected' if post and post[4] == 'text-light' else '' }}>⚪ White (Light)</option>
+                            <option value="text-secondary" {{ 'selected' if post and post[4] == 'text-secondary' else '' }}>⚫ Gray (Secondary)</option>
+                            <option value="text-purple" {{ 'selected' if post and post[4] == 'text-purple' else '' }}>🟣 Purple</option>
+                            <option value="text-pink" {{ 'selected' if post and post[4] == 'text-pink' else '' }}>🩷 Pink</option>
+                            <option value="text-orange" {{ 'selected' if post and post[4] == 'text-orange' else '' }}>🟠 Orange</option>
                         </select>
                     </div>
                 </div>
@@ -230,7 +771,41 @@
                 <div class="mb-4">
                     <label class="form-label">Icon Preview</label>
                     <div class="icon-preview-box p-3">
-                        <i id="icon-preview" class="fa-3x {{ post['icon_class'] if post else 'fas fa-newspaper' }} {{ post['icon_color'] if post else 'text-primary' }}"></i>
+                        <i id="icon-preview" class="fa-3x {{ post[3] if post else 'fas fa-newspaper' }} {{ post[4] if post else 'text-primary' }}"></i>
+                    </div>
+                </div>
+
+                <!-- Live Preview Section -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0">Live Preview</label>
+                        <button type="button" class="btn-toggle" id="toggle-preview">
+                            <i class="fas fa-eye me-1"></i> Toggle Preview
+                        </button>
+                    </div>
+                    <div id="preview-container" style="display: none;">
+                        <div class="preview-tabs">
+                            <div class="preview-tab active" data-tab="content">
+                                <i class="fas fa-file-alt me-1"></i> Content
+                            </div>
+                            <div class="preview-tab" data-tab="full">
+                                <i class="fas fa-desktop me-1"></i> Full Post
+                            </div>
+                        </div>
+                        <div id="preview-content-tab">
+                            <div id="preview-content"></div>
+                        </div>
+                        <div id="preview-full-tab" style="display: none;">
+                            <div class="post-layout">
+                                <div class="post-icon-container">
+                                    <i id="preview-icon" class="fa-2x"></i>
+                                </div>
+                                <div class="post-content-container">
+                                    <h3 id="preview-title">Your Title Here</h3>
+                                    <div id="preview-content-full"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -248,9 +823,63 @@
     </div>
 </div>
 
+<!-- Store post content in a script tag as JSON -->
+<script id="post-content" type="application/json">
+{% if post %}{{ post | tojson }}{% else %}{}{% endif %}
+</script>
+
+<!-- Quill JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+
 <script>
-// Simple vanilla JavaScript - no dependencies required
 document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Quill === 'undefined') {
+        console.error('Quill failed to load');
+        return;
+    }
+
+    // Register custom font sizes with Quill
+    var Size = Quill.import('attributors/style/size');
+    Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px', '64px'];
+    Quill.register(Size, true);
+
+    // Get post data from script tag
+    const postDataEl = document.getElementById('post-content');
+    const postData = JSON.parse(postDataEl.textContent);
+    console.log('Post data:', postData);
+
+    // Initialize Quill
+    const toolbarOptions = [
+        [{ 'font': [] }],
+        [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px', '64px'] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'video'],
+        ['clean']
+    ];
+
+    const quill = new Quill('#editor-container', {
+        modules: {
+            toolbar: toolbarOptions
+        },
+        theme: 'snow',
+        placeholder: 'Write your news post content here...'
+    });
+
+    // Load existing content
+    if (Array.isArray(postData) && postData[2]) {
+        console.log('Loading content from index 2:', postData[2]);
+        const content = postData[2].replace(/\r\n/g, '<br>');
+        quill.root.innerHTML = content;
+    }
+
+    // Icon preview
     const iconClassSelect = document.getElementById('icon_class');
     const iconColorSelect = document.getElementById('icon_color');
     const iconPreview = document.getElementById('icon-preview');
@@ -258,21 +887,92 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateIconPreview() {
         const iconClass = iconClassSelect.value;
         const iconColor = iconColorSelect.value;
-        
-        // Update the class attribute
         iconPreview.className = 'fa-3x ' + iconClass + ' ' + iconColor;
-        console.log('✓ Icon updated:', iconClass, iconColor);
+        
+        const previewIcon = document.getElementById('preview-icon');
+        if (previewIcon) {
+            previewIcon.className = 'fa-2x ' + iconClass + ' ' + iconColor;
+        }
     }
 
-    // Listen for changes
+    updateIconPreview();
     iconClassSelect.addEventListener('change', updateIconPreview);
     iconColorSelect.addEventListener('change', updateIconPreview);
 
-    console.log('✓ Icon preview initialized');
-});
+    // Live preview
+    const togglePreviewBtn = document.getElementById('toggle-preview');
+    const previewContainer = document.getElementById('preview-container');
+    const previewContent = document.getElementById('preview-content');
+    const previewContentFull = document.getElementById('preview-content-full');
+    const previewTitle = document.getElementById('preview-title');
+    const titleInput = document.getElementById('title');
 
-function getCSRFToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.content || '';
-}
+    let previewVisible = false;
+
+    togglePreviewBtn.addEventListener('click', function() {
+        previewVisible = !previewVisible;
+        previewContainer.style.display = previewVisible ? 'block' : 'none';
+        
+        if (previewVisible) {
+            updatePreview();
+            togglePreviewBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i> Hide Preview';
+        } else {
+            togglePreviewBtn.innerHTML = '<i class="fas fa-eye me-1"></i> Show Preview';
+        }
+    });
+
+    quill.on('text-change', function() {
+        if (previewVisible) updatePreview();
+    });
+
+    titleInput.addEventListener('input', function() {
+        if (previewVisible) updatePreview();
+    });
+
+    function updatePreview() {
+        const content = quill.root.innerHTML;
+        previewContent.innerHTML = content;
+        previewContentFull.innerHTML = content;
+        previewTitle.textContent = titleInput.value || 'Your Title Here';
+        
+        // Update icon in preview
+        const iconClass = iconClassSelect.value;
+        const iconColor = iconColorSelect.value;
+        const previewIcon = document.getElementById('preview-icon');
+        if (previewIcon) {
+            previewIcon.className = 'fa-2x ' + iconClass + ' ' + iconColor;
+        }
+    }
+
+    // Preview tabs
+    const previewTabs = document.querySelectorAll('.preview-tab');
+    const previewContentTab = document.getElementById('preview-content-tab');
+    const previewFullTab = document.getElementById('preview-full-tab');
+
+    previewTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            previewTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (tabName === 'content') {
+                previewContentTab.style.display = 'block';
+                previewFullTab.style.display = 'none';
+            } else {
+                previewContentTab.style.display = 'none';
+                previewFullTab.style.display = 'block';
+                updatePreview();
+            }
+        });
+    });
+
+    // Form submission
+    document.getElementById('news-form').addEventListener('submit', function(e) {
+        const content = quill.root.innerHTML;
+        document.getElementById('content-input').value = content;
+    });
+
+    console.log('✓ Editor initialized with custom font sizes');
+});
 </script>
 {% endblock %}
