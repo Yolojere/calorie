@@ -68,6 +68,7 @@ const translations = {
     weeks_ago_2: "2 weeks ago",
 
     // Workouts
+    ccalculator: "Calorie Calculator",
     selectCardio: "Select cardio exercise...",
     distanceKm: "Distance (KM)",
     avgPace: "Average Pace",
@@ -286,6 +287,7 @@ const translations = {
     weeks_ago_2: "2 viikkoa sitten",
 
     // Workouts
+    ccalculator: "Kalorilaskuri",
     selectCardio: "Valitse harjoitus..",
     distanceKm: "Pituus (KM)",
     avgPace: "Keskim. Tahti",
