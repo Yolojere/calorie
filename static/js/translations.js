@@ -116,6 +116,7 @@ const translations = {
     personal_information: "Personal Information",
 
     // Nutrition
+    ccalculator: "Calorie Calculator",
     bigserving: "Big Serving",
     favourite: "Favourite",
     bigserving_g: "Big Serving (g)",
@@ -482,6 +483,7 @@ const translations = {
     personal_information: "Henkilötiedot",
 
     // Nutrition
+    ccalculator: "Kalorilaskuri",
     favourite: "Suosikki",
     bigserving: "Iso Annos",
     bigserving_g: "Iso Annos (g)",
