@@ -228,7 +228,38 @@ def add_garmin_sync_preferences():
         
     finally:
         cursor.close()
-        conn.close()        
+        conn.close()
+AVATAR_LEVEL_REQUIREMENTS = {
+    'default.png': 1,
+    'avatar1.png': 1,
+    'avatar2.png': 3,
+    'avatar3.png': 3,
+    'avatar4.png': 5,
+    'avatar5.png': 5,
+    'avatar6.png': 7,
+    'avatar7.png': 8,
+    'avatar8.png': 10,
+    'avatar9.png': 12,
+    'avatar10.png': 13,
+    'avatar11.png': 15,
+    'avatar12.png': 17,
+    'avatar13.png': 18,
+    'avatar14.png': 20,
+    'avatar15.png': 20,
+    'avatar16.png': 25,
+    'avatar17.png': 25,
+    'avatar18.png': 27,
+    'avatar19.png': 30,
+}
+
+# Helper function to get available avatars
+def get_available_avatars_for_level(user_level):
+    available = []
+    for avatar in ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]:
+        required_level = AVATAR_LEVEL_REQUIREMENTS.get(avatar, 1)
+        if user_level >= required_level:
+            available.append(avatar)
+    return available                
 # Initialize database
 def init_db():
     conn = get_db_connection()
@@ -1750,14 +1781,6 @@ def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
 def profile():
     form = UpdateProfileForm()
     print(f"Request method: {request.method}")
-    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
-    form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
-
-    if request.method == 'POST':
-        if not form.validate_on_submit():
-            for field, errors in form.errors.items():
-                print(f"  Field '{field}': {errors}")
-        print("="*60)
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
@@ -1827,6 +1850,16 @@ def profile():
             if isinstance(user_socials, (list, dict)):
                 user_socials = json.dumps(user_socials)
 
+        # MODIFIED: Filter avatars based on user level
+        available_avatars = get_available_avatars_for_level(user_level)
+        form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in available_avatars]
+
+        if request.method == 'POST':
+            if not form.validate_on_submit():
+                for field, errors in form.errors.items():
+                    print(f"  Field '{field}': {errors}")
+            print("="*60)
+
         if form.validate_on_submit():
             # Handle email lowercase
             email_lower = form.email.data.lower()
@@ -1850,7 +1883,12 @@ def profile():
                 else:
                     flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
             elif hasattr(form, 'avatar_choice') and form.avatar_choice.data:
-                avatar_filename = form.avatar_choice.data if form.avatar_choice.data in predefined_avatars else 'default.png'
+                # MODIFIED: Validate that chosen avatar is available at user's level
+                if form.avatar_choice.data in available_avatars:
+                    avatar_filename = form.avatar_choice.data
+                else:
+                    flash('That avatar is not unlocked yet!', 'warning')
+                    avatar_filename = current_avatar
 
             # Build update query dynamically
             update_query = "UPDATE users SET username = %s, email = %s, avatar = %s"
@@ -1900,14 +1938,11 @@ def profile():
                     continue
                 elif hasattr(form, col):
                     getattr(form, col).data = user_data.get(col, '')
-            form.avatar_choice.data = current_avatar if current_avatar in predefined_avatars else 'default.png'
+            form.avatar_choice.data = current_avatar if current_avatar in available_avatars else 'default.png'
 
-    except psycopg2.IntegrityError:
-        flash('Username or email already taken', 'danger')
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        flash('An unexpected error occurred.', 'danger')
+    except Exception as e:
+        print(f"Profile error: {e}")
+        flash('An error occurred loading your profile.', 'danger')
     finally:
         cursor.close()
         conn.close()
@@ -1922,15 +1957,16 @@ def profile():
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
-        predefined_avatars=predefined_avatars,
+        available_avatars=available_avatars,
         tdee_data=tdee_data,              # Full breakdown
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
         viewed_user=None,
         is_owner=True,
-        user_socials=user_socials
-    )
+        user_socials=user_socials,
+        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS)
+    
 
 
 
@@ -1944,7 +1980,6 @@ def view_profile(user_id):
     role = 'user'
     tdee_data = None
     base_tdee = None
-    predefined_avatars = ['default.png'] + [f'avatar{i}.png' for i in range(1, 20)]
     current_avatar = 'default.png'
     user_level = 1
     user_xp = 0
@@ -1987,12 +2022,15 @@ def view_profile(user_id):
         if not user_data:
             flash('User not found', 'danger')
             return redirect(url_for('index'))
-        #Avatar
+        
+        # Avatar
         current_avatar = user_data.get('avatar') or 'default.png'
+        
         # Level/xp logic
         user_level = user_data.get('level', 1) or 1
         user_xp = user_data.get('xp_points', 0) or 0
         xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
+        
         # Metrics (only if user allows it)
         if user_data.get('show_health_metrics', False) or user_id == current_user.id:
             current_weight = user_data.get('weight')
@@ -2007,14 +2045,13 @@ def view_profile(user_id):
                 base_tdee = tdee_data.get('base_tdee', 0)
             else:
                 base_tdee = current_tdee if current_tdee else 0  # Fallback to current_tdee if no breakdown available
-        
-        # TDEE data only if health metrics are public or it's own profile
-        if user_data.get('show_health_metrics', False) or user_id == current_user.id:
-            tdee_data = get_user_current_tdee(user_data['id']) if callable(globals().get('get_user_current_tdee')) else None
 
+        # MODIFIED: Filter avatars based on viewed user's level (not current_user's level)
+        available_avatars = get_available_avatars_for_level(user_level)
+        
         # Create dummy form for template compatibility
         form = UpdateProfileForm()
-        form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in predefined_avatars]
+        form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in available_avatars]
         
         # Pre-fill form data
         form.username.data = user_data.get('username', '')
@@ -2025,7 +2062,6 @@ def view_profile(user_id):
             elif col == "socials":
                 # Parse socials JSON safely - CORRECTED to use 'socials' (matches HTML name attribute)
                 socials_json = request.form.get("socials", "[]")
-                
             elif hasattr(form, col):
                 getattr(form, col).data = user_data.get(col, '')
 
@@ -2046,7 +2082,9 @@ def view_profile(user_id):
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
-        predefined_avatars=predefined_avatars,
+        predefined_avatars=available_avatars,  # MODIFIED: Pass filtered avatars
+        available_avatars=available_avatars,   # ADDED: For consistency
+        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS,  # ADDED: For showing requirements
         tdee_data=tdee_data,
         base_tdee=base_tdee,
         user_level=user_level,
@@ -2055,6 +2093,7 @@ def view_profile(user_id):
         viewed_user=user_data,
         is_owner=(user_id == current_user.id)
     )
+
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     form = RequestResetForm()
@@ -6727,7 +6766,6 @@ def index():
             })
         
         # Fetch best lifts only if user is authenticated
-        if is_authenticated:
             today = datetime.now().date()
             
             cursor.execute("""
