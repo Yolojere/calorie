@@ -990,15 +990,53 @@ function populateDateOptions() {
 
 // Helper
 function pad2(n){ return String(n).padStart(2,'0'); }
+
+function checkAvatarUnlocks(levelBefore, levelAfter) {
+    const AVATAR_LEVEL_REQUIREMENTS = {
+        1: ['default.png', 'avatar1.png'],
+        3: ['avatar2.png', 'avatar3.png'],
+        5: ['avatar4.png', 'avatar5.png'],
+        7: ['avatar6.png'],
+        8: ['avatar7.png'],
+        10: ['avatar8.png'],
+        12: ['avatar9.png'],
+        13: ['avatar10.png'],
+        15: ['avatar11.png'],
+        17: ['avatar12.png'],
+        18: ['avatar13.png'],
+        20: ['avatar14.png', 'avatar15.png'],
+        25: ['avatar16.png', 'avatar17.png'],
+        27: ['avatar18.png'],
+        30: ['avatar19.png']
+    };
+    
+    let unlockedAvatars = [];
+    
+    // Check each level between levelBefore and levelAfter
+    for (let level = levelBefore + 1; level <= levelAfter; level++) {
+        if (AVATAR_LEVEL_REQUIREMENTS[level]) {
+            unlockedAvatars = unlockedAvatars.concat(AVATAR_LEVEL_REQUIREMENTS[level]);
+        }
+    }
+    
+    return unlockedAvatars;
+}
+
 // XP Display Functions
+
+
 function showXPSummary(xpData, workoutData) {
     console.log('📊 Displaying XP summary:', xpData);
     
     const { gained, sources, levels_gained, level_before, level_after, current_xp, xp_to_next_level } = xpData;
-        if (levels_gained > 0) {
+    
+    // Check for avatar unlocks
+    let unlockedAvatars = [];
+    if (levels_gained > 0) {
         if (window.SoundManager) {
             window.SoundManager.playLevelup();
         }
+        unlockedAvatars = checkAvatarUnlocks(level_before, level_after);
     }
     
     // Create XP overlay
@@ -1015,6 +1053,24 @@ function showXPSummary(xpData, workoutData) {
                         </div>
                     </div>
                     <div class="level-celebration">✨</div>
+                    
+                                ${unlockedAvatars.length > 0 ? `
+                    <div class="avatar-unlock-notification">
+                        <div class="unlock-icon">🎨</div>
+                        <div class="unlock-text">
+                            Avattu ${unlockedAvatars.length} 
+                            ${unlockedAvatars.length === 1 ? 'uusi avatar!' : 'uutta avataria!'}
+                        </div>
+                        <div class="unlock-avatars">
+                            ${unlockedAvatars.map(avatar => `
+                                <img src="/static/avatars/${avatar}" 
+                                    class="unlocked-avatar-preview" 
+                                    alt="${avatar}">
+                            `).join('')}
+                        </div>
+                        <div class="unlock-subtext">Käy katsomassa profiilissa uudet avatarit!</div>
+                    </div>
+                ` : ''}
                 ` : `
                     <h3 style="color: #6dc0d5; margin-bottom: 20px;">
                         <i class="fas fa-star"></i> Suoritus Valmis!
@@ -1070,12 +1126,18 @@ function showXPSummary(xpData, workoutData) {
     setTimeout(() => {
         overlay.addClass('show');
         animateXPElements(levels_gained > 0);
+        
+        // Animate avatar unlock notification
+        if (unlockedAvatars.length > 0) {
+            setTimeout(() => {
+                $('.avatar-unlock-notification').addClass('show');
+            }, 1200);
+        }
     }, 100);
     
     // Store workout data for next step
     window.pendingWorkoutResults = workoutData;
 }
-
 function animateXPElements(isLevelUp) {
     // Animate progress bar
     setTimeout(() => {
