@@ -1454,12 +1454,12 @@ input.form-control:-webkit-autofill {
                 <!-- Left Section: Avatar + User Info -->
                 <div class="text-center flex-shrink-0">
                     <!-- Determine avatar folder based on whether it's a predefined avatar or uploaded -->
-                   {% set show_avatar = viewed_user.avatar if viewed_user else current_avatar %}
-                   {% if show_avatar in predefined_avatars %}
-                       {% set avatar_folder = 'avatars' %}
-                   {% else %}
-                       {% set avatar_folder = 'uploads' %}
-                   {% endif %}
+                    {% set show_avatar = viewed_user.avatar if viewed_user else current_avatar %}
+                    {% if show_avatar == 'default.png' or show_avatar.startswith('avatar') %}
+                        {% set avatar_folder = 'avatars' %}
+                    {% else %}
+                        {% set avatar_folder = 'uploads' %}
+                    {% endif %}
                     
                     <!-- Main Avatar - Clickable only if owner -->
                     <div class="avatar-container" id="avatar-container" {% if is_owner %}style="cursor: pointer;"{% endif %}>
@@ -1911,25 +1911,26 @@ input.form-control:-webkit-autofill {
             {% endif %}
         </div>
         
-        <!-- NEW: TDEE Breakdown Display -->
-        {% if tdee_data.auto_workout_enabled or tdee_data.auto_steps_enabled %}
-            <!-- Dynamic TDEE Active -->
-            <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
-                <small>
-                    Perus: {{ (base_tdee|round(0))|int }} kcal
-                    {% if tdee_data.workout_calories > 0 %}
-                        + Treenit: {{ (tdee_data.workout_calories|round(0))|int }} kcal
-                    {% endif %}
-                    {% if tdee_data.steps_calories > 0 %}
-                        + Askeleet: {{ (tdee_data.steps_calories|round(0))|int }} kcal
-                    {% endif %}
-                </small>
-            </div>
-            <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">Dynaaminen TDEE Aktiivisena</span>
-        {% else %}
-            <!-- Static TDEE -->
-            <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
-        {% endif %}
+            <!-- NEW: TDEE Breakdown Display -->
+            {% if tdee_data and (tdee_data.auto_workout_enabled or tdee_data.auto_steps_enabled) %}
+                <!-- Dynamic TDEE Active -->
+                <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
+                    <small>
+                        Perus: {{ (base_tdee|round(0))|int }} kcal
+                        {% if tdee_data.workout_calories and tdee_data.workout_calories > 0 %}
+                            + Treenit: {{ (tdee_data.workout_calories|round(0))|int }} kcal
+                        {% endif %}
+                        {% if tdee_data.steps_calories and tdee_data.steps_calories > 0 %}
+                            + Askeleet: {{ (tdee_data.steps_calories|round(0))|int }} kcal
+                        {% endif %}
+                    </small>
+                </div>
+                <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">Dynaaminen TDEE Aktiivisena</span>
+            {% elif base_tdee %}
+                <!-- Static TDEE -->
+                <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
+            {% endif %}
+
     </div>
 </div>
 
