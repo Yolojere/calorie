@@ -2,7 +2,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container-y">
         <div class="hero-section">
         <div class="hero-buttons-wrapper">
             <a href="/main" class="hero-btn">
@@ -227,8 +227,8 @@
                     <div class="empty-state-glass">
                         <i class="fas fa-dumbbell fa-3x mb-3"></i>
                         <p>Kukaan ei ole viellä treenannut. Ole ensimmäinen!</p>
-                        <button href="/workout" class="btn btn-index">
-                        <span>Aloita treeni!</span></button>
+                        <a href="{{ url_for('workout') }}" class="btn btn-index">
+                            <span>Aloita treeni!</span>
                         </a>
                     </div>
                     {% endif %}
@@ -289,6 +289,7 @@
             font-size: 1.4rem;
             color: #e0e0e0;
         }
+        
 /* ===== HERO SECTION WITH BIG BUTTONS ===== */
 .hero-section {
     margin: 30px 0 50px 0;
@@ -721,7 +722,7 @@
 /* Responsive adjustments */
 @media (max-width: 991px) {
     /* Remove container padding on mobile */
-    .container {
+    .container-y {
         padding-left: 0 !important;
         padding-right: 0 !important;
         max-width: 100% !important;
