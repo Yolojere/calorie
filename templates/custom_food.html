@@ -890,7 +890,7 @@
                 <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                     - Track, add food, repeat -
                 </a>
-                <button class="btn-beta">BETA</button>
+                                <button class="btn-beta">BETA</button>
                 <!-- Mobile Settings Dropdown (right-aligned) -->
                 <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
                     <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -903,49 +903,56 @@
                             <a class="dropdown-item" 
                             href="/"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Koti</span>
+                            </a>
+                        </li>
+                         <li>
+                                        <a class="dropdown-item" 
+                            href="/main"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-calculator me-2"></i><span data-i18n="ccalculator">Kalorilaskuri</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Harjoitukset</span>
                             </a>
                             </li>
                             <li>
                                         <a class="dropdown-item" 
                             href="/history"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">Historia</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('activity') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Aktiivisuus</span>
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="/custom_food"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
-                            </a>
-                        </li>
+                                 <li>
+                        <a class="dropdown-item" 
+                        href="/custom_food"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                        </a>
+                    </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
                             style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                             </a>
                         </li>
                         
@@ -959,6 +966,11 @@
                             <a class="nav-link home-link nav-link-box" href="/" 
                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
                                 <i class="fa-solid fa-house-chimney-window"></i>
+                            </a>
+                                                    <li class="nav-item">
+                            <a class="nav-link home-link nav-link-box" href="/main" 
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Main" data-i18n="ccalculator" >
+                                <i class="fas fa-calculator"></i>
                             </a>
                             <li class="nav-item">
         <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
@@ -1006,14 +1018,14 @@
                                     <a class="dropdown-item" 
                                     href="{{ url_for('profile') }}"
                                     style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" 
                                     href="{{ url_for('logout') }}"
                                     style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                                     </a>
                                 </li>
                             </ul>
@@ -1037,7 +1049,7 @@
                         <div class="row nutrition-row">
                             <div class="col-md-6">
                                 <button id="scanNutritionLabel" class="btn scan-btn">
-                                    <i class="fa-solid fa-camera me-2"></i><span data-i18n="scan_label">Scan Label (Kokeilussa/Roska)</span>
+                                    <i class="fa-solid fa-camera me-2"></i><span data-i18n="scan_label">Scan Label (BETA)</span>
                                 </button>
                             </div>
                         </div>
@@ -1477,7 +1489,7 @@ function retakePhoto() {
 // Updated processPhoto function
 function processPhoto() {
     if (!capturedPhoto) {
-        showMessage('Kuva puuttuu!', 'error');
+        showMessage('No photo to process', 'error');
         return;
     }
 
@@ -1628,7 +1640,7 @@ function processPhoto() {
 
                 let message = 'Onnistui!';
                 if (fieldsPopulated > 0) {
-                    message = `Täytetty ${fieldsPopulated} kenttää: ${populatedFields.join(', ')}.`;
+                    message = `Täytetty ${fieldsPopulated} kentät: ${populatedFields.join(', ')}.`;
                 } else {
                     message = 'Epäonnistui ravintotietojen hakemisessa';
                 }
