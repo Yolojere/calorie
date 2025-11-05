@@ -693,139 +693,160 @@ object-fit: contain;
             <a class="navbar-brand d-none d-md-inline" href="/" style="font-size: 12px;color: #ffffff; ">
                 - Track, measure, repeat -
             </a>
-            <button class="btn-beta" data-i18n="beta">BETA</button>
-            <!-- Mobile Settings Dropdown (right-aligned) -->
-            <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
-                <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-wrench-adjustable"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" 
-                    aria-labelledby="navbarDropdownMobile"
-                    style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 10;">
-                    <li>
-                        <a class="dropdown-item" 
-                        href="/"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home" data-i18n="home">Home</span>
-                        </a>
-                    </li>
+                <button class="btn-beta">BETA</button>
+                <!-- Mobile Settings Dropdown (right-aligned) -->
+                <div class="ms-auto d-block d-lg-none position-static d-flex align-items-center">
+                    <button class="mobile-settings-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-wrench-adjustable"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" 
+                        aria-labelledby="navbarDropdownMobile"
+                        style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 16;">
                         <li>
-                        <a class="dropdown-item" 
-                        href="{{ url_for('workout') }}"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts" data-i18n="workouts">Workouts</span>
-                        </a>
-                        </li>
-                        <li>
-                                    <a class="dropdown-item" 
-                        href="/history"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-chart-pie me-2"></i><span data-i18n="history" data-i18n="history">History</span>
-                        </a>
-                    </li>
-                        <li>
-                        <a class="dropdown-item" 
-                        href="{{ url_for('activity') }}"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-fire me-2"></i><span data-i18n="activity" data-i18n="activity">Activity</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" 
-                        href="/custom_food"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food" data-i18n="add_food">Add Food</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" 
-                        href="{{ url_for('profile') }}"
-                        style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                            <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" 
-                        href="{{ url_for('logout') }}"
-                        style="color: #e0e0e0; padding: 8px 15px;">
-                            <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
-                        </a>
-                    </li>
-                    
-                </ul>
-            </div>
-            
-            <!-- Desktop Navigation -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link home-link nav-link-box" href="/" 
-                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" data-i18n="tooltip_home" >
-                            <i class="fa-solid fa-house-chimney-window"></i>
-                        </a>
-                        <li class="nav-item">
-                            <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts" data-i18n="tooltip_workouts">
-                                <i class="fa-solid fa-dumbbell"></i>
+                            <a class="dropdown-item" 
+                            href="/"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
                             </a>
                         </li>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link add-link nav-link-box" href="/custom_food"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food" data-i18n="tooltip_add_food">
-                            <i class="fa-solid fa-file-circle-plus"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link history-link nav-link-box" href="/history"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history" data-i18n="tooltip_history">
-                            <i class="fa-solid fa-chart-pie"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-box" href="/activity"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity" data-i18n="tooltip_activity">
-                            <i class="fas fa-fire"></i>
-                        </a>
-                    </li>
-                    
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle nav-link-box" 
-                        href="#" 
-                        id="navbarDropdownDesktop" 
-                        role="button" 
-                        data-bs-toggle="dropdown" 
-                        aria-expanded="false"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings" data-i18n="tooltip_settings"
-                        style="position: relative;">
-                            <i class="bi bi-wrench-adjustable"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" 
-                            aria-labelledby="navbarDropdownDesktop"
-                            style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
-                            
                             <li>
-                                <a class="dropdown-item" 
-                                href="{{ url_for('profile') }}"
-                                style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                    <i class="fas fa-user-circle me-2"></i><span data-i18n="profile" data-i18n="profile">Profile</span>
-                                </a>
+                            <a class="dropdown-item" 
+                            href="/"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-calculator me-2"></i><span data-i18n="ccalculator">Main</span>
+                            </a>
+                        </li>
+                            <li>
+                            <a class="dropdown-item" 
+                            href="{{ url_for('workout') }}"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
+                            </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" 
-                                href="{{ url_for('logout') }}"
-                                style="color: #e0e0e0; padding: 8px 15px;">
-                                    <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout" data-i18n="logout">Logout</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+                                        <a class="dropdown-item" 
+                            href="/history"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
+                            </a>
+                        </li>
+                            <li>
+                            <a class="dropdown-item" 
+                            href="{{ url_for('activity') }}"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/custom_food"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="{{ url_for('profile') }}"
+                            style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="{{ url_for('logout') }}"
+                            style="color: #e0e0e0; padding: 8px 15px;">
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                            </a>
+                        </li>
+                        <li>
+    <div class="dropdown-item" style="color: #e0e0e0; padding: 8px 15px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="soundToggle" checked>
+            <label class="form-check-label" for="soundToggle">
+                <i class="fas fa-volume-up me-2"></i>Äänet
+            </label>
         </div>
-    </nav>
+    </div>
+</li>
+                    </ul>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link home-link nav-link-box" href="/" 
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home" data-i18n="tooltip_home" >
+                                <i class="fa-solid fa-house-chimney-window"></i>
+                            </a>
+                                                    <li class="nav-item">
+                            <a class="nav-link home-link nav-link-box" href="/main" 
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Main" data-i18n="ccalculator" >
+                                <i class="fas fa-calculator"></i>
+                            </a>
+                            <li class="nav-item">
+        <a class="nav-link workout-link nav-link-box" href="{{ url_for('workout') }}"
+        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Workouts" data-i18n="tooltip_workouts">
+            <i class="fa-solid fa-dumbbell"></i>
+        </a>
+    </li>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link add-link nav-link-box" href="/custom_food"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add Food" data-i18n="tooltip_add_food">
+                                <i class="fa-solid fa-file-circle-plus"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link history-link nav-link-box" href="/history"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="History" data-i18n="tooltip_history">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-box" href="/activity"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Activity" data-i18n="tooltip_activity">
+                                <i class="fas fa-fire"></i>
+                            </a>
+                        </li>
+                        
+                        {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle nav-link-box" 
+                            href="#" 
+                            id="navbarDropdownDesktop" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Settings" data-i18n="tooltip_settings"
+                            style="position: relative;">
+                                <i class="bi bi-wrench-adjustable"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" 
+                                aria-labelledby="navbarDropdownDesktop"
+                                style="background-color: #222; border: 1px solid #ffffff; border-radius: 5px;">
+                                
+                                <li>
+                                    <a class="dropdown-item" 
+                                    href="{{ url_for('profile') }}"
+                                    style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" 
+                                    href="{{ url_for('logout') }}"
+                                    style="color: #e0e0e0; padding: 8px 15px;">
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
     <!-- Activity Tracker Content -->
     <div class="activity-container">
@@ -2011,3 +2032,4 @@ document.addEventListener("DOMContentLoaded", function () {
     </script>
 </body>
 </html>
+
