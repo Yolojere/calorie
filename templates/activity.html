@@ -701,73 +701,64 @@ object-fit: contain;
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" 
                         aria-labelledby="navbarDropdownMobile"
-                        style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 16;">
+                        style="position: absolute; background-color: #222; border: 1px solid #ffffff; border-radius: 5px; z-index: 1050; right: 15px; left: auto; font-size: 10;">
                         <li>
                             <a class="dropdown-item" 
                             href="/"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Home</span>
+                                <i class="fa-solid fa-house-chimney-window me-2"></i><span data-i18n="home">Koti</span>
                             </a>
                         </li>
-                            <li>
-                            <a class="dropdown-item" 
-                            href="/"
+                         <li>
+                                        <a class="dropdown-item" 
+                            href="/main"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-calculator me-2"></i><span data-i18n="ccalculator">Main</span>
+                                <i class="fas fa-calculator me-2"></i><span data-i18n="ccalculator">Kalorilaskuri</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('workout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Workouts</span>
+                                <i class="fas fa-dumbbell me-2"></i><span data-i18n="workouts">Harjoitukset</span>
                             </a>
                             </li>
                             <li>
                                         <a class="dropdown-item" 
                             href="/history"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">History</span>
+                                <i class="fas fa-chart-pie me-2"></i><span data-i18n="history">Historia</span>
                             </a>
                         </li>
                             <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('activity') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Activity</span>
+                                <i class="fas fa-fire me-2"></i><span data-i18n="activity">Aktiivisuus</span>
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" 
-                            href="/custom_food"
-                            style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
-                            </a>
-                        </li>
+                                 <li>
+                        <a class="dropdown-item" 
+                        href="/custom_food"
+                        style="color: #e0e0e0; padding: 8px 15px;">
+                            <i class="fas fa-file-circle-plus me-2"></i><span data-i18n="add_food">Add Food</span>
+                        </a>
+                    </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('profile') }}"
                             style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" 
                             href="{{ url_for('logout') }}"
                             style="color: #e0e0e0; padding: 8px 15px;">
-                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                             </a>
                         </li>
-                        <li>
-    <div class="dropdown-item" style="color: #e0e0e0; padding: 8px 15px;">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="soundToggle" checked>
-            <label class="form-check-label" for="soundToggle">
-                <i class="fas fa-volume-up me-2"></i>Äänet
-            </label>
-        </div>
-    </div>
-</li>
+                        
                     </ul>
                 </div>
                 
@@ -830,14 +821,14 @@ object-fit: contain;
                                     <a class="dropdown-item" 
                                     href="{{ url_for('profile') }}"
                                     style="color: #e0e0e0; padding: 8px 15px; border-bottom: 1px solid #444;">
-                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profile</span>
+                                        <i class="fas fa-user-circle me-2"></i><span data-i18n="profile">Profiili</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" 
                                     href="{{ url_for('logout') }}"
                                     style="color: #e0e0e0; padding: 8px 15px;">
-                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span>
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Kirjaudu Ulos</span>
                                     </a>
                                 </li>
                             </ul>
@@ -1047,11 +1038,21 @@ object-fit: contain;
                             <small>Päivittäinen kokonaiskulutuksesi</small>
                         </div>
                     </div>
-                    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Tiedätkö paremmin?</strong> voit asettaa oman kokonaiskulutuksen itse
-                    </div>
-                </div>
+                        <div class="form-group mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="calories_from_device_checkbox">
+            <label class="form-check-label" for="calories_from_device_checkbox">
+                <strong>Tuo kalorit garminista</strong><br>
+                <small>Kun ruksattu, kokonaiskulutus synkronoidaan garmista</small>
+            </label>
+        </div>
+    </div>
+    
+    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px; margin-top: 15px;">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Tiedätkö paremmin?</strong> voit asettaa oman kokonaiskulutuksen itse
+    </div>
+</div>
                 
                 <div class="d-grid mt-4">
                     <button class="btn btn-primary btn-lg" id="calculate-btn">
@@ -1204,7 +1205,7 @@ object-fit: contain;
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const calculateBtn = document.getElementById('calculate-btn');
@@ -1226,35 +1227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         loadFormState();
     }
-    // HEITÄ VITTUUN TÄÄ KU DONE
-document.getElementById('calculate-btn').addEventListener('click', function() {
-    // Debug: Check checkbox state before form submission
-    const checkbox = document.getElementById('autoWorkoutCalories');
-    if (checkbox) {
-        console.log('🔧 DEBUG: Checkbox checked state:', checkbox.checked);
-        console.log('🔧 DEBUG: Checkbox name:', checkbox.name);
-        console.log('🔧 DEBUG: Checkbox value:', checkbox.value);
-    }
-    
-    // Handle checkbox for form submission
-    ensureCheckboxValue();
-});
 
-// ✅ NEW: Function to ensure checkbox submits correct value
-function ensureCheckboxValue() {
-    const checkbox = document.getElementById('autoWorkoutCalories');
-    const hiddenInput = document.querySelector('input[name="auto_add_workout_calories"][type="hidden"]');
-    
-    if (checkbox && checkbox.checked) {
-        // Remove hidden input when checkbox is checked to avoid sending 'false'
-        if (hiddenInput) {
-            hiddenInput.remove();
-        }
-        console.log('🔧 Checkbox is checked, will send value:', checkbox.value);
-    } else {
-        console.log('🔧 Checkbox is unchecked, hidden input will send: false');
-    }
-}
     // Mode selection
     modeButtons.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1298,416 +1271,404 @@ function ensureCheckboxValue() {
 
     // TDEE Calculation button
     if(calculateBtn) {
-    calculateBtn.addEventListener('click', function() {
-        if (currentMode === 'custom') {
-            // For custom mode, skip calculation and go straight to saving
-            const customTdee = parseInt(document.getElementById('custom-tdee').value) || 0;
+        calculateBtn.addEventListener('click', function() {
+            // Get common inputs
             const age = parseInt(document.getElementById('age').value) || 0;
             const weight = parseFloat(weightInput.value) || 0;
             const height = parseInt(document.getElementById('height').value) || 0;
-
-            if (!customTdee) {
-                alert('Please enter your custom TDEE value');
+            
+            // Validate common inputs
+            if (!age || !weight || !height || !currentGender) {
+                alert(t('fillallfields'));
                 return;
             }
             
-            if(!age || !weight || !height) {
-                alert(t('fill_all_personal_info'));
-                return;
-            }
-
-            // Calculate BMR for reference and update display
-            const results = calculateEnergyExpenditureCustom(currentGender, age, weight, height, customTdee);
+            let results;
             
-            // Update results display
-            document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
-            tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
-            document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
-            
-            updateProgressBars(results);
-            
-            // Show save button and save directly
-            saveTdeeBtn.style.display = 'block';
-            
-            // Trigger save immediately
-            saveTdeeBtn.click();
-            
-        } else {
-            // Normal calculation flow for easy and advanced modes
-            const age = parseInt(document.getElementById('age').value) || 0;
-            const weight = parseFloat(weightInput.value) || 0;
-            const height = parseInt(document.getElementById('height').value) || 0;
-
-            if(!age || !weight || !height) {
-                alert(t('fill_all_personal_info'));
-                return;
-            }
-
-            loadingOverlay.classList.add('active');
-            setTimeout(() => {
-                try {
-                    calculateTDEE();
-                } catch(e) {
-                    console.error('Calculation error:', e);
-                    alert(t('error_in_calculation') + ' ' + e.message);
-                } finally {
-                    loadingOverlay.classList.remove('active');
+            if (currentMode === 'easy') {
+                const sleepMin = parseInt(document.getElementById('sleep-hours').value || 0) * 60 + parseInt(document.getElementById('sleep-minutes').value || 0);
+                const intenseMin = parseInt(document.getElementById('intense-hours').value || 0) * 60 + parseInt(document.getElementById('intense-minutes').value || 0);
+                const moderateMin = parseInt(document.getElementById('moderate-hours').value || 0) * 60 + parseInt(document.getElementById('moderate-minutes').value || 0);
+                const lightMin = 0;
+                const walkingMin = parseInt(document.getElementById('walking-hours').value || 0) * 60 + parseInt(document.getElementById('walking-minutes').value || 0);
+                
+                loadingOverlay.classList.add('active');
+                setTimeout(() => {
+                    try {
+                        results = calculateEnergyExpenditureEasy(currentGender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
+                        displayResults(results);
+                        saveTdeeBtn.style.display = 'block';
+                        saveFormState();
+                    } catch(e) {
+                        console.error('Calculation error:', e);
+                        alert(t('error_in_calculation') + ' ' + e.message);
+                    } finally {
+                        loadingOverlay.classList.remove('active');
+                    }
+                }, 1000);
+                
+            } else if (currentMode === 'advanced') {
+                const stepCount = parseInt(document.getElementById('step-count').value) || 0;
+                const activityCalories = parseInt(document.getElementById('activity-calories').value) || 0;
+                
+                loadingOverlay.classList.add('active');
+                setTimeout(() => {
+                    try {
+                        results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, stepCount, activityCalories);
+                        displayResults(results);
+                        saveTdeeBtn.style.display = 'block';
+                        saveFormState();
+                    } catch(e) {
+                        console.error('Calculation error:', e);
+                        alert(t('error_in_calculation') + ' ' + e.message);
+                    } finally {
+                        loadingOverlay.classList.remove('active');
+                    }
+                }, 1000);
+                
+            } else if (currentMode === 'custom') {
+                // NEW: Check if Garmin calories checkbox is enabled
+                const garminCheckbox = document.getElementById('calories_from_device_checkbox');
+                const caloriesFromDevice = garminCheckbox ? garminCheckbox.checked : false;
+                
+                if (caloriesFromDevice) {
+                    // If Garmin calories is enabled, bypass validation and set dummy value
+                    console.log('Garmin calories enabled - bypassing custom TDEE validation');
+                    
+                    // Set dummy TDEE value of 1 for display purposes
+                    results = {
+                        tdee: 1,
+                        bmr: 0,
+                        garmin_mode: true  // Flag to indicate this is Garmin mode
+                    };
+                    
+                    // Calculate BMR for reference
+                    const bmrResults = calculateEnergyExpenditureCustom(currentGender, age, weight, height, 1);
+                    results.bmr = bmrResults.bmr;
+                    
+                    // Display special message for Garmin mode
+                    displayResults(results);
+                    saveTdeeBtn.style.display = 'block';
+                    saveFormState();
+                    
+                } else {
+                    // Normal custom mode - validate TDEE input
+                    const customTdee = parseInt(document.getElementById('custom-tdee').value) || 0;
+                    
+                    if (!customTdee || customTdee < 800) {
+                        alert(t('entercustomtdee'));
+                        return;
+                    }
+                    
+                    results = calculateEnergyExpenditureCustom(currentGender, age, weight, height, customTdee);
+                    displayResults(results);
+                    saveTdeeBtn.style.display = 'block';
+                    saveFormState();
                 }
-            }, 1000);
-        }
-    });
-}
-    // Save TDEE & Weight button
-// Save TDEE & Weight button
-// Save TDEE & Weight button
-// Save TDEE & Weight button
-if (saveTdeeBtn) {
-    saveTdeeBtn.addEventListener('click', function() {
-        // === SAVE METRICS DEBUG ===
-        console.log('=== SAVE METRICS DEBUG ===');
-        console.log('Mode:', currentMode);
-        
-        let tdeeValue = 0;
-        
-        // Get TDEE based on current mode
-        if (currentMode === 'easy') {
-            // For easy mode, recalculate to get exact value
-            const age = parseInt(document.getElementById('age').value) || 0;
-            const weight = parseFloat(weightInput.value) || 0;
-            const height = parseInt(document.getElementById('height').value) || 0;
-            const sleepMin = parseInt(document.getElementById('sleep-hours').value || 0) * 60 + parseInt(document.getElementById('sleep-minutes').value || 0);
-            const intenseMin = parseInt(document.getElementById('intense-hours').value || 0) * 60 + parseInt(document.getElementById('intense-minutes').value || 0);
-            const moderateMin = parseInt(document.getElementById('moderate-hours').value || 0) * 60 + parseInt(document.getElementById('moderate-minutes').value || 0);
-            const lightMin = 0;
-            const walkingMin = parseInt(document.getElementById('walking-hours').value || 0) * 60 + parseInt(document.getElementById('walking-minutes').value || 0);
-            
-            const results = calculateEnergyExpenditureEasy(currentGender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
-            tdeeValue = results.tdee;
-            console.log('Easy mode result:', results);
-        } else if (currentMode === 'advanced') {
-            // For advanced mode, save ONLY BMR (no steps/activity calories)
-            const age = parseInt(document.getElementById('age').value) || 0;
-            const weight = parseFloat(weightInput.value) || 0;
-            const height = parseInt(document.getElementById('height').value) || 0;
-            
-            // Calculate BMR only (no steps, no activity calories)
-            const results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, 0, 0);
-            console.log('Advanced mode result:', results);
-            
-            // Check what properties are available
-            if (results.bmr) {
-                tdeeValue = results.bmr;
-                console.log('Using bmr:', tdeeValue);
-            } else if (results.tdee) {
-                // Fallback to tdee if bmr doesn't exist
-                tdeeValue = results.tdee;
-                console.log('Using tdee (bmr not found):', tdeeValue);
-            } else {
-                console.error('No bmr or tdee found in results:', results);
-                tdeeValue = 0;
             }
-        } else if (currentMode === 'custom') {
-            // For custom mode, get from custom input
-            tdeeValue = parseInt(document.getElementById('custom-tdee').value) || 0;
-            console.log('Custom mode value:', tdeeValue);
-        }
-        
-        const weightValue = parseFloat(weightInput.value) || 0;
-        
-        // Get checkbox values
-        const workoutCheckbox = document.getElementById('autoWorkoutCalories');
-        const stepsCheckbox = document.getElementById('autoGarminSteps');
-        const autoWorkoutCalories = workoutCheckbox ? workoutCheckbox.checked : false;
-        const autoGarminSteps = stepsCheckbox ? stepsCheckbox.checked : false;
-        
-        console.log('TDEE Value:', tdeeValue);
-        console.log('Weight Value:', weightValue);
-        console.log('Sending data:', {
-            tdee: tdeeValue,
-            weight: weightValue,
-            gender: currentGender,
-            auto_add_workout_calories: autoWorkoutCalories,
-            auto_garmin_steps: autoGarminSteps,
-            mode: currentMode
+        });
+    }
+
+    // Save TDEE & Weight button
+    if (saveTdeeBtn) {
+        saveTdeeBtn.addEventListener('click', function() {
+            // === SAVE METRICS DEBUG ===
+            console.log('=== SAVE METRICS DEBUG ===');
+            console.log('Mode:', currentMode);
+            
+            let tdeeValue = 0;
+            let caloriesFromDevice = false;
+            
+            // Get TDEE based on current mode
+            if (currentMode === 'easy') {
+                // For easy mode, recalculate to get exact value
+                const age = parseInt(document.getElementById('age').value) || 0;
+                const weight = parseFloat(weightInput.value) || 0;
+                const height = parseInt(document.getElementById('height').value) || 0;
+                const sleepMin = parseInt(document.getElementById('sleep-hours').value || 0) * 60 + parseInt(document.getElementById('sleep-minutes').value || 0);
+                const intenseMin = parseInt(document.getElementById('intense-hours').value || 0) * 60 + parseInt(document.getElementById('intense-minutes').value || 0);
+                const moderateMin = parseInt(document.getElementById('moderate-hours').value || 0) * 60 + parseInt(document.getElementById('moderate-minutes').value || 0);
+                const lightMin = 0;
+                const walkingMin = parseInt(document.getElementById('walking-hours').value || 0) * 60 + parseInt(document.getElementById('walking-minutes').value || 0);
+                
+                const results = calculateEnergyExpenditureEasy(currentGender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
+                tdeeValue = results.tdee;
+                console.log('Easy mode result:', results);
+            } else if (currentMode === 'advanced') {
+                // For advanced mode, save ONLY BMR (no steps/activity calories)
+                const age = parseInt(document.getElementById('age').value) || 0;
+                const weight = parseFloat(weightInput.value) || 0;
+                const height = parseInt(document.getElementById('height').value) || 0;
+                
+                // Calculate BMR only (no steps, no activity calories)
+                const results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, 0, 0);
+                console.log('Advanced mode result:', results);
+                
+                // Check what properties are available
+                if (results.bmr) {
+                    tdeeValue = results.bmr;
+                    console.log('Using bmr:', tdeeValue);
+                } else if (results.tdee) {
+                    // Fallback to tdee if bmr doesn't exist
+                    tdeeValue = results.tdee;
+                    console.log('Using tdee (bmr not found):', tdeeValue);
+                } else {
+                    console.error('No bmr or tdee found in results:', results);
+                    tdeeValue = 0;
+                }
+            } else if (currentMode === 'custom') {
+                // For custom mode, check if Garmin calories is enabled
+                const garminCheckbox = document.getElementById('calories_from_device_checkbox');
+                caloriesFromDevice = garminCheckbox ? garminCheckbox.checked : false;
+                
+                if (caloriesFromDevice) {
+                    // Set TDEE to 0 when using Garmin data
+                    tdeeValue = 0;
+                    console.log('Custom mode with Garmin calories enabled - setting TDEE to 0');
+                } else {
+                    // Use custom TDEE value
+                    tdeeValue = parseInt(document.getElementById('custom-tdee').value) || 0;
+                    console.log('Custom mode value:', tdeeValue);
+                }
+            }
+            
+            const weightValue = parseFloat(weightInput.value) || 0;
+            
+            // Get checkbox values
+            const workoutCheckbox = document.getElementById('autoWorkoutCalories');
+            const stepsCheckbox = document.getElementById('autoGarminSteps');
+            const autoWorkoutCalories = workoutCheckbox ? workoutCheckbox.checked : false;
+            const autoGarminSteps = stepsCheckbox ? stepsCheckbox.checked : false;
+            
+            console.log('TDEE Value:', tdeeValue);
+            console.log('Weight Value:', weightValue);
+            console.log('Calories from Device:', caloriesFromDevice);
+            console.log('Sending data:', {
+                tdee: tdeeValue,
+                weight: weightValue,
+                gender: currentGender,
+                auto_add_workout_calories: autoWorkoutCalories,
+                auto_garmin_steps: autoGarminSteps,
+                calories_total_enabled: caloriesFromDevice,
+                mode: currentMode
+            });
+            
+            // For custom mode with Garmin, allow tdeeValue = 0
+            if (currentMode === 'custom' && caloriesFromDevice) {
+                // Skip TDEE validation for Garmin mode
+            } else if (tdeeValue <= 0 || weightValue <= 0) {
+                alert('Please calculate TDEE first!');
+                return;
+            }
+            
+            loadingOverlay.classList.add('active');
+            
+            // Use FormData for proper form submission
+            const formData = new FormData();
+            formData.append('tdee', Math.round(tdeeValue));
+            formData.append('weight', weightValue);
+            formData.append('gender', currentGender);
+            formData.append('auto_add_workout_calories', autoWorkoutCalories ? 'true' : 'false');
+            formData.append('auto_garmin_steps', autoGarminSteps ? 'true' : 'false');
+            formData.append('calories_total_enabled', caloriesFromDevice ? 'true' : 'false');
+            formData.append('mode', currentMode);
+            
+            console.log('FormData being sent:', {
+                tdee: Math.round(tdeeValue),
+                weight: weightValue,
+                gender: currentGender,
+                auto_add_workout_calories: autoWorkoutCalories ? 'true' : 'false',
+                auto_garmin_steps: autoGarminSteps ? 'true' : 'false',
+                calories_total_enabled: caloriesFromDevice ? 'true' : 'false',
+                mode: currentMode
+            });
+            
+            fetch('/save_metrics', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Save response:', data);
+                
+                if (data.success) {
+                    saveFormState();
+                    
+                    // Success feedback
+                    const btn = saveTdeeBtn;
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
+                    btn.classList.add('btn-flash-success');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('savemetrics');
+                        btn.classList.remove('btn-flash-success');
+                    }, 2000);
+                    
+                    console.log('Save successful:', data);
+                } else {
+                    alert(t('errorsaving') + ': ' + (data.error || t('unknownerror')));
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert(t('errorsavingconsole'));
+            })
+            .finally(() => {
+                loadingOverlay.classList.remove('active');
+            });
+        });
+    }
+
+    // Mode switching function
+    function switchMode(mode) {
+        // Hide all mode content
+        document.querySelectorAll('.mode-content').forEach(content => {
+            content.style.display = 'none';
         });
         
-        if (tdeeValue <= 0 || weightValue <= 0) {
-            alert('Please calculate TDEE first!');
+        // Hide all breakdown sections
+        document.querySelectorAll('.breakdown-section').forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // Show selected mode content
+        document.getElementById(mode + '-mode').style.display = 'block';
+        
+        // Show corresponding breakdown section
+        if (mode === 'easy') {
+            document.getElementById('breakdown-easy').style.display = 'block';
+        } else if (mode === 'advanced') {
+            document.getElementById('breakdown-advanced').style.display = 'block';
+        } else if (mode === 'custom') {
+            document.getElementById('breakdown-custom').style.display = 'block';
+        }
+        
+        // Update button text based on mode
+        const calculateBtn = document.getElementById('calculate-btn');
+        if (mode === 'custom') {
+            calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske Kulutus</span>';
+        } else {
+            calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske Kulutus</span>';
+        }
+    }
+
+    // Handle workout calories checkbox
+    document.getElementById('autoWorkoutCalories').addEventListener('change', function() {
+        const activityField = document.getElementById('activity-calories');
+        
+        if (!activityField) {
+            console.warn('Activity field not found - skipping hide/show functionality');
             return;
         }
         
-        loadingOverlay.classList.add('active');
+        const activityGroup = activityField.closest('.col-md-6');
         
-        // Use FormData for proper form submission
-        const formData = new FormData();
-        formData.append('tdee', Math.round(tdeeValue));  // Ensure it's a valid number
-        formData.append('weight', weightValue);
-        formData.append('gender', currentGender);
-        formData.append('auto_add_workout_calories', autoWorkoutCalories ? 'true' : 'false');
-        formData.append('auto_garmin_steps', autoGarminSteps ? 'true' : 'false');
-        formData.append('mode', currentMode);
-        
-        console.log('FormData being sent:', {
-            tdee: Math.round(tdeeValue),
-            weight: weightValue,
-            gender: currentGender,
-            auto_add_workout_calories: autoWorkoutCalories ? 'true' : 'false',
-            auto_garmin_steps: autoGarminSteps ? 'true' : 'false',
-            mode: currentMode
-        });
-        
-        fetch('/save_metrics', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Save response:', data);
-            
-            if (data.success) {
-                saveFormState();
-                
-                // Success feedback
-                const btn = saveTdeeBtn;
-                btn.innerHTML = '<i class="fas fa-check me-1"></i>' + t('saved');
-                btn.classList.add('btn-flash-success');
-                
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-save me-1"></i>' + t('savemetrics');
-                    btn.classList.remove('btn-flash-success');
-                }, 2000);
-                
-                console.log('Save successful:', data);
-            } else {
-                alert(t('errorsaving') + ': ' + (data.error || t('unknownerror')));
+        if (this.checked) {
+            if (activityGroup) {
+                activityGroup.style.display = 'none';
             }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            alert(t('errorsavingconsole'));
-        })
-        .finally(() => {
-            loadingOverlay.classList.remove('active');
-        });
-    });
-}
-
-
-
-    // Mode switching function
-function switchMode(mode) {
-    // Hide all mode content
-    document.querySelectorAll('.mode-content').forEach(content => {
-        content.style.display = 'none';
-    });
-    
-    // Hide all breakdown sections
-    document.querySelectorAll('.breakdown-section').forEach(section => {
-        section.style.display = 'none';
-    });
-
-    // Show selected mode content
-    document.getElementById(mode + '-mode').style.display = 'block';
-    
-    // Show corresponding breakdown section
-    if (mode === 'easy') {
-        document.getElementById('breakdown-easy').style.display = 'block';
-    } else if (mode === 'advanced') {
-        document.getElementById('breakdown-advanced').style.display = 'block';
-    } else if (mode === 'custom') {
-        document.getElementById('breakdown-custom').style.display = 'block';
-    }
-    
-    // Update button text based on mode
-    const calculateBtn = document.getElementById('calculate-btn');
-    if (mode === 'custom') {
-        calculateBtn.innerHTML = '<i class="fas fa-save me-2"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>';
-    } else {
-        calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i><span data-i18n="calculate_tdee">Laske Kulutus</span>';
-    }
-}
-document.getElementById('autoWorkoutCalories').addEventListener('change', function() {
-    // Use the correct activity field ID from your HTML
-    const activityField = document.getElementById('activity-calories');
-    
-    if (!activityField) {
-        console.warn('Activity field not found - skipping hide/show functionality');
-        return;
-    }
-    
-    const activityGroup = activityField.closest('.col-md-6');
-    
-    if (this.checked) {
-        // Hide activity field when checkbox is checked
-        if (activityGroup) {
-            activityGroup.style.display = 'none';
+            activityField.value = '';
+            console.log('Auto workout calories enabled - activity field hidden');
+        } else {
+            if (activityGroup) {
+                activityGroup.style.display = 'block';
+            }
+            console.log('Auto workout calories disabled - activity field shown');
         }
-        // Clear activity value since we're not using it
-        activityField.value = '';
+        saveFormState();
+    });
+
+    // Handle Garmin steps checkbox
+    document.getElementById('autoGarminSteps').addEventListener('change', function() {
+        const stepCountField = document.getElementById('step-count');
         
-        console.log('Auto workout calories enabled - activity field hidden');
-    } else {
-        // Show activity field when checkbox is unchecked
-        if (activityGroup) {
-            activityGroup.style.display = 'block';
-        }
-        console.log('Auto workout calories disabled - activity field shown');
-    }
-});
-// NEW: Handle Garmin steps checkbox
-document.getElementById('autoGarminSteps').addEventListener('change', function() {
-    const stepCountField = document.getElementById('step-count');
-    const weightInput = document.getElementById('weight');
-    
-    if (this.checked) {
-        // Disable manual step input
-        stepCountField.disabled = true;
-        stepCountField.placeholder = 'Ladataan laitteesta...';
-        
-        // Fetch steps from Garmin
-        fetchGarminSteps().then(data => {
-            if (data.success) {
-                stepCountField.value = data.steps;
-                stepCountField.placeholder = `Garmin: ${data.steps} askelta`;
-                console.log('Garmin steps loaded:', data.steps);
-            } else {
-                alert('Askeleita ei voitu ladata laitteesta. Tarkista Garmin-yhteys.');
+        if (this.checked) {
+            stepCountField.disabled = true;
+            stepCountField.placeholder = 'Ladataan laitteesta...';
+            
+            fetchGarminSteps().then(data => {
+                if (data.success) {
+                    stepCountField.value = data.steps;
+                    stepCountField.placeholder = `Garmin: ${data.steps} askelta`;
+                    console.log('Garmin steps loaded:', data.steps);
+                } else {
+                    alert('Askeleita ei voitu ladata laitteesta. Tarkista Garmin-yhteys.');
+                    this.checked = false;
+                    stepCountField.disabled = false;
+                    stepCountField.placeholder = 'Enter steps';
+                }
+            }).catch(error => {
+                console.error('Error fetching Garmin steps:', error);
+                alert('Virhe ladattaessa askeleita.');
                 this.checked = false;
                 stepCountField.disabled = false;
                 stepCountField.placeholder = 'Enter steps';
-            }
-        }).catch(error => {
-            console.error('Error fetching Garmin steps:', error);
-            alert('Virhe ladattaessa askeleita.');
-            this.checked = false;
-            stepCountField.disabled = false;
-            stepCountField.placeholder = 'Enter steps';
-        });
-    } else {
-        // Re-enable manual step input
-        stepCountField.disabled = false;
-        stepCountField.value = '';
-        stepCountField.placeholder = 'Enter steps';
-    }
-    
-    saveFormState();
-});
-
-// Function to fetch Garmin steps for today
-async function fetchGarminSteps() {
-    try {
-        const response = await fetch('/garmin/get_garmin_steps', {  // FIXED: Added /garmin prefix
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD
-            })
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server response:', errorText);
-            throw new Error(`Network response was not ok: ${response.status}`);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-    }
-}
-// ✅ NEW: Load saved preference on page load
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        // Use proper Jinja2 syntax and convert to JavaScript boolean
-        const savedPreference = {% if current_user.auto_add_workout_calories %}true{% else %}false{% endif %};
-        
-        const checkbox = document.getElementById('autoWorkoutCalories');
-        if (checkbox) {
-            checkbox.checked = savedPreference;
-            
-            // Trigger the change event to set initial visibility
-            checkbox.dispatchEvent(new Event('change'));
+            });
         } else {
-            console.warn('autoWorkoutCalories checkbox not found');
+            stepCountField.disabled = false;
+            stepCountField.value = '';
+            stepCountField.placeholder = 'Enter steps';
         }
-    } catch (error) {
-        console.error('Error loading workout calories preference:', error);
-    }
-});
+        
+        saveFormState();
+    });
 
-    // Calculate TDEE function
-    function calculateTDEE() {
-        const age = parseInt(document.getElementById('age').value) || 30;
-        const weight = parseFloat(weightInput.value) || 70;
-        const height = parseInt(document.getElementById('height').value) || 175;
-
-        let results;
-
-        if (currentMode === 'easy') {
-            // Original calculation logic
-            const sleepMin = (parseInt(document.getElementById('sleep-hours').value) || 0) * 60 +
-                             (parseInt(document.getElementById('sleep-minutes').value) || 0);
-            const intenseMin = (parseInt(document.getElementById('intense-hours').value) || 0) * 60 +
-                               (parseInt(document.getElementById('intense-minutes').value) || 0);
-            const moderateMin = (parseInt(document.getElementById('moderate-hours').value) || 0) * 60 +
-                                (parseInt(document.getElementById('moderate-minutes').value) || 0);
-            const lightMin = 0; // Hidden in current layout
-            const walkingMin = (parseInt(document.getElementById('walking-hours').value) || 0) * 60 +
-                               (parseInt(document.getElementById('walking-minutes').value) || 0);
-
-            results = calculateEnergyExpenditureEasy(currentGender, age, weight, height,
-                sleepMin, intenseMin, moderateMin, lightMin, walkingMin);
-        } 
-        else if (currentMode === 'advanced') {
-            // Advanced calculation with steps
-            const steps = parseInt(document.getElementById('step-count').value) || 0;
-            const activityCals = parseInt(document.getElementById('activity-calories').value) || 0;
+    // NEW: Handle Garmin calories checkbox (in custom mode)
+    document.getElementById('calories_from_device_checkbox').addEventListener('change', function() {
+        const customTdeeField = document.getElementById('custom-tdee');
+        const customTdeeGroup = customTdeeField.closest('.col-md-6');
+        
+        if (this.checked) {
+            // Hide custom TDEE input when checkbox is checked
+            if (customTdeeGroup) {
+                customTdeeGroup.style.display = 'none';
+            }
+            // Clear custom TDEE value since we're using Garmin data
+            customTdeeField.value = '';
             
-            results = calculateEnergyExpenditureAdvanced(currentGender, age, weight, height, steps, activityCals);
+            console.log('Garmin calories enabled - custom TDEE input hidden');
+        } else {
+            // Show custom TDEE input when checkbox is unchecked
+            if (customTdeeGroup) {
+                customTdeeGroup.style.display = 'block';
+            }
+            console.log('Garmin calories disabled - custom TDEE input shown');
         }
-        else if (currentMode === 'custom') {
-            // Custom TDEE
-            const customTdee = parseInt(document.getElementById('custom-tdee').value) || 0;
-            if (!customTdee) {
-                alert('Please enter your custom TDEE value');
-                return;
+        
+        saveFormState();
+    });
+
+    // Function to fetch Garmin steps
+    async function fetchGarminSteps() {
+        try {
+            const response = await fetch('/garmin/get_garmin_steps', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    date: new Date().toISOString().split('T')[0]
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`Network response was not ok: ${response.status}`);
             }
             
-            results = calculateEnergyExpenditureCustom(currentGender, age, weight, height, customTdee);
+            return await response.json();
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
         }
-
-        // Update results
-        document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
-        tdeeInput.textContent = results.tdee.toLocaleString() + ' kcal';
-        document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
-
-        // Update mode-specific breakdowns
-        if (currentMode === 'easy') {
-            updateEasyModeResults(results);
-        } else if (currentMode === 'advanced') {
-            updateAdvancedModeResults(results);
-        }
-
-        updateProgressBars(results);
-        
-        // Show save button
-        saveTdeeBtn.style.display = 'block';
-        saveTdeeBtn.classList.add('btn-flash-success');
-        setTimeout(() => {
-            saveTdeeBtn.classList.remove('btn-flash-success');
-        }, 1500);
-
-        saveFormState();
     }
 
-    // Easy mode calculation (original)
+    // Easy mode calculation
     function calculateEnergyExpenditureEasy(gender, age, weight, height, sleepMin, intenseMin, moderateMin, lightMin, walkingMin) {
         let baseBMR = (gender==='male') ? 1139 : 939;
         let baseTDEE = (gender==='male') ? 1511 : 1311;
@@ -1749,9 +1710,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return { bmr: Math.round(bmr), tdee: Math.round(tdee), activityBreakdown, mode: 'easy' };
     }
 
-    // Advanced mode calculation with steps
+    // Advanced mode calculation
     function calculateEnergyExpenditureAdvanced(gender, age, weight, height, steps, activityCals) {
-        // Calculate BMR using same formula as easy mode
         let baseBMR = (gender==='male') ? 1139 : 939;
         const weightDiff = weight - 30;
         const weightUnits = weightDiff / 0.5;
@@ -1764,11 +1724,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const heightAdj = (height>170) ? (height-170)*2 : 0;
         let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
 
-        // Calculate calories from steps (weight-adjusted)
-        const caloriesPerStep = 0.04 * (weight / 70); // Adjust base 0.04 cal/step by weight
+        const caloriesPerStep = 0.04 * (weight / 70);
         const stepsCalories = Math.round(steps * caloriesPerStep);
 
-        // Calculate TDEE: BMR + Steps + Activity
         const tdee = bmr + stepsCalories + activityCals;
 
         const activityBreakdown = {
@@ -1781,7 +1739,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Custom mode calculation
     function calculateEnergyExpenditureCustom(gender, age, weight, height, customTdee) {
-        // Calculate BMR for reference
         let baseBMR = (gender==='male') ? 1139 : 939;
         const weightDiff = weight - 30;
         const weightUnits = weightDiff / 0.5;
@@ -1795,6 +1752,54 @@ document.addEventListener('DOMContentLoaded', function() {
         let bmr = baseBMR + weightBMRAdj + ageAdj + heightAdj;
 
         return { bmr: Math.round(bmr), tdee: customTdee, activityBreakdown: {}, mode: 'custom' };
+    }
+
+    // Display results function
+    function displayResults(results) {
+        const resultDiv = document.getElementById('result');
+        const tdeeValueSpan = document.getElementById('tdee-result');
+        
+        // Check if this is Garmin calories mode
+        if (results.garmin_mode) {
+            tdeeValueSpan.textContent = 'Auto (Garmin)';
+            document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
+            document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
+            
+            // Also update the breakdown if it exists
+            const breakdownDiv = document.getElementById('breakdown-custom');
+            if (breakdownDiv) {
+                breakdownDiv.innerHTML = `
+                    <div class="alert" style="background: rgba(40, 40, 60, 0.7); border: 1px solid rgba(100, 100, 200, 0.3); color: #e0e0e0; border-radius: 10px;">
+                        <i class="fas fa-watch me-2"></i>
+                        <strong>Garmin kokonaiskulutus aktivoitu</strong><br>
+                        <small>Kokonaiskulutus synkronoidaan garmin laitteesta. paina "Tallenna Mittaukset" ja toiminto aktivoituu</small>
+                    </div>
+                `;
+            }
+            
+            // Set BMR progress bar
+            const bmrBar = document.getElementById('progress-bmr');
+            if(bmrBar) { 
+                bmrBar.style.width = '100%'; 
+                bmrBar.setAttribute('aria-valuenow', 100); 
+            }
+            
+            return;
+        }
+        
+        // Normal display for other modes
+        document.getElementById('bmr-result').textContent = results.bmr.toLocaleString() + ' kcal';
+        tdeeValueSpan.textContent = results.tdee.toLocaleString() + ' kcal';
+        document.getElementById('bmr-breakdown-result').textContent = results.bmr.toLocaleString() + ' kcal';
+        
+        // Update mode-specific breakdowns
+        if (results.mode === 'easy') {
+            updateEasyModeResults(results);
+        } else if (results.mode === 'advanced') {
+            updateAdvancedModeResults(results);
+        }
+        
+        updateProgressBars(results);
     }
 
     // Update easy mode results
@@ -1816,65 +1821,63 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('activity-result').textContent = '+' + results.activityBreakdown.activity + ' kcal';
     }
 
-    // Update progress bars based on mode
+    // Update progress bars
     function updateProgressBars(results) {
-    const bmrPct = Math.round((results.bmr / results.tdee) * 100);
-    const bmrBar = document.getElementById('progress-bmr');
-    if(bmrBar) { 
-        bmrBar.style.width = bmrPct+'%'; 
-        bmrBar.setAttribute('aria-valuenow', bmrPct); 
+        const bmrPct = Math.round((results.bmr / results.tdee) * 100);
+        const bmrBar = document.getElementById('progress-bmr');
+        if(bmrBar) { 
+            bmrBar.style.width = bmrPct+'%'; 
+            bmrBar.setAttribute('aria-valuenow', bmrPct); 
+        }
+
+        if (results.mode === 'easy') {
+            const intensePct = Math.round((results.activityBreakdown.intense / results.tdee) * 100);
+            const moderatePct = Math.round((results.activityBreakdown.moderate / results.tdee) * 100);
+            const walkingPct = Math.round((results.activityBreakdown.walking / results.tdee) * 100);
+            const otherPct = Math.max(100 - (bmrPct + intensePct + moderatePct + walkingPct), 0);
+
+            const intenseBar = document.getElementById('progress-intense');
+            const moderateBar = document.getElementById('progress-moderate');
+            const walkingBar = document.getElementById('progress-walking');
+            const otherBar = document.getElementById('progress-other');
+            
+            if(intenseBar) {
+                intenseBar.style.width = intensePct+'%';
+                intenseBar.setAttribute('aria-valuenow', intensePct);
+            }
+            if(moderateBar) {
+                moderateBar.style.width = moderatePct+'%';
+                moderateBar.setAttribute('aria-valuenow', moderatePct);
+            }
+            if(walkingBar) {
+                walkingBar.style.width = walkingPct+'%';
+                walkingBar.setAttribute('aria-valuenow', walkingPct);
+            }
+            if(otherBar) {
+                otherBar.style.width = otherPct+'%';
+                otherBar.setAttribute('aria-valuenow', otherPct);
+            }
+        } 
+        else if (results.mode === 'advanced') {
+            const stepsPct = Math.round((results.activityBreakdown.steps / results.tdee) * 100);
+            const activityPct = Math.round((results.activityBreakdown.activity / results.tdee) * 100);
+
+            const stepsBar = document.getElementById('progress-steps');
+            const activityBar = document.getElementById('progress-activity');
+            
+            if(stepsBar) {
+                stepsBar.style.width = stepsPct+'%';
+                stepsBar.setAttribute('aria-valuenow', stepsPct);
+            }
+            if(activityBar) {
+                activityBar.style.width = activityPct+'%';
+                activityBar.setAttribute('aria-valuenow', activityPct);
+            }
+        }
     }
 
-    if (results.mode === 'easy') {
-        const intensePct = Math.round((results.activityBreakdown.intense / results.tdee) * 100);
-        const moderatePct = Math.round((results.activityBreakdown.moderate / results.tdee) * 100);
-        const walkingPct = Math.round((results.activityBreakdown.walking / results.tdee) * 100);
-        const otherPct = Math.max(100 - (bmrPct + intensePct + moderatePct + walkingPct), 0);
-
-        // Fix: Add setAttribute for aria-valuenow to all bars
-        const intenseBar = document.getElementById('progress-intense');
-        const moderateBar = document.getElementById('progress-moderate');
-        const walkingBar = document.getElementById('progress-walking');
-        const otherBar = document.getElementById('progress-other');
-        
-        if(intenseBar) {
-            intenseBar.style.width = intensePct+'%';
-            intenseBar.setAttribute('aria-valuenow', intensePct);
-        }
-        if(moderateBar) {
-            moderateBar.style.width = moderatePct+'%';
-            moderateBar.setAttribute('aria-valuenow', moderatePct);
-        }
-        if(walkingBar) {
-            walkingBar.style.width = walkingPct+'%';
-            walkingBar.setAttribute('aria-valuenow', walkingPct);
-        }
-        if(otherBar) {
-            otherBar.style.width = otherPct+'%';
-            otherBar.setAttribute('aria-valuenow', otherPct);
-        }
-    } 
-    else if (results.mode === 'advanced') {
-        const stepsPct = Math.round((results.activityBreakdown.steps / results.tdee) * 100);
-        const activityPct = Math.round((results.activityBreakdown.activity / results.tdee) * 100);
-
-        // Fix: Add setAttribute for aria-valuenow to advanced mode bars
-        const stepsBar = document.getElementById('progress-steps');
-        const activityBar = document.getElementById('progress-activity');
-        
-        if(stepsBar) {
-            stepsBar.style.width = stepsPct+'%';
-            stepsBar.setAttribute('aria-valuenow', stepsPct);
-        }
-        if(activityBar) {
-            activityBar.style.width = activityPct+'%';
-            activityBar.setAttribute('aria-valuenow', activityPct);
-        }
-    }
-}
-    
-        // Initialize all result fields to empty
-        function initializeResultFields() {
+    // Initialize result fields
+    function initializeResultFields() {
         document.getElementById('sleep-value').style.display = 'none';
         document.getElementById('intense-value').textContent = '';
         document.getElementById('moderate-value').textContent = '';
@@ -1890,7 +1893,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const bar = document.getElementById(id);
             if(bar) {
                 bar.style.width = '0%';
-                bar.setAttribute('aria-valuenow', '0');  // This line was already correct
+                bar.setAttribute('aria-valuenow', '0');
             }
         });
         
@@ -1898,8 +1901,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('tdee-result').textContent = '';
         document.getElementById('save-tdee-btn').style.display = 'none';
     }
-        
-    // Clear form fields on first visit
+
+    // Clear form fields
     function clearFormFields() {
         document.getElementById('age').value = '';
         document.getElementById('height').value = '';
@@ -1916,37 +1919,38 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('custom-tdee').value = '';
     }
 
-    // Form state management
-function saveFormState() {
-    const formState = {
-        mode: currentMode,
-        gender: currentGender,
-        age: document.getElementById('age').value,
-        weight: document.getElementById('weight').value,
-        height: document.getElementById('height').value,
-        sleepHours: document.getElementById('sleep-hours').value,
-        sleepMinutes: document.getElementById('sleep-minutes').value,
-        intenseHours: document.getElementById('intense-hours').value,
-        intenseMinutes: document.getElementById('intense-minutes').value,
-        moderateHours: document.getElementById('moderate-hours').value,
-        moderateMinutes: document.getElementById('moderate-minutes').value,
-        walkingHours: document.getElementById('walking-hours').value,
-        walkingMinutes: document.getElementById('walking-minutes').value,
-        stepCount: document.getElementById('step-count').value,
-        activityCalories: document.getElementById('activity-calories').value,
-        customTdee: document.getElementById('custom-tdee').value,
-        autoGarminSteps: document.getElementById('autoGarminSteps').checked, // NEW
-        autoWorkoutCalories: document.getElementById('autoWorkoutCalories').checked
-    };
-    localStorage.setItem('activityFormState', JSON.stringify(formState));
-}
+    // Save form state
+    function saveFormState() {
+        const formState = {
+            mode: currentMode,
+            gender: currentGender,
+            age: document.getElementById('age').value,
+            weight: document.getElementById('weight').value,
+            height: document.getElementById('height').value,
+            sleepHours: document.getElementById('sleep-hours').value,
+            sleepMinutes: document.getElementById('sleep-minutes').value,
+            intenseHours: document.getElementById('intense-hours').value,
+            intenseMinutes: document.getElementById('intense-minutes').value,
+            moderateHours: document.getElementById('moderate-hours').value,
+            moderateMinutes: document.getElementById('moderate-minutes').value,
+            walkingHours: document.getElementById('walking-hours').value,
+            walkingMinutes: document.getElementById('walking-minutes').value,
+            stepCount: document.getElementById('step-count').value,
+            activityCalories: document.getElementById('activity-calories').value,
+            customTdee: document.getElementById('custom-tdee').value,
+            autoGarminSteps: document.getElementById('autoGarminSteps').checked,
+            autoWorkoutCalories: document.getElementById('autoWorkoutCalories').checked,
+            caloriesFromDevice: document.getElementById('calories_from_device_checkbox').checked
+        };
+        localStorage.setItem('activityFormState', JSON.stringify(formState));
+    }
 
+    // Load form state
     function loadFormState() {
         const savedState = localStorage.getItem('activityFormState');
         if (savedState) {
             const state = JSON.parse(savedState);
             
-            // Set mode
             currentMode = state.mode || 'easy';
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -1956,7 +1960,6 @@ function saveFormState() {
             });
             switchMode(currentMode);
             
-            // Set gender
             currentGender = state.gender || 'male';
             document.querySelectorAll('.gender-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -1965,7 +1968,6 @@ function saveFormState() {
                 }
             });
             
-            // Set other inputs
             document.getElementById('age').value = state.age || '';
             document.getElementById('height').value = state.height || '';
             document.getElementById('sleep-hours').value = state.sleepHours || '';
@@ -1979,31 +1981,41 @@ function saveFormState() {
             document.getElementById('step-count').value = state.stepCount || '';
             document.getElementById('activity-calories').value = state.activityCalories || '';
             document.getElementById('custom-tdee').value = state.customTdee || '';
-           if (state.autoGarminSteps !== undefined) {
-            const garminCheckbox = document.getElementById('autoGarminSteps');
-            garminCheckbox.checked = state.autoGarminSteps;
-            if (state.autoGarminSteps) {
-                garminCheckbox.dispatchEvent(new Event('change'));
+            
+            if (state.autoGarminSteps !== undefined) {
+                const garminCheckbox = document.getElementById('autoGarminSteps');
+                garminCheckbox.checked = state.autoGarminSteps;
+                if (state.autoGarminSteps) {
+                    garminCheckbox.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            if (state.autoWorkoutCalories !== undefined) {
+                document.getElementById('autoWorkoutCalories').checked = state.autoWorkoutCalories;
+            }
+            
+            // NEW: Restore calories from device checkbox
+            if (state.caloriesFromDevice !== undefined) {
+                const caloriesCheckbox = document.getElementById('calories_from_device_checkbox');
+                caloriesCheckbox.checked = state.caloriesFromDevice;
+                if (state.caloriesFromDevice) {
+                    caloriesCheckbox.dispatchEvent(new Event('change'));
+                }
             }
         }
-
-        // ✅ Restore workout calories checkbox
-        if (state.autoWorkoutCalories !== undefined) {
-            document.getElementById('autoWorkoutCalories').checked = state.autoWorkoutCalories;
-        }
     }
-}
-    // Helper function for translations (if exists)
+
+    // Translation helper
     window.t = function(key) {
-        // Simple fallback if translation system isn't available
         const translations = {
-            'fill_all_personal_info': 'Täydä vaadittavat kentät',
+            'fillallfields': 'Täydä vaadittavat kentät',
             'error_in_calculation': 'Error in calculation:',
             'saved': 'Tallennettu!',
-            'save_metrics': 'Tallenna mittaukset',
-            'error_saving': 'Error saving:',
-            'unknown_error': 'Unknown error',
-            'error_saving_console': 'Error saving metrics. Check console.'
+            'savemetrics': 'Tallenna Mittaukset',
+            'errorsaving': 'Error saving:',
+            'unknownerror': 'Unknown error',
+            'errorsavingconsole': 'Error saving metrics. Check console.',
+            'entercustomtdee': 'Please enter your custom TDEE value'
         };
         return translations[key] || key;
     };
@@ -2017,19 +2029,18 @@ document.addEventListener("DOMContentLoaded", function () {
   tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 });
 </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then((registration) => {
-                    console.log('ServiceWorker registered with scope:', registration.scope);
-                })
-                .catch((error) => {
-                    console.error('ServiceWorker registration failed:', error);
-                });
-        });
-    }
-    </script>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('ServiceWorker registration failed:', error);
+            });
+    });
+}
+</script>
 </body>
 </html>
-
