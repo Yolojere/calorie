@@ -1,3 +1,4 @@
+
 # Backend - Updated for PostgreSQL
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, abort
 import json
@@ -1555,7 +1556,79 @@ def generate_date_range(center_date_str, range_days=3):
         dates.append((date_str, formatted_date))
     
     return dates
+def get_user_tdee_for_date(user_id, target_date):
+    """
+    Get user's TDEE for a specific date with support for 3 modes.
+    Always returns a float number, never a tuple.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    try:
+        # Get user settings
+        cursor.execute("""
+            SELECT tdee, calories_total_enabled, weight, 
+                   auto_add_workout_calories, auto_garmin_steps
+            FROM users
+            WHERE id = %s
+        """, (user_id,))
+
+        user_data = cursor.fetchone()
+
+        if not user_data:
+            return None
+
+        base_tdee, calories_total_enabled, weight, auto_workout, auto_steps = user_data
+
+        # PRIORITY 1: If Garmin total calories is enabled
+        if calories_total_enabled:
+            cursor.execute("""
+                SELECT calories_total
+                FROM garmin_daily_data
+                WHERE user_id = %s AND date = %s
+            """, (user_id, target_date))
+
+            garmin_data = cursor.fetchone()
+
+            if garmin_data and garmin_data[0]:
+                tdee = float(garmin_data[0])  # ✅ Convert to float
+                print(f"Using Garmin calories_total for user {user_id}: {tdee} kcal")
+                return tdee
+            else:
+                print(f"No Garmin data found, using base TDEE: {base_tdee} kcal")
+                return float(base_tdee) if base_tdee else 0
+        
+        # PRIORITY 2: If advanced mode features enabled
+        if auto_workout or auto_steps:
+            cursor.execute("""
+                SELECT adjusted_tdee
+                FROM daily_tdee_adjustments
+                WHERE user_id = %s AND date = %s
+            """, (user_id, target_date))
+
+            adjustment_data = cursor.fetchone()
+
+            if adjustment_data and adjustment_data:
+                tdee = float(adjustment_data[0])
+                print(f"Using adjusted TDEE for user {user_id}: {tdee} kcal (from daily_tdee_adjustments)")
+                return tdee
+            else:
+                print(f"No adjustment data found, using base TDEE: {base_tdee} kcal")
+                return float(base_tdee) if base_tdee else 0
+        
+        # PRIORITY 3: Static TDEE mode
+        print(f"Using static TDEE for user {user_id}: {base_tdee} kcal")
+        return float(base_tdee) if base_tdee else 0
+
+    except Exception as e:
+        print(f"Error in get_user_tdee_for_date: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+        
+    finally:
+        cursor.close()
+        conn.close()
 @app.route('/load_more_dates', methods=['POST'])
 @login_required
 def load_more_dates():
@@ -1621,30 +1694,46 @@ def load_more_dates():
 @app.route('/main')
 @login_required
 def main():
-    # ✅ UPDATED: Use dynamic TDEE calculation instead of static current_user.tdee
-    current_weight = current_user.weight or 0
+    """Main food log page with dynamic TDEE support"""
+    user_id = current_user.id
+    current_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
     
-    # Get current TDEE including workout adjustments
-    tdee_data = get_user_current_tdee(current_user.id)
-    current_tdee = tdee_data["daily_tdee"]  # This includes workout calories if enabled
-
-    # Get session data
-    eaten_items, current_date = get_current_session(current_user.id)
+    try:
+        # Parse the date
+        date_obj = datetime.strptime(current_date, '%Y-%m-%d').date()
+    except ValueError:
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        date_obj = datetime.now().date()
+    
+    # *** CRITICAL: Use dynamic TDEE function ***
+    current_tdee = get_user_tdee_for_date(user_id, date_obj)
+    print(f"Dynamic TDEE for {current_date}: {current_tdee} kcal")
+    
+    # Get session data (your existing function)
+    eaten_items, current_date = get_current_session(user_id, current_date)
+    
+    # Calculate totals (your existing function)
     totals = calculate_totals(eaten_items)
-    food_usage = get_food_usage(current_user.id)
+    
+    # Get food usage (your existing function)
+    food_usage = get_food_usage(user_id)
+    
+    # Calculate group breakdown (your existing function)
     group_breakdown = calculate_group_breakdown(eaten_items)
-
-    # Generate initial dates for selector - 3 days past, today, 3 days future
+    
+    # Generate dates for selector (your existing function)
     dates = generate_date_range(current_date, range_days=3)
-
     current_date_formatted = format_date(current_date)
-
+    
     # Ensure each item has a 'key' property
     for group, group_data in group_breakdown.items():
         for item in group_data['items']:
             if 'key' not in item:
                 item['key'] = item['id']
-
+    
+    # Get current weight
+    current_weight = current_user.weight or 0
+    
     return render_template(
         'main.html',
         eaten_items=eaten_items,
@@ -1654,10 +1743,8 @@ def main():
         dates=dates,
         food_usage=food_usage,
         group_breakdown=group_breakdown,
-        current_tdee=current_tdee,
-        current_weight=current_weight,
-        # ✅ NEW: Pass additional TDEE info for display
-        tdee_data=tdee_data  # Contains base_tdee, workout_calories, daily_tdee, auto_enabled
+        current_tdee=current_tdee,  # Pass dynamic TDEE
+        current_weight=current_weight
     )
 @app.route('/terms')
 def terms():
@@ -4775,7 +4862,7 @@ def save_metrics():
     Enhanced save_metrics route that handles TDEE calculations from different modes:
     - Easy mode: Saves the calculated TDEE with activity breakdown (static)
     - Advanced mode: Saves only BMR, steps/workouts added dynamically
-    - Custom mode: Uses user-provided TDEE directly
+    - Custom mode: Uses user-provided TDEE directly OR enables Garmin calories_total
     """
     try:
         # Get basic metrics that are always required
@@ -4785,19 +4872,25 @@ def save_metrics():
         calc_mode = request.form.get('mode', 'unknown')
         auto_add_workout_calories = request.form.get('auto_add_workout_calories') == 'true'
         auto_garmin_steps = request.form.get('auto_garmin_steps') == 'true'
+        calories_total_enabled = request.form.get('calories_total_enabled') == 'true'  # NEW
         
         # DEBUG OUTPUT
         print(f"\n=== SAVE METRICS DEBUG ===")
         print(f"Raw form data: {dict(request.form)}")
         print(f"Parsed - weight={weight}, tdee={tdee}, gender={gender}, mode={calc_mode}")
-        print(f"Checkboxes - autoWorkout={auto_add_workout_calories}, autoSteps={auto_garmin_steps}")
+        print(f"Checkboxes - autoWorkout={auto_add_workout_calories}, autoSteps={auto_garmin_steps}, caloriesFromDevice={calories_total_enabled}")
         
         # Validate inputs
         if not weight or weight <= 0:
             print(f"ERROR: Invalid weight: {weight}")
             return jsonify(success=False, error="Valid weight is required"), 400
-            
-        if not tdee or tdee <= 0:
+        
+        # For custom mode with Garmin calories enabled, TDEE can be 0
+        if calc_mode == 'custom' and calories_total_enabled:
+            # Set TDEE to 0 when using Garmin calories
+            tdee = 0
+            print(f"Custom mode with Garmin calories enabled - setting TDEE to 0")
+        elif not tdee or tdee <= 0:
             print(f"ERROR: Invalid tdee: {tdee}")
             return jsonify(success=False, error="Valid TDEE is required"), 400
         
@@ -4830,21 +4923,22 @@ def save_metrics():
                 weight = %s, 
                 gender = %s, 
                 auto_add_workout_calories = %s,
-                auto_garmin_steps = %s
+                auto_garmin_steps = %s,
+                calories_total_enabled = %s
             WHERE id = %s
-        """, (tdee, weight, gender, auto_add_workout_calories, auto_garmin_steps, current_user.id))
+        """, (tdee, weight, gender, auto_add_workout_calories, auto_garmin_steps, calories_total_enabled, current_user.id))
         
         conn.commit()
         
         # DEBUG: Verify what was saved
         cursor.execute("""
-            SELECT tdee, weight, auto_garmin_steps, auto_add_workout_calories 
+            SELECT tdee, weight, auto_garmin_steps, auto_add_workout_calories, calories_total_enabled
             FROM users 
             WHERE id = %s
         """, (current_user.id,))
         
         result = cursor.fetchone()
-        print(f"VERIFIED IN DB: tdee={result[0]}, weight={result[1]}, autoSteps={result[2]}, autoWorkout={result[3]}")
+        print(f"VERIFIED IN DB: tdee={result}, weight={result}, autoSteps={result}, autoWorkout={result}, caloriesFromDevice={result}")
         
         cursor.close()
         conn.close()
@@ -4858,7 +4952,8 @@ def save_metrics():
                 "gender": gender,
                 "mode": calc_mode,
                 "auto_add_workout_calories": auto_add_workout_calories,
-                "auto_garmin_steps": auto_garmin_steps
+                "auto_garmin_steps": auto_garmin_steps,
+                "calories_total_enabled": calories_total_enabled
             }
         )
         
@@ -4877,6 +4972,7 @@ def save_metrics():
     finally:
         if 'conn' in locals():
             conn.close()
+
 
 
 
@@ -6686,142 +6782,77 @@ def sitemap():
 def index():
     """Main page with workout of the week, news, and best lifts of today"""
     
-    # Initialize default values for ALL template variables
-
     is_authenticated = False
     is_admin = False
     best_lifts = []
     news_posts = []
-    totals = {
-        'total_calories': 0,
-        'total_protein': 0,
-        'total_carbs': 0,
-        'total_fat': 0
-    }
-    tdee_data = None
-    base_tdee = None
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         
-        # Check if user is logged in
-        if 'user_id' in session:
-            is_authenticated = True
-            user_id = session['user_id']
-            
-            # Check admin status
-            cursor.execute("SELECT is_admin FROM users WHERE id = %s", (user_id,))
-            user = cursor.fetchone()
-            if user and user['is_admin']:
-                is_admin = True
-            
-            # Fetch totals for logged-in users
-            cursor.execute("""
-                SELECT 
-                    COALESCE(SUM(calories), 0) as total_calories,
-                    COALESCE(SUM(protein), 0) as total_protein,
-                    COALESCE(SUM(carbs), 0) as total_carbs,
-                    COALESCE(SUM(fat), 0) as total_fat
-                FROM food_log
-                WHERE user_id = %s AND date = CURRENT_DATE
-            """, (user_id,))
-            totals_row = cursor.fetchone()
-            
-            if totals_row:
-                totals = {
-                    'total_calories': float(totals_row['total_calories'] or 0),
-                    'total_protein': float(totals_row['total_protein'] or 0),
-                    'total_carbs': float(totals_row['total_carbs'] or 0),
-                    'total_fat': float(totals_row['total_fat'] or 0)
-                }
-        
         # Fetch published news posts (visible to everyone)
         cursor.execute("""
-            SELECT np.*, u.username, u.avatar, u.level
-            FROM news_post np
-            JOIN "users" u ON np.author_id = u.id
-            WHERE np.is_published = TRUE
-            ORDER BY np.created_at DESC
+            SELECT np.*, u.username, u.avatar, u.level 
+            FROM news_post np 
+            JOIN users u ON np.author_id = u.id 
+            WHERE np.is_published = TRUE 
+            ORDER BY np.created_at DESC 
             LIMIT 4
         """)
         news_posts_raw = cursor.fetchall()
+        news_posts = [dict(row) for row in news_posts_raw]
         
-        # Format news posts
-        news_posts = []
-        for post in news_posts_raw:
-            news_posts.append({
-                'id': post['id'],
-                'title': post['title'],
-                'content': post['content'],
-                'icon_class': post['icon_class'],
-                'icon_color': post['icon_color'],
-                'created_at': post['created_at'],
-                'title_key': post.get('title_key'),
-                'content_key': post.get('content_key'),
-                'author_id': post['author_id'],
-                'author_username': post['username'],
-                'author_avatar': post['avatar'] if post['avatar'] else 'default.png',
-                'author_level': post['level'] if post['level'] else 1
-            })
-        
-        # Fetch best lifts only if user is authenticated
-            today = datetime.now().date()
+        # Fetch data only if user is authenticated
+        if current_user.is_authenticated:
+            is_authenticated = True
+            user_id = current_user.id
             
+            # Check admin status using 'role' column
+            cursor.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            user = cursor.fetchone()
+            if user and user['role'] == 'admin':
+                is_admin = True
+            
+            # Fetch best lifts for today
+            today = datetime.now().date()
             cursor.execute("""
                 SELECT 
-                    u.id as user_id,
-                    u.username,
-                    u.avatar,
-                    u.level,
+                    u.id as user_id, u.username, u.avatar, u.level,
                     e.name as exercise_name,
-                    ws.reps,
-                    ws.weight,
+                    ws.reps, ws.weight,
                     (ws.reps * ws.weight) as volume
                 FROM workout_sets ws
                 JOIN workout_sessions wses ON ws.session_id = wses.id
                 JOIN users u ON wses.user_id = u.id
                 JOIN exercises e ON ws.exercise_id = e.id
                 WHERE wses.date = %s
-                AND ws.is_saved = true
-                AND (ws.reps * ws.weight) >= 20
+                  AND ws.is_saved = true
+                  AND (ws.reps * ws.weight) > 20
                 ORDER BY volume DESC
             """, (today,))
             
             all_lifts_raw = cursor.fetchall()
             
-            # Group lifts by user
+            # Group lifts by user and randomize selection
             lifts_by_user = {}
-            for lift in all_lifts_raw:
-                user_id_lift = lift['user_id']
+            for row in all_lifts_raw:
+                user_id_lift = row['user_id']
                 if user_id_lift not in lifts_by_user:
                     lifts_by_user[user_id_lift] = []
-                
-                lifts_by_user[user_id_lift].append({
-                    'user_id': lift['user_id'],
-                    'username': lift['username'],
-                    'avatar': lift['avatar'] or 'default.png',
-                    'level': lift['level'] if lift['level'] else 1,
-                    'exercise_name': lift['exercise_name'],
-                    'reps': lift['reps'],
-                    'weight': lift['weight'],
-                    'volume': float(lift['volume'])
-                })
+                lifts_by_user[user_id_lift].append(dict(row))
             
             # Randomize and select 1-2 lifts per user
             import random
             best_lifts = []
-            
             users = list(lifts_by_user.keys())
             random.shuffle(users)
             
             for user_id_lift in users:
                 user_lifts = lifts_by_user[user_id_lift]
                 user_lifts.sort(key=lambda x: x['volume'], reverse=True)
-                
                 num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
                 best_lifts.extend(user_lifts[:num_lifts])
-                
                 if len(best_lifts) >= 15:
                     break
             
@@ -6831,30 +6862,28 @@ def index():
         cursor.close()
         conn.close()
         
-        return render_template('index.html', 
-                            news_posts=news_posts, 
-                            best_lifts=best_lifts,
-                            is_admin=is_admin,
-                            is_authenticated=is_authenticated,
-                            totals=totals)
-    
+        return render_template(
+            'index.html',
+            news_posts=news_posts,
+            best_lifts=best_lifts,
+            is_admin=is_admin,
+            is_authenticated=is_authenticated
+        )
+        
     except Exception as e:
         app.logger.error(f"Error loading main page: {e}")
         import traceback
         app.logger.error(traceback.format_exc())
         
-        # CRITICAL: Return template, not redirect (prevents loop)
-        return render_template('index.html', 
-                            news_posts=[],
-                            best_lifts=[],
-                            is_admin=False,
-                            is_authenticated=False,
-                            totals=totals,
-                            tdee_data=None,
-                            base_tdee=None)
+        return render_template(
+            'index.html',
+            news_posts=[],
+            best_lifts=[],
+            is_admin=False,
+            is_authenticated=False
+        )
 
 
- 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
