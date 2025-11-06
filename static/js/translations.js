@@ -5,6 +5,7 @@ const translations = {
     home: "Home",
     workouts: "Workouts",
     add_food: "Add Food",
+    entersteps: "enter steps",
     history: "History",
     activity: "Activity",
     settings: "Settings",
@@ -362,6 +363,9 @@ const translations = {
     no_socials: "No social media accounts added",
     visit: "Visit",
     on: "on",
+    stepcount: "Step count",
+    activitycalories: "Calories from workouts",
+    additionalcalories: "burned calories",
     remove_social: "Remove this social link",
     not_set: "Not set",
     not_calculated: "Not calculated"
@@ -371,6 +375,7 @@ const translations = {
     home: "Koti",
     workouts: "Harjoitukset", 
     add_food: "Lisää Ruoka",
+    entersteps: "aseta askelmäärä",
     history: "Historia",
     activity: "Aktiivisuus",
     settings: "Asetukset",
@@ -737,6 +742,9 @@ const translations = {
     advanced: "Edistynyt",
     easy: "Helppo",
     custom: "Mukautettu",
+    stepcount: "Askelmäärä",
+    activitycalories: "Kalorit harjoituksista",
+    additionalcalories: "poltetut kalorit",
     custom_tdee: "Kokonaiskulutus"
   }
 };
