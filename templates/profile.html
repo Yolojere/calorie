@@ -1911,28 +1911,42 @@ input.form-control:-webkit-autofill {
             {% endif %}
         </div>
         
-            <!-- NEW: TDEE Breakdown Display -->
-            {% if tdee_data and (tdee_data.auto_workout_enabled or tdee_data.auto_steps_enabled) %}
-                <!-- Dynamic TDEE Active -->
-                <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
-                    <small>
-                        Perus: {{ (base_tdee|round(0))|int }} kcal
-                        {% if tdee_data.workout_calories and tdee_data.workout_calories > 0 %}
-                            + Treenit: {{ (tdee_data.workout_calories|round(0))|int }} kcal
-                        {% endif %}
-                        {% if tdee_data.steps_calories and tdee_data.steps_calories > 0 %}
-                            + Askeleet: {{ (tdee_data.steps_calories|round(0))|int }} kcal
-                        {% endif %}
-                    </small>
-                </div>
-                <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">Dynaaminen TDEE Aktiivisena</span>
-            {% elif base_tdee %}
-                <!-- Static TDEE -->
-                <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
-            {% endif %}
-
+        <!-- TDEE Mode Display -->
+        {% if tdee_data.mode == 'garmin_total' %}
+            <!-- Mode 1: Garmin Total Calories -->
+            <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
+                <small>
+                    <i class="fas fa-satellite-dish"></i> Garmin kokonaiskulutus
+                </small>
+            </div>
+            <span class="badge bg-primary" style="font-size: 10px; margin-top: 5px;">
+                <i class="fas fa-sync-alt"></i> Garmin Automaattinen
+            </span>
+            
+        {% elif tdee_data.mode == 'dynamic' %}
+            <!-- Mode 2: Dynamic TDEE (workout + steps) -->
+            <div style="margin-top: 8px; font-size: 12px; color: #bbb;">
+                <small>
+                    Perus: {{ (base_tdee|round(0))|int }} kcal
+                    {% if tdee_data.workout_calories and tdee_data.workout_calories > 0 %}
+                        + Treenit: {{ (tdee_data.workout_calories|round(0))|int }} kcal
+                    {% endif %}
+                    {% if tdee_data.steps_calories and tdee_data.steps_calories > 0 %}
+                        + Askeleet: {{ (tdee_data.steps_calories|round(0))|int }} kcal
+                    {% endif %}
+                </small>
+            </div>
+            <span class="badge bg-success" style="font-size: 10px; margin-top: 5px;">
+                Dynaaminen TDEE Aktiivisena
+            </span>
+            
+        {% else %}
+            <!-- Mode 3: Static TDEE -->
+            <small class="metric-label" data-i18n="based_on_activity">Based on your activity level</small>
+        {% endif %}
     </div>
 </div>
+
 
         
         {% if is_owner %}
