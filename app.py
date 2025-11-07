@@ -238,19 +238,19 @@ AVATAR_LEVEL_REQUIREMENTS = {
     'avatar4.png': 5,
     'avatar5.png': 5,
     'avatar6.png': 7,
-    'avatar7.png': 8,
+    'avatar7.png': 7,
     'avatar8.png': 10,
-    'avatar9.png': 12,
+    'avatar9.png': 10,
     'avatar10.png': 13,
-    'avatar11.png': 15,
-    'avatar12.png': 17,
-    'avatar13.png': 18,
-    'avatar14.png': 20,
-    'avatar15.png': 20,
-    'avatar16.png': 25,
-    'avatar17.png': 25,
-    'avatar18.png': 27,
-    'avatar19.png': 30,
+    'avatar11.png': 13,
+    'avatar12.png': 15,
+    'avatar13.png': 15,
+    'avatar14.png': 17,
+    'avatar15.png': 17,
+    'avatar16.png': 20,
+    'avatar17.png': 20,
+    'avatar18.png': 23,
+    'avatar19.png': 23,
 }
 
 # Helper function to get available avatars
@@ -3101,11 +3101,11 @@ def calculate_weekly_projection(weekly_avg_tdee, weekly_avg_calories):
 def history():
     user_id = current_user.id
     
-    # ✅ Fetch user settings and default TDEE
+    # ✅ Fetch user settings including calories_total_enabled
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     cursor.execute("""
-        SELECT tdee, auto_garmin_steps, auto_add_workout_calories 
+        SELECT tdee, auto_garmin_steps, auto_add_workout_calories, calories_total_enabled
         FROM users 
         WHERE id = %s
     """, (user_id,))
@@ -3118,10 +3118,34 @@ def history():
     if user_row:
         auto_garmin_steps = user_row.get("auto_garmin_steps", False)
         auto_add_workout_calories = user_row.get("auto_add_workout_calories", False)
+        calories_total_enabled = user_row.get("calories_total_enabled", False)
         default_tdee = user_row["tdee"] if user_row["tdee"] is not None else 0
         
-        # If dynamic TDEE is enabled, fetch from daily_tdee_adjustments
-        if auto_garmin_steps or auto_add_workout_calories:
+        # PRIORITY 1: Garmin calories_total mode
+        if calories_total_enabled:
+            # Get today's Garmin calories_total
+            cursor.execute("""
+                SELECT calories_total
+                FROM garmin_daily_data
+                WHERE user_id = %s AND date = CURRENT_DATE
+            """, (user_id,))
+            today_garmin_row = cursor.fetchone()
+            user_tdee = float(today_garmin_row["calories_total"]) if today_garmin_row and today_garmin_row["calories_total"] else default_tdee
+            
+            # Get weekly average Garmin calories_total (last 7 days)
+            cursor.execute("""
+                SELECT AVG(calories_total) as avg_calories_total
+                FROM garmin_daily_data
+                WHERE user_id = %s
+                AND date >= CURRENT_DATE - INTERVAL '6 days'
+                AND date <= CURRENT_DATE
+                AND calories_total IS NOT NULL
+            """, (user_id,))
+            avg_garmin_row = cursor.fetchone()
+            weekly_avg_tdee = float(avg_garmin_row["avg_calories_total"]) if avg_garmin_row and avg_garmin_row["avg_calories_total"] else default_tdee
+        
+        # PRIORITY 2: Dynamic TDEE (workout + steps adjustments)
+        elif auto_garmin_steps or auto_add_workout_calories:
             # Get today's adjusted TDEE
             cursor.execute("""
                 SELECT adjusted_tdee 
@@ -3147,8 +3171,9 @@ def history():
             """, (user_id,))
             avg_tdee_row = cursor.fetchone()
             weekly_avg_tdee = avg_tdee_row["avg_tdee"] if avg_tdee_row and avg_tdee_row["avg_tdee"] else default_tdee
+        
+        # PRIORITY 3: Static TDEE mode
         else:
-            # Static TDEE mode - use default TDEE for both
             user_tdee = default_tdee
             weekly_avg_tdee = default_tdee
     
@@ -3212,8 +3237,6 @@ def history():
         projected_change_kg=projected_change_kg
     )
 
-
-# food templates #
 @app.route('/save_template_food', methods=['POST'])
 @login_required
 def save_template_food():
@@ -5092,7 +5115,10 @@ from datetime import datetime  # ensure this import
 
 def get_user_current_tdee(user_id, target_date=None):
     """
-    Get user's current TDEE, including workout and steps adjustments
+    Get user's current TDEE with 3-mode priority system:
+    1. Garmin calories_total (if enabled)
+    2. Dynamic adjustments (workout + steps)
+    3. Static base TDEE
     
     Args:
         user_id: User ID
@@ -5105,7 +5131,10 @@ def get_user_current_tdee(user_id, target_date=None):
             "steps_calories": float,
             "daily_tdee": float,
             "auto_workout_enabled": bool,
-            "auto_steps_enabled": bool
+            "auto_steps_enabled": bool,
+            "calories_total": float or None,  # NEW
+            "calories_total_enabled": bool,   # NEW
+            "mode": str  # "garmin_total", "dynamic", or "static"
         }
     """
     if target_date is None:
@@ -5115,9 +5144,9 @@ def get_user_current_tdee(user_id, target_date=None):
     cursor = conn.cursor()
     
     try:
-        # Get user settings
+        # Get user settings including calories_total_enabled
         cursor.execute("""
-            SELECT auto_add_workout_calories, auto_garmin_steps, tdee 
+            SELECT auto_add_workout_calories, auto_garmin_steps, tdee, calories_total_enabled
             FROM users 
             WHERE id = %s
         """, (user_id,))
@@ -5131,61 +5160,111 @@ def get_user_current_tdee(user_id, target_date=None):
                 "steps_calories": 0,
                 "daily_tdee": 0,
                 "auto_workout_enabled": False,
-                "auto_steps_enabled": False
+                "auto_steps_enabled": False,
+                "calories_total": None,
+                "calories_total_enabled": False,
+                "mode": "static"
             }
         
         auto_workout_enabled = bool(user_data[0]) if user_data[0] is not None else False
         auto_steps_enabled = bool(user_data[1]) if user_data[1] is not None else False
         base_tdee = float(user_data[2]) if user_data[2] else 0.0
+        calories_total_enabled = bool(user_data[3]) if user_data[3] is not None else False
         
-        # If neither feature is enabled, return base TDEE
-        if not auto_workout_enabled and not auto_steps_enabled:
-            return {
-                "base_tdee": base_tdee,
-                "workout_calories": 0,
-                "steps_calories": 0,
-                "daily_tdee": base_tdee,
-                "auto_workout_enabled": False,
-                "auto_steps_enabled": False
-            }
-        
-        # Get daily adjustment from daily_tdee_adjustments table
-        cursor.execute("""
-            SELECT workout_calories, steps_calories, adjusted_tdee
-            FROM daily_tdee_adjustments 
-            WHERE user_id = %s AND date = %s
-        """, (user_id, target_date))
-        
-        adjustment = cursor.fetchone()
-        
-        if adjustment:
-            # We have adjustments for this date
-            workout_calories = float(adjustment[0]) if adjustment[0] else 0.0
-            steps_calories = float(adjustment[1]) if adjustment[1] else 0.0
-            adjusted_tdee = float(adjustment[2]) if adjustment[2] else base_tdee
+        # PRIORITY 1: Garmin calories_total mode
+        if calories_total_enabled:
+            cursor.execute("""
+                SELECT calories_total
+                FROM garmin_daily_data
+                WHERE user_id = %s AND date = %s
+            """, (user_id, target_date))
             
-            return {
-                "base_tdee": base_tdee,
-                "workout_calories": workout_calories,
-                "steps_calories": steps_calories,
-                "daily_tdee": adjusted_tdee,
-                "auto_workout_enabled": auto_workout_enabled,
-                "auto_steps_enabled": auto_steps_enabled
-            }
-        else:
-            # No adjustments today, return base TDEE
-            return {
-                "base_tdee": base_tdee,
-                "workout_calories": 0,
-                "steps_calories": 0,
-                "daily_tdee": base_tdee,
-                "auto_workout_enabled": auto_workout_enabled,
-                "auto_steps_enabled": auto_steps_enabled
-            }
+            garmin_data = cursor.fetchone()
+            
+            if garmin_data and garmin_data[0]:
+                calories_total = float(garmin_data[0])
+                return {
+                    "base_tdee": base_tdee,
+                    "workout_calories": 0,
+                    "steps_calories": 0,
+                    "daily_tdee": calories_total,  # Use Garmin total
+                    "auto_workout_enabled": auto_workout_enabled,
+                    "auto_steps_enabled": auto_steps_enabled,
+                    "calories_total": calories_total,
+                    "calories_total_enabled": True,
+                    "mode": "garmin_total"
+                }
+            else:
+                # Garmin mode enabled but no data today - fallback to base
+                return {
+                    "base_tdee": base_tdee,
+                    "workout_calories": 0,
+                    "steps_calories": 0,
+                    "daily_tdee": base_tdee,
+                    "auto_workout_enabled": auto_workout_enabled,
+                    "auto_steps_enabled": auto_steps_enabled,
+                    "calories_total": None,
+                    "calories_total_enabled": True,
+                    "mode": "static"
+                }
+        
+        # PRIORITY 2: Dynamic adjustment mode (workout + steps)
+        if auto_workout_enabled or auto_steps_enabled:
+            cursor.execute("""
+                SELECT workout_calories, steps_calories, adjusted_tdee
+                FROM daily_tdee_adjustments 
+                WHERE user_id = %s AND date = %s
+            """, (user_id, target_date))
+            
+            adjustment = cursor.fetchone()
+            
+            if adjustment:
+                workout_calories = float(adjustment[0]) if adjustment[0] else 0.0
+                steps_calories = float(adjustment[1]) if adjustment[1] else 0.0
+                adjusted_tdee = float(adjustment[2]) if adjustment[2] else base_tdee
+                
+                return {
+                    "base_tdee": base_tdee,
+                    "workout_calories": workout_calories,
+                    "steps_calories": steps_calories,
+                    "daily_tdee": adjusted_tdee,
+                    "auto_workout_enabled": auto_workout_enabled,
+                    "auto_steps_enabled": auto_steps_enabled,
+                    "calories_total": None,
+                    "calories_total_enabled": False,
+                    "mode": "dynamic"
+                }
+            else:
+                # Dynamic mode enabled but no adjustments today
+                return {
+                    "base_tdee": base_tdee,
+                    "workout_calories": 0,
+                    "steps_calories": 0,
+                    "daily_tdee": base_tdee,
+                    "auto_workout_enabled": auto_workout_enabled,
+                    "auto_steps_enabled": auto_steps_enabled,
+                    "calories_total": None,
+                    "calories_total_enabled": False,
+                    "mode": "static"
+                }
+        
+        # PRIORITY 3: Static TDEE mode
+        return {
+            "base_tdee": base_tdee,
+            "workout_calories": 0,
+            "steps_calories": 0,
+            "daily_tdee": base_tdee,
+            "auto_workout_enabled": False,
+            "auto_steps_enabled": False,
+            "calories_total": None,
+            "calories_total_enabled": False,
+            "mode": "static"
+        }
     
     finally:
         cursor.close()
         conn.close()
+
 LEVEL_CAP = 999
 
 def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
@@ -6784,7 +6863,11 @@ def index():
     
     is_authenticated = False
     is_admin = False
-    best_lifts = []
+    best_lifts_main = []
+    best_lifts_male = []
+    best_lifts_female = []
+    heaviest_lifts_male = {'bench': [], 'deadlift': [], 'squat': []}
+    heaviest_lifts_female = {'bench': [], 'deadlift': [], 'squat': []}
     news_posts = []
     
     try:
@@ -6814,11 +6897,12 @@ def index():
             if user and user['role'] == 'admin':
                 is_admin = True
             
-            # Fetch best lifts for today
             today = datetime.now().date()
+            
+            # ===== BEST LIFTS OF TODAY - ALL USERS (RANDOMIZED) =====
             cursor.execute("""
                 SELECT 
-                    u.id as user_id, u.username, u.avatar, u.level,
+                    u.id as user_id, u.username, u.avatar, u.level, u.gender,
                     e.name as exercise_name,
                     ws.reps, ws.weight,
                     (ws.reps * ws.weight) as volume
@@ -6834,7 +6918,7 @@ def index():
             
             all_lifts_raw = cursor.fetchall()
             
-            # Group lifts by user and randomize selection
+            # Group lifts by user and randomize selection for MAIN tab
             lifts_by_user = {}
             for row in all_lifts_raw:
                 user_id_lift = row['user_id']
@@ -6842,9 +6926,8 @@ def index():
                     lifts_by_user[user_id_lift] = []
                 lifts_by_user[user_id_lift].append(dict(row))
             
-            # Randomize and select 1-2 lifts per user
             import random
-            best_lifts = []
+            best_lifts_main = []
             users = list(lifts_by_user.keys())
             random.shuffle(users)
             
@@ -6852,12 +6935,174 @@ def index():
                 user_lifts = lifts_by_user[user_id_lift]
                 user_lifts.sort(key=lambda x: x['volume'], reverse=True)
                 num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
-                best_lifts.extend(user_lifts[:num_lifts])
-                if len(best_lifts) >= 15:
+                best_lifts_main.extend(user_lifts[:num_lifts])
+                if len(best_lifts_main) >= 15:
                     break
             
-            random.shuffle(best_lifts)
-            best_lifts = best_lifts[:15]
+            random.shuffle(best_lifts_main)
+            best_lifts_main = best_lifts_main[:15]
+            
+            # ===== BEST LIFTS OF TODAY - MALE USERS =====
+            lifts_by_user_male = {}
+            for row in all_lifts_raw:
+                if row['gender'] == 'male':
+                    user_id_lift = row['user_id']
+                    if user_id_lift not in lifts_by_user_male:
+                        lifts_by_user_male[user_id_lift] = []
+                    lifts_by_user_male[user_id_lift].append(dict(row))
+            
+            best_lifts_male = []
+            users_male = list(lifts_by_user_male.keys())
+            random.shuffle(users_male)
+            
+            for user_id_lift in users_male:
+                user_lifts = lifts_by_user_male[user_id_lift]
+                user_lifts.sort(key=lambda x: x['volume'], reverse=True)
+                num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
+                best_lifts_male.extend(user_lifts[:num_lifts])
+                if len(best_lifts_male) >= 15:
+                    break
+            
+            random.shuffle(best_lifts_male)
+            best_lifts_male = best_lifts_male[:15]
+            
+            # ===== BEST LIFTS OF TODAY - FEMALE USERS =====
+            lifts_by_user_female = {}
+            for row in all_lifts_raw:
+                if row['gender'] == 'female':
+                    user_id_lift = row['user_id']
+                    if user_id_lift not in lifts_by_user_female:
+                        lifts_by_user_female[user_id_lift] = []
+                    lifts_by_user_female[user_id_lift].append(dict(row))
+            
+            best_lifts_female = []
+            users_female = list(lifts_by_user_female.keys())
+            random.shuffle(users_female)
+            
+            for user_id_lift in users_female:
+                user_lifts = lifts_by_user_female[user_id_lift]
+                user_lifts.sort(key=lambda x: x['volume'], reverse=True)
+                num_lifts = 1 if random.random() < 0.7 else min(2, len(user_lifts))
+                best_lifts_female.extend(user_lifts[:num_lifts])
+                if len(best_lifts_female) >= 15:
+                    break
+            
+            random.shuffle(best_lifts_female)
+            best_lifts_female = best_lifts_female[:15]
+            
+            # ===== HEAVIEST LIFTS - BENCH PRESS (MALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id IN (11, 43)
+                  AND u.gender = 'male'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_male['bench'] = [dict(row) for row in cursor.fetchall()]
+            
+            # ===== HEAVIEST LIFTS - DEADLIFT (MALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id IN (117, 12, 57)
+                  AND u.gender = 'male'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_male['deadlift'] = [dict(row) for row in cursor.fetchall()]
+            
+            # ===== HEAVIEST LIFTS - SQUAT (MALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id = 23
+                  AND u.gender = 'male'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_male['squat'] = [dict(row) for row in cursor.fetchall()]
+            
+            # ===== HEAVIEST LIFTS - BENCH PRESS (FEMALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id IN (11, 43)
+                  AND u.gender = 'female'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_female['bench'] = [dict(row) for row in cursor.fetchall()]
+            
+            # ===== HEAVIEST LIFTS - DEADLIFT (FEMALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id IN (117, 12, 57)
+                  AND u.gender = 'female'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_female['deadlift'] = [dict(row) for row in cursor.fetchall()]
+            
+            # ===== HEAVIEST LIFTS - SQUAT (FEMALE) =====
+            cursor.execute("""
+                SELECT 
+                    u.id as user_id, u.username, u.avatar, u.level,
+                    e.name as exercise_name,
+                    ws.reps, ws.weight
+                FROM workout_sets ws
+                JOIN workout_sessions wses ON ws.session_id = wses.id
+                JOIN users u ON wses.user_id = u.id
+                JOIN exercises e ON ws.exercise_id = e.id
+                WHERE wses.date = %s
+                  AND ws.is_saved = true
+                  AND ws.exercise_id = 23
+                  AND u.gender = 'female'
+                ORDER BY ws.weight DESC
+                LIMIT 10
+            """, (today,))
+            heaviest_lifts_female['squat'] = [dict(row) for row in cursor.fetchall()]
         
         cursor.close()
         conn.close()
@@ -6865,7 +7110,11 @@ def index():
         return render_template(
             'index.html',
             news_posts=news_posts,
-            best_lifts=best_lifts,
+            best_lifts_main=best_lifts_main,
+            best_lifts_male=best_lifts_male,
+            best_lifts_female=best_lifts_female,
+            heaviest_lifts_male=heaviest_lifts_male,
+            heaviest_lifts_female=heaviest_lifts_female,
             is_admin=is_admin,
             is_authenticated=is_authenticated
         )
@@ -6878,10 +7127,15 @@ def index():
         return render_template(
             'index.html',
             news_posts=[],
-            best_lifts=[],
+            best_lifts_main=[],
+            best_lifts_male=[],
+            best_lifts_female=[],
+            heaviest_lifts_male={'bench': [], 'deadlift': [], 'squat': []},
+            heaviest_lifts_female={'bench': [], 'deadlift': [], 'squat': []},
             is_admin=False,
             is_authenticated=False
         )
+
 
 
 @app.route('/favicon.ico')
