@@ -1,5 +1,5 @@
 {
-  "name": "TrackYou Kalorilaskuri",
+  "name": "TrackYou Kalorilaskuri ja fitness app",
   "short_name": "TrackYou",
   "description": "Moderni kalorilaskuri ja ravintopäiväkirja",
   "start_url": "/?source=pwa",
@@ -8,7 +8,7 @@
   "background_color": "#161616",
   "theme_color": "#8b34f6",
   "orientation": "portrait-primary",
-  "categories": ["health", "fitness", "lifestyle"],
+  "categories": ["health", "fitness", "lifestyle", "kalorilaskuri", "treenipäiväkirja"],
   "lang": "fi",
   "dir": "ltr",
   "icons": [
@@ -26,11 +26,18 @@
     }
   ],
   "shortcuts": [
+        {
+      "name": "Kotisivu",
+      "short_name": "Koti",
+      "description": "Ruokapäiväkirja ja fitness app",
+      "url": "/?source=pwa",
+      "icons": [{ "src": "/static/images/favicon-192x192.png", "sizes": "192x192" }]
+    },
     {
       "name": "Ruokapäiväkirja",
-      "short_name": "Koti",
+      "short_name": "Ruokapäiväkirja",
       "description": "Avaa päivän ruokapäiväkirja",
-      "url": "/?source=pwa",
+      "url": "/main?source=pwa",
       "icons": [{ "src": "/static/images/favicon-192x192.png", "sizes": "192x192" }]
     },
     {
