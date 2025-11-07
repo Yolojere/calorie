@@ -160,14 +160,38 @@
             </div>
         </div>
 
-        <!-- Right Column: Best Lifts of Today -->
-        <div class="col-lg-6 mb-4">
-            <div class="glass-card h-50">
-                <div class="glass-card-header">
-                    <h5 class="mb-0"><i class="fas fa-medal me-2"></i><span data-i18n="best_lifts_today">Best Lifts Today</span></h5>
-                </div>
-                <div class="card-body">
-                    {% if best_lifts %}
+<!-- Right Column: Best Lifts of Today with Tabs -->
+<div class="col-lg-6 mb-4">
+    <!-- Best Lifts of Today Card -->
+    <div class="glass-card mb-4">
+        <div class="glass-card-header">
+            <h5 class="mb-0"><i class="fas fa-medal me-2"></i><span data-i18n="best_lifts_today">Best Lifts Today</span></h5>
+        </div>
+        <div class="card-body p-0">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#best-lifts-main" type="button" role="tab">
+                        Main
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#best-lifts-miehet" type="button" role="tab">
+                        Miehet
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#best-lifts-naiset" type="button" role="tab">
+                        Naiset
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Main Tab -->
+                <div class="tab-pane fade show active" id="best-lifts-main" role="tabpanel">
+                    {% if best_lifts_main %}
                     <div class="table-responsive">
                         <table class="table table-sm table-hover mb-0 table-glass">
                             <thead>
@@ -179,14 +203,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for lift in best_lifts %}
+                                {% for lift in best_lifts_main %}
                                 <tr>
                                     <td class="text-center align-middle">
                                         <span class="badge bg-secondary">{{ loop.index }}</span>
                                     </td>
                                     <td class="align-middle">
                                         <div class="d-flex align-items-center">
-                                            <!-- Avatar with Level Badge -->
                                             <div class="position-relative me-2" style="width: 40px; height: 40px;">
                                                 <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
                                                      alt="{{ lift.username }}" 
@@ -197,7 +220,6 @@
                                                     {{ lift.level }}
                                                 </span>
                                             </div>
-                                            <!-- Username -->
                                             <div>
                                                 <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
                                                    class="text-decoration-none fw-bold text-white">
@@ -208,7 +230,6 @@
                                     </td>
                                     <td class="align-middle">
                                         <div>
-                                            <!-- Dynamic exercise name from DB - will be translated via JS -->
                                             <strong class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</strong><br>
                                             <small class="text-muted">
                                                 <span>{{ lift.reps }}</span> × {{ lift.weight }}<span>kg</span>
@@ -226,12 +247,553 @@
                     {% else %}
                     <div class="empty-state-glass">
                         <i class="fas fa-dumbbell fa-3x mb-3"></i>
-                        <p>Kukaan ei ole viellä treenannut. Ole ensimmäinen!</p>
+                        <p>Kukaan ei ole vielä treenannut. Ole ensimmäinen!</p>
                         <a href="{{ url_for('workout') }}" class="btn btn-index">
                             <span>Aloita treeni!</span>
                         </a>
                     </div>
                     {% endif %}
+                </div>
+                
+                <!-- Miehet Tab -->
+                <div class="tab-pane fade" id="best-lifts-miehet" role="tabpanel">
+                    {% if best_lifts_male %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 table-glass">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th data-i18n="user">User</th>
+                                    <th data-i18n="best_set">Best Set</th>
+                                    <th class="text-end" data-i18n="volume">Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lift in best_lifts_male %}
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-secondary">{{ loop.index }}</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="position-relative me-2" style="width: 40px; height: 40px;">
+                                                <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                     alt="{{ lift.username }}" 
+                                                     class="rounded-circle"
+                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                                <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                      style="font-size: 0.6rem; padding: 2px 5px;">
+                                                    {{ lift.level }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                   class="text-decoration-none fw-bold text-white">
+                                                    {{ lift.username }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div>
+                                            <strong class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</strong><br>
+                                            <small class="text-muted">
+                                                <span>{{ lift.reps }}</span> × {{ lift.weight }}<span>kg</span>
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <span class="badge bg-primary">{{ "%.1f"|format(lift.volume) }} <span data-i18n="kg">kg</span></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-glass">
+                        <i class="fas fa-dumbbell fa-3x mb-3"></i>
+                        <p>Ei nostoja tänään.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Naiset Tab -->
+                <div class="tab-pane fade" id="best-lifts-naiset" role="tabpanel">
+                    {% if best_lifts_female %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 table-glass">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th data-i18n="user">User</th>
+                                    <th data-i18n="best_set">Best Set</th>
+                                    <th class="text-end" data-i18n="volume">Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lift in best_lifts_female %}
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-secondary">{{ loop.index }}</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="position-relative me-2" style="width: 40px; height: 40px;">
+                                                <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                     alt="{{ lift.username }}" 
+                                                     class="rounded-circle"
+                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                                <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                      style="font-size: 0.6rem; padding: 2px 5px;">
+                                                    {{ lift.level }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                   class="text-decoration-none fw-bold text-white">
+                                                    {{ lift.username }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div>
+                                            <strong class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</strong><br>
+                                            <small class="text-muted">
+                                                <span>{{ lift.reps }}</span> × {{ lift.weight }}<span>kg</span>
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <span class="badge bg-primary">{{ "%.1f"|format(lift.volume) }} <span data-i18n="kg">kg</span></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-glass">
+                        <i class="fas fa-dumbbell fa-3x mb-3"></i>
+                        <p>Ei nostoja tänään.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Heaviest Lifts of Today Card -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <h5 class="mb-0"><i class="fas fa-weight-hanging me-2"></i><span>Raskaimmat Nostot Tänään</span></h5>
+        </div>
+        <div class="card-body p-0">
+            <!-- Main Gender Tabs -->
+            <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#heaviest-miehet" type="button" role="tab">
+                        Miehet
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#heaviest-naiset" type="button" role="tab">
+                        Naiset
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Main Gender Tab Content -->
+            <div class="tab-content">
+                <!-- Miehet Container -->
+                <div class="tab-pane fade show active" id="heaviest-miehet" role="tabpanel">
+                    <!-- Exercise Sub-tabs -->
+                    <ul class="nav nav-tabs nav-tabs-sub" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#miehet-penkki" type="button" role="tab">
+                                Penkki
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#miehet-maastaveto" type="button" role="tab">
+                                Maastaveto
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#miehet-kyykky" type="button" role="tab">
+                                Kyykky
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content">
+                        <!-- Miehet - Penkki -->
+                        <div class="tab-pane fade show active" id="miehet-penkki" role="tabpanel">
+                            {% if heaviest_lifts_male.bench %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_male.bench %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Miehet - Maastaveto -->
+                        <div class="tab-pane fade" id="miehet-maastaveto" role="tabpanel">
+                            {% if heaviest_lifts_male.deadlift %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_male.deadlift %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Miehet - Kyykky -->
+                        <div class="tab-pane fade" id="miehet-kyykky" role="tabpanel">
+                            {% if heaviest_lifts_male.squat %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_male.squat %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Naiset Container -->
+                <div class="tab-pane fade" id="heaviest-naiset" role="tabpanel">
+                    <!-- Exercise Sub-tabs -->
+                    <ul class="nav nav-tabs nav-tabs-sub" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#naiset-penkki" type="button" role="tab">
+                                Penkki
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#naiset-maastaveto" type="button" role="tab">
+                                Maastaveto
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#naiset-kyykky" type="button" role="tab">
+                                Kyykky
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content">
+                        <!-- Naiset - Penkki -->
+                        <div class="tab-pane fade show active" id="naiset-penkki" role="tabpanel">
+                            {% if heaviest_lifts_female.bench %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_female.bench %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Naiset - Maastaveto -->
+                        <div class="tab-pane fade" id="naiset-maastaveto" role="tabpanel">
+                            {% if heaviest_lifts_female.deadlift %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_female.deadlift %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Naiset - Kyykky -->
+                        <div class="tab-pane fade" id="naiset-kyykky" role="tabpanel">
+                            {% if heaviest_lifts_female.squat %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0 table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Käyttäjä</th>
+                                            <th>Liike</th>
+                                            <th class="text-end">Paino</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lift in heaviest_lifts_female.squat %}
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="position-relative me-2" style="width: 35px; height: 35px;">
+                                                        <img src="{{ url_for('static', filename='avatars/' + lift.avatar) }}" 
+                                                             alt="{{ lift.username }}" 
+                                                             class="rounded-circle"
+                                                             style="width: 35px; height: 35px; object-fit: cover;">
+                                                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark" 
+                                                              style="font-size: 0.55rem; padding: 1px 4px;">
+                                                            {{ lift.level }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url_for('view_profile', user_id=lift.user_id) }}" 
+                                                       class="text-decoration-none fw-bold text-white">
+                                                        {{ lift.username }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="exercise-name-translate" data-exercise-name="{{ lift.exercise_name }}">{{ lift.exercise_name }}</small><br>
+                                                <small class="text-muted">{{ lift.reps }} {{ "toisto" if lift.reps == 1 else "toistoa" }}</small>
+                                            </td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-danger">{{ lift.weight }} kg</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state-glass">
+                                <i class="fas fa-dumbbell fa-2x mb-2"></i>
+                                <p>Ei nostoja tänään.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -718,7 +1280,76 @@
 .glass-card.h-50 .card-body::-webkit-scrollbar-thumb:hover {
     background: rgba(100, 100, 200, 0.7);
 }
+/* Tab Styling */
+.nav-tabs-custom {
+    background: rgba(39, 39, 39, 0.7);
+    border-bottom: 2px solid rgba(100, 100, 200, 0.3);
+    padding: 10px 10px 0 10px;
+    margin: 0;
+}
 
+.nav-tabs-custom .nav-item {
+    margin-bottom: -2px;
+}
+
+.nav-tabs-custom .nav-link {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #888;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border-radius: 0;
+}
+
+.nav-tabs-custom .nav-link:hover {
+    color: #fff;
+    border-bottom-color: rgba(139, 52, 246, 0.5);
+}
+
+.nav-tabs-custom .nav-link.active {
+    color: #fff;
+    background: transparent;
+    border-bottom-color: rgba(139, 52, 246, 1);
+}
+
+/* Sub-tabs styling */
+.nav-tabs-sub {
+    background: rgba(30, 30, 30, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 5px 10px 0 10px;
+    margin: 0;
+}
+
+.nav-tabs-sub .nav-link {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #888;
+    padding: 8px 15px;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    border-radius: 0;
+}
+
+.nav-tabs-sub .nav-link:hover {
+    color: #fff;
+    border-bottom-color: rgba(139, 52, 246, 0.5);
+}
+
+.nav-tabs-sub .nav-link.active {
+    color: #fff;
+    background: transparent;
+    border-bottom-color: rgba(139, 52, 246, 1);
+}
+
+/* Tab content padding */
+.tab-content > .tab-pane {
+    padding: 15px;
+}
 /* Responsive adjustments */
 @media (max-width: 991px) {
     /* Remove container padding on mobile */
@@ -747,6 +1378,19 @@
 }
 
 @media (max-width: 768px) {
+        .nav-tabs-custom .nav-link {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .nav-tabs-sub .nav-link {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .tab-content > .tab-pane {
+        padding: 10px;
+    }
     .hero-buttons-wrapper {
     display: flex;
     align-items: center;
