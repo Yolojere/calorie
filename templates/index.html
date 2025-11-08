@@ -172,7 +172,7 @@
             <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#best-lifts-main" type="button" role="tab">
-                        Main
+                        Kaikki
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -1353,6 +1353,10 @@
 /* Responsive adjustments */
 @media (max-width: 991px) {
     /* Remove container padding on mobile */
+    .container-page {
+        margin: 0rem auto !important;
+        padding: 0px !important;
+    }
     .container-y {
         padding-left: 0 !important;
         padding-right: 0 !important;
@@ -1425,6 +1429,9 @@
     
     .glass-card-header .btn-index {
         align-self: flex-end;
+    }
+        .tab-content > .tab-pane {
+        padding: 0px !important;
     }
 }
 
