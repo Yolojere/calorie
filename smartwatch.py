@@ -62,10 +62,7 @@ def connect_garmin():
         client.login()
         
         # Get session data (tokens) for storage
-        session_data = {
-            'oauth1_token': getattr(client, 'oauth1_token', None),
-            'oauth2_token': getattr(client, 'oauth2_token', None),
-        }
+        session_data = client.garth.dumps()
         
         # Store in database
         conn = get_db_connection()
@@ -522,47 +519,122 @@ def get_auto_import_status():
 # ==============================================================================
 # HELPER FUNCTIONS
 # ==============================================================================
+def refresh_garmin_session(user_id, client):
+    """Try to refresh Garmin auth tokens if expired."""
+    import logging
+
+    try:
+        # The garminconnect library handles token refresh automatically
+        # Just save the updated session
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get the updated session data from the client
+        session_data = client.garth.dumps()
+        
+        cursor.execute('''
+            UPDATE garmin_connections
+            SET garmin_session_data = %s,
+                last_sync = CURRENT_TIMESTAMP,
+                is_active = TRUE
+            WHERE user_id = %s
+        ''', (session_data, user_id))
+        conn.commit()
+        conn.close()
+
+        garmin_clients[user_id] = client
+        logging.info(f"🔄 Garmin session auto-refreshed for user {user_id}")
+        return client
+
+    except Exception as e:
+        logging.warning(f"⚠️ Failed to refresh Garmin session for user {user_id}: {e}")
+        
+        # Mark connection as inactive when refresh fails
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE garmin_connections 
+                SET is_active = FALSE 
+                WHERE user_id = %s
+            ''', (user_id,))
+            conn.commit()
+            conn.close()
+            logging.info(f"🔴 Marked user {user_id} Garmin connection as inactive after failed refresh")
+        except Exception as db_error:
+            logging.error(f"Failed to update is_active for user {user_id}: {db_error}")
+        
+        return None
+
 
 def get_or_create_garmin_client(user_id):
-    """Get existing client or create new one from stored session"""
+    """Get existing Garmin client or create new one from stored session"""
     from garminconnect import Garmin
-    
+    import garth
+    import logging
+    from datetime import date
+
     # Check memory cache first
     if user_id in garmin_clients:
         try:
             client = garmin_clients[user_id]
-            # Quick validation - try to get today's stats
             client.get_stats(date.today().strftime('%Y-%m-%d'))
             return client
         except Exception as e:
             logging.warning(f"Cached Garmin client expired for user {user_id}: {e}")
-            # Remove expired client
             del garmin_clients[user_id]
-    
-    # Try to restore from database session data
+
+    # Restore from stored session
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
-        
         cursor.execute('''
             SELECT garmin_email, garmin_session_data
             FROM garmin_connections
             WHERE user_id = %s AND is_active = TRUE
         ''', (user_id,))
-        
         connection = cursor.fetchone()
-        conn.close()
-        
-        if not connection:
+
+        if not connection or not connection['garmin_session_data']:
+            conn.close()
             return None
+
+        session_data = connection['garmin_session_data']
+
+        # ✅ CORRECT: Create Garmin client with session data
+        client = Garmin()
+        client.login(session_data)  # Pass the base64 string directly
         
-        # Note: garminconnect library doesn't support session restoration
-        # Users will need to re-authenticate when sessions expire
-        logging.info(f"No valid session for user {user_id} - re-authentication required")
-        return None
-        
+        # Verify that it still works
+        try:
+            client.get_stats(date.today().strftime('%Y-%m-%d'))
+            garmin_clients[user_id] = client
+            logging.info(f"✅ Restored Garmin session for user {user_id}")
+            conn.close()
+            return client
+        except Exception as e:
+            logging.warning(f"⚠️ Stored Garmin session invalid for user {user_id}: {e}")
+            conn.close()
+            return refresh_garmin_session(user_id, client)
+
     except Exception as e:
-        logging.error(f"Error restoring Garmin session for user {user_id}: {e}")
+        logging.error(f"❌ Error restoring Garmin session for user {user_id}: {e}")
+        
+        # Mark connection as inactive when restoration fails
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE garmin_connections 
+                SET is_active = FALSE 
+                WHERE user_id = %s
+            ''', (user_id,))
+            conn.commit()
+            conn.close()
+            logging.info(f"🔴 Marked user {user_id} Garmin connection as inactive")
+        except Exception as db_error:
+            logging.error(f"Failed to update is_active for user {user_id}: {db_error}")
+        
         return None
 
 
@@ -978,7 +1050,7 @@ def auto_sync_all_garmin_users():
             user_id = connection['user_id']
             username = connection['username']
             last_sync = connection['last_sync']
-            sync_interval = connection.get('garmin_sync_interval', 60)  # Default 60 minutes
+            sync_interval = connection.get('garmin_sync_interval', 30)  # Default 60 minutes
             auto_import_enabled = connection.get('auto_import_garmin_cardio', True)
             
             # Get or create Garmin client
@@ -1047,33 +1119,73 @@ def auto_sync_all_garmin_users():
 
 
 def reconnect_garmin_user(user_id):
-    """
-    Attempt to reconnect a user whose Garmin session has expired
-    Note: This will only work if you're storing encrypted credentials
-    """
+    """Attempt to reconnect a Garmin user from stored session"""
+    from garminconnect import Garmin
+    import logging
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
-        
         cursor.execute('''
-            SELECT garmin_email, garmin_session_data 
-            FROM garmin_connections 
+            SELECT garmin_email, garmin_session_data
+            FROM garmin_connections
             WHERE user_id = %s AND is_active = TRUE
         ''', (user_id,))
-        
         connection = cursor.fetchone()
-        conn.close()
-        
-        if not connection:
+
+        if not connection or not connection['garmin_session_data']:
+            logging.warning(f"No Garmin session data found for user {user_id}")
+            conn.close()
             return None
-        
-        # Try to restore session using tokens (may not work)
-        logging.warning("Session restoration not fully implemented - user may need to re-authenticate")
-        return None
-        
+
+        session_data = connection['garmin_session_data']
+
+        # ✅ CORRECT: Create Garmin client with session data
+        client = Garmin()
+        client.login(session_data)  # Pass the base64 string directly
+
+        # Verify reconnection works
+        try:
+            from datetime import date
+            client.get_stats(date.today().strftime('%Y-%m-%d'))
+            garmin_clients[user_id] = client
+            logging.info(f"✅ Reconnected Garmin client for user {user_id}")
+            conn.close()
+            return client
+        except Exception as e:
+            logging.warning(f"⚠️ Failed to verify reconnected Garmin client for user {user_id}: {e}")
+            
+            # Mark connection as inactive when verification fails
+            cursor.execute('''
+                UPDATE garmin_connections 
+                SET is_active = FALSE 
+                WHERE user_id = %s
+            ''', (user_id,))
+            conn.commit()
+            conn.close()
+            logging.info(f"🔴 Marked user {user_id} Garmin connection as inactive")
+            return None
+
     except Exception as e:
-        logging.error(f"Error reconnecting user {user_id}: {e}")
+        logging.error(f"❌ Error reconnecting Garmin user {user_id}: {e}")
+        
+        # Mark connection as inactive on reconnection error
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE garmin_connections 
+                SET is_active = FALSE 
+                WHERE user_id = %s
+            ''', (user_id,))
+            conn.commit()
+            conn.close()
+            logging.info(f"🔴 Marked user {user_id} Garmin connection as inactive")
+        except Exception as db_error:
+            logging.error(f"Failed to update is_active for user {user_id}: {db_error}")
+        
         return None
+
 
 @smartwatch_bp.route('/get_garmin_steps', methods=['POST'])
 @login_required
