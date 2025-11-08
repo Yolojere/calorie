@@ -20,7 +20,8 @@ const pageSpecificResources = [
   '/activity',
   '/custom_food',
   '/profile',
-  '/register'
+  '/register',
+  '/main'
 ];
 
 // =============== INSTALL ===============
