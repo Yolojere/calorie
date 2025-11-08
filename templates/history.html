@@ -1004,11 +1004,15 @@
 
         /* Sortable Table Headers */
         .sortable-header {
-            width: 50%;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 10px;
+                white-space: nowrap;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s ease;
             position: flex;
+            width: 100px !important;
         }
 
         .sortable-header:hover {
@@ -1474,7 +1478,7 @@
 }
         /* Mobile-specific styles for horizontal scrolling */
         @media (max-width: 768px) {
-
+            
                 .clickable-exercise {
           font-size: var(--font-size-base);
             }
@@ -1638,72 +1642,17 @@
     .exercise-filters {
         gap: 6px;
     }
-.sortable-header {
-    text-align:start !important;
-    align-items: center;
-    justify-content: space-between; /* keeps text + icon neatly aligned */
-    white-space: nowrap; /* optional: prevents breaking words */
-}
-    #exercises-list td:last-child {
-        text-align: start !important;
-    }
-
-}
-    @media (max-width: 480px) {
-            .sortable-header {
-        padding: 6px 2px !important;
-        font-size: 9px !important;
-    }
     .table-custom {
-    width: 100%;
-    table-layout: auto; /* allows dynamic width */
-    word-wrap: break-word; /* wraps long exercise names */
+    color: #ffffff;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: transparent;
+    min-width: 100px;
+    
 }
 
-    
-    .sort-icon {
-        margin-left: 1px;
-        font-size: 7px;
-    }
-    
-    #exercises-list td:first-child {
-        font-size: 10px !important;
-    }
-    
-    #exercises-list td:last-child {
-        font-size: 10px !important;
-        text-align: start !important;
-    }
-        .clickable-exercise {
-            font-size: var(--font-size-base);
-            gap: var(--space-6);
-            padding: var(--space-2) var(--space-6);
-        }
-        
-        .pr-badge {
-            font-size: var(--font-size-base);
-            margin: 0 var(--space-1);
-        }
-        
-        .clickable-exercise:hover {
-            transform: translateX(var(--space-2));
-        }
-        
-        .clickable-exercise .fa-external-link-alt {
-            font-size: var(--font-size-sm);
-        }
-        
-        .pr-badge[title]:hover::after {
-            font-size: var(--font-size-xs);
-            padding: var(--space-2) var(--space-6);
-            margin-left: var(--space-8);
-        }
-        
-        .exercise-sets-table th:last-child,
-        .exercise-sets-table td:last-child {
-            width: 50px;
-        }
-    }
+}
         /* Animation for tab content */
         .tab-pane {
             animation: fadeIn 0.5s ease;
@@ -1744,6 +1693,13 @@
             color: #ffd166;
             font-weight: bold;
         }
+@media (max-width: 400px) {
+  .weekly-monthly-table-wrapper .exercise-sets-table th:nth-child(4),
+  .weekly-monthly-table-wrapper .exercise-sets-table td:nth-child(4) {
+    display: none !important;
+  }
+}
+        
         @media (max-width: 360px) {
     .navbar-brand.d-md-inline {
         display: none !important; /* Hide brand text completely */
@@ -2341,7 +2297,7 @@
                                         <!-- Muscle Group Details -->
                                         <div class="muscle-group-details">
                                             <h5><i class="fas fa-dumbbell me-2"></i><span data-i18n="muscle_group_breakdown">Muscle Group Breakdown</span></h5>
-                                            <div id="weekly-detail-muscle-breakdown">
+                                            <div id="weekly-detail-muscle-breakdown" class="weekly-monthly-table-wrapper">
                                                 <!-- Will be populated by JavaScript -->
                                             </div>
                                         </div>
@@ -2409,7 +2365,7 @@
                                         <!-- Muscle Group Details -->
                                         <div class="muscle-group-details">
                                             <h5><i class="fas fa-dumbbell me-2"></i><span data-i18n="muscle_group_breakdown">Muscle Group Breakdown</span></h5>
-                                            <div id="monthly-detail-muscle-breakdown">
+                                            <div id="monthly-detail-muscle-breakdown" class="weekly-monthly-table-wrapper">
                                                 <!-- Will be populated by JavaScript -->
                                             </div>
                                         </div>
