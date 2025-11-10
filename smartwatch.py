@@ -164,6 +164,7 @@ def garmin_status():
 @smartwatch_bp.route('/sync', methods=['POST'])
 @login_required
 def sync_garmin_data():
+    from app import sync_garmin_and_update_tdee
     """Manually trigger Garmin data sync with optional auto-import"""
     try:
         days = int(request.form.get('days', 7))
@@ -182,6 +183,11 @@ def sync_garmin_data():
         result = sync_garmin_data_internal(client, current_user.id, days)
         
         if result['success']:
+            # Update TDEE for any previous days that received delayed Garmin data
+            tdee_update = sync_garmin_and_update_tdee(current_user.id)
+            result['tdee_updated_days'] = tdee_update['previous_days_updated']
+            result['current_mode'] = tdee_update['mode']
+            
             # Check if auto-import is enabled
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=DictCursor)
