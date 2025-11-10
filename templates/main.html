@@ -3801,6 +3801,9 @@
                 // Update nutrition grids without full DOM refresh
                     updateNutritionGrid(totals);
                     updateMobileNutrition(totals);
+                        if (tdeeData) {
+                    updateActivityData(tdeeData);
+                }
                     updateCalorieDifference();
                     updateNutritionProgressBars();
                     applyTranslations();
@@ -4263,7 +4266,7 @@ function addFoodToLog() {
         // Instead of full session refresh, just add the new item
         if (response.new_item && response.breakdown) {
             // Update totals first
-            updateNutritionTotalsOnly(response.totals);
+            updateNutritionTotalsOnly(response.totals, response.tdee_data);
             
             // Add new item to specific group
             const newItem = response.new_item;
@@ -4396,7 +4399,7 @@ function optimizedUpdateGrams(itemId, foodKey, newGrams, date, buttonElement) {
         // Instead of full refresh, just update the specific item and totals
         if (response.totals) {
             console.log("Updated totals:", response.totals);
-            updateNutritionTotalsOnly(response.totals);
+            updateNutritionTotalsOnly(response.totals,response.tdee_data);
         }
         
         // Update the specific item in DOM if we have the item data
@@ -4487,7 +4490,7 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
     }, response => {
         // Update totals only
         if (response.totals) {
-            updateNutritionTotalsOnly(response.totals);
+            updateNutritionTotalsOnly(response.totals,response.tdee_data);
         }
         
         // Remove item from DOM
@@ -4547,26 +4550,30 @@ function clearSession() {
                     other: true
                 };
     localStorage.setItem(`mealGroupCollapseStates_${currentSelectedDate}`, JSON.stringify(collapseStates));
-                    $.post('/update_session', { date })
-                        .done(response => {
-                            console.log("Date change response:", response);
-                            if (response.session && response.totals && response.breakdown) {
-                                updateSessionDisplay(response.session, response.totals, response.breakdown);
-                                updateCalorieDifference();
-                                applyTranslations();
-                                updateNutritionAbbreviations();
-                                if (response.current_date_formatted) {
-                                    $('.card-header h6:contains("Food Log")').text(`Food Log (${response.current_date_formatted})`);
-                                }
-                            } else {
-                                console.error("Invalid response format from server");
-                            }
-                        })
-                        .fail((xhr, status, error) => {
-                            console.error('Date change failed:', error);
-                            showToast('Epäonnistui! yritä vaihtaa päivä uudelleen!');
-                        });
+                        $.post('/update_session', { date })
+        .done(response => {
+            if (response.session && response.totals && response.breakdown) {
+                updateSessionDisplay(response.session, response.totals, response.breakdown);
+                
+                // ✅ Update activity data for the new date
+                if (response.tdee_data) {
+                    updateActivityData(response.tdee_data);
                 }
+                
+                updateCalorieDifference();
+                applyTranslations();
+                updateNutritionAbbreviations();
+                
+                if (response.current_date_formatted) {
+                    $('.card-header h6:contains("Food Log")').text(`Food Log - ${response.current_date_formatted}`);
+                }
+            }
+        })
+        .fail((xhr, status, error) => {
+            console.error('Date change failed:', error);
+            showToast('Epäonnistui! yritä vaihtaa päivä uudelleen!');
+        });
+}
                 
             function handleItemSelection(e) {
                 if ($(e.target).is('button') || $(e.target).is('.edit-grams')) {
@@ -4636,7 +4643,7 @@ function clearSession() {
     }, response => {
         if (response.success) {
             // Update nutrition totals
-            updateNutritionTotalsOnly(response.totals);
+            updateNutritionTotalsOnly(response.totals,response.tdee_data);
             updateNutritionProgressBars();
             updateCalorieDifference();
 
@@ -6377,6 +6384,24 @@ $(document).on('sessionUpdated', function() {
                         currentSearchRequest = null;
                     });
                 }
+                function updateActivityData(tdeeData) {
+    // Desktop activity grid
+    if (tdeeData && tdeeData.daily_tdee) {
+        $('#tdee-value').html(Math.round(tdeeData.daily_tdee) + ' kcal');
+    } else {
+        $('#tdee-value').html('Ei laskettu');
+    }
+    
+    // Mobile activity value
+    if (tdeeData && tdeeData.daily_tdee) {
+        $('#mobile-activity-value').html(Math.round(tdeeData.daily_tdee) + ' kcal');
+    } else {
+        $('#mobile-activity-value').html('Ei laskettu');
+    }
+    
+    // Update calorie difference since TDEE changed
+    updateCalorieDifference();
+}
                 // TOAST SYSTEM 
             function showToast(message, type = 'success') {
                 const toastId = 'toast-' + Date.now();
