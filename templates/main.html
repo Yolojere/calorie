@@ -4527,6 +4527,7 @@ function clearSession() {
     $btn.prop('disabled', true); // optional: disable while running
 
     $.post('/clear_session', { date: currentSelectedDate }, response => {
+        showToast('Ruokapäiväkirja tyhjennetty!');
         updateSessionDisplay(response.session, response.totals, response.breakdown);
         updateCalorieDifference();
         applyTranslations();
@@ -5165,6 +5166,7 @@ function applyTemplate() {
         applyBtn.html(originalText);
         
         if (response.success) {
+            showToast('Onnistui! lisätty ruokapäiväkirjaan!');
             // Update totals only
             if (response.totals) {
                 updateNutritionTotalsOnly(response.totals);
