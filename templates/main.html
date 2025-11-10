@@ -3797,7 +3797,7 @@
                         updateRealTimeBreakdownFromForm();
                     }
                 }
-                    function updateNutritionTotalsOnly(totals) {
+                    function updateNutritionTotalsOnly(totals, tdeeData = null) {
                 // Update nutrition grids without full DOM refresh
                     updateNutritionGrid(totals);
                     updateMobileNutrition(totals);
