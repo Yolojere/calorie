@@ -139,6 +139,21 @@ github = oauth.register(
     client_kwargs={'scope': 'user:email'}
 )
 scheduler = APScheduler()
+scheduler.init_app(app)
+app.config['SCHEDULER_API_ENABLED'] = False
+app.config['SCHEDULER_TIMEZONE'] = 'UTC'
+scheduler.add_job(
+    id='auto_sync_garmin',
+    func=auto_sync_all_garmin_users,
+    trigger='interval',
+    minutes=15,
+    max_instances=1,
+    replace_existing=True
+)
+
+# Start the scheduler
+scheduler.start()
+print("SCHEDULER: Automatic Garmin sync started - running every 15 minutes")
 garmin_clients = {}
 _nutrition_scanner = OpenAINutritionScanner()
 def get_scanner():
@@ -7737,27 +7752,6 @@ if __name__ == '__main__':
 
         # ===== NEW: Initialize Scheduler =====
         print("[INIT] Configuring automatic Garmin sync scheduler...")
-        
-        # Configure scheduler
-        app.config['SCHEDULER_API_ENABLED'] = False  # Disable REST API for security
-        app.config['SCHEDULER_TIMEZONE'] = 'UTC'     # Use UTC for consistency
-        
-        # Initialize scheduler with app
-        scheduler.init_app(app)
-        
-        # Add the auto-sync job - runs every 30 minutes
-        scheduler.add_job(
-            id='auto_sync_garmin',
-            func=auto_sync_all_garmin_users,
-            trigger='interval',
-            minutes=15,  # Sync every 15 minutes
-            max_instances=1,  # Prevent overlapping runs
-            replace_existing=True
-        )
-        
-        # Start the scheduler
-        scheduler.start()
-        print("[SCHEDULER] ✅ Automatic Garmin sync enabled - running every 30 minutes")
         
         print("[START] Running Flask app...")
         app.run(debug=False)
