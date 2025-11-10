@@ -17,15 +17,13 @@
         <meta name="theme-color" content="#8b34f6">
         <link rel="canonical" href="https://trackyou.fi/">
         <meta name="twitter:description" content="Moderni kalorilaskuri ja ravintopäiväkirja verkossa.">
-        <link rel="icon" type="image/png" href="/static/favicon-96x96.png" sizes="96x96">
-        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/favicon-192x192.png') }}">
         <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/favicon-512x512.png') }}">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48x48.png') }}">
-        <link rel="icon" href="/favicon.ico" type="image/x-icon">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=CSalibri&display=swap" rel="stylesheet">
         <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
@@ -2879,12 +2877,13 @@
                     <div class="grid-cell grid-activity">
                         <i class="fas fa-running"></i>
                         <span data-i18n="activity">Aktiivisuus</span>
-                        <div class="grid-value" id="tdee-value">{% if current_tdee %}
-                                    {{ current_tdee|round(0) }} kcal
-                                {% else %}
-                                    Not calculated
-                                {% endif %}</div>
-                    </div>
+                        <div class="grid-value" id="tdee-value">
+                            {% if tdee_data and tdee_data.daily_tdee %}
+                                {{ tdee_data.daily_tdee|round(0) }} kcal
+                            {% else %}
+                                Ei laskettu
+                            {% endif %}
+                        </div>
                     <div class="grid-cell grid-today">
                         <i class="fas fa-balance-scale"></i>
                         <span data-i18n="today">Tänään</span>
@@ -4181,10 +4180,10 @@ function hideEmptyGroups() {
                 $('#grams').trigger('focus').trigger('select');
             }, 100);
         } else {
-            alert('Error loading food details');
+            showToast('Ongelma ruokien latauksessa');
         }
     }).fail(function() {
-        alert('Failed to fetch food details');
+        showToast('Ongelma ruoan haussa');
     });
 });
 
@@ -4240,7 +4239,7 @@ function addFoodToLog() {
     const mealGroup = $('#meal-group').val();
     
     if (!foodId || grams <= 0) {
-        alert('Please select a food and enter a valid amount');
+        showToast('Valitse ruoka ja syötä oikeat arvot');
         return;
     }
     
@@ -4289,7 +4288,7 @@ function addFoodToLog() {
         }
     }).fail(error => {
         console.error('Error adding food:', error);
-        alert('Failed to add food. Please try again.');
+        showToast('Ongelma ruoan lisäämisessä. Yritä uudelleen!');
     }).always(() => {
         $button.prop('disabled', false).html(originalText);
     });
@@ -4409,7 +4408,7 @@ function optimizedUpdateGrams(itemId, foodKey, newGrams, date, buttonElement) {
             }
         }
     }).fail(() => {
-        alert('Failed to update grams. Please try again.');
+        showToast('Ongelma grammojen päivityksessä. Yritä uudelleen!');
         // Revert button on failure
         buttonElement.text(originalGrams + 'g');
     });
@@ -4442,10 +4441,10 @@ function optimizedUpdateGrams(itemId, foodKey, newGrams, date, buttonElement) {
                                 resetFoodForm();
                             }
                         } else {
-                            alert('Error: ' + (response.error || 'Failed to delete food'));
+                            showToast('Error: ' + (response.error || 'Ruoan poistamisessa ongelma'));
                         }
                     }).fail(() => {
-                        alert('Failed to delete food. Please try again.');
+                        showToast('Emme pystyneet poistamaan ruokaa, yritä uudelleen.');
                     }).always(() => {
                         button.html(originalHTML);
                     });
@@ -4504,7 +4503,7 @@ function optimizedDeleteItem(itemId, date, itemElement = null, groupName = null)
         const button = itemElement.find('.delete-item');
         button.html('<i class="fa-solid fa-circle-xmark"></i>');
         button.prop('disabled', false);
-        alert('Failed to delete item. Please try again.');
+        showToast('Epäonnistui! yritä uudelleen.');
     });
 }
                 
@@ -4560,7 +4559,7 @@ function clearSession() {
                         })
                         .fail((xhr, status, error) => {
                             console.error('Date change failed:', error);
-                            alert('Failed to change date. Please try again.');
+                            showToast('Epäonnistui! yritä vaihtaa päivä uudelleen!');
                         });
                 }
                 
@@ -4665,11 +4664,11 @@ function clearSession() {
             applyTranslations();
             updateNutritionAbbreviations();
         } else {
-            alert('Error: ' + (response.error || 'Operation failed'));
+            showToast('Error: ' + (response.error || 'Epäonnistui!'));
         }
     }).fail(function(xhr, status, error) {
         console.error('Move/Copy error:', error);
-        alert('Siirto ei onnistunut. Yritä uudelleen!');
+        showToast('Siirto ei onnistunut. Yritä uudelleen!');
     }).always(() => {
         confirmBtn.html(originalText);
     });
@@ -4910,15 +4909,15 @@ function restoreCollapseStates(collapseStates) {
                         date: date
                     }, response => {
                         if (response.success) {
-                            alert('Recipe saved successfully!');
+                            showToast('Resepti tallennettu onnistuneesti!');
                             recipeModal.hide();
                             resetRecipeSelection();
                             loadTopFoods();
                         } else {
-                            alert('Error: ' + (response.error || 'Failed to save recipe'));
+                            showToast('Error: ' + (response.error || 'Ongelma reseptin tallentamisessa'));
                         }
                     }).fail(xhr => {
-                        alert('Error: ' + (xhr.responseJSON?.error || 'Failed to save recipe'));
+                        showToast('Error: ' + (xhr.responseJSON?.error || 'Ongelma reseptin tallentamisessa'));
                     });
                 }
                 function adjustMobileFontSize(){}
@@ -4995,7 +4994,7 @@ function displaySaveTemplatePreview() {
 function saveTemplate() {
     const templateName = $('#template-name').val().trim();
     if (!templateName) {
-        alert('Valitse pohjalle nimi ennen tallennusta.');
+        showToast('Valitse pohjalle nimi ennen tallennusta.');
         return;
     }
 
@@ -5041,7 +5040,7 @@ function saveTemplate() {
     console.log('Items to save:', itemsWithData);
     
     if (itemsWithData.length === 0) {
-        alert('Ei tallennettavia tuotteita. Varmista että olet valinnut ruokia.');
+        showToast('Ei tallennettavia tuotteita. Varmista että olet valinnut ruokia.');
         return;
     }
     
@@ -5205,12 +5204,12 @@ function applyTemplate() {
             $('#applyTemplateModal').modal('hide');
         
         } else {
-            alert(t('error_apply_template' + (response.error || 'failed_to_apply_template')));
+            showToast(t('error_apply_template' + (response.error || 'failed_to_apply_template')));
         }
     }).fail((xhr, status, error) => {
         applyBtn.html(originalText);
         console.error('Template application error:', error);
-        alert(t('failed_to_apply_template_retry'));
+        showToast(t('failed_to_apply_template_retry'));
     });
 }
 const DELETETEMPLATEURL = "{{ url_for('delete_template_food') }}";
@@ -6432,5 +6431,3 @@ if ('serviceWorker' in navigator) {
 </script>
     </body>
     </html>
-
-
