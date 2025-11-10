@@ -6356,7 +6356,7 @@ def copy_from_session():
         
         return jsonify({
             "success": True, 
-            "message": f"Copied {sets_copied} sets to {target_date}",
+            "message": f"Kopioitiin {sets_copied} sarjaa, päivälle: {target_date}",
             "debug": {
                 "source_session_id": session_id,
                 "new_session_id": new_session_id,
@@ -7750,7 +7750,7 @@ if __name__ == '__main__':
             id='auto_sync_garmin',
             func=auto_sync_all_garmin_users,
             trigger='interval',
-            minutes=15,  # Sync every 30 minutes
+            minutes=15,  # Sync every 15 minutes
             max_instances=1,  # Prevent overlapping runs
             replace_existing=True
         )
