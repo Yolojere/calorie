@@ -1862,8 +1862,8 @@ input.form-control:-webkit-autofill {
                     <h5 id="modal-platform-name" data-i18n="platform">Platform</h5>
                 </div>
                 <div class="social-modal-body">
-                    <label for="social-handle-input" class="form-label">Social Handle</label>
-                    <input type="text" id="social-handle-input" placeholder="Enter your handle" autocomplete="off">
+                    <label for="social-handle-input" class="form-label">Käyttäjänimi</label>
+                    <input type="text" id="social-handle-input" placeholder="" autocomplete="off">
                     <small data-i18n="handle_instructions">Enter your username without @ symbol</small>
                 </div>
                 <div class="social-modal-footer">
@@ -2548,11 +2548,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Set modal content
         modalPlatformIcon.className = platformInfo.icon;
-        modalPlatformName.textContent = `Add ${platformInfo.name}`;
+        modalPlatformName.textContent = `Lisää ${platformInfo.name}`;
         
         // Clear and focus input
         socialHandleInput.value = '';
-        socialHandleInput.placeholder = `Enter your ${platformInfo.placeholder}`;
         
         // Show modal
         socialModal.style.display = 'flex';
