@@ -1713,39 +1713,6 @@ function displayCardioSessions(cardioSessions, containerOverride = null) {
     console.log('Successfully displayed cardio sessions with data attributes');
 }
 
-// ✅ UTILITY: Show toast messages
-function showToast(message, type = 'info') {
-    // Create toast if it doesn't exist
-    let toast = document.getElementById('cardio-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'cardio-toast';
-        toast.style.cssText = `
-            position: fixed; top: 20px; right: 20px; z-index: 10000;
-            padding: 12px 20px; border-radius: 6px; color: white;
-            font-weight: bold; opacity: 0; transition: opacity 0.3s;
-        `;
-        document.body.appendChild(toast);
-    }
-    
-    // Set color based on type
-    const colors = {
-        success: '#4CAF50',
-        error: '#F44336', 
-        warning: '#FF9800',
-        info: '#2196F3'
-    };
-    
-    toast.style.backgroundColor = colors[type] || colors.info;
-    toast.textContent = message;
-    toast.style.opacity = '1';
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-        toast.style.opacity = '0';
-    }, 3000);
-}
-
 function displayWorkoutData(workoutData) {
     const container = document.getElementById('workout-session-container');
 
