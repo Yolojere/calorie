@@ -2884,6 +2884,7 @@
                                 Ei laskettu
                             {% endif %}
                         </div>
+                        </div>
                     <div class="grid-cell grid-today">
                         <i class="fas fa-balance-scale"></i>
                         <span data-i18n="today">Tänään</span>
@@ -3156,7 +3157,11 @@
                 <i class="fas fa-running"></i>
                 <div class="label" data-i18n="activity">Aktiivisuus</div>
                 <div class="value" id="mobile-activity-value">
-                    {% if current_tdee %}{{ current_tdee|round(0) }} kcal{% else %}Not calculated{% endif %}
+                {% if tdee_data and tdee_data.daily_tdee %}
+                {{ tdee_data.daily_tdee|round(0) }} kcal
+                {% else %}
+                Ei laskettu
+                {% endif %}
                 </div>
             </div>
             <div class="card-section today-section">
