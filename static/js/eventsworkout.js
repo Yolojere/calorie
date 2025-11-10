@@ -832,9 +832,9 @@ function copyWorkoutFromSessionInline(sessionId, targetDate) {
                     location.reload();
                 }
                 
-                alert(`Treeni kopioitu onnistuneesti! ${response.debug ? response.debug.sets_copied : ''} sarjaa kopioitu.`);
+                showToast(response.message || 'Treeni kopioitu onnistuneesti!');
             } else {
-                alert('Ongelma kopioinissa: ' + response.error);
+                showToast('Ongelma kopioinnissa: ' + response.error, true);
             }
         },
         error: function(xhr, status, error) {
