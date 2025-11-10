@@ -1422,13 +1422,13 @@ def update_daily_tdee_with_steps(user_id, target_date, steps):
         user_data = cursor.fetchone()
         
         if not user_data:
-            return {'success': False, 'error': 'User not found'}
+            return {'success': False, 'error': 'Käyttäjää ei löytynyt'}
         
         weight, base_tdee, auto_garmin_steps = user_data
         
         # Check if auto_garmin_steps is enabled
         if not auto_garmin_steps:
-            return {'success': False, 'error': 'Auto Garmin steps not enabled'}
+            return {'success': False, 'error': 'Auto Garmin askeleet ei päällä'}
         
         # Calculate calories from steps using your formula
         # Formula: calories = steps × (0.04 × (weight_kg / 70))
@@ -1486,7 +1486,7 @@ def update_daily_tdee_with_steps(user_id, target_date, steps):
         
     except Exception as e:
         conn.rollback()
-        print(f"Error updating TDEE with steps: {e}")
+        print(f"Ongelma TDEE päivittämisessä: {e}")
         import traceback
         traceback.print_exc()
         return {'success': False, 'error': str(e)}
@@ -1642,7 +1642,7 @@ def load_more_dates():
         current_dates = data.get('current_dates', [])
         
         if not current_dates:
-            return jsonify({'error': 'No current dates provided'}), 400
+            return jsonify({'error': 'päivän tietoja ei löytynyt'}), 400
             
         if direction == 'past':
             # Get the earliest date - extract just the date string part
@@ -1705,9 +1705,12 @@ def main():
         current_date = datetime.now().strftime('%Y-%m-%d')
         date_obj = datetime.now().date()
     
-    # *** CRITICAL: Use dynamic TDEE function ***
-    current_tdee = get_user_tdee_for_date(user_id, date_obj)
-    print(f"Dynamic TDEE for {current_date}: {current_tdee} kcal")
+    # ✅ UPDATED: Use new get_user_current_tdee() instead of get_user_tdee_for_date()
+    # Pass update_previous_days=False to avoid overwriting historical TDEE
+    tdee_data = get_user_current_tdee(user_id, date_obj, update_previous_days=False)
+    current_tdee = tdee_data["daily_tdee"]
+    
+    print(f"Dynamic TDEE for {current_date}: {current_tdee} kcal (mode: {tdee_data.get('mode')})")
     
     # Get session data (your existing function)
     eaten_items, current_date = get_current_session(user_id, current_date)
@@ -1743,7 +1746,8 @@ def main():
         dates=dates,
         food_usage=food_usage,
         group_breakdown=group_breakdown,
-        current_tdee=current_tdee,  # Pass dynamic TDEE
+        tdee_data=tdee_data,
+        current_tdee=current_tdee,
         current_weight=current_weight
     )
 @app.route('/terms')
@@ -2029,7 +2033,7 @@ def profile():
 
     except Exception as e:
         print(f"Profile error: {e}")
-        flash('An error occurred loading your profile.', 'danger')
+        flash('Ongelma profiilin päivittämisessä', 'danger')
     finally:
         cursor.close()
         conn.close()
@@ -2154,7 +2158,7 @@ def view_profile(user_id):
 
     except Exception as e:
         print(f"Error loading profile: {e}")
-        flash('Error loading profile', 'danger')
+        flash('Ongelma profiilin lataamisessa', 'danger')
         return redirect(url_for('index'))
     finally:
         cursor.close()
@@ -2392,7 +2396,7 @@ def get_food_details():
 
         if not food:
             print(f"❌ Food not found or not visible: '{normalized_key}'")
-            return jsonify({'error': 'Food not found or not accessible'}), 404
+            return jsonify({'error': 'Ruokaa ei löytynyt'}), 404
 
         # Default to grams if no units provided
         if not units or float(units) <= 0:
@@ -2479,7 +2483,7 @@ def log_food():
         food = get_food_by_key(normalized_key)
         if not food:
             print(f"Food not found: '{normalized_key}'")
-            return jsonify({'error': 'Food not found'}), 404
+            return jsonify({'error': 'Ruokaa ei löytynyt'}), 404
 
         # Convert units to grams
         if unit_type == 'grams':
@@ -2553,17 +2557,26 @@ def log_food():
 @app.route('/update_session', methods=['POST'])
 @login_required
 def update_session():
+    """
+    Update the current session display for a specific date.
+    
+    IMPORTANT: We do NOT call update_previous_days here because this route 
+    is called frequently (every time user changes date or modifies food).
+    
+    Retroactive TDEE updates should ONLY happen in the /garmin/sync route
+    after new data is actually synced from Garmin.
+    """
     user_id = current_user.id
     date_str = request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
     
-    # ✅ UPDATED: Use dynamic TDEE calculation for specific date
     try:
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         target_date = datetime.now().date()
     
-    # Get TDEE for the specific date (includes workout adjustments if enabled)
-    tdee_data = get_user_current_tdee(user_id, target_date)
+    # ✅ FIXED: Pass update_previous_days=False to prevent overwriting historical TDEE
+    # Retroactive updates only happen after Garmin sync in sync_garmin_and_update_tdee()
+    tdee_data = get_user_current_tdee(user_id, target_date, update_previous_days=False)
     current_tdee = tdee_data["daily_tdee"]
     
     eaten_items, current_date = get_current_session(user_id, date_str)
@@ -2586,12 +2599,12 @@ def update_session():
         'calorie_difference': calorie_difference_str,
         'calorie_status': calorie_status,
         'calorie_status_class': calorie_status_class,
-        # ✅ NEW: Include TDEE breakdown in response
         'tdee_data': {
             'base_tdee': tdee_data["base_tdee"],
-            'garmin_source': tdee_data.get("garmin_source"),
+            'calories_total': tdee_data.get("calories_total"),
             'daily_tdee': tdee_data["daily_tdee"],
-            'auto_enabled': tdee_data.get("auto_enabled", False)
+            'mode': tdee_data.get("mode", "static"),
+            'calories_total_enabled': tdee_data.get("calories_total_enabled", False)
         }
     })
 
@@ -4414,7 +4427,7 @@ def workout_history():
         app.logger.error(f"Workout History Error: {str(e)}")
         import traceback
         app.logger.error(f"Traceback: {traceback.format_exc()}")
-        return jsonify(error="Could not load workout history"), 500
+        return jsonify(error="Historian latauksessa ongelma"), 500
     finally:
         conn.close()
 
@@ -4574,7 +4587,7 @@ def apply_workout_template():
             (template_id,)
         )
         if not cursor.fetchone():
-            return jsonify(success=False, error="Template not found"), 404
+            return jsonify(success=False, error="Pohjaa ei löydy"), 404
         
         # Get template exercises
         cursor.execute('''
@@ -4906,7 +4919,7 @@ def save_metrics():
         # Validate inputs
         if not weight or weight <= 0:
             print(f"ERROR: Invalid weight: {weight}")
-            return jsonify(success=False, error="Valid weight is required"), 400
+            return jsonify(success=False, error="Paino vaaditaan"), 400
         
         # For custom mode with Garmin calories enabled, TDEE can be 0
         if calc_mode == 'custom' and calories_total_enabled:
@@ -4915,7 +4928,7 @@ def save_metrics():
             print(f"Custom mode with Garmin calories enabled - setting TDEE to 0")
         elif not tdee or tdee <= 0:
             print(f"ERROR: Invalid tdee: {tdee}")
-            return jsonify(success=False, error="Valid TDEE is required"), 400
+            return jsonify(success=False, error="TDEE vaaditaan"), 400
         
         # For advanced mode with dynamic features enabled, clear daily_tdee_adjustments
         # so it recalculates from scratch (without the old step count)
@@ -5113,16 +5126,21 @@ def get_nutrition_targets():
     return jsonify(targets)
 from datetime import datetime  # ensure this import
 
-def get_user_current_tdee(user_id, target_date=None):
+def get_user_current_tdee(user_id, target_date=None, update_previous_days=False):
     """
     Get user's current TDEE with 3-mode priority system:
     1. Garmin calories_total (if enabled)
     2. Dynamic adjustments (workout + steps)
     3. Static base TDEE
     
+    IMPORTANT: update_previous_days should only be True when called from sync routes,
+    NOT from regular /update_session calls, to avoid overwriting historical TDEE data.
+    
     Args:
         user_id: User ID
         target_date: Date to get TDEE for (defaults to today)
+        update_previous_days: If True and garmin_calories_total mode is enabled,
+                             update TDEE for previous days (should only be True after Garmin sync)
     
     Returns:
         dict: {
@@ -5132,9 +5150,10 @@ def get_user_current_tdee(user_id, target_date=None):
             "daily_tdee": float,
             "auto_workout_enabled": bool,
             "auto_steps_enabled": bool,
-            "calories_total": float or None,  # NEW
-            "calories_total_enabled": bool,   # NEW
-            "mode": str  # "garmin_total", "dynamic", or "static"
+            "calories_total": float or None,
+            "calories_total_enabled": bool,
+            "mode": str,  # "garmin_total", "dynamic", or "static"
+            "previous_days_updated": int  # Number of previous days updated with Garmin data
         }
     """
     if target_date is None:
@@ -5163,7 +5182,8 @@ def get_user_current_tdee(user_id, target_date=None):
                 "auto_steps_enabled": False,
                 "calories_total": None,
                 "calories_total_enabled": False,
-                "mode": "static"
+                "mode": "static",
+                "previous_days_updated": 0
             }
         
         auto_workout_enabled = bool(user_data[0]) if user_data[0] is not None else False
@@ -5171,8 +5191,16 @@ def get_user_current_tdee(user_id, target_date=None):
         base_tdee = float(user_data[2]) if user_data[2] else 0.0
         calories_total_enabled = bool(user_data[3]) if user_data[3] is not None else False
         
+        previous_days_updated = 0
+        
         # PRIORITY 1: Garmin calories_total mode
         if calories_total_enabled:
+            # Only update previous days when explicitly requested (e.g., after Garmin sync)
+            if update_previous_days:
+                previous_days_updated = _update_previous_days_garmin_tdee(
+                    user_id, cursor, target_date
+                )
+            
             cursor.execute("""
                 SELECT calories_total
                 FROM garmin_daily_data
@@ -5187,15 +5215,16 @@ def get_user_current_tdee(user_id, target_date=None):
                     "base_tdee": base_tdee,
                     "workout_calories": 0,
                     "steps_calories": 0,
-                    "daily_tdee": calories_total,  # Use Garmin total
+                    "daily_tdee": calories_total,
                     "auto_workout_enabled": auto_workout_enabled,
                     "auto_steps_enabled": auto_steps_enabled,
                     "calories_total": calories_total,
                     "calories_total_enabled": True,
-                    "mode": "garmin_total"
+                    "mode": "garmin_total",
+                    "previous_days_updated": previous_days_updated
                 }
             else:
-                # Garmin mode enabled but no data today - fallback to base
+                # Garmin mode enabled but no data for this date - fallback to base
                 return {
                     "base_tdee": base_tdee,
                     "workout_calories": 0,
@@ -5205,7 +5234,8 @@ def get_user_current_tdee(user_id, target_date=None):
                     "auto_steps_enabled": auto_steps_enabled,
                     "calories_total": None,
                     "calories_total_enabled": True,
-                    "mode": "static"
+                    "mode": "static",
+                    "previous_days_updated": previous_days_updated
                 }
         
         # PRIORITY 2: Dynamic adjustment mode (workout + steps)
@@ -5232,10 +5262,11 @@ def get_user_current_tdee(user_id, target_date=None):
                     "auto_steps_enabled": auto_steps_enabled,
                     "calories_total": None,
                     "calories_total_enabled": False,
-                    "mode": "dynamic"
+                    "mode": "dynamic",
+                    "previous_days_updated": 0
                 }
             else:
-                # Dynamic mode enabled but no adjustments today
+                # Dynamic mode enabled but no adjustments for this date
                 return {
                     "base_tdee": base_tdee,
                     "workout_calories": 0,
@@ -5245,7 +5276,8 @@ def get_user_current_tdee(user_id, target_date=None):
                     "auto_steps_enabled": auto_steps_enabled,
                     "calories_total": None,
                     "calories_total_enabled": False,
-                    "mode": "static"
+                    "mode": "static",
+                    "previous_days_updated": 0
                 }
         
         # PRIORITY 3: Static TDEE mode
@@ -5258,12 +5290,121 @@ def get_user_current_tdee(user_id, target_date=None):
             "auto_steps_enabled": False,
             "calories_total": None,
             "calories_total_enabled": False,
-            "mode": "static"
+            "mode": "static",
+            "previous_days_updated": 0
         }
     
     finally:
         cursor.close()
         conn.close()
+
+
+def _update_previous_days_garmin_tdee(user_id, cursor, current_date, lookback_days=7):
+    """
+    Update daily_tdee_adjustments for previous days that may have received 
+    Garmin data late. This handles delayed Garmin syncs (up to a few hours) 
+    that might arrive after midnight for previous days.
+    
+    IMPORTANT: This stores the Garmin calories as the "adjusted_tdee" in 
+    daily_tdee_adjustments so the TDEE retrieval picks it up correctly.
+    
+    Args:
+        user_id: User ID
+        cursor: Database cursor (reused from parent connection)
+        current_date: Current date to start lookback from
+        lookback_days: Number of previous days to check (default 7 days)
+    
+    Returns:
+        int: Number of days updated
+    """
+    updated_count = 0
+    
+    try:
+        # Look back up to N days for any Garmin data that might have arrived late
+        for days_ago in range(1, lookback_days + 1):
+            check_date = current_date - timedelta(days=days_ago)
+            
+            # Check if Garmin data exists for this date
+            cursor.execute("""
+                SELECT id, calories_total
+                FROM garmin_daily_data
+                WHERE user_id = %s 
+                  AND date = %s
+                  AND calories_total IS NOT NULL
+            """, (user_id, check_date))
+            
+            garmin_data = cursor.fetchone()
+            
+            if garmin_data:
+                garmin_id, calories_total = garmin_data
+                
+                # Check if daily_tdee_adjustments record exists for this date
+                cursor.execute("""
+                    SELECT id
+                    FROM daily_tdee_adjustments
+                    WHERE user_id = %s AND date = %s
+                """, (user_id, check_date))
+                
+                adjustment_record = cursor.fetchone()
+                
+                if adjustment_record:
+                    adjustment_id = adjustment_record[0]
+                    # Update only if we haven't already set it with Garmin data
+                    # Check the current adjusted_tdee
+                    cursor.execute("""
+                        SELECT adjusted_tdee
+                        FROM daily_tdee_adjustments
+                        WHERE id = %s
+                    """, (adjustment_id,))
+                    
+                    current_adjusted = cursor.fetchone()
+                    
+                    # Only update if it's different (fresh Garmin data)
+                    if current_adjusted and current_adjusted[0] != calories_total:
+                        cursor.execute("""
+                            UPDATE daily_tdee_adjustments
+                            SET adjusted_tdee = %s
+                            WHERE id = %s
+                        """, (calories_total, adjustment_id))
+                        updated_count += 1
+                else:
+                    # Create new adjustment record with Garmin data as the TDEE
+                    cursor.execute("""
+                        INSERT INTO daily_tdee_adjustments 
+                        (user_id, date, workout_calories, steps_calories, adjusted_tdee)
+                        VALUES (%s, %s, 0, 0, %s)
+                    """, (user_id, check_date, calories_total))
+                    updated_count += 1
+        
+    except Exception as e:
+        # Log the error but don't raise - we want the main function to continue
+        print(f"Error updating previous days TDEE for user {user_id}: {str(e)}")
+    
+    return updated_count
+
+
+def sync_garmin_and_update_tdee(user_id):
+    """
+    Helper function to call ONLY after Garmin data sync completes.
+    This ensures all days with newly synced Garmin data get their TDEE updated.
+    
+    IMPORTANT: This triggers retroactive updates. Only call from sync routes!
+    
+    Args:
+        user_id: User ID
+    
+    Returns:
+        dict: Update summary
+    """
+    # Get current TDEE which will trigger retroactive updates
+    result = get_user_current_tdee(user_id, update_previous_days=True)
+    
+    return {
+        "success": True,
+        "current_tdee": result["daily_tdee"],
+        "mode": result["mode"],
+        "previous_days_updated": result["previous_days_updated"]
+    }
 
 LEVEL_CAP = 999
 
@@ -7136,7 +7277,445 @@ def index():
             is_authenticated=False
         )
 
+@app.route('/profile/<int:user_id>/stats', methods=['GET'])
+@login_required
+def get_profile_stats(user_id):
+    """Fetch heaviest lifts and cardio personal bests for a user profile"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Check if user exists and get their gender
+        cursor.execute("""
+            SELECT id, gender
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            return jsonify(error="User not found"), 404
+        
+        user_gender = user_data['gender']  # Get user's gender (male, female, other)
+        
+        # ===== HEAVIEST LIFTS - ALL TIME =====
+        # Bench Press (exercise_id IN 11, 43)
+        cursor.execute("""
+            SELECT 
+                e.name as exercise_name,
+                ws.reps, 
+                ws.weight,
+                wses.date,
+                (ws.reps * ws.weight) as volume
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE wses.user_id = %s
+              AND ws.is_saved = true
+              AND ws.exercise_id IN (11, 43)
+            ORDER BY ws.weight DESC
+            LIMIT 1
+        """, (user_id,))
+        heaviest_bench = cursor.fetchone()
+        
+        # Deadlift (exercise_id IN 117, 12, 57)
+        cursor.execute("""
+            SELECT 
+                e.name as exercise_name,
+                ws.reps, 
+                ws.weight,
+                wses.date,
+                (ws.reps * ws.weight) as volume
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE wses.user_id = %s
+              AND ws.is_saved = true
+              AND ws.exercise_id IN (117, 12, 57)
+            ORDER BY ws.weight DESC
+            LIMIT 1
+        """, (user_id,))
+        heaviest_deadlift = cursor.fetchone()
+        
+        # Squat (exercise_id = 23)
+        cursor.execute("""
+            SELECT 
+                e.name as exercise_name,
+                ws.reps, 
+                ws.weight,
+                wses.date,
+                (ws.reps * ws.weight) as volume
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE wses.user_id = %s
+              AND ws.is_saved = true
+              AND ws.exercise_id = 23
+            ORDER BY ws.weight DESC
+            LIMIT 1
+        """, (user_id,))
+        heaviest_squat = cursor.fetchone()
+        
+        # ===== CALCULATE TOTAL AND GENDER-BASED RANK =====
+        # Calculate total powerlifting score
+        total_weight = 0
+        if heaviest_bench:
+            total_weight += heaviest_bench['weight']
+        if heaviest_squat:
+            total_weight += heaviest_squat['weight']
+        if heaviest_deadlift:
+            total_weight += heaviest_deadlift['weight']
+        
+        # Calculate user's rank based on total weight FILTERED BY SAME GENDER
+        user_rank = None
+        total_users_same_gender = 0
+        
+        if total_weight > 0:
+            cursor.execute("""
+                WITH user_totals AS (
+                    SELECT 
+                        wses.user_id,
+                        u.gender,
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id IN (11, 43)
+                            ), 0
+                        ) +
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id = 23
+                            ), 0
+                        ) +
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id IN (117, 12, 57)
+                            ), 0
+                        ) as total_weight
+                    FROM workout_sessions wses
+                    JOIN users u ON wses.user_id = u.id
+                    GROUP BY wses.user_id, u.gender
+                    HAVING 
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id IN (11, 43)
+                            ), 0
+                        ) +
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id = 23
+                            ), 0
+                        ) +
+                        COALESCE(
+                            (SELECT MAX(ws.weight) 
+                             FROM workout_sets ws 
+                             JOIN workout_sessions wses2 ON ws.session_id = wses2.id 
+                             WHERE wses2.user_id = wses.user_id 
+                               AND ws.is_saved = true 
+                               AND ws.exercise_id IN (117, 12, 57)
+                            ), 0
+                        ) > 0
+                )
+                SELECT 
+                    (SELECT COUNT(*) FROM user_totals WHERE total_weight > %s AND gender = %s) + 1 as rank,
+                    (SELECT COUNT(*) FROM user_totals WHERE gender = %s) as total_users
+            """, (total_weight, user_gender, user_gender))
+            rank_result = cursor.fetchone()
+            
+            if rank_result:
+                user_rank = rank_result['rank']
+                total_users_same_gender = rank_result['total_users']
+        
+        # ===== TOP 5 VOLUME LIFTS - ALL TIME =====
+        cursor.execute("""
+            SELECT 
+                e.name as exercise_name,
+                ws.reps, 
+                ws.weight,
+                wses.date,
+                (ws.reps * ws.weight) as volume
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE wses.user_id = %s
+              AND ws.is_saved = true
+              AND (ws.reps * ws.weight) > 20
+            ORDER BY volume DESC
+            LIMIT 5
+        """, (user_id,))
+        top_volume_lifts = cursor.fetchall()
+        
+        # ===== CARDIO PERSONAL BESTS - RUNNING =====
+        # Longest running session
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+            ORDER BY cs.duration_minutes DESC
+            LIMIT 1
+        """, (user_id,))
+        longest_running_session = cursor.fetchone()
+        
+        # Most calories burned in running session
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+              AND cs.calories_burned IS NOT NULL
+            ORDER BY cs.calories_burned DESC
+            LIMIT 1
+        """, (user_id,))
+        most_calories_running = cursor.fetchone()
+        
+        # Longest distance - Running
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+              AND cs.distance_km IS NOT NULL
+            ORDER BY cs.distance_km DESC
+            LIMIT 1
+        """, (user_id,))
+        longest_distance_running = cursor.fetchone()
+        
+        # ===== CARDIO PERSONAL BESTS - CYCLING =====
+        # Longest cycling session
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+            ORDER BY cs.duration_minutes DESC
+            LIMIT 1
+        """, (user_id,))
+        longest_cycling_session = cursor.fetchone()
+        
+        # Most calories burned in cycling session
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+              AND cs.calories_burned IS NOT NULL
+            ORDER BY cs.calories_burned DESC
+            LIMIT 1
+        """, (user_id,))
+        most_calories_cycling = cursor.fetchone()
+        
+        # Longest distance - Cycling
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.calories_burned,
+                cs.distance_km,
+                wses.date
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+              AND cs.is_saved = true
+              AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+              AND cs.distance_km IS NOT NULL
+            ORDER BY cs.distance_km DESC
+            LIMIT 1
+        """, (user_id,))
+        longest_distance_cycling = cursor.fetchone()
+        
+        # Convert dict rows to regular dicts for JSON serialization
+        response_data = {
+            'user_gender': user_gender,  # Return user's gender for frontend reference
+            'heaviest_lifts': {
+                'bench': dict(heaviest_bench) if heaviest_bench else None,
+                'deadlift': dict(heaviest_deadlift) if heaviest_deadlift else None,
+                'squat': dict(heaviest_squat) if heaviest_squat else None,
+                'total': total_weight,
+                'total_rank': user_rank,
+                'total_users': total_users_same_gender
+            },
+            'top_volume_lifts': [dict(row) for row in top_volume_lifts],
+            'cardio_records': {
+                'running': {
+                    'longest_session': dict(longest_running_session) if longest_running_session else None,
+                    'most_calories': dict(most_calories_running) if most_calories_running else None,
+                    'longest_distance': dict(longest_distance_running) if longest_distance_running else None
+                },
+                'cycling': {
+                    'longest_session': dict(longest_cycling_session) if longest_cycling_session else None,
+                    'most_calories': dict(most_calories_cycling) if most_calories_cycling else None,
+                    'longest_distance': dict(longest_distance_cycling) if longest_distance_cycling else None
+                }
+            }
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        app.logger.error(f"Error loading profile stats: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify(error="Could not load profile stats"), 500
+    finally:
+        cursor.close()
+        conn.close()
 
+
+
+@app.route('/profile/<int:user_id>/stats/recent', methods=['GET'])
+@login_required
+def get_profile_stats_recent(user_id):
+    """Fetch recent 30-day stats for profile"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Check if user exists and privacy settings
+        cursor.execute("""
+            SELECT show_health_metrics 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            return jsonify(error="User not found"), 404
+        
+        if not user_data.get('show_health_metrics', False) and user_id != current_user.id:
+            return jsonify(error="Stats are private"), 403
+        
+        # Calculate date 30 days ago
+        from datetime import datetime, timedelta
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).date()
+        
+        # Recent workout count
+        cursor.execute("""
+            SELECT COUNT(DISTINCT id) as recent_workouts
+            FROM workout_sessions
+            WHERE user_id = %s 
+              AND is_saved = true 
+              AND date >= %s
+        """, (user_id, thirty_days_ago))
+        recent_workouts = cursor.fetchone()['recent_workouts'] or 0
+        
+        # Recent volume
+        cursor.execute("""
+            SELECT COALESCE(SUM(ws.reps * ws.weight), 0) as recent_volume
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            WHERE wses.user_id = %s 
+              AND ws.is_saved = true
+              AND wses.date >= %s
+        """, (user_id, thirty_days_ago))
+        recent_volume = float(cursor.fetchone()['recent_volume'] or 0)
+        
+        # Recent cardio time
+        cursor.execute("""
+            SELECT COALESCE(SUM(cs.duration_minutes), 0) as recent_cardio_minutes
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            WHERE wses.user_id = %s 
+              AND cs.is_saved = true
+              AND wses.date >= %s
+        """, (user_id, thirty_days_ago))
+        recent_cardio_minutes = float(cursor.fetchone()['recent_cardio_minutes'] or 0)
+        
+        # Most trained muscle group (last 30 days)
+        cursor.execute("""
+            SELECT 
+                e.muscle_group,
+                COUNT(ws.id) as set_count
+            FROM workout_sets ws
+            JOIN workout_sessions wses ON ws.session_id = wses.id
+            JOIN exercises e ON ws.exercise_id = e.id
+            WHERE wses.user_id = %s 
+              AND ws.is_saved = true
+              AND wses.date >= %s
+            GROUP BY e.muscle_group
+            ORDER BY set_count DESC
+            LIMIT 1
+        """, (user_id, thirty_days_ago))
+        top_muscle = cursor.fetchone()
+        
+        response_data = {
+            'period_days': 30,
+            'recent_workouts': recent_workouts,
+            'recent_volume_kg': recent_volume,
+            'recent_cardio_hours': round(recent_cardio_minutes / 60, 1),
+            'top_muscle_group': dict(top_muscle) if top_muscle else None
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        app.logger.error(f"Error loading recent profile stats: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify(error="Could not load recent stats"), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/favicon.ico')
 def favicon():
