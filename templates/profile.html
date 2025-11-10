@@ -217,28 +217,28 @@ input.form-control:-webkit-autofill {
 
     .health-card {
         text-align: center;
-        padding: 15px;
-        border-radius: 20px;
+        padding: 12px;
+        border-radius: 15px;
         background: #121212;
         border: 1px solid #2a2a2a;
     }
 
     .metric-value {
-        font-size: 1.6rem;
+        font-size: 1.3rem;
         font-weight: 600;
         color: #fff;
-        margin: 10px 0;
+        margin: 8px 0;
     }
 
     .metric-label {
         color: #bbb;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .metric-icon {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         color: #888;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     a {
@@ -1171,6 +1171,32 @@ input.form-control:-webkit-autofill {
   }
 }
 @media (max-width: 576px) {
+        .lift-card div:first-child,
+    .cardio-card .fa-clock + div,
+    .cardio-card .fa-route + div {
+        font-size: 0.75rem !important; /* Label text */
+    }
+    
+    #bench-weight, #squat-weight, #deadlift-weight,
+    #running-longest-duration, #running-longest-distance,
+    #cycling-longest-duration, #cycling-longest-distance {
+        font-size: 1.4rem !important; /* Main metric */
+    }
+    
+    #bench-reps, #squat-reps, #deadlift-reps,
+    #running-longest-distance-info, #running-longest-duration-info,
+    #cycling-longest-distance-info, #cycling-longest-duration-info {
+        font-size: 0.75rem !important; /* Secondary info */
+    }
+    
+    #running-longest-exercise, #running-distance-exercise,
+    #cycling-longest-exercise, #cycling-distance-exercise {
+        font-size: 0.7rem !important; /* Exercise name */
+    }
+    
+    .lift-card, .cardio-card {
+        padding: 12px !important; /* Reduce card padding on mobile */
+    }
     .social-dropdown {
         right: 0;
         left: auto;
@@ -1292,16 +1318,17 @@ input.form-control:-webkit-autofill {
         min-width: 50px;
         min-height: 50px;
     }
-        .card-body.p-4 {
-            padding: 1.5rem !important;
-        }
-        
         .health-metrics {
-            padding: 1.5rem;
+            padding: 10px;
+            margin-left: -12px;
+            margin-right: -12px;
+            border-radius: 0;
         }
-        
+            .health-card {
+        padding: 10px;
+    }
         .metric-value {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
         }
             .avatar-modal-content {
         width: 95%;
@@ -1872,16 +1899,150 @@ input.form-control:-webkit-autofill {
         </div>
     {% endif %}
 
-    <!-- Health Metrics Section - Only show if allowed -->
+   <!-- Health Metrics Section - Only show if allowed -->
+<div class="profile-stats-section" style="background: #1b1b1b; border: 1px solid #2a2a2a; border-radius: 20px; padding: 20px; margin-top: 30px;">
+    <legend class="border-bottom mb-4" style="color: #fff; font-size: 1.2rem; border-bottom: 1px solid #2a2a2a !important; padding-bottom: 6px; margin-bottom: 15px;">
+        <i class="fas fa-trophy me-2"></i><span>Ennätykset</span>
+    </legend>
+    
+    <!-- Heaviest Lifts -->
+    <div class="heaviest-lifts-container mb-4">
+        <h5 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">
+            <i class="fas fa-dumbbell me-2" style="color: #7bc8a4;"></i>Parhaat Nostot
+        </h5>
+        <div class="row g-3">
+            <!-- Bench Press -->
+            <div class="col-6">
+                <div class="lift-card" style="text-align: center; padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">Penkkipunnerrus</div>
+                    <div id="bench-weight" style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="bench-reps" style="font-size: 0.85rem; color: #7bc8a4; font-weight: 500;">- reps</div>
+                </div>
+            </div>
+            
+            <!-- Squat -->
+            <div class="col-6">
+                <div class="lift-card" style="text-align: center; padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">Kyykky</div>
+                    <div id="squat-weight" style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="squat-reps" style="font-size: 0.85rem; color: #7bc8a4; font-weight: 500;">- reps</div>
+                </div>
+            </div>
+            
+            <!-- Deadlift -->
+            <div class="col-6">
+                <div class="lift-card" style="text-align: center; padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">Maastaveto</div>
+                    <div id="deadlift-weight" style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="deadlift-reps" style="font-size: 0.85rem; color: #7bc8a4; font-weight: 500;">- reps</div>
+                </div>
+            </div>
+            <!-- Total -->
+           <div class="col-6">
+                    <div class="lift-card" style="text-align: center; padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                        <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">Kokonaistulos</div>
+                        <div id="total-weight" style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                        <div id="total-rank" style="font-size: 0.85rem; color: #7bc8a4; font-weight: 500;">B + S + D</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    
+    <!-- Cardio PRs -->
+    <div class="cardio-prs-container">
+        <h5 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">
+            <i class="fas fa-running me-2" style="color: #7bc8a4;"></i>Kestävyys Ennätykset
+        </h5>
+        
+        <!-- Cardio Tabs -->
+        <ul class="nav nav-tabs cardio-tabs mb-3" role="tablist" style="border-bottom: 1px solid #333;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active cardio-tab-btn" id="running-tab" data-bs-toggle="tab" data-bs-target="#running-content" type="button" role="tab" aria-controls="running-content" aria-selected="true" style="background: transparent; border: none; color: #ddd; padding: 10px 16px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                    <i class="fas fa-running me-2"></i>Juoksu
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cardio-tab-btn" id="cycling-tab" data-bs-toggle="tab" data-bs-target="#cycling-content" type="button" role="tab" aria-controls="cycling-content" aria-selected="false" style="background: transparent; border: none; color: #ddd; padding: 10px 16px; border-bottom: 2px solid transparent; transition: all 0.3s;">
+                    <i class="fas fa-biking me-2"></i>Pyöräily
+                </button>
+            </li>
+        </ul>
+        
+        <!-- Tab Content -->
+        <div class="tab-content" id="cardioTabContent">
+            <!-- Running Tab -->
+            <div class="tab-pane fade show active" id="running-content" role="tabpanel" aria-labelledby="running-tab">
+                <div class="row g-3">
+                    <!-- Longest Session -->
+                    <div class="col-6">
+                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-clock" style="font-size: 1.2rem; color: #7bc8a4; margin-right: 8px;"></i>
+                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Harjoitus</div>
+                            </div>
+                            <div id="running-longest-duration" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                            <div id="running-longest-distance-info" style="font-size: 0.9rem; color: #6dc0d5; margin-top: 4px;">-</div>
+                            <div id="running-longest-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Longest Distance -->
+                    <div class="col-6">
+                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
+                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
+                            </div>
+                            <div id="running-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                            <div id="running-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
+                            <div id="running-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cycling Tab -->
+            <div class="tab-pane fade" id="cycling-content" role="tabpanel" aria-labelledby="cycling-tab">
+                <div class="row g-3">
+                    <!-- Longest Session -->
+                    <div class="col-6">
+                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-clock" style="font-size: 1.2rem; color: #7bc8a4; margin-right: 8px;"></i>
+                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Harjoitus</div>
+                            </div>
+                            <div id="cycling-longest-duration" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                            <div id="cycling-longest-distance-info" style="font-size: 0.9rem; color: #6dc0d5; margin-top: 4px;">-</div>
+                            <div id="cycling-longest-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Longest Distance -->
+                    <div class="col-6">
+                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
+                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
+                            </div>
+                            <div id="cycling-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                            <div id="cycling-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
+                            <div id="cycling-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     {% if (viewed_user and (viewed_user.get('show_health_metrics', False) or is_owner)) or (not viewed_user and is_owner) %}
     <div class="health-metrics">
         <legend class="border-bottom mb-4">
             <i class="fas fa-heartbeat me-2" ></i><span data-i18n="health_metrics">Health Metrics</span>
         </legend>
         
-        <div class="row">
+        <div class="row g-3">
             <!-- Weight Card -->
-            <div class="col-md-6 mb-4">
+            <div class="col-6 mb-3">
                 <div class="health-card">
                     <div class="metric-icon">
                         <i class="fas fa-weight-scale"></i>
@@ -1899,7 +2060,7 @@ input.form-control:-webkit-autofill {
             </div>
             
            <!-- TDEE Card -->
-<div class="col-md-6 mb-4">
+<div class="col-6 mb-3">
     <div class="health-card">
         <div class="metric-icon"><i class="fas fa-fire"></i></div>
         <div class="metric-label" data-i18n="daily_energy">Daily Energy Expenditure</div>
@@ -1976,6 +2137,117 @@ input.form-control:-webkit-autofill {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+        const userId = {{ viewed_user.id if viewed_user else current_user.id }};
+    
+    // ===== PROFILE STATS LOADING =====
+    async function loadProfileStats() {
+    try {
+        const response = await fetch(`/profile/${userId}/stats`);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Error loading stats:', data.error);
+            return;
+        }
+        
+        // Populate heaviest lifts
+        if (data.heaviest_lifts.bench) {
+            document.getElementById('bench-weight').textContent = `${data.heaviest_lifts.bench.weight} kg`;
+            const reps = data.heaviest_lifts.bench.reps;
+            document.getElementById('bench-reps').textContent = `${reps} ${reps === 1 ? 'toisto' : 'toistoa'}`;
+        }
+        
+        if (data.heaviest_lifts.squat) {
+            document.getElementById('squat-weight').textContent = `${data.heaviest_lifts.squat.weight} kg`;
+            const reps = data.heaviest_lifts.squat.reps;
+            document.getElementById('squat-reps').textContent = `${reps} ${reps === 1 ? 'toisto' : 'toistoa'}`;
+        }
+        
+        if (data.heaviest_lifts.deadlift) {
+            document.getElementById('deadlift-weight').textContent = `${data.heaviest_lifts.deadlift.weight} kg`;
+            const reps = data.heaviest_lifts.deadlift.reps;
+            document.getElementById('deadlift-reps').textContent = `${reps} ${reps === 1 ? 'toisto' : 'toistoa'}`;
+        }
+        
+        // Populate total and gender-based rank
+        if (data.heaviest_lifts.total !== undefined && data.heaviest_lifts.total > 0) {
+            document.getElementById('total-weight').textContent = `${data.heaviest_lifts.total} kg`;
+            
+            // Display gender-specific rank
+            if (data.heaviest_lifts.total_rank && data.heaviest_lifts.total_users) {
+            const genderKey = data.user_gender ? data.user_gender.toLowerCase() : null;
+            const genderLabel = genderKey ? `(${t(genderKey)})` : '';
+            document.getElementById('total-rank').textContent =
+            `#${data.heaviest_lifts.total_rank} / ${data.heaviest_lifts.total_users} ${genderLabel}`;
+            } else {
+                document.getElementById('total-rank').textContent = 'B + S + D';
+            }
+        } else {
+            document.getElementById('total-weight').textContent = '-';
+            document.getElementById('total-rank').textContent = 'B + S + D';
+        }
+        
+        // ===== RUNNING TAB =====
+        if (data.cardio_records.running.longest_session) {
+            const longest = data.cardio_records.running.longest_session;
+            document.getElementById('running-longest-duration').textContent = `${longest.duration_minutes} min`;
+            document.getElementById('running-longest-exercise').textContent = longest.cardio_exercise;
+            
+            if (longest.distance_km && longest.distance_km > 0) {
+                const distanceKm = parseFloat(longest.distance_km);
+                document.getElementById('running-longest-distance-info').textContent = `${distanceKm.toFixed(2)} km`;
+            } else {
+                document.getElementById('running-longest-distance-info').textContent = '-';
+            }
+        }
+        
+        if (data.cardio_records.running.longest_distance) {
+            const distance = data.cardio_records.running.longest_distance;
+            const distanceKm = parseFloat(distance.distance_km);
+            document.getElementById('running-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
+            document.getElementById('running-distance-exercise').textContent = distance.cardio_exercise;
+            
+            if (distance.duration_minutes) {
+                document.getElementById('running-longest-duration-info').textContent = `${distance.duration_minutes} min`;
+            } else {
+                document.getElementById('running-longest-duration-info').textContent = '-';
+            }
+        }
+        
+        // ===== CYCLING TAB =====
+        if (data.cardio_records.cycling.longest_session) {
+            const longest = data.cardio_records.cycling.longest_session;
+            document.getElementById('cycling-longest-duration').textContent = `${longest.duration_minutes} min`;
+            document.getElementById('cycling-longest-exercise').textContent = longest.cardio_exercise;
+            
+            if (longest.distance_km && longest.distance_km > 0) {
+                const distanceKm = parseFloat(longest.distance_km);
+                document.getElementById('cycling-longest-distance-info').textContent = `${distanceKm.toFixed(2)} km`;
+            } else {
+                document.getElementById('cycling-longest-distance-info').textContent = '-';
+            }
+        }
+        
+        if (data.cardio_records.cycling.longest_distance) {
+            const distance = data.cardio_records.cycling.longest_distance;
+            const distanceKm = parseFloat(distance.distance_km);
+            document.getElementById('cycling-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
+            document.getElementById('cycling-distance-exercise').textContent = distance.cardio_exercise;
+            
+            if (distance.duration_minutes) {
+                document.getElementById('cycling-longest-duration-info').textContent = `${distance.duration_minutes} min`;
+            } else {
+                document.getElementById('cycling-longest-duration-info').textContent = '-';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching profile stats:', error);
+    }
+}
+    
+    // Load stats immediately on page load
+    loadProfileStats();
     // Handle read-only social media display for other users' profiles
     const readOnlySocials = document.getElementById('readonly-socials');
     if (readOnlySocials) {
@@ -2653,7 +2925,34 @@ if (garminModal) {
         }
     });
 }
-
+// Add CSS for tab styling
+const style = document.createElement('style');
+style.textContent = `
+    .cardio-tab-btn:hover {
+        color: #fff !important;
+        border-bottom-color: #555 !important;
+    }
+    
+    .cardio-tab-btn.active {
+        color: #fff !important;
+        border-bottom-color: #7bc8a4 !important;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .lift-card, .cardio-card {
+            margin-bottom: 12px;
+        }
+        
+        .profile-stats-section {
+            padding: 15px;
+            margin-left: -12px;
+            margin-right: -12px;
+            border-radius: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
 // Check status on page load
 checkGarminStatus();
     // Initialize on page load
