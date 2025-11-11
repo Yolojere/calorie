@@ -918,6 +918,23 @@ def import_garmin_activity_as_cardio(activity, user_id):
         activity_name = activity['activity_name']
         activity_type = activity['activity_type']
         
+        # ✅ FIX: Check if activity is already imported FIRST
+        cursor.execute("""
+            SELECT cs.id 
+            FROM cardio_sessions cs
+            JOIN workout_sessions ws ON cs.session_id = ws.id
+            WHERE ws.user_id = %s 
+            AND cs.garmin_activity_id = %s
+        """, (user_id, str(activity_id)))
+        
+        existing = cursor.fetchone()
+        if existing:
+            return {
+                'success': False, 
+                'reason': 'Activity already imported',
+                'skipped': True
+            }
+        
         # Check if activity type should be imported
         cardio_name = GARMIN_TO_CARDIO_MAP.get(activity_type)
         if cardio_name is None:
@@ -1051,12 +1068,13 @@ def auto_sync_all_garmin_users():
         synced_count = 0
         failed_count = 0
         total_imported = 0
+        total_skipped = 0  # ✅ Track skipped activities
         
         for connection in active_connections:
             user_id = connection['user_id']
             username = connection['username']
             last_sync = connection['last_sync']
-            sync_interval = connection.get('garmin_sync_interval', 30)  # Default 60 minutes
+            sync_interval = connection.get('garmin_sync_interval', 60)  # Default 60 minutes
             auto_import_enabled = connection.get('auto_import_garmin_cardio', True)
             
             # Get or create Garmin client
@@ -1091,12 +1109,18 @@ def auto_sync_all_garmin_users():
                         recent_activities = cursor.fetchall()
                         
                         imported_count = 0
+                        skipped_count = 0
+                        
                         for activity in recent_activities:
                             try:
                                 import_result = import_garmin_activity_as_cardio(dict(activity), user_id)
                                 if import_result['success']:
                                     imported_count += 1
                                     logging.info(f"  ✓ Imported {import_result['activity_name']} ({import_result['calories_burned']} cal)")
+                                elif import_result.get('skipped'):
+                                    # ✅ Handle skipped activities (already imported)
+                                    skipped_count += 1
+                                    logging.debug(f"  ⊘ Already imported: {activity.get('activity_name', 'Unknown')}")
                                 else:
                                     logging.debug(f"  ⊘ Skipped: {import_result.get('reason', 'Unknown')}")
                             except Exception as e:
@@ -1104,7 +1128,10 @@ def auto_sync_all_garmin_users():
                                 continue
                         
                         total_imported += imported_count
-                        logging.info(f"  Auto-imported {imported_count} activities for {username}")
+                        total_skipped += skipped_count
+                        
+                        if imported_count > 0:
+                            logging.info(f"  Auto-imported {imported_count} new activities for {username} ({skipped_count} already imported)")
                         
                     except Exception as e:
                         logging.error(f"Error during auto-import for {username}: {e}")
@@ -1112,12 +1139,12 @@ def auto_sync_all_garmin_users():
                 logging.error(f"Sync failed for {username}: {result.get('error', 'Unknown error')}")
                 failed_count += 1
                 
-        logging.info(f"Auto-sync complete: {synced_count} successful, {failed_count} failed, {total_imported} activities imported")
+        logging.info(f"Auto-sync complete: {synced_count} successful, {failed_count} failed, {total_imported} activities imported, {total_skipped} skipped")
         
     except Exception as e:
         logging.error(f"Critical error in auto_sync_all_garmin_users: {e}")
         import traceback
-        traceback.printexc()
+        traceback.print_exc()
         
     finally:
         cursor.close()
