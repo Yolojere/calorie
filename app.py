@@ -146,14 +146,14 @@ scheduler.add_job(
     id='auto_sync_garmin',
     func=auto_sync_all_garmin_users,
     trigger='interval',
-    minutes=15,
+    minutes=60,
     max_instances=1,
     replace_existing=True
 )
 
 # Start the scheduler
 scheduler.start()
-print("SCHEDULER: Automatic Garmin sync started - running every 15 minutes")
+print("SCHEDULER: Automatic Garmin sync started - running every 60 minutes")
 garmin_clients = {}
 _nutrition_scanner = OpenAINutritionScanner()
 def get_scanner():
