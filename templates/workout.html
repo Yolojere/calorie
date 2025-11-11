@@ -636,6 +636,7 @@
   overflow-x: hidden; /* keep it clean */
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #444 #1a1a1a; /* scrollbar styling */
+  padding: 0.5rem;
 }
 #template-list-desktop{
     width: 300px !important;
@@ -657,13 +658,36 @@
 }
     
     .dropdown-item {
-        color: #fff;
-    }
-
+    color: #fff;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, #252525 0%, #1f1f1f 100%);
+    border: 1px solid #333;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
     .dropdown-item:hover {
-        background-color: #333;
-        color: #ffffff;
-    }
+    background: linear-gradient(135deg, #2e2e2e 0%, #282828 100%);
+    border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+.dropdown-item:active {
+    background-color: #333;
+    transform: translateX(3px) scale(0.98); /* Pressed effect */
+}
+.dropdown-item:last-child {
+    margin-bottom: 0;
+}
+
+    .dropdown-item:hover::before {
+    content: '▸ ';
+    margin-right: 0.5rem;
+    opacity: 0.7;
+}
 
     /* ===== TABLES ===== */
     .workout-table {
