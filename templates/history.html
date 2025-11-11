@@ -3058,7 +3058,7 @@ if (item.muscles && Object.keys(item.muscles).length > 0) {
     muscleBreakdownContainer.html(`
         <div class="text-center text-muted">
             <i class="fas fa-info-circle me-2"></i>
-            <span data-i18n="nomuscledata">No muscle group data available</span>
+            <span data-i18n="nomuscledata">Salitreenejä ei löytynyt</span>
         </div>
     `);
 }
@@ -3093,7 +3093,7 @@ function loadMuscleExerciseDetails(muscle, period, date, weekStart, monthStart, 
     
     $.get(url, function(data) {
         if (!data.exercises || data.exercises.length === 0) {
-            detailSection.html('<div class="text-center text-muted">No exercise data found</div>');
+            detailSection.html('<div class="text-center text-muted">Dataa ei löytynyt</div>');
             return;
         }
         
@@ -3363,7 +3363,7 @@ function loadCardioBreakdown(period, date, weekStart, monthStart) {
             cardioSection.html(`
                 <div class="text-center text-muted py-3">
                     <i class="fas fa-info-circle me-2"></i>
-                    <span>No cardio sessions recorded</span>
+                    <span>Kestävyys harjoituksia ei löytynyt</span>
                 </div>
             `);
             return;
