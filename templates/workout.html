@@ -620,11 +620,30 @@
     /* ===== DROPDOWNS & MODALS ===== */
     /* Only affect the template dropdowns, not all menus */
 .dropdown-menu-template {
-  width: auto !important;        /* don't force 100% */
-  max-width: calc(100vw - 2rem); /* keep inside viewport */
-  overflow-x: auto; 
-  font-size: 12px !important;        
-  font-weight: 600 !important; 
+  width: auto !important;
+  max-width: calc(100vw - 2rem);
+  overflow-x: auto;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 40, 0.98));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(109, 192, 213, 0.3) !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 
+              0 0 20px rgba(109, 192, 213, 0.15);
+  animation: templateDropdownFadeIn 0.3s ease;
+}
+
+@keyframes templateDropdownFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .dropdown-menu {
   background-color: #181818;
@@ -3142,6 +3161,106 @@
 .unlocked-avatar-preview:nth-child(2) { animation-delay: 0.2s; }
 .unlocked-avatar-preview:nth-child(3) { animation-delay: 0.3s; }
 .unlocked-avatar-preview:nth-child(4) { animation-delay: 0.4s; }
+.dropdown-menu-template .dropdown-header {
+  color: #6dc0d5;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 16px 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(109, 192, 213, 0.2);
+}
+
+.dropdown-menu-template .dropdown-item {
+  color: #e0e0e0 !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px !important;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-menu-template .dropdown-item:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-menu-template .dropdown-item:hover {
+  background: linear-gradient(135deg, rgba(109, 192, 213, 0.25), rgba(123, 200, 164, 0.25)) !important;
+  border-color: rgba(109, 192, 213, 0.5);
+  color: #ffffff !important;
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(109, 192, 213, 0.3);
+}
+
+.dropdown-menu-template .dropdown-item:active {
+  background: linear-gradient(135deg, rgba(109, 192, 213, 0.35), rgba(123, 200, 164, 0.35)) !important;
+  transform: translateX(4px) scale(0.98);
+}
+
+/* Icon styling in template dropdown */
+.dropdown-menu-template .dropdown-item i {
+  font-size: 14px;
+  color: #6dc0d5;
+  transition: color 0.2s ease;
+}
+
+.dropdown-menu-template .dropdown-item:hover i {
+  color: #7bc8a4;
+}
+
+/* Scrollbar styling for template dropdown */
+.dropdown-menu-template::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dropdown-menu-template::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.dropdown-menu-template::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6dc0d5, #7bc8a4);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.dropdown-menu-template::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7bc8a4, #6dc0d5);
+}
+
+/* Loading state for template dropdown */
+.dropdown-menu-template .dropdown-item[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Template group headers (if you use them) */
+.dropdown-menu-template .dropdown-header {
+  color: #6dc0d5;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 16px 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(109, 192, 213, 0.2);
+}
+
+/* Dividers in template dropdown */
+.dropdown-menu-template .dropdown-divider {
+  border-color: rgba(109, 192, 213, 0.15);
+  margin: 6px 0;
+}
 
 @keyframes avatarPop {
     0% {
@@ -3912,7 +4031,7 @@
                                 <i class="fas fa-layer-group fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline" data-i18n="apply">Apply</span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end w-70" id="template-list-desktop">
+                            <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-70" id="template-list-desktop">
                                 <li><a class="dropdown-item" href="#" data-i18n="loading_templates">Loading templates...</a></li>
                             </ul>
 
@@ -3937,7 +4056,7 @@
                     <i class="fas fa-layer-group"></i>
                     <span class="btn-label d-block" data-i18n="apply">&nbsp;Apply</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end w-100" id="template-list-mobile">
+                <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-100" id="template-list-mobile">
                     <li><a class="dropdown-item" href="#" data-i18="loading_templates">Loading templates...</a></li>
                 </ul>
 
