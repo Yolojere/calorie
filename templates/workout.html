@@ -620,8 +620,8 @@
     /* ===== DROPDOWNS & MODALS ===== */
     /* Only affect the template dropdowns, not all menus */
 .dropdown-menu-template {
-  width: auto !important;
-  max-width: calc(100vw - 2rem);
+  width: fit-content !important;
+  max-width: fit-content !important;
   overflow-x: auto;
   font-size: 12px !important;
   font-weight: 600 !important;
@@ -633,6 +633,7 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 
               0 0 20px rgba(109, 192, 213, 0.15);
   animation: templateDropdownFadeIn 0.3s ease;
+  
 }
 
 @keyframes templateDropdownFadeIn {
@@ -649,7 +650,7 @@
   background-color: #181818;
   border: 1px solid #333;
   right: 0 !important;
-  width: 150px !important;
+  width: fit-content !important;
   max-height:min-content; /* adjust to taste */
   overflow-y: auto;
   overflow-x: hidden; /* keep it clean */
@@ -657,7 +658,7 @@
   scrollbar-color: #444 #1a1a1a; /* scrollbar styling */
 }
 #template-list-desktop{
-    width: 300px !important;
+    width: fit-content !important;
 }
 
 /* Chrome/Edge scrollbar styling */
@@ -2209,8 +2210,14 @@
         overflow-x:auto !important;
     }
     #template-list-mobile.dropdown-menu {
-        width: 300px !important;
+        position: absolute;
+        width: fit-content !important;
         font-size: 11px !important;
+        max-height: 300px !important;
+        overflow-y: auto !important;
+    }
+        #template-list-mobile.dropdown-menu {
+        animation: none !important;
     }
         .group-title {
             font-size: 14px !important;
@@ -4026,12 +4033,17 @@
                      <!-- Desktop Footer -->
                     <div class="card-footer py-2 d-none d-lg-block">
                         <div class="d-flex justify-content-between gap-2 flex-wrap flex-md-nowrap">
-                            <!-- Apply Template -->
-                            <button id="templateDropdown" class="btn btn-jere dropdown-toggle flex-fill text-center" data-bs-toggle="dropdown">
+                        <!-- Apply Template -->
+                            <button id="templateDropdown" 
+                                    class="btn btn-jere dropdown-toggle flex-fill text-center" 
+                                    data-bs-toggle="dropdown"
+                                    data-bs-auto-close="true">
                                 <i class="fas fa-layer-group fa-lg"></i>
                                 <span class="btn-label d-block d-md-inline" data-i18n="apply">Apply</span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-70" id="template-list-desktop">
+                            <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-70" 
+                                id="template-list-desktop"
+                                data-bs-popper="static">
                                 <li><a class="dropdown-item" href="#" data-i18n="loading_templates">Loading templates...</a></li>
                             </ul>
 
@@ -4051,14 +4063,19 @@
                     </div>
                     <div class="d-lg-none mobile-footer p-2">
             <div class="d-flex justify-content-between">
-                <!-- Apply Template -->
-                <button id="templateDropdownMobile" class="btn btn-jere flex-fill text-center dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="fas fa-layer-group"></i>
-                    <span class="btn-label d-block" data-i18n="apply">&nbsp;Apply</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-100" id="template-list-mobile">
-                    <li><a class="dropdown-item" href="#" data-i18="loading_templates">Loading templates...</a></li>
-                </ul>
+               <!-- Apply Template -->
+                    <button id="templateDropdownMobile" 
+                            class="btn btn-jere flex-fill text-center dropdown-toggle" 
+                            data-bs-toggle="dropdown"
+                            data-bs-auto-close="true">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="btn-label d-block" data-i18n="apply">&nbsp;Apply</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-template dropdown-menu-end w-100" 
+                        id="template-list-mobile"
+                        data-bs-popper="static">
+                        <li><a class="dropdown-item" href="#" data-i18="loading_templates">Loading templates...</a></li>
+                    </ul>
 
                 <!-- Save Workout -->
                 <button type="button" class="btn-jerey flex-fill text-center" data-bs-toggle="modal" data-bs-target="#saveWorkoutModal">
