@@ -1030,6 +1030,10 @@ function showXPSummary(xpData, workoutData) {
     
     const { gained, sources, levels_gained, level_before, level_after, current_xp, xp_to_next_level } = xpData;
     
+    // Get streak data from workoutData
+    const streakData = workoutData?.streak || { current: 0, previous: 0, awarded: false };
+    const currentStreak = streakData.current || 0;
+    
     // Check for avatar unlocks
     let unlockedAvatars = [];
     if (levels_gained > 0) {
@@ -1038,6 +1042,9 @@ function showXPSummary(xpData, workoutData) {
         }
         unlockedAvatars = checkAvatarUnlocks(level_before, level_after);
     }
+    
+    // Determine streak styling based on milestones
+    const streakStyle = getStreakStyle(currentStreak);
     
     // Create XP overlay
     const overlay = $(`
@@ -1054,23 +1061,23 @@ function showXPSummary(xpData, workoutData) {
                     </div>
                     <div class="level-celebration">✨</div>
                     
-                                ${unlockedAvatars.length > 0 ? `
-                    <div class="avatar-unlock-notification">
-                        <div class="unlock-icon">🎨</div>
-                        <div class="unlock-text">
-                            Avattu ${unlockedAvatars.length} 
-                            ${unlockedAvatars.length === 1 ? 'uusi avatar!' : 'uutta avataria!'}
+                    ${unlockedAvatars.length > 0 ? `
+                        <div class="avatar-unlock-notification">
+                            <div class="unlock-icon">🎨</div>
+                            <div class="unlock-text">
+                                Avattu ${unlockedAvatars.length} 
+                                ${unlockedAvatars.length === 1 ? 'uusi avatar!' : 'uutta avataria!'}
+                            </div>
+                            <div class="unlock-avatars">
+                                ${unlockedAvatars.map(avatar => `
+                                    <img src="/static/avatars/${avatar}" 
+                                        class="unlocked-avatar-preview" 
+                                        alt="${avatar}">
+                                `).join('')}
+                            </div>
+                            <div class="unlock-subtext">Käy katsomassa profiilissa uudet avatarit!</div>
                         </div>
-                        <div class="unlock-avatars">
-                            ${unlockedAvatars.map(avatar => `
-                                <img src="/static/avatars/${avatar}" 
-                                    class="unlocked-avatar-preview" 
-                                    alt="${avatar}">
-                            `).join('')}
-                        </div>
-                        <div class="unlock-subtext">Käy katsomassa profiilissa uudet avatarit!</div>
-                    </div>
-                ` : ''}
+                    ` : ''}
                 ` : `
                     <h3 style="color: #6dc0d5; margin-bottom: 20px;">
                         <i class="fas fa-star"></i> Suoritus Valmis!
@@ -1090,7 +1097,8 @@ function showXPSummary(xpData, workoutData) {
                             'cardio_calories': '🔥 Cardion Kalorit',
                             'weights_volume': '💪 Treenin Volyymi',
                             'new_exercises': '🆕 Uudet Liikkeet',
-                            'personal_bests': '🏆 Ennätykset'
+                            'personal_bests': '🏆 Ennätykset',
+                            'streak': `<span style="${streakStyle}">⚡ Treeniputki</span>`
                         };
                         return `
                             <div class="xp-source-item">
@@ -1100,6 +1108,16 @@ function showXPSummary(xpData, workoutData) {
                         `;
                     }).join('')}
                 </div>
+                
+                ${streakData.awarded ? `
+                    <div class="streak-display" style="${streakStyle}">
+                        <div class="streak-icon">📈</div>
+                        <div class="streak-text">
+                            <div class="streak-title">Treeniputki</div>
+                            <div class="streak-value">${currentStreak} ${currentStreak === 1 ? 'päivä' : 'päivää'}</div>
+                        </div>
+                    </div>
+                ` : ''}
                 
                 <div class="level-progress">
                     <div class="level-info">
@@ -1133,11 +1151,76 @@ function showXPSummary(xpData, workoutData) {
                 $('.avatar-unlock-notification').addClass('show');
             }, 1200);
         }
+        
+        // Animate streak display
+        if (streakData.awarded) {
+            setTimeout(() => {
+                $('.streak-display').addClass('show');
+            }, 800);
+        }
     }, 100);
     
     // Store workout data for next step
     window.pendingWorkoutResults = workoutData;
 }
+
+// Function to determine streak styling based on milestones
+function getStreakStyle(streak) {
+    if (streak >= 200) {
+        return `
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
+                         0 0 40px rgba(255, 215, 0, 0.6),
+                         0 0 60px rgba(255, 215, 0, 0.4);
+            filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.9));
+            animation: megaStreakPulse 2s ease-in-out infinite;
+        `;
+    } else if (streak >= 150) {
+        return `
+            color: #FF6EC7;
+            text-shadow: 0 0 15px rgba(255, 110, 199, 0.7),
+                         0 0 30px rgba(255, 110, 199, 0.5);
+            filter: drop-shadow(0 0 20px rgba(255, 110, 199, 0.8));
+            animation: ultraStreakPulse 2s ease-in-out infinite;
+        `;
+    } else if (streak >= 100) {
+        return `
+            color: #9D4EDD;
+            text-shadow: 0 0 12px rgba(157, 78, 221, 0.7),
+                         0 0 25px rgba(157, 78, 221, 0.5);
+            filter: drop-shadow(0 0 18px rgba(157, 78, 221, 0.8));
+            animation: epicStreakPulse 2s ease-in-out infinite;
+        `;
+    } else if (streak >= 50) {
+        return `
+            color: #FF8C00;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.7),
+                         0 0 20px rgba(255, 140, 0, 0.5);
+            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.7));
+            animation: superStreakPulse 2.5s ease-in-out infinite;
+        `;
+    } else if (streak >= 20) {
+        return `
+            color: #00D9FF;
+            text-shadow: 0 0 8px rgba(0, 217, 255, 0.6);
+            filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.6));
+            animation: greatStreakPulse 3s ease-in-out infinite;
+        `;
+    } else if (streak >= 10) {
+        return `
+            color: #7bc8a4;
+            text-shadow: 0 0 6px rgba(123, 200, 164, 0.5);
+            filter: drop-shadow(0 0 10px rgba(123, 200, 164, 0.5));
+            animation: goodStreakPulse 3.5s ease-in-out infinite;
+        `;
+    } else {
+        return `
+            color: #6dc0d5;
+            text-shadow: 0 0 4px rgba(109, 192, 213, 0.4);
+        `;
+    }
+}
+
 function animateXPElements(isLevelUp) {
     // Animate progress bar
     setTimeout(() => {
