@@ -795,7 +795,7 @@ input.form-control:-webkit-autofill {
 }
 
 .level-badge.tier-expert {
-    background: linear-gradient(135deg, #7B68EE, #4B0082);
+    background: linear-gradient(135deg, #9182ea, #c888f6);
 }
 
 .level-badge.tier-master {
@@ -1147,6 +1147,300 @@ input.form-control:-webkit-autofill {
     justify-content: flex-end;
     gap: 12px;
     margin-top: 20px;
+}
+.card-body,
+.profile-info-section {
+    overflow: visible !important;
+}
+.streak-display-profile {
+    margin: 16px 0 !important;
+    padding: 16px 18px !important;
+    border-radius: 12px;
+    background: rgba(109, 192, 213, 0.08);
+    border-left: 3px solid;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: #6dc0d5;
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Gradient glow layer behind streak display */
+.streak-display-profile::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 12px;
+    padding: 2px;
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #6dc0d5 0%, 
+        #4a9db0 50%, 
+        #6dc0d5 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.3;
+    z-index: -1;
+    animation: gradientGlow 3s ease-in-out infinite;
+}
+
+.streak-value-profile {
+    font-weight: 700;
+    font-size: 18px;
+    display: inline-block;
+    position: relative;
+    z-index: 2;
+}
+
+.streak-days {
+    font-size: 13px;
+    color: #aaa;
+    margin-left: 4px;
+}
+
+/* ===== TIER 1: 10-19 days (Green) ===== */
+.streak-display-profile.streak-10 {
+    border-left-color: #7bc8a4;
+    background: linear-gradient(135deg, rgba(123, 200, 164, 0.12), rgba(20, 20, 20, 0.8));
+    color: #7bc8a4;
+}
+
+.streak-display-profile.streak-10::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #7bc8a4 0%, 
+        #5aa085 50%, 
+        #7bc8a4 100%);
+    opacity: 0.4;
+    filter: blur(12px);
+}
+
+.streak-display-profile.streak-10 .streak-value-profile {
+    color: #7bc8a4;
+    text-shadow: 0 0 10px rgba(123, 200, 164, 0.6);
+    animation: goodStreakPulse 3.5s ease-in-out infinite;
+}
+
+/* ===== TIER 2: 20-49 days (Cyan) ===== */
+.streak-display-profile.streak-20 {
+    border-left-color: #00D9FF;
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(20, 20, 20, 0.8));
+    color: #00D9FF;
+}
+
+.streak-display-profile.streak-20::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #00D9FF 0%, 
+        #0099cc 33%, 
+        #00D9FF 66%, 
+        #33e6ff 100%);
+    opacity: 0.5;
+    filter: blur(16px);
+}
+
+.streak-display-profile.streak-20 .streak-value-profile {
+    color: #00D9FF;
+    text-shadow: 0 0 12px rgba(0, 217, 255, 0.7),
+                 0 0 24px rgba(0, 217, 255, 0.4);
+    animation: greatStreakPulse 3s ease-in-out infinite;
+}
+
+/* ===== TIER 3: 50-99 days (Orange) ===== */
+.streak-display-profile.streak-50 {
+    border-left-color: #FF8C00;
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.18), rgba(20, 20, 20, 0.8));
+    color: #FF8C00;
+}
+
+.streak-display-profile.streak-50::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #FF8C00 0%, 
+        #ff6600 25%, 
+        #ffaa00 50%, 
+        #ff6600 75%, 
+        #FF8C00 100%);
+    opacity: 0.6;
+    filter: blur(20px);
+}
+
+.streak-display-profile.streak-50 .streak-value-profile {
+    color: #FF8C00;
+    text-shadow: 0 0 15px rgba(255, 140, 0, 0.8),
+                 0 0 30px rgba(255, 140, 0, 0.5);
+    animation: superStreakPulse 2.5s ease-in-out infinite;
+}
+
+/* ===== TIER 4: 100-149 days (Purple) ===== */
+.streak-display-profile.streak-100 {
+    border-left-color: #9D4EDD;
+    background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(20, 20, 20, 0.8));
+    color: #9D4EDD;
+}
+
+.streak-display-profile.streak-100::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #9D4EDD 0%, 
+        #7b2cbf 20%, 
+        #c77dff 40%, 
+        #7b2cbf 60%, 
+        #9D4EDD 80%, 
+        #e0aaff 100%);
+    opacity: 0.7;
+    filter: blur(24px);
+}
+
+.streak-display-profile.streak-100 .streak-value-profile {
+    color: #9D4EDD;
+    text-shadow: 0 0 18px rgba(157, 78, 221, 0.9),
+                 0 0 35px rgba(157, 78, 221, 0.6);
+    animation: epicStreakPulse 2s ease-in-out infinite;
+}
+
+/* ===== TIER 5: 150-199 days (Pink) ===== */
+.streak-display-profile.streak-150 {
+    border-left-color: #FF6EC7;
+    background: linear-gradient(135deg, rgba(255, 110, 199, 0.22), rgba(20, 20, 20, 0.8));
+    color: #FF6EC7;
+}
+
+.streak-display-profile.streak-150::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #FF6EC7 0%, 
+        #ff1493 15%, 
+        #ff69b4 30%, 
+        #c71585 45%, 
+        #FF6EC7 60%, 
+        #ffc0cb 75%, 
+        #ff1493 90%, 
+        #FF6EC7 100%);
+    opacity: 0.8;
+    filter: blur(28px);
+}
+
+.streak-display-profile.streak-150 .streak-value-profile {
+    color: #FF6EC7;
+    text-shadow: 0 0 20px rgba(255, 110, 199, 1),
+                 0 0 40px rgba(255, 110, 199, 0.7),
+                 0 0 60px rgba(255, 110, 199, 0.4);
+    animation: ultraStreakPulse 2s ease-in-out infinite;
+}
+
+/* ===== TIER 6: 200+ days (Gold) ===== */
+.streak-display-profile.streak-200 {
+    border-left-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(20, 20, 20, 0.8));
+    color: #FFD700;
+}
+
+.streak-display-profile.streak-200::before {
+    background: conic-gradient(from 90deg at 50% 50%, 
+        #FFD700 0%, 
+        #FFA500 12%, 
+        #FFFF00 25%, 
+        #FFD700 37%, 
+        #FF8C00 50%, 
+        #FFD700 62%, 
+        #FFFF00 75%, 
+        #FFA500 87%, 
+        #FFD700 100%);
+    opacity: 0.9;
+    filter: blur(32px);
+}
+
+.streak-display-profile.streak-200 .streak-value-profile {
+    color: #FFD700;
+    text-shadow: 0 0 25px rgba(255, 215, 0, 1),
+                 0 0 50px rgba(255, 215, 0, 0.8),
+                 0 0 75px rgba(255, 215, 0, 0.5),
+                 0 0 100px rgba(255, 165, 0, 0.3);
+    animation: megaStreakPulse 2s ease-in-out infinite;
+}
+
+/* Hardware acceleration */
+.streak-value-profile,
+.streak-display-profile,
+.streak-display-profile::before {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+@keyframes goodStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.05);
+    }
+}
+
+/* 20-49 days: Cyan pulse */
+@keyframes greatStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.08);
+    }
+}
+
+/* 50-99 days: Orange pulse */
+@keyframes superStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.12);
+    }
+}
+
+/* 100-149 days: Purple pulse */
+@keyframes epicStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.15);
+    }
+}
+
+/* 150-199 days: Pink pulse */
+@keyframes ultraStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.18);
+    }
+}
+
+/* 200+ days: Golden pulse */
+@keyframes megaStreakPulse {
+    0%, 100% { 
+        transform: scale(1);
+    }
+    50% { 
+        transform: scale(1.22);
+    }
+}
+
+/* Gradient glow animation */
+@keyframes gradientGlow {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Optional: Add hardware acceleration for smoother animations */
+.streak-value-profile,
+.streak-display-profile {
+    will-change: transform, filter;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
 }
     /* Responsive adjustments */
 @media (min-width: 768px) {
@@ -1523,6 +1817,13 @@ input.form-control:-webkit-autofill {
                     <p class="text-info mb-0">
                         <i class="fas fa-user-shield me-1"></i> <span data-i18n="account_type">Account Type</span>: {{ role|capitalize }}
                     </p>
+                    <!-- STREAK DISPLAY -->
+                <p class="streak-display-profile" id="streak-profile-display">
+                    <i class="fas fa-fire me-2"></i> 
+                    <span">Treeniputki</span>: 
+                    <span class="streak-value-profile" id="streak-value-profile">{{ workout_streak or 0 }}</span> 
+                    <span class="streak-days">{{ 'päivä' if workout_streak == 1 else 'päivää' }}</span>
+                </p>
                 </div>
 
                 <!-- Right Section: Form or Read-only display -->
@@ -2952,6 +3253,31 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+    const streakValueElement = document.getElementById('streak-value-profile');
+    const streakDisplay = document.getElementById('streak-profile-display');
+    
+    if (streakValueElement && streakDisplay) {
+        const streak = parseInt(streakValueElement.textContent);
+        
+        // Remove all streak classes first
+        streakDisplay.classList.remove('streak-10', 'streak-20', 'streak-50', 'streak-100', 'streak-150', 'streak-200');
+        
+        // Add appropriate class based on streak value
+        if (streak >= 200) {
+            streakDisplay.classList.add('streak-200');
+        } else if (streak >= 150) {
+            streakDisplay.classList.add('streak-150');
+        } else if (streak >= 100) {
+            streakDisplay.classList.add('streak-100');
+        } else if (streak >= 50) {
+            streakDisplay.classList.add('streak-50');
+        } else if (streak >= 20) {
+            streakDisplay.classList.add('streak-20');
+        } else if (streak >= 10) {
+            streakDisplay.classList.add('streak-10');
+        }
+    }
+
 // Check status on page load
 checkGarminStatus();
     // Initialize on page load
