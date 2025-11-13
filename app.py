@@ -146,7 +146,7 @@ scheduler.add_job(
     id='auto_sync_garmin',
     func=auto_sync_all_garmin_users,
     trigger='interval',
-    minutes=120,
+    minutes=15,
     max_instances=1,
     replace_existing=True
 )
@@ -1895,6 +1895,7 @@ def profile():
     current_avatar = 'default.png'
     extra_columns_exist = False
     role = getattr(current_user, 'role', 'user')
+    workout_streak = 0
     
     # NEW: Get dynamic TDEE data (includes base, workout, and steps)
     tdee_data = get_user_current_tdee(current_user.id)
@@ -1928,7 +1929,7 @@ def profile():
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('level', 'xp_points')
+            AND column_name IN ('level', 'xp_points', 'workout_streak')
         """)
         level_columns = [row['column_name'] for row in cursor.fetchall()]
         
@@ -1936,6 +1937,8 @@ def profile():
             select_cols.append('level')
         if 'xp_points' in level_columns:
             select_cols.append('xp_points')
+        if 'workout_streak' in level_columns:
+            select_cols.append('workout_streak')
         
         cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
         user_data = cursor.fetchone()
@@ -1948,6 +1951,9 @@ def profile():
             user_level = user_data.get('level', 1) or 1
             user_xp = user_data.get('xp_points', 0) or 0
             
+            # Extract workout streak
+            workout_streak = user_data.get('workout_streak', 0) or 0
+
             # Calculate XP needed for next level
             xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
             
@@ -2001,7 +2007,7 @@ def profile():
             update_params = [form.username.data, email_lower, avatar_filename]
 
             # Handle privacy controls
-            privacy_fields = ['show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials']
+            privacy_fields = ['show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak']
             for privacy_field in privacy_fields:
                 if privacy_field in columns:
                     privacy_value = request.form.get(privacy_field) == 'on'
@@ -2068,6 +2074,7 @@ def profile():
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
+        workout_streak=workout_streak,
         viewed_user=None,
         is_owner=True,
         user_socials=user_socials,
@@ -2092,6 +2099,7 @@ def view_profile(user_id):
     xp_to_next = 100
     current_weight = None
     current_tdee = None
+    workout_streak = 0
 
     try:
         # Check for extra columns including privacy controls
@@ -2099,7 +2107,7 @@ def view_profile(user_id):
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials')
+            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials', 'workout_streak')
         """)
         columns = [row['column_name'] for row in cursor.fetchall()]
         extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
@@ -2112,7 +2120,7 @@ def view_profile(user_id):
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('level', 'xp_points')
+            AND column_name IN ('level', 'xp_points', 'workout_streak')
         """)
         level_columns = [row['column_name'] for row in cursor.fetchall()]
         
@@ -2120,6 +2128,8 @@ def view_profile(user_id):
             select_cols.append('level')
         if 'xp_points' in level_columns:
             select_cols.append('xp_points')
+        if 'workout_streak' in level_columns:
+            select_cols.append('workout_streak')
 
         # Find requested user with all data
         cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (user_id,))
@@ -2136,6 +2146,7 @@ def view_profile(user_id):
         user_level = user_data.get('level', 1) or 1
         user_xp = user_data.get('xp_points', 0) or 0
         xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
+        workout_streak = user_data.get('workout_streak', 0) or 0
         
         # Metrics (only if user allows it)
         if user_data.get('show_health_metrics', False) or user_id == current_user.id:
@@ -2196,6 +2207,7 @@ def view_profile(user_id):
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
+        workout_streak=workout_streak,
         viewed_user=user_data,
         is_owner=(user_id == current_user.id)
     )
