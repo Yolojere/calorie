@@ -1111,7 +1111,7 @@ function showXPSummary(xpData, workoutData) {
                 
                 ${streakData.awarded ? `
                     <div class="streak-display" style="${streakStyle}">
-                        <div class="streak-icon">📈</div>
+                        <div class="streak-icon">⚡</div>
                         <div class="streak-text">
                             <div class="streak-title">Treeniputki</div>
                             <div class="streak-value">${currentStreak} ${currentStreak === 1 ? 'päivä' : 'päivää'}</div>
@@ -2139,3 +2139,4 @@ function hideEmptyWorkoutGroups() {
         saveCollapseState();
     }, 350); // Slightly longer than the fadeOut duration
 }
+
