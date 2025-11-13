@@ -146,7 +146,7 @@ scheduler.add_job(
     id='auto_sync_garmin',
     func=auto_sync_all_garmin_users,
     trigger='interval',
-    minutes=15,
+    minutes=120,
     max_instances=1,
     replace_existing=True
 )
