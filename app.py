@@ -146,14 +146,14 @@ scheduler.add_job(
     id='auto_sync_garmin',
     func=auto_sync_all_garmin_users,
     trigger='interval',
-    minutes=60,
+    minutes=120,
     max_instances=1,
     replace_existing=True
 )
 
 # Start the scheduler
 scheduler.start()
-print("SCHEDULER: Automatic Garmin sync started - running every 60 minutes")
+print("SCHEDULER: Automatic Garmin sync started - running every 15 minutes")
 garmin_clients = {}
 _nutrition_scanner = OpenAINutritionScanner()
 def get_scanner():
@@ -5950,6 +5950,82 @@ def save_workout():
             import traceback
             traceback.print_exc()
             pass
+# ============================================================================
+# STEP 6.5: WORKOUT STREAK LOGIC
+# ============================================================================
+        streak_awarded = False
+        current_streak = 0
+        previous_streak = 0
+
+        try:
+            # Get current streak info
+            cursor.execute("""
+                SELECT workout_streak, last_streak_date 
+                FROM users 
+                WHERE id = %s
+            """, (user_id,))
+            
+            streak_data = cursor.fetchone()
+            
+            if streak_data:
+                previous_streak = int(streak_data[0] or 0)
+                last_streak_date = streak_data[1]
+                current_streak = previous_streak
+                
+                # Only award streak if we haven't already awarded one for today
+                if last_streak_date != date:
+                    # Check if yesterday had a workout with 20+ minutes (1200+ seconds)
+                    yesterday = date - timedelta(days=1)
+                    
+                    cursor.execute("""
+                        SELECT COALESCE(SUM(total_duration_seconds), 0) as total_duration
+                        FROM workout_sessions
+                        WHERE user_id = %s 
+                        AND date = %s 
+                        AND is_saved = true
+                    """, (user_id, yesterday))
+                    
+                    yesterday_duration = cursor.fetchone()
+                    yesterday_total_seconds = int(yesterday_duration[0] or 0)
+                    
+                    # Award streak if yesterday had 20+ minutes OR if this is their first workout
+                    if yesterday_total_seconds >= 1200 or previous_streak == 0:
+                        current_streak = previous_streak + 1
+                        streak_awarded = True
+                        
+                        # Update user's streak
+                        cursor.execute("""
+                            UPDATE users 
+                            SET workout_streak = %s, 
+                                last_streak_date = %s 
+                            WHERE id = %s
+                        """, (current_streak, date, user_id))
+                        
+                        app.logger.info(f"Streak awarded! User {user_id}: {previous_streak} -> {current_streak}")
+                    else:
+                        # Reset streak to 1 if they missed yesterday
+                        current_streak = 1
+                        streak_awarded = True
+                        
+                        cursor.execute("""
+                            UPDATE users 
+                            SET workout_streak = %s, 
+                                last_streak_date = %s 
+                            WHERE id = %s
+                        """, (current_streak, date, user_id))
+                        
+                        app.logger.info(f"Streak reset! User {user_id}: {previous_streak} -> 1 (missed yesterday)")
+                else:
+                    app.logger.info(f"Streak already awarded today for user {user_id}")
+            
+            conn.commit()
+            
+        except Exception as e:
+            app.logger.error(f"Error calculating workout streak: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't fail the entire request if streak calculation fails
+            pass
 
         # ============================================================================
         # STEP 7: XP REWARDS LOGIC
@@ -6012,6 +6088,11 @@ def save_workout():
             "auto_calories_enabled": bool(auto_calories_enabled),
             "base_tdee": float(base_tdee) if base_tdee is not None else None,
             "daily_tdee": float(daily_tdee) if daily_tdee is not None else None,
+            "streak": {
+                "current": int(current_streak),
+                "previous": int(previous_streak),
+                "awarded": bool(streak_awarded)
+            },
             "comparisonData": {
                 "setComparisons": set_comparisons,
                 "totalSets": int(total_sets),
@@ -6043,6 +6124,7 @@ def save_workout():
             }
         })
 
+
     except Exception as e:
         conn.rollback()
         import traceback
@@ -6052,12 +6134,6 @@ def save_workout():
     finally:
         cursor.close()
         conn.close()
-
-
-
-
-
-
 
 
 def get_oauth_connection(provider, provider_user_id):
