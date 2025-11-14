@@ -1838,7 +1838,10 @@ def login():
                 session.permanent = True
             
             next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
+            if next_page and urlparse(next_page).netloc == '':
+                if next_page != url_for('login'):
+                    return redirect(next_page)
+            return redirect(url_for('index'))
         else:
             flash('login_failed', 'danger')
 
@@ -6226,15 +6229,28 @@ def oauth_authorize(provider):
         else:
             flash('Unsupported OAuth provider', 'danger')
             return redirect(url_for('login'))
-        
+        if current_user.is_authenticated:
+            flash('Olet jo kirjautunut sisään!', 'info')
+            return redirect(url_for('index'))        
         # Check if we already have this OAuth connection
         existing_connection = get_oauth_connection(provider, provider_user_id)
         
         if existing_connection:
             # Existing user - log them in
             user = load_user(existing_connection['user_id'])
-            login_user(user)
-            return redirect(url_for('index'))
+            if user:
+                login_user(user)
+                
+                # ✅ FIX 3: Validate next parameter to prevent redirect to login
+                next_page = request.args.get('next')
+                if next_page and urlparse(next_page).netloc == '':  # Internal URL only
+                    if next_page != url_for('login'):  # Don't redirect to login
+                        return redirect(next_page)
+                    
+                return redirect(url_for('index'))
+            else:
+                flash('Käyttäjää ei löytynyt', 'danger')
+                return redirect(url_for('login'))
         
         # Check if user with this email already exists
         conn = get_db_connection()
@@ -6252,6 +6268,12 @@ def oauth_authorize(provider):
                 role=user['role']
             )
             login_user(user_obj)
+
+            next_page = request.args.get('next')
+            if next_page and urlparse(next_page).netloc == '':
+                if next_page != url_for('login'):
+                    return redirect(next_page)
+            
             return redirect(url_for('index', toast_msg='Käyttäjätili yhdisttety onnistuneesti!', toast_cat='success'))
         else:
             # Create new user
@@ -6287,7 +6309,10 @@ def oauth_authorize(provider):
             login_user(user_obj)
             flash(f'Käyttäjätili luotu käyttäen {provider}!', 'success')
             return redirect(url_for('index'))
-            
+        
+        cursor.close()
+        conn.close()     
+
     except Exception as e:
         flash(f'OAuth kirjautuminen epäonnistui: {str(e)}', 'danger')
         return redirect(url_for('login'))
@@ -7819,10 +7844,6 @@ def get_profile_stats_recent(user_id):
     finally:
         cursor.close()
         conn.close()
-
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     try:
