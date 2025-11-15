@@ -146,7 +146,7 @@ scheduler.add_job(
     id='auto_sync_garmin',
     func=auto_sync_all_garmin_users,
     trigger='interval',
-    minutes=120,
+    minutes=240,
     max_instances=1,
     replace_existing=True
 )
@@ -899,11 +899,11 @@ class LoginForm(FlaskForm):
 class UpdateProfileForm(FlaskForm):
     username = StringField(
         'Username',
-        validators=[DataRequired(), Length(min=4, max=20)]
+        validators=[Length(min=4, max=20)]
     )
     email = StringField(
         'Email',
-        validators=[DataRequired(), Email()]
+        validators=[Email()]
     )
 
     # Optional fields - safe to access even if DB column doesn't exist
@@ -1884,12 +1884,179 @@ def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
     if level >= LEVEL_CAP:
         return 10**12  # effectively unreachable
     return max(50, int(round(base_xp * (level ** exp))))
+def unlock_avatar_for_user(user_id, avatar_name, reason='manual', borders=None):
+    """Manually unlock an avatar for a user with optional borders"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if borders is None:
+            borders = []
+        
+        cursor.execute("""
+            INSERT INTO unlocked_avatars (user_id, avatar_name, unlock_reason, unlocked_borders)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id, avatar_name) 
+            DO UPDATE SET unlocked_borders = unlocked_avatars.unlocked_borders
+        """, (user_id, avatar_name, reason, json.dumps(borders)))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error unlocking avatar: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()
 
+def get_available_avatars_for_user(user_id, user_level):
+    """Get all avatars available to a user (level-based + manually unlocked)"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        # Get level-based avatars
+        level_avatars = set(get_available_avatars_for_level(user_level))
+        
+        # Get manually unlocked avatars with their borders
+        cursor.execute("""
+            SELECT avatar_name, unlocked_borders
+            FROM unlocked_avatars 
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        unlocked_data = cursor.fetchall()
+        unlocked_avatars = {row['avatar_name'] for row in unlocked_data}
+        
+        # Combine both sets
+        all_available = level_avatars.union(unlocked_avatars)
+        
+        return sorted(list(all_available))
+        
+    finally:
+        cursor.close()
+        conn.close()
+def get_unlocked_borders_for_avatar(user_id, avatar_name):
+    """Get all unlocked borders for a specific avatar"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT unlocked_borders 
+            FROM unlocked_avatars 
+            WHERE user_id = %s AND avatar_name = %s
+        """, (user_id, avatar_name))
+        
+        result = cursor.fetchone()
+        
+        if result and result['unlocked_borders']:
+            borders = result['unlocked_borders']
+            if isinstance(borders, str):
+                borders = json.loads(borders)
+            return borders
+        
+        return []
+        
+    finally:
+        cursor.close()
+        conn.close()
+def add_border_to_avatar(user_id, avatar_name, border_name):
+    """Add a border to an already unlocked avatar"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Check if avatar is unlocked
+        cursor.execute("""
+            SELECT unlocked_borders 
+            FROM unlocked_avatars 
+            WHERE user_id = %s AND avatar_name = %s
+        """, (user_id, avatar_name))
+        
+        result = cursor.fetchone()
+        
+        if not result:
+            # Avatar not unlocked yet - unlock it first with the border
+            return unlock_avatar_for_user(user_id, avatar_name, 'border_unlock', [border_name])
+        
+        # Avatar exists - add border if not already there
+        cursor.execute("""
+            UPDATE unlocked_avatars 
+            SET unlocked_borders = 
+                CASE 
+                    WHEN unlocked_borders @> %s::jsonb THEN unlocked_borders
+                    ELSE unlocked_borders || %s::jsonb
+                END
+            WHERE user_id = %s AND avatar_name = %s
+        """, (json.dumps([border_name]), json.dumps([border_name]), user_id, avatar_name))
+        
+        conn.commit()
+        return True
+        
+    except Exception as e:
+        print(f"Error adding border: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_border_from_avatar(user_id, avatar_name, border_name):
+    """Remove a border from an avatar"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE unlocked_avatars 
+            SET unlocked_borders = unlocked_borders - %s
+            WHERE user_id = %s AND avatar_name = %s
+        """, (border_name, user_id, avatar_name))
+        
+        conn.commit()
+        return True
+        
+    except Exception as e:
+        print(f"Error removing border: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_all_unlocked_avatars_with_borders(user_id):
+    """Get all unlocked avatars with their borders for a user"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT avatar_name, unlocked_borders, unlocked_at, unlock_reason
+            FROM unlocked_avatars 
+            WHERE user_id = %s
+            ORDER BY unlocked_at DESC
+        """, (user_id,))
+        
+        results = cursor.fetchall()
+        
+        # Parse borders if they're strings
+        for row in results:
+            if isinstance(row['unlocked_borders'], str):
+                row['unlocked_borders'] = json.loads(row['unlocked_borders'])
+        
+        return results
+        
+    finally:
+        cursor.close()
+        conn.close()        
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     form = UpdateProfileForm()
-    print(f"Request method: {request.method}")
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
@@ -1899,49 +2066,42 @@ def profile():
     extra_columns_exist = False
     role = getattr(current_user, 'role', 'user')
     workout_streak = 0
+    current_avatar_border = None
+    current_avatar_borders = []
     
-    # NEW: Get dynamic TDEE data (includes base, workout, and steps)
     tdee_data = get_user_current_tdee(current_user.id)
+    current_tdee = tdee_data['daily_tdee']
+    base_tdee = tdee_data['base_tdee']
     
-    # Use daily_tdee (adjusted) if features are enabled, otherwise use base_tdee
-    current_tdee = tdee_data['daily_tdee']  # This is the adjusted TDEE
-    base_tdee = tdee_data['base_tdee']      # This is the base TDEE from settings
-    
-    # XP/Level defaults
     user_level = 1
     user_xp = 0
     xp_to_next = 100
     user_socials = "[]"
 
     try:
-        # Check for extra columns including privacy controls
+        # Single query for ALL columns (prevent duplicate checks)
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials')
+            AND column_name IN (
+                'full_name', 'main_sport', 'socials', 
+                'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials',
+                'level', 'xp_points', 'workout_streak', 'weight', 'avatar', 'username', 'email', 'selected_border'
+            )
         """)
-        columns = [row['column_name'] for row in cursor.fetchall()]
-        extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
+        all_columns = {row['column_name'] for row in cursor.fetchall()}
+        
+        # Categorize columns
+        profile_columns = all_columns.intersection({
+            'full_name', 'main_sport', 'socials', 
+            'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials'
+        })
+        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'selected_border'})
+        extra_columns_exist = bool(profile_columns.intersection({'full_name', 'main_sport', 'socials'}))
 
-        # Build select query with level/xp and privacy controls
-        select_cols = ['username', 'email', 'weight', 'avatar'] + columns
-        
-        # Check if level and xp_points columns exist
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'users' 
-            AND column_name IN ('level', 'xp_points', 'workout_streak')
-        """)
-        level_columns = [row['column_name'] for row in cursor.fetchall()]
-        
-        if 'level' in level_columns:
-            select_cols.append('level')
-        if 'xp_points' in level_columns:
-            select_cols.append('xp_points')
-        if 'workout_streak' in level_columns:
-            select_cols.append('workout_streak')
+        # Build select query dynamically (no duplicates)
+        select_cols = list({'username', 'email', 'weight', 'avatar'}.union(profile_columns).union(level_columns))
         
         cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
         user_data = cursor.fetchone()
@@ -1949,38 +2109,36 @@ def profile():
         if user_data:
             current_weight = user_data.get('weight')
             current_avatar = user_data.get('avatar') or 'default.png'
-            
-            # Extract level and XP
             user_level = user_data.get('level', 1) or 1
             user_xp = user_data.get('xp_points', 0) or 0
-            
-            # Extract workout streak
             workout_streak = user_data.get('workout_streak', 0) or 0
-
-            # Calculate XP needed for next level
             xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
             
-            # Get socials data
             user_socials = user_data.get('socials') or "[]"
             if isinstance(user_socials, (list, dict)):
                 user_socials = json.dumps(user_socials)
 
-        # MODIFIED: Filter avatars based on user level
-        available_avatars = get_available_avatars_for_level(user_level)
+        # Get available avatars for this user's level
+        available_avatars = get_available_avatars_for_user(current_user.id, user_level)
         form.avatar_choice.choices = [(avatar, avatar.split('.')[0].capitalize()) for avatar in available_avatars]
-
-        if request.method == 'POST':
-            if not form.validate_on_submit():
-                for field, errors in form.errors.items():
-                    print(f"  Field '{field}': {errors}")
-            print("="*60)
+        
+        # Get borders for current avatar
+        if current_avatar != 'default.png':
+            borders = get_unlocked_borders_for_avatar(current_user.id, current_avatar)
+            current_avatar_borders = borders
+            
+            # Get selected border from database, or use first available
+            if 'selected_border' in level_columns and user_data.get('selected_border'):
+                current_avatar_border = user_data.get('selected_border')
+            elif borders:
+                current_avatar_border = borders[0]
 
         if form.validate_on_submit():
-            # Handle email lowercase
             email_lower = form.email.data.lower()
 
-            # Avatar handling
+            # Strict avatar validation with early return
             avatar_filename = current_avatar
+            
             if hasattr(form, 'avatar_upload') and form.avatar_upload.data:
                 file = form.avatar_upload.data
                 if file and allowed_file(file.filename):
@@ -1997,44 +2155,58 @@ def profile():
                     avatar_filename = unique_filename
                 else:
                     flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
+                    
             elif hasattr(form, 'avatar_choice') and form.avatar_choice.data:
-                # MODIFIED: Validate that chosen avatar is available at user's level
+                # Validate avatar is unlocked - BLOCK if not
                 if form.avatar_choice.data in available_avatars:
                     avatar_filename = form.avatar_choice.data
                 else:
-                    flash('That avatar is not unlocked yet!', 'warning')
-                    avatar_filename = current_avatar
+                    flash('Avatar on lukittu!', 'danger')
+                    return redirect(url_for('profile', toast_msg='Avatar on lukittu', toast_cat='warning'))
 
-            # Build update query dynamically
-            update_query = "UPDATE users SET username = %s, email = %s, avatar = %s"
-            update_params = [form.username.data, email_lower, avatar_filename]
-
-            # Handle privacy controls
-            privacy_fields = ['show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak']
+            # Build update query with whitelist (prevent duplicate columns)
+            update_fields = {}  # Use dict to prevent duplicates
+            update_fields['username'] = form.username.data
+            update_fields['email'] = email_lower
+            update_fields['avatar'] = avatar_filename
+            if 'selected_border' in level_columns:
+                selected_border = request.form.get('selected_border', '')
+                print(f"DEBUG: Saving border = '{selected_border}'")
+            # If border is 'none' or empty, store NULL
+                update_fields['selected_border'] = selected_border if selected_border and selected_border != 'none' else None
+            # Define privacy fields whitelist
+            privacy_fields = {'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak'}
+            
+            # Add privacy controls (only if column exists)
             for privacy_field in privacy_fields:
-                if privacy_field in columns:
-                    privacy_value = request.form.get(privacy_field) == 'on'
-                    update_query += f", {privacy_field} = %s"
-                    update_params.append(privacy_value)
+                if privacy_field in profile_columns:
+                    update_fields[privacy_field] = request.form.get(privacy_field) == 'on'
 
-            for col in columns:
-                if col in privacy_fields:
+            # Add profile columns (skip privacy fields and socials)
+            for col in profile_columns:
+                if col in privacy_fields or col == 'socials':
                     continue
-                elif col == "socials":
-                    socials_json = request.form.get("socials", "[]")
-                    try:
-                        socials_data = json.loads(socials_json)
-                    except json.JSONDecodeError:
-                        socials_data = []
-                    update_query += ", socials = %s"
-                    update_params.append(json.dumps(socials_data))
+                # Add other profile fields from form if they exist
+                if hasattr(form, col):
+                    update_fields[col] = getattr(form, col).data
 
-            update_query += " WHERE id = %s"
-            update_params.append(current_user.id)
+            # Handle socials separately
+            if 'socials' in profile_columns:
+                socials_json = request.form.get("socials", "[]")
+                try:
+                    socials_data = json.loads(socials_json)
+                except json.JSONDecodeError:
+                    socials_data = []
+                update_fields['socials'] = json.dumps(socials_data)
+
+            # Build final query from dict (guarantees no duplicates)
+            update_query = "UPDATE users SET " + ", ".join([f"{k} = %s" for k in update_fields.keys()]) + " WHERE id = %s"
+            update_params = list(update_fields.values()) + [current_user.id]
 
             cursor.execute(update_query, tuple(update_params))
             conn.commit()
             
+            # Refresh user data
             cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (current_user.id,))
             user_data = cursor.fetchone()
             if user_data:
@@ -2048,11 +2220,12 @@ def profile():
             form.email.data = user_data.get('email', '')
             form.socials.data = user_data.get('socials', '[]')
             
-            for col in columns:
+            for col in profile_columns:
                 if col == "socials":
                     continue
                 elif hasattr(form, col):
                     getattr(form, col).data = user_data.get(col, '')
+            
             form.avatar_choice.data = current_avatar if current_avatar in available_avatars else 'default.png'
 
     except Exception as e:
@@ -2067,13 +2240,13 @@ def profile():
         title='Profile',
         form=form,
         current_weight=current_weight,
-        current_tdee=current_tdee,        # Dynamic adjusted TDEE
-        base_tdee=base_tdee,              # NEW: Base TDEE from settings
+        current_tdee=current_tdee,
+        base_tdee=base_tdee,
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
         available_avatars=available_avatars,
-        tdee_data=tdee_data,              # Full breakdown
+        tdee_data=tdee_data,
         user_level=user_level,
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
@@ -2081,7 +2254,11 @@ def profile():
         viewed_user=None,
         is_owner=True,
         user_socials=user_socials,
-        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS)
+        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS,
+        current_avatar_border=current_avatar_border,
+        current_avatar_borders=current_avatar_borders
+    )
+
     
 
 
@@ -2103,36 +2280,35 @@ def view_profile(user_id):
     current_weight = None
     current_tdee = None
     workout_streak = 0
+    current_avatar_border = None
+    current_avatar_borders = []
 
     try:
-        # Check for extra columns including privacy controls
+        # Single query for ALL columns (prevent duplicate checks)
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
-            AND column_name IN ('full_name','main_sport','socials','show_full_name','show_main_sport','show_health_metrics','show_socials', 'workout_streak')
+            AND column_name IN (
+                'full_name', 'main_sport', 'socials', 
+                'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials',
+                'level', 'xp_points', 'workout_streak', 'selected_border'
+            )
         """)
-        columns = [row['column_name'] for row in cursor.fetchall()]
-        extra_columns_exist = any(col in columns for col in ['full_name', 'main_sport', 'socials'])
+        all_columns = {row['column_name'] for row in cursor.fetchall()}
+        
+        # Categorize columns
+        profile_columns = all_columns.intersection({
+            'full_name', 'main_sport', 'socials', 
+            'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials'
+        })
+        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'selected_border'})
+        extra_columns_exist = bool(profile_columns.intersection({'full_name', 'main_sport', 'socials'}))
 
-        # Build select query with privacy controls
-        select_cols = ['id', 'username', 'email', 'weight', 'tdee', 'avatar', 'role'] + columns
-        
-        # Check if level and xp_points columns exist
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'users' 
-            AND column_name IN ('level', 'xp_points', 'workout_streak')
-        """)
-        level_columns = [row['column_name'] for row in cursor.fetchall()]
-        
-        if 'level' in level_columns:
-            select_cols.append('level')
-        if 'xp_points' in level_columns:
-            select_cols.append('xp_points')
-        if 'workout_streak' in level_columns:
-            select_cols.append('workout_streak')
+        # Build select query dynamically
+        select_cols = list({'id', 'username', 'email', 'weight', 'tdee', 'avatar', 'role'}
+                          .union(profile_columns)
+                          .union(level_columns))
 
         # Find requested user with all data
         cursor.execute(f"SELECT {', '.join(select_cols)} FROM users WHERE id = %s", (user_id,))
@@ -2160,14 +2336,24 @@ def view_profile(user_id):
         # TDEE data only if health metrics are public or it's own profile
         if user_data.get('show_health_metrics', False) or user_id == current_user.id:
             tdee_data = get_user_current_tdee(user_data['id']) if callable(globals().get('get_user_current_tdee')) else None
-            # Add base_tdee calculation
             if tdee_data and isinstance(tdee_data, dict):
                 base_tdee = tdee_data.get('base_tdee', 0)
             else:
-                base_tdee = current_tdee if current_tdee else 0  # Fallback to current_tdee if no breakdown available
+                base_tdee = current_tdee if current_tdee else 0
 
-        # MODIFIED: Filter avatars based on viewed user's level (not current_user's level)
-        available_avatars = get_available_avatars_for_level(user_level)
+        # Get available avatars for the VIEWED user (not current_user)
+        available_avatars = get_available_avatars_for_user(user_id, user_level)
+        
+        # Get borders for the VIEWED user's current avatar
+        if current_avatar != 'default.png':
+            borders = get_unlocked_borders_for_avatar(user_id, current_avatar)
+            current_avatar_borders = borders
+            
+            # Get selected border from database, or use first available
+            if 'selected_border' in level_columns and user_data.get('selected_border'):
+                current_avatar_border = user_data.get('selected_border')
+            elif borders:
+                current_avatar_border = borders[0]
         
         # Create dummy form for template compatibility
         form = UpdateProfileForm()
@@ -2176,12 +2362,12 @@ def view_profile(user_id):
         # Pre-fill form data
         form.username.data = user_data.get('username', '')
         form.email.data = user_data.get('email', '')
-        for col in columns:
+        
+        for col in profile_columns:
             if col.startswith('show_'):
                 continue  # Skip privacy controls
             elif col == "socials":
-                # Parse socials JSON safely - CORRECTED to use 'socials' (matches HTML name attribute)
-                socials_json = request.form.get("socials", "[]")
+                form.socials.data = user_data.get('socials', '[]')
             elif hasattr(form, col):
                 getattr(form, col).data = user_data.get(col, '')
 
@@ -2202,9 +2388,9 @@ def view_profile(user_id):
         current_avatar=current_avatar,
         role=role,
         extra_columns_exist=extra_columns_exist,
-        predefined_avatars=available_avatars,  # MODIFIED: Pass filtered avatars
-        available_avatars=available_avatars,   # ADDED: For consistency
-        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS,  # ADDED: For showing requirements
+        predefined_avatars=available_avatars,
+        available_avatars=available_avatars,
+        AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS,
         tdee_data=tdee_data,
         base_tdee=base_tdee,
         user_level=user_level,
@@ -2212,7 +2398,9 @@ def view_profile(user_id):
         xp_to_next_level=xp_to_next,
         workout_streak=workout_streak,
         viewed_user=user_data,
-        is_owner=(user_id == current_user.id)
+        is_owner=(user_id == current_user.id),
+        current_avatar_border=current_avatar_border,
+        current_avatar_borders=current_avatar_borders
     )
 
 @app.route("/reset_password", methods=['GET', 'POST'])
