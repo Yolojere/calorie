@@ -797,10 +797,16 @@ input.form-control:-webkit-autofill {
 .level-badge.tier-expert {
     background: linear-gradient(135deg, #9182ea, #c888f6);
 }
+.level-badge.tier-expert .level-number {
+  color: #ffffff
+}
 
 .level-badge.tier-master {
     background: linear-gradient(135deg, #00D9FF, #0080FF);
     animation: masterBadgeGlow 2s ease-in-out infinite;
+}
+.level-badge.tier-master .level-number {
+  color: #ffffff
 }
 
 @keyframes masterBadgeGlow {
@@ -1442,6 +1448,186 @@ input.form-control:-webkit-autofill {
     backface-visibility: hidden;
     -webkit-font-smoothing: antialiased;
 }
+/* Base avatar with border container */
+.avatar-with-border {
+    position: relative;
+    display: inline-block;
+    border-radius: 50%;
+}
+
+/* Default border */
+.avatar-with-border .avatar-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #444;
+}
+
+/* Gold Border (Level 10) */
+.avatar-with-border.border-gold .avatar-img {
+    border: 4px solid #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+/* Platinum Border (Level 25) */
+.avatar-with-border.border-platinum .avatar-img {
+    border: 4px solid #E5E4E2;
+    box-shadow: 0 0 20px rgba(229, 228, 226, 0.6);
+}
+
+/* Rainbow Animated Border (Level 50) */
+.avatar-with-border.border-rainbow .avatar-img {
+    border: 4px solid transparent;
+    background: linear-gradient(#1d1d1d, #1d1d1d) padding-box,
+                linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) border-box;
+    animation: rainbowRotate 3s linear infinite;
+}
+
+@keyframes rainbowRotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* Glowing Animated Border (Level 75) */
+.avatar-with-border.border-glow .avatar-img {
+    border: 4px solid #9D4EDD;
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(157, 78, 221, 0.8),
+                    0 0 40px rgba(157, 78, 221, 0.4);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(157, 78, 221, 1),
+                    0 0 60px rgba(157, 78, 221, 0.6);
+    }
+}
+
+/* Fire Border (Level 100) */
+.avatar-with-border.border-fire .avatar-img {
+    border: 4px solid #FF4500;
+    box-shadow: 0 0 20px #FF4500,
+                0 0 40px #FF6347,
+                0 0 60px #FF8C00;
+    animation: firePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes firePulse {
+    0%, 100% { 
+        filter: brightness(1);
+    }
+    50% { 
+        filter: brightness(1.3);
+    }
+}
+/* Border selection grid */
+.border-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+    padding: 10px;
+}
+
+.border-option {
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+}
+
+.border-option:not(.locked):hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.border-option.selected {
+    border-color: var(--accent-color, #7bc8a4);
+    background: rgba(123, 200, 164, 0.1);
+}
+
+.border-option.locked {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.border-preview-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 3px solid #444;
+}
+
+.border-preview-circle .sample-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.border-preview-circle .lock-icon {
+    position: absolute;
+    font-size: 24px;
+    color: #666;
+}
+
+/* Apply border styles to preview circles */
+.border-preview-circle.border-gold {
+    border: 4px solid #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+.border-preview-circle.border-platinum {
+    border: 4px solid #E5E4E2;
+    box-shadow: 0 0 20px rgba(229, 228, 226, 0.6);
+}
+
+.border-preview-circle.border-rainbow {
+    border: 4px solid transparent;
+    background: linear-gradient(#1d1d1d, #1d1d1d) padding-box,
+                linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) border-box;
+    animation: rainbowRotate 3s linear infinite;
+}
+
+.border-preview-circle.border-fire {
+    border: 4px solid #FF4500;
+    box-shadow: 0 0 20px #FF4500, 0 0 40px #FF6347;
+    animation: firePulse 1.5s ease-in-out infinite;
+}
+
+.border-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-top: 4px;
+}
+
+.border-level {
+    display: block;
+    font-size: 11px;
+    color: #7bc8a4;
+    margin-top: 2px;
+}
+
+.border-option.locked .border-level {
+    color: #666;
+}
+
+/* Preview container */
+.border-preview-container {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
     /* Responsive adjustments */
 @media (min-width: 768px) {
         .device-header {
@@ -1465,6 +1651,20 @@ input.form-control:-webkit-autofill {
   }
 }
 @media (max-width: 576px) {
+        .border-selection-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .border-preview-circle {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .border-preview-circle .sample-avatar {
+        width: 45px;
+        height: 45px;
+    }
         .lift-card div:first-child,
     .cardio-card .fa-clock + div,
     .cardio-card .fa-route + div {
@@ -1782,34 +1982,37 @@ input.form-control:-webkit-autofill {
                         {% set avatar_folder = 'uploads' %}
                     {% endif %}
                     
-                    <!-- Main Avatar - Clickable only if owner -->
-                    <div class="avatar-container" id="avatar-container" {% if is_owner %}style="cursor: pointer;"{% endif %}>
-                        <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ show_avatar) }}"
-                            class="avatar-img"
-                            id="main-avatar"
-                            alt="{{ viewed_user.username if viewed_user else current_user.username }}'s avatar"
-                            onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
-                        
-                        <!-- Level Badge with Progress Bar -->
-                        <div class="level-badge {% if user_level < 5 %}tier-beginner{% elif user_level < 15 %}tier-intermediate{% elif user_level < 30 %}tier-advanced{% elif user_level < 50 %}tier-expert{% else %}tier-master{% endif %}">
-                            <div class="level-badge-text">
-                                <span class="level-number">{{ user_level }}</span>
-                            </div>
-                            
-                            <!-- Enhanced Tooltip with Progress -->
-                            <div class="level-badge-tooltip">
-                                <div style="margin-bottom: 5px;">
-                                    <strong>Level {{ user_level }}</strong>
-                                </div>
-                                <div style="font-size: 11px; color: #7bc8a4;">
-                                    {{ user_xp }} / {{ xp_to_next_level }} XP
-                                </div>
-                                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 5px; overflow: hidden;">
-                                    <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) if xp_to_next_level else 0 }}%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- Main Avatar with Border - Clickable only if owner -->
+<div class="avatar-container {% if current_avatar_border %}avatar-with-border border-{{ current_avatar_border }}{% endif %}" 
+     id="avatar-container" 
+     {% if is_owner %}style="cursor: pointer;"{% endif %}>
+    <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ show_avatar) }}"
+        class="avatar-img"
+        id="main-avatar"
+        alt="{{ viewed_user.username if viewed_user else current_user.username }}'s avatar"
+        onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+    
+    <!-- Level Badge with Progress Bar (INSIDE avatar-container) -->
+    <div class="level-badge {% if user_level < 5 %}tier-beginner{% elif user_level < 15 %}tier-intermediate{% elif user_level < 30 %}tier-advanced{% elif user_level < 50 %}tier-expert{% else %}tier-master{% endif %}">
+        <div class="level-badge-text">
+            <span class="level-number">{{ user_level }}</span>
+        </div>
+        
+        <!-- Enhanced Tooltip with Progress -->
+        <div class="level-badge-tooltip">
+            <div style="margin-bottom: 5px;">
+                <strong>Level {{ user_level }}</strong>
+            </div>
+            <div style="font-size: 11px; color: #7bc8a4;">
+                {{ user_xp }} / {{ xp_to_next_level }} XP
+            </div>
+            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 5px; overflow: hidden;">
+                <div style="height: 100%; background: linear-gradient(90deg, #6dc0d5, #7bc8a4); width: {{ (user_xp / xp_to_next_level * 100) if xp_to_next_level else 0 }}%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
                                             
                     <!-- User Info -->
                     <h2 class="account-heading">{{ viewed_user.username if viewed_user else current_user.username }}</h2>
@@ -2089,7 +2292,7 @@ input.form-control:-webkit-autofill {
                             <!-- Hidden avatar selection fields -->
                             <input type="hidden" id="selected_avatar" name="avatar_choice" value="{{ form.avatar_choice.data or 'default.png' }}">
                             <input type="file" class="d-none" id="avatar_upload_input" name="avatar_upload" accept="image/*">
-
+                            <input type="hidden" id="selected-border" name="selected_border" value="{{ current_avatar_border or '' }}">
                             <button type="submit" class="btn btn-primary" id="submit-button">
                                 <span id="submit-text" data-i18n="update_profile">Update Profile</span>
                                 <span id="submit-spinner" class="d-none"><span class="spinner"></span><span data-i18n="updating">Updating...</span></span>
@@ -2175,29 +2378,183 @@ input.form-control:-webkit-autofill {
         </div>
 
         <!-- Avatar Selection Modal - only for owner -->
-        <div class="avatar-modal" id="avatarModal">
-            <div class="avatar-modal-content">
-                <h4 class="text-center mb-3" data-i18n="choose_avatar">Choose Your Avatar</h4>
-                <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Select from our options</p>
+        <!-- Avatar Selection Modal - only for owner -->
+<div class="avatar-modal" id="avatarModal">
+    <div class="avatar-modal-content">
+        <h4 class="text-center mb-3" data-i18n="chooseavatar">Muokkaa Avataria</h4>
+        
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-3" id="avatarModalTabs" role="tablist" style="border-bottom: 1px solid #444;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" 
+                        id="avatars-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#avatars-content" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="avatars-content" 
+                        aria-selected="true"
+                        style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent;">
+                    <i class="fas fa-user-circle me-2"></i>Avataarit
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" 
+                        id="borders-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#borders-content" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="borders-content" 
+                        aria-selected="false"
+                        style="background: transparent; border: none; color: #ddd; padding: 12px 20px; border-bottom: 2px solid transparent;">
+                    <i class="fas fa-certificate me-2"></i>Reunukset
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="avatarModalTabContent">
+            <!-- Avatars Tab -->
+            <div class="tab-pane fade show active" id="avatars-content" role="tabpanel" aria-labelledby="avatars-tab">
+                <p class="text-center text-secondary mb-4" data-i18n="select_from_options">Valitse avataarisi</p>
                 
                 <div class="avatar-options">
                     {% for value, label in form.avatar_choice.choices %}
-                        {% set thumb_path = url_for('static', filename='avatars/' ~ value) %}
-                        <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
-                             data-value="{{ value }}">
-                            <img src="{{ thumb_path }}" 
-                                 alt="Avatar option {{ value }}"
-                                 onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
-                        </div>
+                    {% set thumb_path = url_for('static', filename='avatars/' + value) %}
+                    <div class="avatar-option {% if form.avatar_choice.data == value %}selected{% endif %}" 
+                         data-value="{{ value }}">
+                        <img src="{{ thumb_path }}" 
+                             alt="Avatar option {{ value }}" 
+                             onerror="this.src='{{ url_for('static', filename='avatars/default.png') }}'">
+                    </div>
                     {% endfor %}
                 </div>
+            </div>
+
+            <!-- Borders Tab -->
+            <div class="tab-pane fade" id="borders-content" role="tabpanel" aria-labelledby="borders-tab">
+                <p class="text-center text-secondary mb-4">Valitse reunus avataarillesi</p>
                 
-                <div class="modal-buttons">
-                    <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Change Avatar</button>
+                <div class="border-options">
+                    <!-- Preview of current avatar with border -->
+                    <div class="border-preview-container text-center mb-4">
+                        <div class="avatar-with-border" id="border-preview-container">
+                            <img src="{{ url_for('static', filename=avatar_folder ~ '/' ~ current_avatar) }}" 
+                                 class="avatar-img" 
+                                 id="border-preview-avatar"
+                                 style="width: 120px; height: 120px;"
+                                 alt="Preview">
+                        </div>
+                        <p class="text-secondary mt-2" style="font-size: 13px;">Esikatselu</p>
+                    </div>
+
+                    <!-- Border Selection Grid -->
+                    <div class="border-selection-grid">
+                        <!-- Default/No Border -->
+                        <div class="border-option {% if not current_avatar_border %}selected{% endif %}" 
+                             data-border="none">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Ei reunusta</span>
+                        </div>
+
+                        <!-- Gold Border -->
+                        {% if 'gold' in current_avatar_borders or user_level >= 10 %}
+                        <div class="border-option {% if current_avatar_border == 'gold' %}selected{% endif %}" 
+                             data-border="gold">
+                            <div class="border-preview-circle border-gold">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Kulta</span>
+                            <span class="border-level">Taso 10</span>
+                        </div>
+                        {% else %}
+                        <div class="border-option locked" data-border="gold">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
+                            <span class="border-name">Kulta</span>
+                            <span class="border-level">Taso 10</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Platinum Border -->
+                        {% if 'platinum' in current_avatar_borders or user_level >= 25 %}
+                        <div class="border-option {% if current_avatar_border == 'platinum' %}selected{% endif %}" 
+                             data-border="platinum">
+                            <div class="border-preview-circle border-platinum">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Platina</span>
+                            <span class="border-level">Taso 25</span>
+                        </div>
+                        {% else %}
+                        <div class="border-option locked" data-border="platinum">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
+                            <span class="border-name">Platina</span>
+                            <span class="border-level">Taso 25</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Rainbow Border -->
+                        {% if 'rainbow' in current_avatar_borders or user_level >= 50 %}
+                        <div class="border-option {% if current_avatar_border == 'rainbow' %}selected{% endif %}" 
+                             data-border="rainbow">
+                            <div class="border-preview-circle border-rainbow">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Sateenkaari</span>
+                            <span class="border-level">Taso 50</span>
+                        </div>
+                        {% else %}
+                        <div class="border-option locked" data-border="rainbow">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
+                            <span class="border-name">Sateenkaari</span>
+                            <span class="border-level">Taso 50</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Fire Border -->
+                        {% if 'fire' in current_avatar_borders or user_level >= 100 %}
+                        <div class="border-option {% if current_avatar_border == 'fire' %}selected{% endif %}" 
+                             data-border="fire">
+                            <div class="border-preview-circle border-fire">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Tuli</span>
+                            <span class="border-level">Taso 100</span>
+                        </div>
+                        {% else %}
+                        <div class="border-option locked" data-border="fire">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
+                            <span class="border-name">Tuli</span>
+                            <span class="border-level">Taso 100</span>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Modal Buttons -->
+        <div class="modal-buttons">
+            <button type="button" class="btn btn-outline-secondary" id="cancelAvatar" data-i18n="cancel">Peruuta</button>
+            <button type="button" class="btn btn-primary" id="updateAvatar" data-i18n="change_avatar">Tallenna muutokset</button>
+        </div>
+    </div>
+</div>
     {% endif %}
 
    <!-- Health Metrics Section - Only show if allowed -->
@@ -2653,25 +3010,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Update avatar
-    if (updateAvatarBtn) {
-        updateAvatarBtn.addEventListener('click', function() {
-            if (!selectedAvatarInput || !mainAvatar) return;
-
-            selectedAvatarInput.value = selectedAvatar;
-
-            if (uploadedAvatarFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    mainAvatar.src = e.target.result;
-                };
-                reader.readAsDataURL(uploadedAvatarFile);
-            } else if (selectedAvatar) {
-                mainAvatar.src = '/static/avatars/' + selectedAvatar;
+if (updateAvatarBtn) {
+    updateAvatarBtn.addEventListener('click', function() {
+        // Don't submit form directly, instead update the hidden fields and let user save normally
+        const avatarInput = document.getElementById('selected_avatar');
+        if (avatarInput) {
+            avatarInput.value = selectedAvatar;
+        }
+        
+        const borderInput = document.getElementById('selected-border');
+        if (borderInput) {
+            borderInput.value = selectedBorder === 'none' ? '' : selectedBorder;
+        }
+        
+        // Update the main avatar preview
+        if (selectedAvatar && mainAvatar) {
+            mainAvatar.src = `/static/avatars/${selectedAvatar}`;
+        }
+        
+        // Update border preview on main avatar
+        const avatarContainer = document.getElementById('avatar-container');
+        if (avatarContainer && borderInput) {
+            // Remove all border classes
+            avatarContainer.classList.remove('border-gold', 'border-platinum', 'border-rainbow', 'border-fire');
+            
+            // Add new border class if not "none"
+            if (selectedBorder && selectedBorder !== 'none') {
+                avatarContainer.classList.add('avatar-with-border', 'border-' + selectedBorder);
+            } else {
+                avatarContainer.classList.remove('avatar-with-border');
             }
-            showToast(t('avatar_updated'));
-            closeModal();
-        });
-    }
+        }
+        
+        // Close modal and let user click the main "Update Profile" button
+        closeModal();
+        showToast('Avatar vaihdettu!, muista päivittää profiili tallentaaksesi muutokset!', 'info');
+    });
+}
 
     // Avatar option selection
     avatarOptions.forEach(option => {
@@ -3277,7 +3652,58 @@ document.head.appendChild(style);
             streakDisplay.classList.add('streak-10');
         }
     }
+// Border selection functionality
+let selectedBorder = '{{ current_avatar_border or "" }}';
+const borderOptions = document.querySelectorAll('.border-option');
+const borderPreviewContainer = document.getElementById('border-preview-container');
+const borderPreviewAvatar = document.getElementById('border-preview-avatar');
+const selectedBorderInput = document.getElementById('selected-border');
 
+// Border option selection
+borderOptions.forEach(option => {
+    option.addEventListener('click', function() {
+        // Don't allow selecting locked borders
+        if (this.classList.contains('locked')) {
+            showToast('Tämä reunus on lukittu!', 'warning');
+            return;
+        }
+
+        // Remove selected class from all
+        borderOptions.forEach(opt => opt.classList.remove('selected'));
+        
+        // Add selected class to clicked option
+        this.classList.add('selected');
+        
+        // Get border value
+        selectedBorder = this.getAttribute('data-border');
+        
+        // Update preview
+        updateBorderPreview(selectedBorder);
+        
+        // Update hidden input
+        if (selectedBorderInput) {
+            selectedBorderInput.value = selectedBorder === 'none' ? '' : selectedBorder;
+        }
+    });
+});
+
+// Update border preview
+function updateBorderPreview(border) {
+    // Remove all border classes
+    borderPreviewContainer.className = 'avatar-with-border';
+    
+    // Add new border class if not "none"
+    if (border && border !== 'none') {
+        borderPreviewContainer.classList.add('border-' + border);
+    }
+}
+
+// When switching to borders tab, update preview with current avatar
+document.getElementById('borders-tab')?.addEventListener('shown.bs.tab', function() {
+    if (selectedAvatar && borderPreviewAvatar) {
+        borderPreviewAvatar.src = '{{ url_for("static", filename="avatars/") }}' + selectedAvatar;
+    }
+});
 // Check status on page load
 checkGarminStatus();
     // Initialize on page load
