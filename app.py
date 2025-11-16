@@ -5722,6 +5722,30 @@ def safe_add_user_level_columns(cursor):
     except Exception as _migration_err:
         # Non-fatal; if migration fails due to permissions, continue assuming columns exist.
         pass
+def calculate_streak_xp_multiplier(streak_days: int) -> float:
+    """
+    Calculate XP multiplier based on workout streak.
+    
+    Formula:
+    - 0-4 days: 0% bonus (1.0x multiplier)
+    - 5-9 days: 2% bonus (1.02x multiplier)
+    - 10-19 days: 5% bonus (1.05x multiplier)
+    - 20+ days: 10% bonus (1.10x multiplier)
+    
+    Args:
+        streak_days: Current workout streak count
+    
+    Returns:
+        XP multiplier (e.g., 1.02 for 2% increase)
+    """
+    if streak_days >= 20:
+        return 1.10
+    elif streak_days >= 10:
+        return 1.05
+    elif streak_days >= 5:
+        return 1.02
+    else:
+        return 1.0    
 @app.route("/workout/save", methods=["POST"])
 @login_required
 def save_workout():
@@ -5851,7 +5875,7 @@ def save_workout():
         # ============================================================================
         total_calories = float(timer_data.get('calories', 0) or 0.0)
         total_duration_seconds = int(timer_data.get('totalSeconds', 0) or 0)
-
+        workout_duration_seconds = int(timer_data.get('totalSeconds', 0) or 0)
         cardio_calories = 0.0
         cardio_duration = 0
 
@@ -6291,22 +6315,113 @@ def save_workout():
             pass
 
         # ============================================================================
+        # STEP 6.7: CHECK IF USER ALREADY EARNED XP TODAY (STRENGTH & CARDIO)
+        # ============================================================================
+        
+        # Check if user already has saved strength sets TODAY
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM workout_sets ws
+            JOIN workout_sessions wsess ON ws.session_id = wsess.id
+            WHERE wsess.user_id = %s 
+            AND wsess.date = %s 
+            AND ws.is_saved = true
+            AND wsess.id != %s
+        """, (user_id, date, session_id))
+        
+        existing_strength_saved_today = cursor.fetchone()[0] > 0
+        
+        # Check if user already has saved cardio TODAY
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM cardio_sessions cs
+            JOIN workout_sessions wsess ON cs.session_id = wsess.id
+            WHERE wsess.user_id = %s 
+            AND wsess.date = %s 
+            AND cs.is_saved = true
+            AND wsess.id != %s
+        """, (user_id, date, session_id))
+        
+        existing_cardio_saved_today = cursor.fetchone()[0] > 0
+        
+        app.logger.info(f"XP eligibility check - User {user_id} on {date}:")
+        app.logger.info(f"  Existing strength saved: {existing_strength_saved_today}")
+        app.logger.info(f"  Existing cardio saved: {existing_cardio_saved_today}")
+
+
+        # 
+        # ============================================================================
         # STEP 7: XP REWARDS LOGIC
         # ============================================================================
         xp_sources = {}
         
-        xp_cardio_duration = float(cardio_duration) * 0.01
-        xp_sources['cardio_duration'] = xp_cardio_duration
-        xp_cardio_calories = float(cardio_calories) * 0.2
-        xp_sources['cardio_calories'] = xp_cardio_calories
-        xp_weights_volume = float(current_total_volume) * 0.03
-        xp_sources['weights_volume'] = xp_weights_volume
-        xp_new_exercises = int(new_exercises_count) * 25.0
-        xp_sources['new_exercises'] = xp_new_exercises
-        xp_personal_bests = float(len(personal_records)) * 30.0
-        xp_sources['personal_bests'] = xp_personal_bests
+        # Only award cardio XP if this is the first cardio save of the day
+        if not existing_cardio_saved_today and cardio_duration > 0:
+            xp_cardio_duration = float(cardio_duration) * 0.02
+            xp_sources['cardio_duration'] = xp_cardio_duration
+            app.logger.info(f"Cardio duration XP awarded: {xp_cardio_duration}")
+        else:
+            xp_cardio_duration = 0.0
+            xp_sources['cardio_duration'] = 0.0
+            if existing_cardio_saved_today:
+                app.logger.info(f"Cardio XP NOT awarded - already saved cardio today")
         
-        xp_gain = int(round(sum(xp_sources.values())))
+        # Only award cardio calories XP if this is the first cardio save of the day
+        if not existing_cardio_saved_today and cardio_calories > 0:
+            xp_cardio_calories = float(cardio_calories) * 0.2
+            xp_sources['cardio_calories'] = xp_cardio_calories
+            app.logger.info(f"Cardio calories XP awarded: {xp_cardio_calories}")
+        else:
+            xp_cardio_calories = 0.0
+            xp_sources['cardio_calories'] = 0.0
+        
+        # Only award strength volume XP if this is the first strength save of the day
+        if not existing_strength_saved_today and current_total_volume > 0:
+            xp_weights_volume = float(current_total_volume) * 0.03
+            xp_sources['weights_volume'] = xp_weights_volume
+            app.logger.info(f"Weights volume XP awarded: {xp_weights_volume}")
+        else:
+            xp_weights_volume = 0.0
+            xp_sources['weights_volume'] = 0.0
+            if existing_strength_saved_today:
+                app.logger.info(f"Strength XP NOT awarded - already saved strength today")
+        
+        # Only award workout duration XP if this is the first strength save of the day
+        if not existing_strength_saved_today and workout_duration_seconds > 0:
+            xp_workout_duration = float(workout_duration_seconds) * 0.01
+            xp_sources['workout_duration'] = xp_workout_duration
+            app.logger.info(f"Workout duration XP awarded: {xp_workout_duration}")
+        else:
+            xp_workout_duration = 0.0
+            xp_sources['workout_duration'] = 0.0
+        
+        # Only award new exercises XP if this is the first strength save of the day
+        if not existing_strength_saved_today:
+            xp_new_exercises = int(new_exercises_count) * 25.0
+            xp_sources['new_exercises'] = xp_new_exercises
+            app.logger.info(f"New exercises XP awarded: {xp_new_exercises}")
+        else:
+            xp_new_exercises = 0.0
+            xp_sources['new_exercises'] = 0.0
+        
+        # Only award personal bests XP if this is the first strength save of the day
+        if not existing_strength_saved_today:
+            xp_personal_bests = float(len(personal_records)) * 30.0
+            xp_sources['personal_bests'] = xp_personal_bests
+            app.logger.info(f"Personal bests XP awarded: {xp_personal_bests}")
+        else:
+            xp_personal_bests = 0.0
+            xp_sources['personal_bests'] = 0.0
+        
+        # Calculate base XP before streak multiplier
+        base_xp_gain = sum(xp_sources.values())
+        
+        # Get current streak and calculate multiplier
+        streak_multiplier = calculate_streak_xp_multiplier(current_streak)
+        xp_gain = int(round(base_xp_gain * streak_multiplier))
+        
+        app.logger.info(f"Base XP gain: {base_xp_gain}, Streak: {current_streak}, Multiplier: {streak_multiplier}x, Final XP: {xp_gain}")
+
 
         cursor.execute("SELECT COALESCE(xp_points,0), COALESCE(level,1) FROM users WHERE id = %s", (user_id,))
         row = cursor.fetchone()
@@ -6376,6 +6491,7 @@ def save_workout():
                     "cardio_duration": int(round(xp_cardio_duration)),
                     "cardio_calories": int(round(xp_cardio_calories)),
                     "weights_volume": int(round(xp_weights_volume)),
+                    "workout_duration": int(round(xp_workout_duration)),
                     "new_exercises": int(round(xp_new_exercises)),
                     "personal_bests": int(round(xp_personal_bests))
                 },
@@ -6383,8 +6499,14 @@ def save_workout():
                 "level_before": int(current_level),
                 "level_after": int(level_cursor),
                 "current_xp": int(pool),
-                "xp_to_next_level": int(xp_to_next_level(level_cursor))
+                "xp_to_next_level": int(xp_to_next_level(level_cursor)),
+                "streak_multiplier": float(streak_multiplier),
+                "daily_limits": {
+                    "strength_already_earned_today": bool(existing_strength_saved_today),
+                    "cardio_already_earned_today": bool(existing_cardio_saved_today)
+                }
             }
+
         })
 
 
