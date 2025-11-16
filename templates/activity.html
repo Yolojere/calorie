@@ -7,7 +7,6 @@
     <title data-i18n="app_title">TrackYou - Aktiivisuuslaskuri</title>
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='images/favicon-96x96.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/favicon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/favicon-512x512.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
@@ -76,7 +75,7 @@ body {
 
 /* Input group text */
 .input-group-text {
-    background-color: #121212;
+    background-color: #121212 !important;
     color: #eee;
     border: 1px solid #333;
     border-radius: 0 20px 20px 0;
@@ -145,11 +144,6 @@ body {
     transform: scale(0.98);
 }
 
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 13px;
-    border-radius: 20px;
-}
 
 /* === MODE SELECTOR BUTTONS === */
 .mode-selector {
@@ -283,6 +277,20 @@ body {
     background: linear-gradient(135deg, #353535 0%, #494949 100%);
     transform: translateY(-3px);
     box-shadow: 0 5px 20px rgba(92, 92, 92, 0.4);
+}
+.btn-sm{
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: Roboto, sans-serif;
+    text-decoration: none;
+    color: #ffffff !important;
+    background-color: #35723cd0 !important;
+    border: 1px solid #000000 !important;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 /* ===== NAV LINK BOX ===== */
@@ -566,6 +574,37 @@ object-fit: contain;
     animation: fadeIn 0.5s ease-out;
 }
 
+@keyframes pop {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* Continuous pulse */
+@keyframes continuousPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+}
+
+/* When shown, run pop once → then pulse forever */
+#save-tdee-btn[style*="display: block"]:not(.btn-flash-success) {
+    animation:
+        pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+        continuousPulse 2s ease-in-out infinite 0.6s;
+    /* ^ delay pulse by exactly the pop duration */
+}
+
+#save-tdee-btn[style*="display: block"] {
+    animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 /* Loading overlay */
 .loading-overlay {
     position: fixed;
@@ -671,6 +710,13 @@ object-fit: contain;
     .navbar-brand.d-md-inline {
         display: none !important; /* Hide brand text completely */
     }
+}
+@media (max-width: 460x) {
+.btn-sm {
+    padding: 6px 12px !important;
+    font-size: 10px !important;
+    border-radius: 20px;
+}
 }
 </style>
 
@@ -984,18 +1030,18 @@ object-fit: contain;
 <div id="advanced-mode" class="mode-content" style="display: none;">
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label class="form-label"><i class="fas fa-shoe-prints me-2"></i><span data-i18n="stepcount">Step Count</span></label>
+            <label class="form-label"><i class="fas fa-shoe-prints me-2"></i><span data-i18n="step_count">Step Count</span></label>
             <div class="input-group">
-                <input type="number" class="form-control" id="step-count" min="0" max="100000" value="" placeholder="Enter steps" data-i18n="entersteps">
+                <input type="number" class="form-control" id="step-count" min="0" max="100000" value="" placeholder="Enter steps" data-i18n="enter_steps">
                 <span class="input-group-text" data-i18n="steps">steps</span>
             </div>
             <small>Keskimääräinen askelmäärä on noin 5000-8000 askelta päivässä</small>
         </div>
         
         <div class="col-md-6 mb-3">
-            <label class="form-label"><i class="fas fa-fire me-2"></i><span data-i18n="activitycalories">Activity Calories</span></label>
+            <label class="form-label"><i class="fas fa-fire me-2"></i><span data-i18n="activity_calories">Activity Calories</span></label>
             <div class="input-group">
-                <input type="number" class="form-control" id="activity-calories" min="0" max="2000" value="" placeholder="Additional calories" data-i18n="additionalcalories">
+                <input type="number" class="form-control" id="activity-calories" min="0" max="2000" value="" placeholder="Additional calories" data-i18n="additional_calories">
                 <span class="input-group-text" data-i18n="kcal">kcal</span>
             </div>
             <small>Kulutetut kalorit harjoituksista</small>
@@ -1073,7 +1119,7 @@ object-fit: contain;
                 <div>
                     <i class="fas fa-chart-line me-2"></i><span data-i18n="energy_expenditure_results">Energy Expenditure Results</span>
                 </div>
-                <button class="btn btn-sm btn-primary" id="save-tdee-btn" style="display: none;">
+                <button class="btn btn-sm" id="save-tdee-btn" style="display: none;">
                     <i class="fas fa-save me-1"></i><span data-i18n="save_metrics">Tallenna Mittaukset</span>
                 </button>
             </div>
@@ -2049,4 +2095,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-
