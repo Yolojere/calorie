@@ -996,18 +996,13 @@ function checkAvatarUnlocks(levelBefore, levelAfter) {
         1: ['default.png', 'avatar1.png'],
         3: ['avatar2.png', 'avatar3.png'],
         5: ['avatar4.png', 'avatar5.png'],
-        7: ['avatar6.png'],
-        7: ['avatar7.png'],
-        10: ['avatar8.png'],
-        10: ['avatar9.png'],
-        13: ['avatar10.png'],
-        13: ['avatar11.png'],
-        15: ['avatar12.png'],
-        15: ['avatar13.png'],
+        7: ['avatar6.png', 'avatar7.png'],
+        10: ['avatar8.png', 'avatar9.png'],
+        13: ['avatar10.png', 'avatar11.png'],
+        15: ['avatar12.png', 'avatar13.png'],
         17: ['avatar14.png', 'avatar15.png'],
         20: ['avatar16.png', 'avatar17.png'],
-        23: ['avatar18.png'],
-        23: ['avatar19.png']
+        23: ['avatar18.png', 'avatar19.png']
     };
     
     let unlockedAvatars = [];
@@ -1022,6 +1017,27 @@ function checkAvatarUnlocks(levelBefore, levelAfter) {
     return unlockedAvatars;
 }
 
+// NEW FUNCTION: Check for border unlocks
+function checkBorderUnlocks(levelBefore, levelAfter) {
+    const BORDER_LEVEL_REQUIREMENTS = {
+        10: ['platinum'],
+        15: ['gold'],
+        50: ['rainbow'],
+        100: ['fire']
+    };
+    
+    let unlockedBorders = [];
+    
+    // Check each level between levelBefore and levelAfter
+    for (let level = levelBefore + 1; level <= levelAfter; level++) {
+        if (BORDER_LEVEL_REQUIREMENTS[level]) {
+            unlockedBorders = unlockedBorders.concat(BORDER_LEVEL_REQUIREMENTS[level]);
+        }
+    }
+    
+    return unlockedBorders;
+}
+
 // XP Display Functions
 
 
@@ -1034,17 +1050,27 @@ function showXPSummary(xpData, workoutData) {
     const streakData = workoutData?.streak || { current: 0, previous: 0, awarded: false };
     const currentStreak = streakData.current || 0;
     
-    // Check for avatar unlocks
+    // Check for avatar and border unlocks
     let unlockedAvatars = [];
+    let unlockedBorders = [];
     if (levels_gained > 0) {
         if (window.SoundManager) {
             window.SoundManager.playLevelup();
         }
         unlockedAvatars = checkAvatarUnlocks(level_before, level_after);
+        unlockedBorders = checkBorderUnlocks(level_before, level_after);
     }
     
     // Determine streak styling based on milestones
     const streakStyle = getStreakStyle(currentStreak);
+    
+    // Border names for display
+    const borderNames = {
+        'platinum': 'Platina',
+        'gold': 'Kulta',
+        'rainbow': 'Sateenkaari',
+        'fire': 'Tuli'
+    };
     
     // Create XP overlay
     const overlay = $(`
@@ -1076,6 +1102,27 @@ function showXPSummary(xpData, workoutData) {
                                 `).join('')}
                             </div>
                             <div class="unlock-subtext">Käy katsomassa profiilissa uudet avatarit!</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${unlockedBorders.length > 0 ? `
+                        <div class="border-unlock-notification">
+                            <div class="unlock-icon">✨</div>
+                            <div class="unlock-text">
+                                Avattu ${unlockedBorders.length} 
+                                ${unlockedBorders.length === 1 ? 'uusi reunus!' : 'uutta reunusta!'}
+                            </div>
+                            <div class="unlock-borders">
+                                ${unlockedBorders.map(border => `
+                                    <div class="unlocked-border-preview">
+                                        <div class="border-preview-circle border-${border}">
+                                            <div class="sample-avatar"></div>
+                                        </div>
+                                        <div class="border-name-label">${borderNames[border]}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="unlock-subtext">Käy valitsemassa profiilissa uusi reunus!</div>
                         </div>
                     ` : ''}
                 ` : `
@@ -1150,6 +1197,13 @@ function showXPSummary(xpData, workoutData) {
             setTimeout(() => {
                 $('.avatar-unlock-notification').addClass('show');
             }, 1200);
+        }
+        
+        // Animate border unlock notification
+        if (unlockedBorders.length > 0) {
+            setTimeout(() => {
+                $('.border-unlock-notification').addClass('show');
+            }, 1500);
         }
         
         // Animate streak display
