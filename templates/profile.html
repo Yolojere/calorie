@@ -2377,7 +2377,7 @@ input.form-control:-webkit-autofill {
             </div>
         </div>
 
-        <!-- Avatar Selection Modal - only for owner -->
+
         <!-- Avatar Selection Modal - only for owner -->
 <div class="avatar-modal" id="avatarModal">
     <div class="avatar-modal-content">
@@ -2460,15 +2460,35 @@ input.form-control:-webkit-autofill {
                             <span class="border-name">Ei reunusta</span>
                         </div>
 
-                        <!-- Gold Border -->
-                        {% if 'gold' in current_avatar_borders or user_level >= 10 %}
+                        <!-- Platinum -->
+                        {% if 'platinum' in current_avatar_borders or user_level >= 10 %}
+                        <div class="border-option {% if current_avatar_border == 'platinum' %}selected{% endif %}" 
+                             data-border="platinum">
+                            <div class="border-preview-circle border-platinum">
+                                <div class="sample-avatar"></div>
+                            </div>
+                            <span class="border-name">Valkoinen</span>
+                            <span class="border-level">Level 10</span>
+                        </div>
+                        {% else %}
+                        <div class="border-option locked" data-border="platinum">
+                            <div class="border-preview-circle">
+                                <div class="sample-avatar"></div>
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
+                            <span class="border-name">Valkoinen</span>
+                            <span class="border-level">Level 10</span>
+                        </div>
+                        {% endif %}  
+                        <!-- Gold Border -->                       
+                        {% if 'gold' in current_avatar_borders or user_level >= 20 %}
                         <div class="border-option {% if current_avatar_border == 'gold' %}selected{% endif %}" 
                              data-border="gold">
                             <div class="border-preview-circle border-gold">
                                 <div class="sample-avatar"></div>
                             </div>
                             <span class="border-name">Kulta</span>
-                            <span class="border-level">Taso 10</span>
+                            <span class="border-level">Level 20</span>
                         </div>
                         {% else %}
                         <div class="border-option locked" data-border="gold">
@@ -2477,28 +2497,7 @@ input.form-control:-webkit-autofill {
                                 <i class="fas fa-lock lock-icon"></i>
                             </div>
                             <span class="border-name">Kulta</span>
-                            <span class="border-level">Taso 10</span>
-                        </div>
-                        {% endif %}
-
-                        <!-- Platinum Border -->
-                        {% if 'platinum' in current_avatar_borders or user_level >= 25 %}
-                        <div class="border-option {% if current_avatar_border == 'platinum' %}selected{% endif %}" 
-                             data-border="platinum">
-                            <div class="border-preview-circle border-platinum">
-                                <div class="sample-avatar"></div>
-                            </div>
-                            <span class="border-name">Platina</span>
-                            <span class="border-level">Taso 25</span>
-                        </div>
-                        {% else %}
-                        <div class="border-option locked" data-border="platinum">
-                            <div class="border-preview-circle">
-                                <div class="sample-avatar"></div>
-                                <i class="fas fa-lock lock-icon"></i>
-                            </div>
-                            <span class="border-name">Platina</span>
-                            <span class="border-level">Taso 25</span>
+                            <span class="border-level">Level 20</span>
                         </div>
                         {% endif %}
 
@@ -2510,7 +2509,7 @@ input.form-control:-webkit-autofill {
                                 <div class="sample-avatar"></div>
                             </div>
                             <span class="border-name">Sateenkaari</span>
-                            <span class="border-level">Taso 50</span>
+                            <span class="border-level">Mysteeri</span>
                         </div>
                         {% else %}
                         <div class="border-option locked" data-border="rainbow">
@@ -2519,7 +2518,7 @@ input.form-control:-webkit-autofill {
                                 <i class="fas fa-lock lock-icon"></i>
                             </div>
                             <span class="border-name">Sateenkaari</span>
-                            <span class="border-level">Taso 50</span>
+                            <span class="border-level">Mysteeri</span>
                         </div>
                         {% endif %}
 
@@ -2531,7 +2530,7 @@ input.form-control:-webkit-autofill {
                                 <div class="sample-avatar"></div>
                             </div>
                             <span class="border-name">Tuli</span>
-                            <span class="border-level">Taso 100</span>
+                            <span class="border-level">Mysteeri</span>
                         </div>
                         {% else %}
                         <div class="border-option locked" data-border="fire">
@@ -2540,7 +2539,7 @@ input.form-control:-webkit-autofill {
                                 <i class="fas fa-lock lock-icon"></i>
                             </div>
                             <span class="border-name">Tuli</span>
-                            <span class="border-level">Taso 100</span>
+                            <span class="border-level">Mysteeri</span>
                         </div>
                         {% endif %}
                     </div>
