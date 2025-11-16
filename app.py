@@ -267,7 +267,15 @@ AVATAR_LEVEL_REQUIREMENTS = {
     'avatar18.png': 23,
     'avatar19.png': 23,
 }
-
+BORDER_LEVEL_REQUIREMENTS = {
+    'platinum': 10,
+    'gold': 20,
+    'thirty': 30,
+    'rainbow': 999,
+    'master': 100,
+    'legendary': 150
+    # Add more borders with their required levels
+}
 # Helper function to get available avatars
 def get_available_avatars_for_level(user_level):
     available = []
@@ -1876,7 +1884,13 @@ def allowed_file(filename):
 import json
 
 LEVEL_CAP = 999
-
+def get_available_borders_for_level(user_level):
+    """Get all borders available at a given level"""
+    available = []
+    for border, required_level in BORDER_LEVEL_REQUIREMENTS.items():
+        if user_level >= required_level:
+            available.append(border)
+    return available
 def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
     """
     XP required to advance from `level` to `level + 1`.
@@ -1884,6 +1898,7 @@ def xp_to_next_level(level: int, base_xp: int = 120, exp: float = 1.72) -> int:
     if level >= LEVEL_CAP:
         return 10**12  # effectively unreachable
     return max(50, int(round(base_xp * (level ** exp))))
+
 def unlock_avatar_for_user(user_id, avatar_name, reason='manual', borders=None):
     """Manually unlock an avatar for a user with optional borders"""
     conn = get_db_connection()
@@ -1937,12 +1952,29 @@ def get_available_avatars_for_user(user_id, user_level):
     finally:
         cursor.close()
         conn.close()
-def get_unlocked_borders_for_avatar(user_id, avatar_name):
-    """Get all unlocked borders for a specific avatar"""
+def get_available_borders_for_level(user_level):
+    """Get all borders available at a given level"""
+    available = []
+    for border, required_level in BORDER_LEVEL_REQUIREMENTS.items():
+        if user_level >= required_level:
+            available.append(border)
+    return available        
+def get_unlocked_borders_for_avatar(user_id, avatar_name, user_level=None):
+    """Get all unlocked borders for a specific avatar (manually unlocked + level-based)"""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     
     try:
+        # Get user level if not provided
+        if user_level is None:
+            cursor.execute("SELECT level FROM users WHERE id = %s", (user_id,))
+            result = cursor.fetchone()
+            user_level = result['level'] if result else 1
+        
+        # Get level-based borders
+        level_borders = set(get_available_borders_for_level(user_level))
+        
+        # Get manually unlocked borders
         cursor.execute("""
             SELECT unlocked_borders 
             FROM unlocked_avatars 
@@ -1951,57 +1983,66 @@ def get_unlocked_borders_for_avatar(user_id, avatar_name):
         
         result = cursor.fetchone()
         
+        manual_borders = set()
         if result and result['unlocked_borders']:
             borders = result['unlocked_borders']
             if isinstance(borders, str):
                 borders = json.loads(borders)
-            return borders
+            manual_borders = set(borders)
         
-        return []
+        # Combine both sets
+        all_borders = level_borders.union(manual_borders)
+        
+        return sorted(list(all_borders))
         
     finally:
         cursor.close()
         conn.close()
+
 def add_border_to_avatar(user_id, avatar_name, border_name):
     """Add a border to an already unlocked avatar"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
-        # Check if avatar is unlocked
+        if user_level is None:
+            cursor.execute("SELECT level FROM users WHERE id = %s", (user_id,))
+            result = cursor.fetchone()
+            user_level = result[0] if result else 1
+
+        required_level = BORDER_LEVEL_REQUIREMENTS.get(border_name)
+        if required_level and user_level < required_level:
+            print(f"Käyttäjän level {user_level} on liian pieni avaamaan reunuksen '{border_name}' (tarvittava level {required_level})")
+            return False    
+        
         cursor.execute("""
-            SELECT unlocked_borders 
-            FROM unlocked_avatars 
+            SELECT unlocked_borders
+            FROM unlocked_avatars
             WHERE user_id = %s AND avatar_name = %s
         """, (user_id, avatar_name))
-        
+
         result = cursor.fetchone()
-        
+
         if not result:
-            # Avatar not unlocked yet - unlock it first with the border
             return unlock_avatar_for_user(user_id, avatar_name, 'border_unlock', [border_name])
-        
-        # Avatar exists - add border if not already there
         cursor.execute("""
-            UPDATE unlocked_avatars 
-            SET unlocked_borders = 
-                CASE 
-                    WHEN unlocked_borders @> %s::jsonb THEN unlocked_borders
-                    ELSE unlocked_borders || %s::jsonb
-                END
+            UPDATE unlocked_avatars
+                       SET unlocked_borders =
+                           CASE
+                       WHEN unlocked_borders @> %s::jsonb THEN unlocked_borders
+                       ELSE unlocked_borders || %s::jsonb
+                       END
             WHERE user_id = %s AND avatar_name = %s
         """, (json.dumps([border_name]), json.dumps([border_name]), user_id, avatar_name))
-        
         conn.commit()
         return True
-        
     except Exception as e:
         print(f"Error adding border: {e}")
         conn.rollback()
         return False
     finally:
         cursor.close()
-        conn.close()
+        conn.close()           
 
 
 def remove_border_from_avatar(user_id, avatar_name, border_name):
@@ -2124,15 +2165,20 @@ def profile():
         
         # Get borders for current avatar
         if current_avatar != 'default.png':
-            borders = get_unlocked_borders_for_avatar(current_user.id, current_avatar)
+            borders = get_unlocked_borders_for_avatar(current_user.id, current_avatar, user_level)
             current_avatar_borders = borders
             
             # Get selected border from database, or use first available
             if 'selected_border' in level_columns and user_data.get('selected_border'):
-                current_avatar_border = user_data.get('selected_border')
+                selected = user_data.get('selected_border')
+                # Validate selected border is still available
+                if selected in borders:
+                    current_avatar_border = selected
+                elif borders:
+                    current_avatar_border = borders[0]
             elif borders:
                 current_avatar_border = borders[0]
-
+        
         if form.validate_on_submit():
             email_lower = form.email.data.lower()
 
@@ -2171,9 +2217,22 @@ def profile():
             update_fields['avatar'] = avatar_filename
             if 'selected_border' in level_columns:
                 selected_border = request.form.get('selected_border', '')
-                print(f"DEBUG: Saving border = '{selected_border}'")
-            # If border is 'none' or empty, store NULL
+                
+                # Validate if a border is being selected (not 'none' or empty)
+                if selected_border and selected_border != 'none':
+                    available_borders = get_unlocked_borders_for_avatar(
+                        current_user.id, 
+                        avatar_filename, 
+                        user_level
+                    )
+                    
+                    if selected_border not in available_borders:
+                        flash('Reunus on lukittu!', 'danger')
+                        return redirect(url_for('profile', toast_msg='Reunus on lukittu', toast_cat='warning'))
+                
+                # Store the border (NULL if 'none' or empty, otherwise the selected border)
                 update_fields['selected_border'] = selected_border if selected_border and selected_border != 'none' else None
+
             # Define privacy fields whitelist
             privacy_fields = {'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak'}
             
@@ -2255,6 +2314,7 @@ def profile():
         is_owner=True,
         user_socials=user_socials,
         AVATAR_LEVEL_REQUIREMENTS=AVATAR_LEVEL_REQUIREMENTS,
+        BORDER_LEVEL_REQUIREMENTS=BORDER_LEVEL_REQUIREMENTS,
         current_avatar_border=current_avatar_border,
         current_avatar_borders=current_avatar_borders
     )
