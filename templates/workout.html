@@ -1792,6 +1792,7 @@
     transform: scale(0.8) translateY(50px);
     transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
 .xp-overlay.show .xp-card {
@@ -3383,7 +3384,38 @@
 .dropdown-menu-template::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #7bc8a4, #6dc0d5);
 }
+.xp-card.xp-card-scrollable {
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
 
+/* Scrollbar styling for better appearance */
+.xp-card.xp-card-scrollable::-webkit-scrollbar {
+    width: 8px;
+}
+
+.xp-card.xp-card-scrollable::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.xp-card.xp-card-scrollable::-webkit-scrollbar-thumb {
+    background: rgba(109, 192, 213, 0.5);
+    border-radius: 10px;
+}
+
+.xp-card.xp-card-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(109, 192, 213, 0.8);
+}
+
+/* Firefox scrollbar */
+.xp-card.xp-card-scrollable {
+    scrollbar-color: rgba(109, 192, 213, 0.5) rgba(0, 0, 0, 0.2);
+    scrollbar-width: thin;
+}
 /* Loading state for template dropdown */
 .dropdown-menu-template .dropdown-item[disabled] {
   opacity: 0.5;
@@ -3525,6 +3557,9 @@
 /* Mobile Responsive */
 
 @media (max-width: 768px) {
+        .xp-card.xp-card-scrollable {
+        max-height: 85vh;
+    }
     
     .achievement-grid {
         grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
