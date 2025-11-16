@@ -2094,10 +2094,67 @@ def get_all_unlocked_avatars_with_borders(user_id):
     finally:
         cursor.close()
         conn.close()        
+def check_and_handle_streak_break(user_id):
+    """
+    Check if user's streak should break today.
+    Returns True if streak just broke, False otherwise.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT workout_streak, longest_streak, last_streak_date 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            return False
+        
+        last_streak_date = user_data.get('last_streak_date')
+        if not last_streak_date:
+            return False
+        
+        # Convert to date objects for comparison
+        today = datetime.now().date()
+        last_date = last_streak_date.date() if isinstance(last_streak_date, datetime) else last_streak_date
+        
+        # Check if more than 1 day has passed (streak broken)
+        days_since_last = (today - last_date).days
+        
+        if days_since_last > 1:
+            # Streak is broken - update longest_streak if current is higher
+            current_streak = user_data.get('workout_streak', 0)
+            longest_streak = user_data.get('longest_streak', 0)
+            
+            if current_streak > longest_streak:
+                cursor.execute("""
+                    UPDATE users 
+                    SET longest_streak = %s, workout_streak = 0 
+                    WHERE id = %s
+                """, (current_streak, user_id))
+            else:
+                cursor.execute("""
+                    UPDATE users 
+                    SET workout_streak = 0 
+                    WHERE id = %s
+                """, (user_id,))
+            
+            conn.commit()
+            return True  # Streak just broke
+        
+        return False
+    
+    finally:
+        cursor.close()
+        conn.close()        
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     form = UpdateProfileForm()
+    streak_just_broke = check_and_handle_streak_break(current_user.id)
     
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
@@ -2109,6 +2166,7 @@ def profile():
     workout_streak = 0
     current_avatar_border = None
     current_avatar_borders = []
+    longest_streak = 0
     
     tdee_data = get_user_current_tdee(current_user.id)
     current_tdee = tdee_data['daily_tdee']
@@ -2128,7 +2186,7 @@ def profile():
             AND column_name IN (
                 'full_name', 'main_sport', 'socials', 
                 'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials',
-                'level', 'xp_points', 'workout_streak', 'weight', 'avatar', 'username', 'email', 'selected_border'
+                'level', 'xp_points', 'workout_streak', 'longest_streak', 'weight', 'avatar', 'username', 'email', 'selected_border'
             )
         """)
         all_columns = {row['column_name'] for row in cursor.fetchall()}
@@ -2138,7 +2196,7 @@ def profile():
             'full_name', 'main_sport', 'socials', 
             'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials'
         })
-        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'selected_border'})
+        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'longest_streak', 'selected_border'})
         extra_columns_exist = bool(profile_columns.intersection({'full_name', 'main_sport', 'socials'}))
 
         # Build select query dynamically (no duplicates)
@@ -2153,6 +2211,7 @@ def profile():
             user_level = user_data.get('level', 1) or 1
             user_xp = user_data.get('xp_points', 0) or 0
             workout_streak = user_data.get('workout_streak', 0) or 0
+            longest_streak = user_data.get('longest_streak', 0) or 0
             xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
             
             user_socials = user_data.get('socials') or "[]"
@@ -2234,7 +2293,7 @@ def profile():
                 update_fields['selected_border'] = selected_border if selected_border and selected_border != 'none' else None
 
             # Define privacy fields whitelist
-            privacy_fields = {'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak'}
+            privacy_fields = {'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials', 'workout_streak', 'longest_streak'}
             
             # Add privacy controls (only if column exists)
             for privacy_field in privacy_fields:
@@ -2310,6 +2369,8 @@ def profile():
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
         workout_streak=workout_streak,
+        longest_streak=longest_streak,
+        streak_just_broke=streak_just_broke,
         viewed_user=None,
         is_owner=True,
         user_socials=user_socials,
@@ -2352,7 +2413,7 @@ def view_profile(user_id):
             AND column_name IN (
                 'full_name', 'main_sport', 'socials', 
                 'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials',
-                'level', 'xp_points', 'workout_streak', 'selected_border'
+                'level', 'xp_points', 'workout_streak', 'longest_streak', 'selected_border'
             )
         """)
         all_columns = {row['column_name'] for row in cursor.fetchall()}
@@ -2362,7 +2423,7 @@ def view_profile(user_id):
             'full_name', 'main_sport', 'socials', 
             'show_full_name', 'show_main_sport', 'show_health_metrics', 'show_socials'
         })
-        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'selected_border'})
+        level_columns = all_columns.intersection({'level', 'xp_points', 'workout_streak', 'longest_streak', 'selected_border'})
         extra_columns_exist = bool(profile_columns.intersection({'full_name', 'main_sport', 'socials'}))
 
         # Build select query dynamically
@@ -2386,6 +2447,7 @@ def view_profile(user_id):
         user_xp = user_data.get('xp_points', 0) or 0
         xp_to_next = xp_to_next_level(user_level) if callable(globals().get('xp_to_next_level')) else 100
         workout_streak = user_data.get('workout_streak', 0) or 0
+        longest_streak = user_data.get('longest_streak', 0) or 0
         
         # Metrics (only if user allows it)
         if user_data.get('show_health_metrics', False) or user_id == current_user.id:
@@ -2457,6 +2519,7 @@ def view_profile(user_id):
         user_xp=user_xp,
         xp_to_next_level=xp_to_next,
         workout_streak=workout_streak,
+        longest_streak=longest_streak,
         viewed_user=user_data,
         is_owner=(user_id == current_user.id),
         current_avatar_border=current_avatar_border,
