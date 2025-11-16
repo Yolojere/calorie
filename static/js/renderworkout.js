@@ -1062,7 +1062,20 @@ function showXPSummary(xpData, workoutData) {
     }
     
     // Determine streak styling based on milestones
-    const streakStyle = getStreakStyle(currentStreak);
+        const getStreakMultiplier = (streak) => {
+        if (streak >= 20) return 1.10;
+        if (streak >= 10) return 1.05;
+        if (streak >= 5) return 1.02;
+        return 1.0;
+    };
+    
+    const streakMultiplier = getStreakMultiplier(currentStreak);
+    const multiplierPercent = ((streakMultiplier - 1) * 100).toFixed(0);
+    
+    const streakStyle = currentStreak >= 20 ? 'color: #FFD700;' : 
+                        currentStreak >= 10 ? 'color: #87CEEB;' : 
+                        currentStreak >= 5 ? 'color: #98FF98;' : 
+                        'color: #888;';
     
     // Border names for display
     const borderNames = {
@@ -1073,9 +1086,9 @@ function showXPSummary(xpData, workoutData) {
     };
     
     // Create XP overlay
-    const overlay = $(`
+        const overlay = $(`
         <div class="xp-overlay" id="xp-summary-overlay">
-            <div class="xp-card">
+            <div class="xp-card xp-card-scrollable">
                 <div class="xp-particles" id="xp-particles"></div>
                 
                 ${levels_gained > 0 ? `
@@ -1143,6 +1156,7 @@ function showXPSummary(xpData, workoutData) {
                             'cardio_duration': '🏃 Cardion Kesto',
                             'cardio_calories': '🔥 Cardion Kalorit',
                             'weights_volume': '💪 Treenin Volyymi',
+                            'workout_duration': '⏱️ Treenin Kesto',
                             'new_exercises': '🆕 Uudet Liikkeet',
                             'personal_bests': '🏆 Ennätykset',
                             'streak': `<span style="${streakStyle}">📈 Treeniputki</span>`
@@ -1162,6 +1176,9 @@ function showXPSummary(xpData, workoutData) {
                         <div class="streak-text">
                             <div class="streak-title">Treeniputki</div>
                             <div class="streak-value">${currentStreak} ${currentStreak === 1 ? 'päivä' : 'päivää'}</div>
+                            <div style="font-size: 14px; margin-top: 5px; opacity: 0.9;">
+                                XP Kerroin: ${streakMultiplier}x (+${multiplierPercent}%)
+                            </div>
                         </div>
                     </div>
                 ` : ''}
