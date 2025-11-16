@@ -997,17 +997,17 @@ function checkAvatarUnlocks(levelBefore, levelAfter) {
         3: ['avatar2.png', 'avatar3.png'],
         5: ['avatar4.png', 'avatar5.png'],
         7: ['avatar6.png'],
-        8: ['avatar7.png'],
+        7: ['avatar7.png'],
         10: ['avatar8.png'],
-        12: ['avatar9.png'],
+        10: ['avatar9.png'],
         13: ['avatar10.png'],
-        15: ['avatar11.png'],
-        17: ['avatar12.png'],
-        18: ['avatar13.png'],
-        20: ['avatar14.png', 'avatar15.png'],
-        25: ['avatar16.png', 'avatar17.png'],
-        27: ['avatar18.png'],
-        30: ['avatar19.png']
+        13: ['avatar11.png'],
+        15: ['avatar12.png'],
+        15: ['avatar13.png'],
+        17: ['avatar14.png', 'avatar15.png'],
+        20: ['avatar16.png', 'avatar17.png'],
+        23: ['avatar18.png'],
+        23: ['avatar19.png']
     };
     
     let unlockedAvatars = [];
@@ -1098,7 +1098,7 @@ function showXPSummary(xpData, workoutData) {
                             'weights_volume': '💪 Treenin Volyymi',
                             'new_exercises': '🆕 Uudet Liikkeet',
                             'personal_bests': '🏆 Ennätykset',
-                            'streak': `<span style="${streakStyle}">⚡ Treeniputki</span>`
+                            'streak': `<span style="${streakStyle}">📈 Treeniputki</span>`
                         };
                         return `
                             <div class="xp-source-item">
@@ -1111,7 +1111,7 @@ function showXPSummary(xpData, workoutData) {
                 
                 ${streakData.awarded ? `
                     <div class="streak-display" style="${streakStyle}">
-                        <div class="streak-icon">⚡</div>
+                        <div class="streak-icon">📈</div>
                         <div class="streak-text">
                             <div class="streak-title">Treeniputki</div>
                             <div class="streak-value">${currentStreak} ${currentStreak === 1 ? 'päivä' : 'päivää'}</div>
@@ -2139,4 +2139,3 @@ function hideEmptyWorkoutGroups() {
         saveCollapseState();
     }, 350); // Slightly longer than the fadeOut duration
 }
-
