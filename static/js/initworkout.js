@@ -185,46 +185,65 @@ $(document).on('click', function(e) {
         }
     });
 });
-// Initialization
 function getWorkoutNameKey(date) {
     return "workoutName_" + date;
 }
 
-// Render workout name in header
+function checkAndApplyPulseAnimation(date) {
+    const $display = $(".workout-name-display");
+    const name = localStorage.getItem(getWorkoutNameKey(date)) || "Nimetön Treeni";
+    
+    // Keep pulsing as long as the name is the default
+    if (name === "Nimetön Treeni") {
+        $display.addClass("pulse-animation");
+    } else {
+        $display.removeClass("pulse-animation");
+    }
+}
+
 function renderWorkoutName(date) {
     const name = localStorage.getItem(getWorkoutNameKey(date)) || "Nimetön Treeni";
     $(".workout-name-display").text(name).show();
     $(".workout-name-input").val(name).hide();
+    checkAndApplyPulseAnimation(date);
 }
 
-// Editable name, inline!
 $(document).on("click", ".workout-name-display", function() {
+    $(this).removeClass("pulse-animation");
     $(this).hide();
     $(".workout-name-input").val($(this).text()).removeClass("d-none").show().focus().select();
 });
+
 $(document).on("blur", ".workout-name-input", saveEditWorkoutName);
+
 $(document).on("keydown", ".workout-name-input", function(e){
     if(e.key === "Enter") $(this).blur();
 });
+
 function saveEditWorkoutName() {
     const $input = $(".workout-name-input");
-    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T")[0];
     let val = $input.val().trim() || "Nimeä/Lataa Treeni";
     localStorage.setItem(getWorkoutNameKey(date), val);
-    $(".workout-name-display").text(val).show();
+    $(".workout-name-display").text(val).removeClass("pulse-animation").show();
     $input.hide();
 }
 
-// On workout date change or page load
 $(document).on("workoutContentChanged", function() {
-    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T");
+    const date = $(".workout-date.active").data("date") || new Date().toISOString().split("T")[0];
     renderWorkoutName(date);
 });
+
+$(document).on('click', '.workout-date', function() {
+    const selectedDate = $(this).data('date');
+    renderWorkoutName(selectedDate);
+});
+
 $(document).ready(function(){
-    // ✅ IMPROVED: Use proper date fallback
     const date = $(".workout-date.active").data("date") || currentSelectedDate || new Date().toISOString().split("T")[0];
     renderWorkoutName(date);
 });
+
 $(window).on('beforeunload', function() {
     cleanupTimer();
 });
