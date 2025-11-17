@@ -1440,7 +1440,130 @@ input.form-control:-webkit-autofill {
         opacity: 0.7;
     }
 }
+/* LONGEST STREAK CARD STYLING - MATCHES CARDIO/LIFT CARD SIZE */
+.longest-streak-card {
+    padding: 16px !important;
+    border-radius: 15px;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 15px;
+    color: #6dc0d5;
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
 
+/* Gradient glow layer behind longest streak */
+.longest-streak-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 15px;
+    padding: 2px;
+    background: conic-gradient(from 90deg at 50% 50%, #6dc0d5 0, #4a9db0 50%, #6dc0d5 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.3;
+    z-index: -1;
+    animation: gradientGlow 3s ease-in-out infinite;
+}
+
+/* TIER 1: 10-19 days - Green */
+.longest-streak-card.streak-10 {
+    border-color: #7bc8a4;
+    background: linear-gradient(135deg, rgba(123, 200, 164, 0.12), rgba(20, 20, 20, 0.8));
+    color: #7bc8a4;
+}
+
+.longest-streak-card.streak-10::before {
+    background: conic-gradient(from 90deg at 50% 50%, #7bc8a4 0, #5aa085 50%, #7bc8a4 100%);
+    opacity: 0.4;
+    filter: blur(12px);
+}
+
+/* TIER 2: 20-49 days - Cyan */
+.longest-streak-card.streak-20 {
+    border-color: #00D9FF;
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(20, 20, 20, 0.8));
+    color: #00D9FF;
+}
+
+.longest-streak-card.streak-20::before {
+    background: conic-gradient(from 90deg at 50% 50%, #00D9FF 0, #0099cc 33%, #00D9FF 66%, #33e6ff 100%);
+    opacity: 0.5;
+    filter: blur(16px);
+}
+
+/* TIER 3: 50-99 days - Orange */
+.longest-streak-card.streak-50 {
+    border-color: #FF8C00;
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.18), rgba(20, 20, 20, 0.8));
+    color: #FF8C00;
+}
+
+.longest-streak-card.streak-50::before {
+    background: conic-gradient(from 90deg at 50% 50%, #FF8C00 0, #ff6600 25%, #ffaa00 50%, #ff6600 75%, #FF8C00 100%);
+    opacity: 0.6;
+    filter: blur(20px);
+}
+
+/* TIER 4: 100-149 days - Purple */
+.longest-streak-card.streak-100 {
+    border-color: #9D4EDD;
+    background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(20, 20, 20, 0.8));
+    color: #9D4EDD;
+}
+
+.longest-streak-card.streak-100::before {
+    background: conic-gradient(from 90deg at 50% 50%, #9D4EDD 0, #7b2cbf 20%, #c77dff 40%, #7b2cbf 60%, #9D4EDD 80%, #e0aaff 100%);
+    opacity: 0.7;
+    filter: blur(24px);
+}
+
+/* TIER 5: 150-199 days - Pink */
+.longest-streak-card.streak-150 {
+    border-color: #FF6EC7;
+    background: linear-gradient(135deg, rgba(255, 110, 199, 0.22), rgba(20, 20, 20, 0.8));
+    color: #FF6EC7;
+}
+
+.longest-streak-card.streak-150::before {
+    background: conic-gradient(from 90deg at 50% 50%, #FF6EC7 0, #ff1493 15%, #ff69b4 30%, #c71585 45%, #FF6EC7 60%, #ffc0cb 75%, #ff1493 90%, #FF6EC7 100%);
+    opacity: 0.8;
+    filter: blur(28px);
+}
+
+/* TIER 6: 200+ days - Gold */
+.longest-streak-card.streak-200 {
+    border-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(20, 20, 20, 0.8));
+    color: #FFD700;
+}
+
+.longest-streak-card.streak-200::before {
+    background: conic-gradient(from 90deg at 50% 50%, #FFD700 0, #FFA500 12%, #FFFF00 25%, #FFD700 37%, #FF8C00 50%, #FFD700 62%, #FFFF00 75%, #FFA500 87%, #FFD700 100%);
+    opacity: 0.9;
+    filter: blur(32px);
+}
+
+#longest-streak-value {
+    font-weight: 700;
+    color: inherit;
+    text-shadow: 0 0 15px currentColor;
+}
+
+/* Hardware acceleration */
+.longest-streak-card,
+.longest-streak-card::before {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
 /* Optional: Add hardware acceleration for smoother animations */
 .streak-value-profile,
 .streak-display-profile {
@@ -2690,7 +2813,31 @@ input.form-control:-webkit-autofill {
             </div>
         </div>
     </div>
+    <!-- NEW SECTION: Yleiset Ennätykset (General Records) -->
+<div class="general-records-container mb-4 mt-5">
+  <h5 style="color: fff; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">
+    <i class="fas fa-fire me-2" style="color: FFD700;"></i>
+    Yleiset Ennätykset
+  </h5>
+
+  <!-- Longest Streak Card -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="longest-streak-card" id="longest-streak-display-container">
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 0.9rem; color: bbb; font-weight: 500;">Pisin Treeniputki</div>
+          <div id="longest-streak-display" style="font-size: 2.2rem; font-weight: 700; color: fff; margin: 8px 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-trophy" style="font-size: 1.8rem; color: FFD700;"></i>
+            <span id="longest-streak-value">{{ longest_streak or 0 }}</span>
+          </div>
+          <div style="font-size: 0.85rem; color: 7bc8a4; margin-top: 8px;">Paras saavutuksesi</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+</div>
+
     {% if (viewed_user and (viewed_user.get('show_health_metrics', False) or is_owner)) or (not viewed_user and is_owner) %}
     <div class="health-metrics">
         <legend class="border-bottom mb-4">
@@ -3627,30 +3774,55 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-    const streakValueElement = document.getElementById('streak-value-profile');
-    const streakDisplay = document.getElementById('streak-profile-display');
+const streakValueElement = document.getElementById('streak-value-profile')
+const streakDisplay = document.getElementById('streak-profile-display')
+if (streakValueElement && streakDisplay) {
+    const streak = parseInt(streakValueElement.textContent)
     
-    if (streakValueElement && streakDisplay) {
-        const streak = parseInt(streakValueElement.textContent);
-        
-        // Remove all streak classes first
-        streakDisplay.classList.remove('streak-10', 'streak-20', 'streak-50', 'streak-100', 'streak-150', 'streak-200');
-        
-        // Add appropriate class based on streak value
-        if (streak >= 200) {
-            streakDisplay.classList.add('streak-200');
-        } else if (streak >= 150) {
-            streakDisplay.classList.add('streak-150');
-        } else if (streak >= 100) {
-            streakDisplay.classList.add('streak-100');
-        } else if (streak >= 50) {
-            streakDisplay.classList.add('streak-50');
-        } else if (streak >= 20) {
-            streakDisplay.classList.add('streak-20');
-        } else if (streak >= 10) {
-            streakDisplay.classList.add('streak-10');
-        }
+    // Remove all streak classes first
+    streakDisplay.classList.remove('streak-10', 'streak-20', 'streak-50', 'streak-100', 'streak-150', 'streak-200')
+    
+    // Add appropriate class based on streak value
+    if (streak >= 200) {
+        streakDisplay.classList.add('streak-200')
+    } else if (streak >= 150) {
+        streakDisplay.classList.add('streak-150')
+    } else if (streak >= 100) {
+        streakDisplay.classList.add('streak-100')
+    } else if (streak >= 50) {
+        streakDisplay.classList.add('streak-50')
+    } else if (streak >= 20) {
+        streakDisplay.classList.add('streak-20')
+    } else if (streak >= 10) {
+        streakDisplay.classList.add('streak-10')
     }
+}
+
+// LONGEST STREAK CARD STYLING
+const longestStreakValueElement = document.getElementById('longest-streak-value')
+const longestStreakContainer = document.getElementById('longest-streak-display-container')
+if (longestStreakValueElement && longestStreakContainer) {
+    const longestStreak = parseInt(longestStreakValueElement.textContent)
+    
+    // Remove all streak classes first
+    longestStreakContainer.classList.remove('streak-10', 'streak-20', 'streak-50', 'streak-100', 'streak-150', 'streak-200')
+    
+    // Add appropriate class based on longest streak value
+    if (longestStreak >= 200) {
+        longestStreakContainer.classList.add('streak-200')
+    } else if (longestStreak >= 150) {
+        longestStreakContainer.classList.add('streak-150')
+    } else if (longestStreak >= 100) {
+        longestStreakContainer.classList.add('streak-100')
+    } else if (longestStreak >= 50) {
+        longestStreakContainer.classList.add('streak-50')
+    } else if (longestStreak >= 20) {
+        longestStreakContainer.classList.add('streak-20')
+    } else if (longestStreak >= 10) {
+        longestStreakContainer.classList.add('streak-10')
+    }
+}
+
 // Border selection functionality
 let selectedBorder = '{{ current_avatar_border or "" }}';
 const borderOptions = document.querySelectorAll('.border-option');
