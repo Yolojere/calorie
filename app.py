@@ -6420,7 +6420,7 @@ def save_workout():
         
         # Only award cardio XP if this is the first cardio save of the day
         if not existing_cardio_saved_today and cardio_duration > 0:
-            xp_cardio_duration = float(cardio_duration) * 0.02
+            xp_cardio_duration = float(cardio_duration) * 0.03
             xp_sources['cardio_duration'] = xp_cardio_duration
             app.logger.info(f"Cardio duration XP awarded: {xp_cardio_duration}")
         else:
@@ -6431,7 +6431,7 @@ def save_workout():
         
         # Only award cardio calories XP if this is the first cardio save of the day
         if not existing_cardio_saved_today and cardio_calories > 0:
-            xp_cardio_calories = float(cardio_calories) * 0.2
+            xp_cardio_calories = float(cardio_calories) * 0.3
             xp_sources['cardio_calories'] = xp_cardio_calories
             app.logger.info(f"Cardio calories XP awarded: {xp_cardio_calories}")
         else:
@@ -6440,7 +6440,7 @@ def save_workout():
         
         # Only award strength volume XP if this is the first strength save of the day
         if not existing_strength_saved_today and current_total_volume > 0:
-            xp_weights_volume = float(current_total_volume) * 0.03
+            xp_weights_volume = float(current_total_volume) * 0.04
             xp_sources['weights_volume'] = xp_weights_volume
             app.logger.info(f"Weights volume XP awarded: {xp_weights_volume}")
         else:
@@ -6451,7 +6451,7 @@ def save_workout():
         
         # Only award workout duration XP if this is the first strength save of the day
         if not existing_strength_saved_today and workout_duration_seconds > 0:
-            xp_workout_duration = float(workout_duration_seconds) * 0.01
+            xp_workout_duration = float(workout_duration_seconds) * 0.03
             xp_sources['workout_duration'] = xp_workout_duration
             app.logger.info(f"Workout duration XP awarded: {xp_workout_duration}")
         else:
