@@ -1812,7 +1812,7 @@ function displayCardioSessions(cardioSessions, containerOverride = null) {
         <div class="group-header">
             <div class="group-header-content">
                 <div class="group-icon">
-                    <i class="fas fa-heart"></i>
+                    <i class="fas fa-heart-pulse"></i>
                 </div>
                 <div class="group-title">Cardio</div>
             </div>
