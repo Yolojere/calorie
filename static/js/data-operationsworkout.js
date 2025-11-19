@@ -1085,48 +1085,74 @@ function populateCardioSelects() {
 }
 
 // ✅ ENHANCED: Calculate estimated calories with multiple methods
-function calculateCardioCalories(metValue, durationMinutes, heartRate = null, watts = null, distance = null) {
+function calculateCardioCalories(metValue, durationMinutes, heartRate = null, watts = null, distance = null, exerciseName = "") {
     if (!metValue || !durationMinutes) return 0;
-    
+
     let calories = 0;
     let method = "MET";
     const durationHours = durationMinutes / 60.0;
-    
+
+    // --- Cycling detection (FIN + ENG) ---
+    const name = (exerciseName || "").toLowerCase();
+    const isCycling =
+        name.includes("pyörä") ||
+        name.includes("cycling") ||
+        name.includes("bike") ||
+        name.includes("biking");
+
     // Method 1: Watts-based (most accurate for cycling)
     if (watts && watts > 0) {
         calories = watts * durationHours * 3.6;
         method = "Watts";
     }
-    // Method 2: Distance-based (good for running/walking)
+
+    // Method 2: Distance-based
     else if (distance && distance > 0) {
         const speedKmh = distance / durationHours;
+
+        // --- NEW: Cycling block (prevents running/walking override) ---
+        if (isCycling) {
+            calories = distance * 0.28 * userWeight;
+            method = `Cycling (${speedKmh.toFixed(1)} km/h)`;
         
-        if (speedKmh > 6) {
-            // Running METs based on speed
-            let runningMet;
-            if (speedKmh >= 16) runningMet = 15.0;
-            else if (speedKmh >= 13) runningMet = 12.0;
-            else if (speedKmh >= 11) runningMet = 11.0;
-            else if (speedKmh >= 9) runningMet = 9.0;
-            else if (speedKmh >= 8) runningMet = 8.0;
-            else runningMet = 7.0;
-            
-            calories = runningMet * userWeight * durationHours;
-            method = `Running (${speedKmh.toFixed(1)} km/h)`;
-        } else {
-            // Walking METs based on speed
-            let walkingMet;
-            if (speedKmh >= 5.5) walkingMet = 4.3;
-            else if (speedKmh >= 4.8) walkingMet = 3.8;
-            else if (speedKmh >= 4.0) walkingMet = 3.5;
-            else if (speedKmh >= 3.2) walkingMet = 3.0;
-            else walkingMet = 2.5;
-            
-            calories = walkingMet * userWeight * durationHours;
-            method = `Walking (${speedKmh.toFixed(1)} km/h)`;
+                console.log("CYCLING MATCH FRONTEND", {
+        exerciseName,
+        distance,
+        speedKmh,
+        calories
+    });
+}
+
+        // Running / walking fallback
+        else {
+            if (speedKmh > 6) {
+                // Running METs based on speed
+                let runningMet;
+                if (speedKmh >= 16) runningMet = 15.0;
+                else if (speedKmh >= 13) runningMet = 12.0;
+                else if (speedKmh >= 11) runningMet = 11.0;
+                else if (speedKmh >= 9) runningMet = 9.0;
+                else if (speedKmh >= 8) runningMet = 8.0;
+                else runningMet = 7.0;
+
+                calories = runningMet * userWeight * durationHours;
+                method = `Running (${speedKmh.toFixed(1)} km/h)`;
+            } else {
+                // Walking METs based on speed
+                let walkingMet;
+                if (speedKmh >= 5.5) walkingMet = 4.3;
+                else if (speedKmh >= 4.8) walkingMet = 3.8;
+                else if (speedKmh >= 4.0) walkingMet = 3.5;
+                else if (speedKmh >= 3.2) walkingMet = 3.0;
+                else walkingMet = 2.5;
+
+                calories = walkingMet * userWeight * durationHours;
+                method = `Walking (${speedKmh.toFixed(1)} km/h)`;
+            }
         }
     }
-    // Method 3: Heart rate (when available)
+
+    // Method 3: Heart rate
     else if (heartRate && userAge && userGender) {
         if (userGender.toLowerCase() === 'male') {
             calories = durationMinutes * (0.6309 * heartRate + 0.1988 * userWeight + 0.2017 * userAge - 55.0969) / 4.184;
@@ -1135,15 +1161,17 @@ function calculateCardioCalories(metValue, durationMinutes, heartRate = null, wa
         }
         method = `Heart Rate (${heartRate} bpm)`;
     }
-    // Method 4: Standard MET calculation (fallback)
+
+    // Method 4: Standard MET fallback
     else {
         calories = metValue * userWeight * durationHours;
         method = "MET";
     }
-    
+
     console.log(`Calorie calculation - Method: ${method}, Calories: ${calories.toFixed(1)}`);
     return Math.max(0, calories);
 }
+
 
 // ✅ ENHANCED: Update calorie preview with multiple input methods
 function updateCaloriePreview(isMobile = false) {
@@ -1164,7 +1192,7 @@ function updateCaloriePreview(isMobile = false) {
     const distance = distanceInput ? parseFloat(distanceInput.value) : null;
     
     if (metValue && duration) {
-        const calories = calculateCardioCalories(metValue, duration, heartRate, watts, distance);
+        const calories = calculateCardioCalories(metValue, duration, heartRate, watts, distance, selectedExercise.name);
         caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: ${Math.round(calories)}`;
     } else {
         caloriesPreview.textContent = `${isMobile ? 'Kalorit' : 'Estimated Calories'}: --`;
