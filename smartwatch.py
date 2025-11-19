@@ -975,6 +975,12 @@ def import_garmin_activity_as_cardio(activity, user_id):
         max_hr = activity.get('max_hr')
         calories_burned = activity.get('calories', 0)
         
+        # NEW: Get avg_speed from Garmin activity or calculate it
+        avg_speed = activity.get('avg_speed')  # Try to get from Garmin first
+        if not avg_speed and distance_km and duration_minutes > 0:
+            # Calculate if not provided
+            avg_speed = round((distance_km / (duration_minutes / 60.0)), 2)
+        
         # Calculate pace if distance available
         avg_pace_min_per_km = None
         if distance_km and distance_km > 0 and duration_minutes > 0:
@@ -1012,9 +1018,9 @@ def import_garmin_activity_as_cardio(activity, user_id):
         cursor.execute("""
             INSERT INTO cardio_sessions 
             (session_id, cardio_exercise_id, duration_minutes, distance_km, 
-             avg_pace_min_per_km, avg_heart_rate, max_heart_rate, calories_burned, 
+             avg_pace_min_per_km, avg_heart_rate, avg_speed, max_heart_rate, calories_burned, 
              notes, garmin_activity_id, is_saved, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, false, NOW())
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, false, NOW())
             RETURNING id
         """, (
             session_id,
@@ -1023,6 +1029,7 @@ def import_garmin_activity_as_cardio(activity, user_id):
             distance_km,
             avg_pace_min_per_km,
             avg_hr,
+            avg_speed,  # NEW: Include avg_speed
             max_hr,
             calories_burned,
             notes,
@@ -1039,6 +1046,7 @@ def import_garmin_activity_as_cardio(activity, user_id):
             'activity_name': activity_name,
             'calories_burned': round(calories_burned, 1),
             'duration_minutes': round(duration_minutes, 1),
+            'avg_speed': avg_speed,  # NEW: Return avg_speed
             'activity_id': activity_id,
             'date': activity_date.strftime('%Y-%m-%d')
         }
