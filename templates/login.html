@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 
-{% block title %}TrackYou - Kalorilaskuri - Fitness App{% endblock %}
 
 {% block content %}
 <style>
@@ -203,8 +202,13 @@
 
     .btn-google:hover, .btn-github:hover {
         opacity: 0.9;
-        color: rgb(0, 0, 0);
-        background-color: #ff0000;
+        color: rgb(0, 0, 0) !important;
+        background-color: #ff0000 !important;
+    }
+     .btn-google:focus {
+        background-color: #DB4437 !important;
+        color: white !important;
+        transform: scale(1.05);
     }
 
     /* Pop animation */
