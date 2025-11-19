@@ -6982,46 +6982,38 @@ def add_cardio_session():
     cursor = conn.cursor(cursor_factory=DictCursor)
 
     try:
-        # ✅ Validate and parse date
+        # Parse date
         date_str = data.get('date', datetime.now().strftime("%Y-%m-%d"))
         try:
             session_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             return jsonify(error="Invalid date format"), 400
 
-        # ✅ Validate required fields
+        # Validate required fields
         if not data.get('cardio_exercise_id') or not data.get('duration_minutes'):
             return jsonify(error="Missing required fields"), 400
 
-        # ✅ Check for duplicate cardio session
+        # Duplicate prevention (5-second window)
         cursor.execute('''
             SELECT cs.id FROM cardio_sessions cs
             JOIN workout_sessions ws ON cs.session_id = ws.id
             WHERE ws.user_id = %s AND ws.date = %s 
-            AND cs.cardio_exercise_id = %s AND cs.duration_minutes = %s
-            AND cs.created_at > NOW() - INTERVAL '5 seconds'
+              AND cs.cardio_exercise_id = %s 
+              AND cs.duration_minutes = %s
+              AND cs.created_at > NOW() - INTERVAL '5 seconds'
         ''', (user_id, session_date, data['cardio_exercise_id'], data['duration_minutes']))
-        
-        existing = cursor.fetchone()
-        if existing:
+
+        if cursor.fetchone():
             return jsonify(error="Duplicate cardio session detected"), 409
 
-        # ✅ Get user weight & gender from database (with fallback)
+        # User weight & gender
         cursor.execute('SELECT weight, gender FROM users WHERE id = %s', (user_id,))
         user_record = cursor.fetchone()
-        
-        if user_record and user_record['weight']:
-            weight_kg = float(user_record['weight'])
-        else:
-            weight_kg = data.get('weight_kg', 70.0)
-            
-        gender = (user_record['gender'].lower() if user_record and user_record['gender'] else "male")
 
-        app.logger.info(f"Using weight: {weight_kg}kg, gender: {gender} for user {user_id}")
+        weight_kg = float(user_record['weight']) if user_record and user_record['weight'] else float(data.get('weight_kg', 70.0))
+        gender = user_record['gender'].lower() if user_record and user_record['gender'] else "male"
 
-        # ============================================================================
-        # CRITICAL: Use SAME logic as save_set - find or create UNSAVED session
-        # ============================================================================
+        # Get unsaved workout session or create one
         cursor.execute('''
             SELECT id FROM workout_sessions 
             WHERE user_id = %s AND date = %s AND is_saved = false
@@ -7035,12 +7027,10 @@ def add_cardio_session():
                 VALUES (%s, %s, %s, %s, false) RETURNING id
             ''', (user_id, session_date, 'Unnamed Workout', 'general'))
             session_id = cursor.fetchone()['id']
-            app.logger.info(f"Created new unsaved session {session_id} for cardio on date {session_date}")
         else:
             session_id = session['id']
-            app.logger.info(f"Using existing unsaved session {session_id} for cardio on date {session_date}")
 
-        # ✅ Get cardio exercise details
+        # Fetch cardio exercise
         cursor.execute('''
             SELECT met_value, name FROM cardio_exercises WHERE id = %s
         ''', (data['cardio_exercise_id'],))
@@ -7051,80 +7041,92 @@ def add_cardio_session():
 
         met_value = float(exercise['met_value'])
         exercise_name = exercise['name'].lower()
+
         duration_minutes = float(data['duration_minutes'])
         duration_hours = duration_minutes / 60.0
 
-        # ✅ Calories burned calculation
         calories_burned = 0
         calculation_method = "MET"
 
-        # Method 1: Watts-based
-        if data.get('watts') and float(data['watts']) > 0:
+        # ---------------------------------------
+        # Distance-based calculation
+        # ---------------------------------------
+        if data.get('distance_km') and float(data['distance_km']) > 0:
+            distance_km = float(data['distance_km'])
+            speed_kmh = distance_km / duration_hours
+
+            is_cycling = (
+                'cycling' in exercise_name or
+                'pyöräily' in exercise_name or
+                'biking' in exercise_name
+            )
+
+            if is_cycling:
+                calories_burned = distance_km * 0.28 * weight_kg
+                calculation_method = f"Distance-Cycling ({speed_kmh:.1f} km/h)"
+
+            else:
+                # Running
+                if speed_kmh > 6:
+                    if speed_kmh >= 16: running_met = 15.0
+                    elif speed_kmh >= 13: running_met = 12.0
+                    elif speed_kmh >= 11: running_met = 11.0
+                    elif speed_kmh >= 9:  running_met = 9.0
+                    elif speed_kmh >= 8:  running_met = 8.0
+                    else:                 running_met = 7.0
+
+                    calories_burned = running_met * weight_kg * duration_hours
+                    calculation_method = f"Distance-Running ({speed_kmh:.1f} km/h)"
+
+                else:
+                    # Walking
+                    if speed_kmh >= 5.5: walking_met = 4.3
+                    elif speed_kmh >= 4.8: walking_met = 3.8
+                    elif speed_kmh >= 4.0: walking_met = 3.5
+                    elif speed_kmh >= 3.2: walking_met = 3.0
+                    else: walking_met = 2.5
+
+                    calories_burned = walking_met * weight_kg * duration_hours
+                    calculation_method = f"Distance-Walking ({speed_kmh:.1f} km/h)"
+
+        # ---------------------------------------
+        # Watts-based calculation
+        # ---------------------------------------
+        elif data.get('watts') and float(data['watts']) > 0:
             watts = float(data['watts'])
             calories_burned = watts * duration_hours * 3.6
             calculation_method = "Watts"
 
-        # Method 2: Distance-based (running/walking)
-        elif data.get('distance_km') and float(data['distance_km']) > 0:
-            distance_km = float(data['distance_km'])
-            speed_kmh = distance_km / duration_hours
-
-            if 'cycling' in exercise_name or 'pyöräily' in exercise_name or 'biking' in exercise_name:
-                # Cycling: 1 km = 0.28 × weight (kg)
-                calories_burned = distance_km * 0.28 * weight_kg
-                calculation_method = f"Distance-Cycling ({speed_kmh:.1f} km/h)"            
-            
-            if speed_kmh > 6:  # Running
-                if speed_kmh >= 16:
-                    running_met = 15.0
-                elif speed_kmh >= 13:
-                    running_met = 12.0
-                elif speed_kmh >= 11:
-                    running_met = 11.0
-                elif speed_kmh >= 9:
-                    running_met = 9.0
-                elif speed_kmh >= 8:
-                    running_met = 8.0
-                else:
-                    running_met = 7.0
-                    
-                calories_burned = running_met * weight_kg * duration_hours
-                calculation_method = f"Distance-Running ({speed_kmh:.1f} km/h)"
-            else:  # Walking
-                if speed_kmh >= 5.5:
-                    walking_met = 4.3
-                elif speed_kmh >= 4.8:
-                    walking_met = 3.8
-                elif speed_kmh >= 4.0:
-                    walking_met = 3.5
-                elif speed_kmh >= 3.2:
-                    walking_met = 3.0
-                else:
-                    walking_met = 2.5
-                    
-                calories_burned = walking_met * weight_kg * duration_hours
-                calculation_method = f"Distance-Walking ({speed_kmh:.1f} km/h)"
-
-        # Method 3: Standard MET
+        # ---------------------------------------
+        # MET fallback
+        # ---------------------------------------
         else:
             calories_burned = met_value * weight_kg * duration_hours
             calculation_method = "MET"
 
-        # ✅ Heart rate adjustment (overrides other calculations)
+        # ---------------------------------------
+        # Heart rate formula (overrides others)
+        # ---------------------------------------
         if data.get('avg_heart_rate') and data.get('age'):
             hr = float(data['avg_heart_rate'])
             age = float(data['age'])
-            
+
             if gender == 'male':
-                calories_burned = duration_minutes * (0.6309 * hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969) / 4.184
+                calories_burned = duration_minutes * (
+                    0.6309 * hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969
+                ) / 4.184
             else:
-                calories_burned = duration_minutes * (0.4472 * hr - 0.1263 * weight_kg + 0.074 * age - 20.4022) / 4.184
-            
+                calories_burned = duration_minutes * (
+                    0.4472 * hr - 0.1263 * weight_kg + 0.074 * age - 20.4022
+                ) / 4.184
+
             calculation_method = f"Heart Rate ({hr} bpm)"
 
         calories_burned = max(0, calories_burned)
 
-        # ✅ Insert cardio session with is_saved = false
+        # ---------------------------------------
+        # Insert cardio session
+        # ---------------------------------------
         cursor.execute('''
             INSERT INTO cardio_sessions 
             (session_id, cardio_exercise_id, duration_minutes, distance_km, 
@@ -7160,10 +7162,11 @@ def add_cardio_session():
     except Exception as e:
         conn.rollback()
         app.logger.error(f"Add Cardio Error: {str(e)}")
-        app.logger.error(traceback.format_exc())
         return jsonify(error="Could not add cardio session"), 500
+
     finally:
         conn.close()
+
 
 
 
