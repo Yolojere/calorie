@@ -1851,7 +1851,7 @@ def login():
                     return redirect(next_page)
             return redirect(url_for('index'))
         else:
-            flash('login_failed', 'danger')
+            flash('Sisäänkirjautuminen epäonnistui!', 'danger')
 
     return render_template('login.html', title='Login', form=form)
 
