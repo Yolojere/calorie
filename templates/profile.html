@@ -2504,7 +2504,7 @@ input.form-control:-webkit-autofill {
         <!-- Avatar Selection Modal - only for owner -->
 <div class="avatar-modal" id="avatarModal">
     <div class="avatar-modal-content">
-        <h4 class="text-center mb-3" data-i18n="choose_avatar">Muokkaa Avataria</h4>
+        <h4 class="text-center mb-3" data-i18n="chooseavatar">Muokkaa Avataria</h4>
         
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs mb-3" id="avatarModalTabs" role="tablist" style="border-bottom: 1px solid #444;">
@@ -2749,70 +2749,122 @@ input.form-control:-webkit-autofill {
         </ul>
         
         <!-- Tab Content -->
-        <div class="tab-content" id="cardioTabContent">
-            <!-- Running Tab -->
-            <div class="tab-pane fade show active" id="running-content" role="tabpanel" aria-labelledby="running-tab">
-                <div class="row g-3">
-                    <!-- Longest Session -->
-                    <div class="col-6">
-                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <i class="fas fa-clock" style="font-size: 1.2rem; color: #7bc8a4; margin-right: 8px;"></i>
-                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Harjoitus</div>
-                            </div>
-                            <div id="running-longest-duration" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
-                            <div id="running-longest-distance-info" style="font-size: 0.9rem; color: #6dc0d5; margin-top: 4px;">-</div>
-                            <div id="running-longest-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
-                        </div>
+<div class="tab-content" id="cardioTabContent">
+    <!-- Running Tab -->
+    <div class="tab-pane fade show active" id="running-content" role="tabpanel" aria-labelledby="running-tab">
+        <div class="row g-3">
+            <!-- Longest Distance -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
                     </div>
-                    
-                    <!-- Longest Distance -->
-                    <div class="col-6">
-                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
-                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
-                            </div>
-                            <div id="running-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
-                            <div id="running-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
-                            <div id="running-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
-                        </div>
-                    </div>
+                    <div id="running-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="running-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
+                    <div id="running-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
                 </div>
             </div>
             
-            <!-- Cycling Tab -->
-            <div class="tab-pane fade" id="cycling-content" role="tabpanel" aria-labelledby="cycling-tab">
-                <div class="row g-3">
-                    <!-- Longest Session -->
-                    <div class="col-6">
-                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <i class="fas fa-clock" style="font-size: 1.2rem; color: #7bc8a4; margin-right: 8px;"></i>
-                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Harjoitus</div>
-                            </div>
-                            <div id="cycling-longest-duration" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
-                            <div id="cycling-longest-distance-info" style="font-size: 0.9rem; color: #6dc0d5; margin-top: 4px;">-</div>
-                            <div id="cycling-longest-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
-                        </div>
+            <!-- Best 5km -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-running" style="font-size: 1.2rem; color: #f39c12; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 5 km</div>
                     </div>
-                    
-                    <!-- Longest Distance -->
-                    <div class="col-6">
-                        <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
-                                <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
-                            </div>
-                            <div id="cycling-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
-                            <div id="cycling-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
-                            <div id="cycling-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
-                        </div>
+                    <div id="running-best-5km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="running-best-5km-pace" style="font-size: 0.9rem; color: #f39c12; margin-top: 4px;">-</div>
+                    <div id="running-best-5km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+            
+            <!-- Best 10km -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-running" style="font-size: 1.2rem; color: #e74c3c; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 10 km</div>
                     </div>
+                    <div id="running-best-10km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="running-best-10km-pace" style="font-size: 0.9rem; color: #e74c3c; margin-top: 4px;">-</div>
+                    <div id="running-best-10km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+            
+            <!-- Best 21km (Half Marathon) -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-running" style="font-size: 1.2rem; color: #9b59b6; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 21 km</div>
+                    </div>
+                    <div id="running-best-21km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="running-best-21km-pace" style="font-size: 0.9rem; color: #9b59b6; margin-top: 4px;">-</div>
+                    <div id="running-best-21km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Cycling Tab -->
+    <div class="tab-pane fade" id="cycling-content" role="tabpanel" aria-labelledby="cycling-tab">
+        <div class="row g-3">
+            <!-- Longest Distance -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-route" style="font-size: 1.2rem; color: #6dc0d5; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Pisin Matka</div>
+                    </div>
+                    <div id="cycling-longest-distance" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="cycling-longest-duration-info" style="font-size: 0.9rem; color: #7bc8a4; margin-top: 4px;">-</div>
+                    <div id="cycling-distance-exercise" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+            
+            <!-- Best 30km -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-biking" style="font-size: 1.2rem; color: #3498db; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 30 km</div>
+                    </div>
+                    <div id="cycling-best-30km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="cycling-best-30km-speed" style="font-size: 0.9rem; color: #3498db; margin-top: 4px;">-</div>
+                    <div id="cycling-best-30km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+            
+            <!-- Best 60km -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-biking" style="font-size: 1.2rem; color: #2ecc71; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 60 km</div>
+                    </div>
+                    <div id="cycling-best-60km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="cycling-best-60km-speed" style="font-size: 0.9rem; color: #2ecc71; margin-top: 4px;">-</div>
+                    <div id="cycling-best-60km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+            
+            <!-- Best 100km -->
+            <div class="col-6">
+                <div class="cardio-card" style="padding: 16px; border-radius: 15px; background: #121212; border: 1px solid #2a2a2a;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-biking" style="font-size: 1.2rem; color: #e67e22; margin-right: 8px;"></i>
+                        <div style="font-size: 0.85rem; color: #bbb; font-weight: 500;">Paras 100 km</div>
+                    </div>
+                    <div id="cycling-best-100km-time" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 6px 0;">-</div>
+                    <div id="cycling-best-100km-speed" style="font-size: 0.9rem; color: #e67e22; margin-top: 4px;">-</div>
+                    <div id="cycling-best-100km-date" style="font-size: 0.8rem; color: #888; margin-top: 4px;">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- NEW SECTION: Yleiset Ennätykset (General Records) -->
 <div class="general-records-container mb-4 mt-5">
   <h5 style="color: fff; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">
@@ -2992,63 +3044,216 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // ===== RUNNING TAB =====
-        if (data.cardio_records.running.longest_session) {
-            const longest = data.cardio_records.running.longest_session;
-            document.getElementById('running-longest-duration').textContent = `${longest.duration_minutes} min`;
-            document.getElementById('running-longest-exercise').textContent = longest.cardio_exercise;
-            
-            if (longest.distance_km && longest.distance_km > 0) {
-                const distanceKm = parseFloat(longest.distance_km);
-                document.getElementById('running-longest-distance-info').textContent = `${distanceKm.toFixed(2)} km`;
-            } else {
-                document.getElementById('running-longest-distance-info').textContent = '-';
-            }
-        }
+
+if (data.cardio_records.running.longest_distance) {
+    const distance = data.cardio_records.running.longest_distance;
+    const distanceKm = parseFloat(distance.distance_km);
+    document.getElementById('running-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
+    document.getElementById('running-distance-exercise').textContent = distance.cardio_exercise;
+    
+    if (distance.duration_minutes) {
+        const durationMinutes = parseFloat(distance.duration_minutes);
+        const hours = Math.floor(durationMinutes / 60);
+        const mins = Math.floor(durationMinutes % 60);
         
-        if (data.cardio_records.running.longest_distance) {
-            const distance = data.cardio_records.running.longest_distance;
-            const distanceKm = parseFloat(distance.distance_km);
-            document.getElementById('running-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
-            document.getElementById('running-distance-exercise').textContent = distance.cardio_exercise;
-            
-            if (distance.duration_minutes) {
-                document.getElementById('running-longest-duration-info').textContent = `${distance.duration_minutes} min`;
-            } else {
-                document.getElementById('running-longest-duration-info').textContent = '-';
-            }
+        if (hours > 0) {
+            document.getElementById('running-longest-duration-info').textContent = `${hours}h ${mins}min`;
+        } else {
+            document.getElementById('running-longest-duration-info').textContent = `${mins} min`;
         }
+    } else {
+        document.getElementById('running-longest-duration-info').textContent = '-';
+    }
+}
+
+// Best 5km
+if (data.cardio_records.running.best_5km) {
+    const best5km = data.cardio_records.running.best_5km;
+    const durationMinutes = parseFloat(best5km.estimated_5km_time);  // CHANGED
+    const paceMinPerKm = parseFloat(best5km.pace_min_per_km);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    const secs = Math.round((durationMinutes % 1) * 60);
+    
+    if (hours > 0) {
+        document.getElementById('running-best-5km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('running-best-5km-time').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Format pace (min/km)
+    const paceMin = Math.floor(paceMinPerKm);
+    const paceSec = Math.round((paceMinPerKm % 1) * 60);
+    document.getElementById('running-best-5km-pace').textContent = `${paceMin}:${paceSec.toString().padStart(2, '0')}/km`;
+    
+    // Format date
+    if (best5km.date) {
+        const date = new Date(best5km.date);
+        document.getElementById('running-best-5km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
+
+// Best 10km
+if (data.cardio_records.running.best_10km) {
+    const best10km = data.cardio_records.running.best_10km;
+    const durationMinutes = parseFloat(best10km.estimated_10km_time);  // CHANGED
+    const paceMinPerKm = parseFloat(best10km.pace_min_per_km);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    const secs = Math.round((durationMinutes % 1) * 60);
+    
+    if (hours > 0) {
+        document.getElementById('running-best-10km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('running-best-10km-time').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Format pace (min/km)
+    const paceMin = Math.floor(paceMinPerKm);
+    const paceSec = Math.round((paceMinPerKm % 1) * 60);
+    document.getElementById('running-best-10km-pace').textContent = `${paceMin}:${paceSec.toString().padStart(2, '0')}/km`;
+    
+    // Format date
+    if (best10km.date) {
+        const date = new Date(best10km.date);
+        document.getElementById('running-best-10km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
+
+// Best 21km (Half Marathon)
+if (data.cardio_records.running.best_21km) {
+    const best21km = data.cardio_records.running.best_21km;
+    const durationMinutes = parseFloat(best21km.estimated_21km_time);  // CHANGED
+    const paceMinPerKm = parseFloat(best21km.pace_min_per_km);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    const secs = Math.round((durationMinutes % 1) * 60);
+    
+    if (hours > 0) {
+        document.getElementById('running-best-21km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('running-best-21km-time').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Format pace (min/km)
+    const paceMin = Math.floor(paceMinPerKm);
+    const paceSec = Math.round((paceMinPerKm % 1) * 60);
+    document.getElementById('running-best-21km-pace').textContent = `${paceMin}:${paceSec.toString().padStart(2, '0')}/km`;
+    
+    // Format date
+    if (best21km.date) {
+        const date = new Date(best21km.date);
+        document.getElementById('running-best-21km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
+if (data.cardio_records.cycling.longest_distance) {
+    const distance = data.cardio_records.cycling.longest_distance;
+    const distanceKm = parseFloat(distance.distance_km);
+    document.getElementById('cycling-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
+    document.getElementById('cycling-distance-exercise').textContent = distance.cardio_exercise;
+    
+    if (distance.duration_minutes) {
+        const durationMinutes = parseFloat(distance.duration_minutes);
+        const hours = Math.floor(durationMinutes / 60);
+        const mins = Math.floor(durationMinutes % 60);
         
-        // ===== CYCLING TAB =====
-        if (data.cardio_records.cycling.longest_session) {
-            const longest = data.cardio_records.cycling.longest_session;
-            document.getElementById('cycling-longest-duration').textContent = `${longest.duration_minutes} min`;
-            document.getElementById('cycling-longest-exercise').textContent = longest.cardio_exercise;
-            
-            if (longest.distance_km && longest.distance_km > 0) {
-                const distanceKm = parseFloat(longest.distance_km);
-                document.getElementById('cycling-longest-distance-info').textContent = `${distanceKm.toFixed(2)} km`;
-            } else {
-                document.getElementById('cycling-longest-distance-info').textContent = '-';
-            }
+        if (hours > 0) {
+            document.getElementById('cycling-longest-duration-info').textContent = `${hours}h ${mins}min`;
+        } else {
+            document.getElementById('cycling-longest-duration-info').textContent = `${mins} min`;
         }
-        
-        if (data.cardio_records.cycling.longest_distance) {
-            const distance = data.cardio_records.cycling.longest_distance;
-            const distanceKm = parseFloat(distance.distance_km);
-            document.getElementById('cycling-longest-distance').textContent = `${distanceKm.toFixed(2)} km`;
-            document.getElementById('cycling-distance-exercise').textContent = distance.cardio_exercise;
-            
-            if (distance.duration_minutes) {
-                document.getElementById('cycling-longest-duration-info').textContent = `${distance.duration_minutes} min`;
-            } else {
-                document.getElementById('cycling-longest-duration-info').textContent = '-';
-            }
-        }
+    } else {
+        document.getElementById('cycling-longest-duration-info').textContent = '-';
+    }
+}
+// Best 30km
+if (data.cardio_records.cycling.best_30km) {
+    const best30km = data.cardio_records.cycling.best_30km;
+    const durationMinutes = parseFloat(best30km.estimated_30km_time);  // CHANGED
+    const speedKmh = parseFloat(best30km.speed_kmh);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    
+    if (hours > 0) {
+        document.getElementById('cycling-best-30km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('cycling-best-30km-time').textContent = `${mins} min`;
+    }
+    
+    // Format speed
+    document.getElementById('cycling-best-30km-speed').textContent = `${speedKmh.toFixed(1)} km/h`;
+    
+    // Format date
+    if (best30km.date) {
+        const date = new Date(best30km.date);
+        document.getElementById('cycling-best-30km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
+
+// Best 60km
+if (data.cardio_records.cycling.best_60km) {
+    const best60km = data.cardio_records.cycling.best_60km;
+    const durationMinutes = parseFloat(best60km.estimated_60km_time);  // CHANGED
+    const speedKmh = parseFloat(best60km.speed_kmh);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    
+    if (hours > 0) {
+        document.getElementById('cycling-best-60km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('cycling-best-60km-time').textContent = `${mins} min`;
+    }
+    
+    // Format speed
+    document.getElementById('cycling-best-60km-speed').textContent = `${speedKmh.toFixed(1)} km/h`;
+    
+    // Format date
+    if (best60km.date) {
+        const date = new Date(best60km.date);
+        document.getElementById('cycling-best-60km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
+
+// Best 100km
+if (data.cardio_records.cycling.best_100km) {
+    const best100km = data.cardio_records.cycling.best_100km;
+    const durationMinutes = parseFloat(best100km.estimated_100km_time);  // CHANGED
+    const speedKmh = parseFloat(best100km.speed_kmh);
+    
+    // Format time
+    const hours = Math.floor(durationMinutes / 60);
+    const mins = Math.floor(durationMinutes % 60);
+    
+    if (hours > 0) {
+        document.getElementById('cycling-best-100km-time').textContent = `${hours}h ${mins}min`;
+    } else {
+        document.getElementById('cycling-best-100km-time').textContent = `${mins} min`;
+    }
+    
+    // Format speed
+    document.getElementById('cycling-best-100km-speed').textContent = `${speedKmh.toFixed(1)} km/h`;
+    
+    // Format date
+    if (best100km.date) {
+        const date = new Date(best100km.date);
+        document.getElementById('cycling-best-100km-date').textContent = date.toLocaleDateString('fi-FI');
+    }
+}
         
     } catch (error) {
         console.error('Error fetching profile stats:', error);
     }
-}
+    }
     
     // Load stats immediately on page load
     loadProfileStats();
@@ -3884,4 +4089,3 @@ checkGarminStatus();
 </script>
 
 {% endblock %}
-
