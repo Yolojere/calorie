@@ -1851,7 +1851,7 @@ def login():
                     return redirect(next_page)
             return redirect(url_for('index'))
         else:
-            flash('Sisäänkirjautuminen epäonnistui!', 'danger')
+            flash('Sisään kirjautuminen epäonnistui!', 'danger')
 
     return render_template('login.html', title='Login', form=form)
 
@@ -7047,6 +7047,7 @@ def add_cardio_session():
 
         calories_burned = 0
         calculation_method = "MET"
+        avg_speed = None  # NEW: Track average speed
 
         # ---------------------------------------
         # Distance-based calculation
@@ -7054,6 +7055,7 @@ def add_cardio_session():
         if data.get('distance_km') and float(data['distance_km']) > 0:
             distance_km = float(data['distance_km'])
             speed_kmh = distance_km / duration_hours
+            avg_speed = round(speed_kmh, 2)  # NEW: Store calculated speed
 
             is_cycling = (
                 'cycling' in exercise_name or
@@ -7130,8 +7132,8 @@ def add_cardio_session():
         cursor.execute('''
             INSERT INTO cardio_sessions 
             (session_id, cardio_exercise_id, duration_minutes, distance_km, 
-             avg_pace_min_per_km, avg_heart_rate, watts, calories_burned, notes, is_saved, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, false, NOW())
+             avg_pace_min_per_km, avg_heart_rate, avg_speed, watts, calories_burned, notes, is_saved, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, false, NOW())
             RETURNING id
         ''', (
             session_id,
@@ -7140,6 +7142,7 @@ def add_cardio_session():
             data.get('distance_km'),
             data.get('avg_pace_min_per_km'),
             data.get('avg_heart_rate'),
+            avg_speed,  # NEW: Include avg_speed
             data.get('watts'),
             calories_burned,
             data.get('notes', '')
@@ -7156,7 +7159,8 @@ def add_cardio_session():
             'weight_used': weight_kg,
             'gender_used': gender,
             'session_id': session_id,
-            'exercise_name': exercise['name']
+            'exercise_name': exercise['name'],
+            'avg_speed': avg_speed  # NEW: Return avg_speed
         })
 
     except Exception as e:
@@ -7166,9 +7170,6 @@ def add_cardio_session():
 
     finally:
         conn.close()
-
-
-
 
 
 # Delete cardio session
@@ -8048,26 +8049,6 @@ def get_profile_stats(user_id):
         """, (user_id,))
         longest_running_session = cursor.fetchone()
         
-        # Most calories burned in running session
-        cursor.execute("""
-            SELECT 
-                ce.name as cardio_exercise,
-                cs.duration_minutes,
-                cs.calories_burned,
-                cs.distance_km,
-                wses.date
-            FROM cardio_sessions cs
-            JOIN workout_sessions wses ON cs.session_id = wses.id
-            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
-            WHERE wses.user_id = %s
-              AND cs.is_saved = true
-              AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
-              AND cs.calories_burned IS NOT NULL
-            ORDER BY cs.calories_burned DESC
-            LIMIT 1
-        """, (user_id,))
-        most_calories_running = cursor.fetchone()
-        
         # Longest distance - Running
         cursor.execute("""
             SELECT 
@@ -8088,7 +8069,80 @@ def get_profile_stats(user_id):
         """, (user_id,))
         longest_distance_running = cursor.fetchone()
         
-        # ===== CARDIO PERSONAL BESTS - CYCLING =====
+        # ===== RUNNING - BEST 5KM =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 5km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 5.0) as estimated_5km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+            AND cs.distance_km >= 5.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_5km_run = cursor.fetchone()
+
+        # ===== RUNNING - BEST 10KM =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 10km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 10.0) as estimated_10km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+            AND cs.distance_km >= 10.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_10km_run = cursor.fetchone()
+
+        # ===== RUNNING - BEST 21KM (HALF MARATHON) =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 21km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 21.0) as estimated_21km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (1, 2, 3, 4, 5, 10)
+            AND cs.distance_km >= 21.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_21km_run = cursor.fetchone()
         # Longest cycling session
         cursor.execute("""
             SELECT 
@@ -8107,26 +8161,6 @@ def get_profile_stats(user_id):
             LIMIT 1
         """, (user_id,))
         longest_cycling_session = cursor.fetchone()
-        
-        # Most calories burned in cycling session
-        cursor.execute("""
-            SELECT 
-                ce.name as cardio_exercise,
-                cs.duration_minutes,
-                cs.calories_burned,
-                cs.distance_km,
-                wses.date
-            FROM cardio_sessions cs
-            JOIN workout_sessions wses ON cs.session_id = wses.id
-            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
-            WHERE wses.user_id = %s
-              AND cs.is_saved = true
-              AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
-              AND cs.calories_burned IS NOT NULL
-            ORDER BY cs.calories_burned DESC
-            LIMIT 1
-        """, (user_id,))
-        most_calories_cycling = cursor.fetchone()
         
         # Longest distance - Cycling
         cursor.execute("""
@@ -8147,6 +8181,80 @@ def get_profile_stats(user_id):
             LIMIT 1
         """, (user_id,))
         longest_distance_cycling = cursor.fetchone()
+        # ===== CYCLING - BEST 30KM =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 30km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 30.0) as estimated_30km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+            AND cs.distance_km >= 30.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_30km_cycle = cursor.fetchone()
+
+        # ===== CYCLING - BEST 60KM =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 60km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 60.0) as estimated_60km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+            AND cs.distance_km >= 60.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_60km_cycle = cursor.fetchone()
+
+        # ===== CYCLING - BEST 100KM =====
+        cursor.execute("""
+            SELECT 
+                ce.name as cardio_exercise,
+                cs.duration_minutes,
+                cs.distance_km,
+                cs.avg_speed,
+                cs.avg_heart_rate,
+                wses.date,
+                (cs.duration_minutes / cs.distance_km) as pace_min_per_km,
+                (cs.distance_km / (cs.duration_minutes / 60.0)) as speed_kmh,
+                -- Calculate estimated time for exactly 100km based on pace
+                ((cs.duration_minutes / cs.distance_km) * 100.0) as estimated_100km_time
+            FROM cardio_sessions cs
+            JOIN workout_sessions wses ON cs.session_id = wses.id
+            JOIN cardio_exercises ce ON cs.cardio_exercise_id = ce.id
+            WHERE wses.user_id = %s
+            AND cs.is_saved = true
+            AND cs.cardio_exercise_id IN (11, 12, 13, 14, 15, 16, 17, 18)
+            AND cs.distance_km >= 100.0
+            ORDER BY (cs.duration_minutes / cs.distance_km) ASC
+            LIMIT 1
+        """, (user_id,))
+        best_100km_cycle = cursor.fetchone()
         
         # Convert dict rows to regular dicts for JSON serialization
         response_data = {
@@ -8163,13 +8271,17 @@ def get_profile_stats(user_id):
             'cardio_records': {
                 'running': {
                     'longest_session': dict(longest_running_session) if longest_running_session else None,
-                    'most_calories': dict(most_calories_running) if most_calories_running else None,
-                    'longest_distance': dict(longest_distance_running) if longest_distance_running else None
+                    'longest_distance': dict(longest_distance_running) if longest_distance_running else None,
+                    'best_5km': dict(best_5km_run) if best_5km_run else None,
+                    'best_10km': dict(best_10km_run) if best_10km_run else None,
+                    'best_21km': dict(best_21km_run) if best_21km_run else None
                 },
                 'cycling': {
                     'longest_session': dict(longest_cycling_session) if longest_cycling_session else None,
-                    'most_calories': dict(most_calories_cycling) if most_calories_cycling else None,
-                    'longest_distance': dict(longest_distance_cycling) if longest_distance_cycling else None
+                    'longest_distance': dict(longest_distance_cycling) if longest_distance_cycling else None,
+                    'best_30km': dict(best_30km_cycle) if best_30km_cycle else None,
+                    'best_60km': dict(best_60km_cycle) if best_60km_cycle else None,
+                    'best_100km': dict(best_100km_cycle) if best_100km_cycle else None
                 }
             }
         }
@@ -8184,7 +8296,6 @@ def get_profile_stats(user_id):
     finally:
         cursor.close()
         conn.close()
-
 
 
 @app.route('/profile/<int:user_id>/stats/recent', methods=['GET'])
