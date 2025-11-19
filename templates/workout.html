@@ -862,9 +862,17 @@
 /* CARDIO STYLES */
 .workout-group.cardio .group-header {
     background: linear-gradient(135deg, #535353ba, rgba(28, 28, 28, 0.8)) !important;
+            align-items: center !important;
+        flex-direction: row !important;
+        display: flex !important;
+        min-width: 0;
+        justify-content: space-between !important ;
 }
 .workout-group.cardio .group-header i{
     color: #df7dd6 !important;
+    align-items: center !important;
+        display: flex !important;
+        justify-content: center !important  ;
     
 }
 .workout-group.cardio .group-header .group-icon {
@@ -892,7 +900,11 @@
     border-top: 1px solid rgba(255,255,255,0.1);
     margin-top: 4px;
 }
-
+.group-header-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
 /* Cardio form enhancements */
 #cardio-type-select,
 #cardio-type-select-mobile {
