@@ -3678,10 +3678,6 @@
                 $(window).resize(handleWindowResize);
                 
                 // ===== HELPER FUNCTIONS =====
-                function formatFinnishDate(isoDate) {
-                const [year, month, day] = isoDate.split('-');
-                return `${day}.${month}.${year}`;
-            }
                 // Enhanced change handler that pre-loads dates
                 function handleSmartDateChange() {
                     const selector = $('#date-selector');
@@ -4652,7 +4648,7 @@ function clearSession() {
             updateNutritionTotalsOnly(response.totals,response.tdee_data);
             updateNutritionProgressBars();
             updateCalorieDifference();
-
+            showToast('Operaatio onnistui! tuotteet siirretty!', 'success');
             if ($('#nutrition-panel').hasClass('active')) {
                 updateMobileNutrition(response.totals);
             }
@@ -4668,7 +4664,7 @@ function clearSession() {
                     if (response.action === 'move') {
                         removeMovedItems(response, itemsToRemove);
                     }
-                    showToast('Onnistui! tuotteet siirretty ' + formatFinnishDate(targetDate), 'success');
+                    showToast('Operaatio onnistui! tuotteet siirretty ' + targetDate, 'success');
                 }
             }
 
