@@ -4086,7 +4086,17 @@ checkGarminStatus();
     initializeSocials();
     {% endif %}
 });
+{% if streak_just_broke %}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Use your existing showToast function if you have one
+        if (typeof showToast === 'function') {
+            showToast('Treeniputki katkesi! Aloita uusi putki tänään.', 'warning');
+        } else {
+            // Fallback alert if no toast function
+            alert('⚠️ Treeniputki katkesi! Aloita uusi putki tänään.');
+        }
+    });
+{% endif %}
 </script>
 
 {% endblock %}
-
