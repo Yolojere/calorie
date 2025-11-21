@@ -831,8 +831,8 @@ function copyWorkoutFromSessionInline(sessionId, targetDate) {
                 } else {
                     location.reload();
                 }
-                
-                showToast(response.message || 'Treeni kopioitu onnistuneesti!');
+                const finnishDate = formatFinnishDate(targetDate);
+                showToast(`Onnistui! Treeni kopioitu päivälle ${finnishDate}!`, 'success');
             } else {
                 showToast('Ongelma kopioinnissa: ' + response.error, true);
             }
@@ -860,3 +860,4 @@ $(document).on('blur', '.workout-name-input', function() {
         $('#workout-name-suggestions-inline').hide();
     }, 200);
 });
+
