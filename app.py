@@ -6917,7 +6917,6 @@ def copy_from_session():
         
         return jsonify({
             "success": True, 
-            "message": f"Kopioitiin {sets_copied} sarjaa, päivälle: {target_date}",
             "debug": {
                 "source_session_id": session_id,
                 "new_session_id": new_session_id,
